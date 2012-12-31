@@ -84,7 +84,7 @@ if kDAKConfig and kDAKConfig.Captains then
 				match = player
 				nameMatchCount = -1
 			else
-				local index = string.find(playerName, name) // partial match
+				local index = string.find(string.lower(playerName), string.lower(name)) // partial match
 				if index ~= nil then
 					match = player
 					nameMatchCount = nameMatchCount + 1
@@ -384,7 +384,9 @@ if kDAKConfig and kDAKConfig.Captains then
 		local team = player:GetTeamNumber()
 		if team ~= kTeamReadyRoom then
 			local notes = buildTeamNotes(team)
-			DisplayMessage(player, notes)
+			if notes ~= nil and string.len(notes) > 0 then
+				DisplayMessage(player, notes)
+			end
 		end
 	end
 
