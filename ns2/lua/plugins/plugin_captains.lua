@@ -8,8 +8,6 @@ if kDAKConfig and kDAKConfig.Captains then
 	local NOTESCOMMAND = "/notes"
 	local CAPTAINCOMMAND = "/captain"
 	
-	// Misc variables and tables
-	// local allowAttack = true // Is this needed, the noattackpregame plugin should handle this
 	local allowNotesDisplay = true
 	local captain1id = -1
 	local captain2id = -1
@@ -48,7 +46,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		
 	end
 
-	local function GetPlayerMatchingSteamId(steamId)
+	local function GetPlayerMatchingSteamId(steamId, team)
 
 		assert(type(steamId) == "number")
 		
@@ -58,7 +56,9 @@ if kDAKConfig and kDAKConfig.Captains then
 		
 			local playerClient = Server.GetOwner(player)
 			if playerClient and playerClient:GetUserId() == steamId then
-				match = player
+				if team == nil or team == -1 or team == player:GetTeamNumber() then
+					match = player
+				end
 			end
 			
 		end
@@ -68,7 +68,7 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	end
 
-	local function GetPlayerMatchingName(name)
+	local function GetPlayerMatchingName(name, team)
 
 		assert(type(name) == "string")
 		
@@ -81,13 +81,17 @@ if kDAKConfig and kDAKConfig.Captains then
 			end
 			local playerName =  player:GetName()
 			if player:GetName() == name then // exact match
-				match = player
-				nameMatchCount = -1
+				if team == nil or team == -1 or team == player:GetTeamNumber() then
+					match = player
+					nameMatchCount = -1
+				end
 			else
 				local index = string.find(string.lower(playerName), string.lower(name)) // partial match
 				if index ~= nil then
-					match = player
-					nameMatchCount = nameMatchCount + 1
+					if team == nil or team == -1 or team == player:GetTeamNumber() then
+						match = player
+						nameMatchCount = nameMatchCount + 1
+					end
 				end
 			end
 			
@@ -102,13 +106,13 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	end
 
-	local function GetPlayerMatching(id)
+	local function GetPlayerMatching(id, team)
 
 		local idNum = tonumber(id)
 		if idNum then
-			return GetPlayerMatchingGameId(idNum) or GetPlayerMatchingSteamId(idNum)
+			return GetPlayerMatchingGameId(idNum, team) or GetPlayerMatchingSteamId(idNum, team)
 		elseif type(id) == "string" then
-			return GetPlayerMatchingName(id)
+			return GetPlayerMatchingName(id, team)
 		end
 
 	end
@@ -146,18 +150,26 @@ if kDAKConfig and kDAKConfig.Captains then
 		Server.SendNetworkMessage("Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 
 	end
+	
+	local function DisplayMessageConsole(player, message)
+		if type(message) == "string" then
+			ServerAdminPrint(Server.GetOwner(player), CHAT_TAG .. " " .. message)
+		elseif type(message) == "table" then
+			for _, m in pairs(message) do
+				ServerAdminPrint(Server.GetOwner(player), CHAT_TAG .. " " .. m)
+			end
+		end
+	end
 
 	local function StartCaptains()
 		if kDAKConfig and kDAKConfig.TournamentMode then
 			local tournamentMode = GetTournamentMode()
-			//allowAttack = false
 			captainsEnabled = true;
 			captain1id = -1
 			captain2id = -1
 			notes = {}
 			DisplayMessageAll("Captains game starting.  Return to the readyroom to pick teams.")
 			
-			// TODO: Modify tournament mode settings to require 'ready'
 			// TODO: Adjust server settings (time limit, others?)
 				// server_cmd("mp_timelimit 45")
 			if Server then
@@ -168,8 +180,12 @@ if kDAKConfig and kDAKConfig.Captains then
 		end
 	end
 
-	DAKCreateServerAdminCommand("Console_captains", StartCaptains, "configures the server for Captains Games")
-
+	DAKCreateServerAdminCommand("Console_captains", StartCaptains, "configures the server for Captains Games", false)
+	DAKCreateServerAdminCommand("Console_/captain", function(client) if client ~= nil then makeCaptain(client:GetUserId()) end end, "Make yourself a team captain", true)
+	DAKCreateServerAdminCommand("Console_/notes", function(client) if client ~= nil then showTeamNotesConsole(client:GetUserId()) end end, "Lists all notes assigned to your team", true)
+	DAKCreateServerAdminCommand("Console_/note", function(client, playerName, ...)  if client ~= nil then assignNote(client:GetUserId(), playerName, StringConcatArgs(...)) end end, "<playerName> <note>, Set a note for yourself.  If you are a captain, you can set a note for a teammate", true)
+	
+/*
 	local function OnCaptainsChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
 		if client and steamId and steamId ~= 0 and isCaptainsMode() then
 			if isCommand(message, NOTECOMMAND) then
@@ -185,39 +201,53 @@ if kDAKConfig and kDAKConfig.Captains then
 			elseif isCommand(message, CAPTAINCOMMAND) then
 				makeCaptain(steamId)
 			elseif isCommand(message, NOTESCOMMAND) then
-				showTeamNotes(GetPlayerMatchingSteamId(steamId))
+				showTeamNotesConsole(steamId)
 			end
 		end
 	end
 
 	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnCaptainsChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
+*/
 
 	function assignNote(steamId, targetName, note)
 		if isCaptainsMode() then
 			local sourcePlayer = GetPlayerMatchingSteamId(steamId)
-			if sourcePlayer and sourcePlayer:GetTeamNumber() ~= kTeamReadyRoom then
-				local targetPlayer = GetPlayerMatching(targetName)
-				if targetPlayer ~= nil then
-					local targetSteamId = Server.GetOwner(targetPlayer):GetUserId()
-					if steamId == targetSteamId or isCaptain(steamId) then
-						if sourcePlayer:GetTeamNumber() == targetPlayer:GetTeamNumber() then
-							notes[targetSteamId] = string.sub(note, 1, NOTE_MAX_LENGTH)
-							showNotes()
+			local team = sourcePlayer:GetTeamNumber()
+			if sourcePlayer and team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
+				if targetName ~= nil then
+					local targetPlayer = GetPlayerMatching(targetName, team)
+					if targetPlayer ~= nil then
+						local targetSteamId = Server.GetOwner(targetPlayer):GetUserId()
+						if steamId == targetSteamId or isCaptain(steamId) then
+							if sourcePlayer:GetTeamNumber() == targetPlayer:GetTeamNumber() then
+								if note ~= nil and string.len(note) > 0 then
+									notes[targetSteamId] = string.sub(note, 1, NOTE_MAX_LENGTH)
+								else
+									notes[targetSteamId] = nil
+								end
+								//showNotes()
+								if note == nil then
+									note = "<Blank>"
+								end
+								DisplayMessage(targetPlayer, string.format("A note has been set for you: \"%s\"", note))
+								DisplayMessageConsole(sourcePlayer, string.format("You set the note for %s to \"%s\"", targetPlayer:GetName(), note))
+							else
+								DisplayMessageConsole(sourcePlayer, "You may only set notes for players on your own team.")
+							end
 						else
-							DisplayMessage(sourcePlayer, "You may only set notes for players on your own team.")
+							DisplayMessageConsole(sourcePlayer, "Only captains may set others' notes.  You may only set your own.")
 						end
 					else
-						DisplayMessage(sourcePlayer, "Only captains may set others' notes.  You may only set your own.")
+						DisplayMessageConsole(sourcePlayer, string.format("'%s' does not uniquely match a teammate.  Try again.", targetName))
 					end
 				else
-					DisplayMessage(sourcePlayer, string.format("'%s' does not uniquely match a teammate.  Try again.", targetName))
+					DisplayMessageConsole(sourcePlayer, "You must enter a player name")
 				end
-				
 			else
-				DisplayMessage(sourcePlayer, "You must be on a team to use this command.")
+				DisplayMessageConsole(sourcePlayer, "You must be on a team to use this command.")
 			end
 		else
-			DisplayMessage(sourcePlayer, "Captains mode is not enabled.")
+			DisplayMessageConsole(sourcePlayer, "Captains mode is not enabled.")
 		end
 	end
 
@@ -226,7 +256,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		if isCaptainsMode() then
 			if player:GetTeamNumber() == kTeamReadyRoom then
 				if isCaptain(id) then
-					DisplayMessage(player, "You are already a captain.")
+					DisplayMessageConsole(player, "You are already a captain.")
 				else
 					if captain1id  == -1 then
 						captain1id = id
@@ -236,32 +266,22 @@ if kDAKConfig and kDAKConfig.Captains then
 					if isCaptain(id) then
 						local name = string.sub(player:GetName(), 1, PLAYNAME_MAX_LENGTH)
 						DisplayMessageAll(string.format("%s is a captain.", name))
+						DisplayMessageConsole(player, "You are now a captain.")
 					else
-						DisplayMessage(player, "Two captains already exist.  You are not a captain.")
+						DisplayMessageConsole(player, "Two captains already exist.  You are not a captain.")
 					end
 				end
 			else
-				DisplayMessage(player, "This command must be used from the readyroom")
+				DisplayMessageConsole(player, "This command must be used from the readyroom")
 			end
 		else
-			DisplayMessage(player, "Captains mode is not enabled.")
+			DisplayMessageConsole(player, "Captains mode is not enabled.")
 		end
 	end
 
 	function isCaptain(id)
 		return captain1id == id or captain2id == id
 	end
-
-// Is this needed?
-/*
-	function attack_allow()
-		allowAttack = true
-	end
-
-	function attack_disallow()
-		allowAttack = false
-	end
-*/
 
 	local function onGameStateChange(self, state, currentstate)
 
@@ -280,19 +300,15 @@ if kDAKConfig and kDAKConfig.Captains then
 	table.insert(kDAKOnSetGameState, function(self, state, currentstate) return onGameStateChange(self, state, currentstate) end)
 	
 	function do_roundbegin()
-		// allowAttack = true
 		if isCaptainsMode() then
-			allowNotesDisplay = false
-			hideNotes()
+			//allowNotesDisplay = false
+			//hideNotes()
 		end
 	end
 
 	function do_roundend()
-		// todo: when round ends, show notes again
-		//set_task(float(DISPLAY_FREQ),"showNotes",taskId,_,_,"b")
-		//allowAttack = false
 		if isCaptainsMode() then
-			allowNotesDisplay = true
+			//allowNotesDisplay = true
 		end
 	end
 
@@ -310,7 +326,7 @@ if kDAKConfig and kDAKConfig.Captains then
 			if isCaptainsMode() then
 				local id = client:GetUserId()
 				local team = client:GetControllingPlayer():GetTeamNumber()
-				if team ~= kTeamReadyRoom then
+				if team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
 					for _, player in pairs(GetPlayerList()) do
 						if team == player:GetTeamNumber() and notes[id] ~= nil and string.len(notes[id]) > 0 then
 							DisplayMessage(player, string.format("Teammate with note '%s' has left the server.", notes[id]))
@@ -345,7 +361,7 @@ if kDAKConfig and kDAKConfig.Captains then
 				//	allowNotesDisplay = true
 				//end
 				if notes[steamId] ~= nil then
-					notes[steamId] = "" // clear the note when a player changes teams
+					notes[steamId] = nil // clear the note when a player changes teams
 				end
 			end
 		end
@@ -359,7 +375,7 @@ if kDAKConfig and kDAKConfig.Captains then
 	end
 
 	function buildTeamNotes(team)
-		local notesString = ""
+		local notesTable = {}
 		local playername
 		local notesLine
 		for _, player in pairs(GetPlayerList()) do
@@ -369,42 +385,49 @@ if kDAKConfig and kDAKConfig.Captains then
 				if isCaptain(steamId) then
 					playername = playername .. "*"
 				end
-				local note = ""
 				if notes[steamId] ~= nil and string.len(notes[steamId]) > 0 then
-					note = notes[steamId]
+					local note = notes[steamId]
 					notesLine = string.format("%s: %s\n", playername, note)
-					notesString = notesString .. notesLine
+					table.insert(notesTable, notesLine)
 				end
 			end
 		end
-		return notesString
+		return notesTable
 	end
 
-	function showTeamNotes(player)
+	function showTeamNotesConsole(id)
+		local player = GetPlayerMatchingSteamId(id)
 		local team = player:GetTeamNumber()
-		if team ~= kTeamReadyRoom then
-			local notes = buildTeamNotes(team)
-			if notes ~= nil and string.len(notes) > 0 then
-				DisplayMessage(player, notes)
-			end
-		end
-	end
-
-	function showNotes()
-		if allowNotesDisplay == true and isCaptainsMode() then
-			for _, player in pairs(GetPlayerList()) do
-				if player:GetTeamNumber() ~= kTeamReadyRoom then
-					showTeamNotes(player)
+		if isCaptainsMode() then
+			if team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
+				local notes = buildTeamNotes(team)
+				if notes ~= nil and #notes > 0 then
+					DisplayMessageConsole(player, "")
+					DisplayMessageConsole(player, notes)
+				else
+					DisplayMessageConsole(player, "There are no notes set for your team.")
 				end
+			else
+				DisplayMessageConsole(player, "You must be on a team to view the notes")
 			end
 		end
 	end
 
-	function hideNotes()
-		for _, player in pairs(GetPlayerList()) do
-			DisplayMessage(player, "Say /notes to view the captain's notes.")
-		end
-	end
+	//function showNotes()
+	//	if allowNotesDisplay == true and isCaptainsMode() then
+	//		for _, player in pairs(GetPlayerList()) do
+	//			if player:GetTeamNumber() ~= kTeamReadyRoom then
+	//				showTeamNotes(player)
+	//			end
+	//		end
+	//	end
+	//end
+
+	//function hideNotes()
+	//	for _, player in pairs(GetPlayerList()) do
+	//		DisplayMessage(player, "Say /notes to view the captain's notes.")
+	//	end
+	//end
 
 end
 
