@@ -1,0 +1,67 @@
+# First, ignore everything
+*
+
+# Now, whitelist anything that's a directory ( http://stackoverflow.com/a/9227991/116895 )
+!*/
+
+# And then whitelist .gitattributes	and .gitignore
+!.gitattributes
+!.gitignore
+
+# And then whitelist DAK core files
+!ns2/lua/DAKLoader.lua
+!ns2/lua/DAKLoader_Class.lua
+!ns2/lua/DAKLoader_Client.lua
+!ns2/lua/DAKLoader_Config.lua
+!ns2/lua/DAKLoader_EventHooks.lua
+!ns2/lua/DAKLoader_MapCycle.lua
+!ns2/lua/DAKLoader_Server.lua
+!ns2/lua/DAKLoader_ServerAdmin.lua
+!ns2/lua/DAKLoader_ServerAdminCommands.lua
+!ns2/lua/DAKLoader_Settings.lua
+!ns2/lua/DAKLoader_Shared.lua
+
+# And then whitelist DAK plugins
+!ns2/lua/plugins/config_replaceGetCanPlayerHearPlayer.lua
+!ns2/lua/plugins/plugin_replaceGetCanPlayerHearPlayer.lua
+
+!ns2/lua/plugins/config_afkkick.lua
+!ns2/lua/plugins/plugin_afkkick.lua
+
+!ns2/lua/plugins/config_captains.lua
+!ns2/lua/plugins/plugin_captains.lua
+
+!ns2/lua/plugins/config_autoconcede.lua
+!ns2/lua/plugins/config_automapcycle.lua
+!ns2/lua/plugins/config_baseadmincommands.lua
+!ns2/lua/plugins/config_commbans.lua
+!ns2/lua/plugins/config_enhancedlogging.lua
+!ns2/lua/plugins/config_mapvote.lua
+!ns2/lua/plugins/config_messages.lua
+!ns2/lua/plugins/config_motd.lua
+!ns2/lua/plugins/config_noattackpregame.lua
+!ns2/lua/plugins/config_printablenames.lua
+!ns2/lua/plugins/config_prohibitednames.lua
+!ns2/lua/plugins/config_reservedslots.lua
+!ns2/lua/plugins/config_taglines.lua
+!ns2/lua/plugins/config_tournamentmode.lua
+!ns2/lua/plugins/config_unstuck.lua
+!ns2/lua/plugins/config_voterandom.lua
+!ns2/lua/plugins/config_votesurrender.lua
+!ns2/lua/plugins/plugin_autoconcede.lua
+!ns2/lua/plugins/plugin_automapcycle.lua
+!ns2/lua/plugins/plugin_baseadmincommands.lua
+!ns2/lua/plugins/plugin_commbans.lua
+!ns2/lua/plugins/plugin_enhancedlogging.lua
+!ns2/lua/plugins/plugin_mapvote.lua
+!ns2/lua/plugins/plugin_messages.lua
+!ns2/lua/plugins/plugin_motd.lua
+!ns2/lua/plugins/plugin_noattackpregame.lua
+!ns2/lua/plugins/plugin_printablenames.lua
+!ns2/lua/plugins/plugin_prohibitednames.lua
+!ns2/lua/plugins/plugin_reservedslots.lua
+!ns2/lua/plugins/plugin_taglines.lua
+!ns2/lua/plugins/plugin_tournamentmode.lua
+!ns2/lua/plugins/plugin_unstuck.lua
+!ns2/lua/plugins/plugin_voterandom.lua
+!ns2/lua/plugins/plugin_votesurrender.lua
