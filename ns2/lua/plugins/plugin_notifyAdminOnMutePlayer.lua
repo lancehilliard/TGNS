@@ -9,15 +9,36 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		return playerList
 		
 	end
-	
-	local function PMAllAdminsWithAccess(message, command)
+
+	local function PMAllPlayersWithAccess(srcClient, message, command, showCommand)
+		if srcClient then
+			local srcPlayer = srcClient:GetControllingPlayer()
+			if srcPlayer then
+				srcName = srcPlayer:GetName()
+			else
+				srcName = kDAKConfig.DAKLoader.MessageSender
+			end
+		else
+			srcName = kDAKConfig.DAKLoader.MessageSender
+		end
+		
+		if showCommand then
+			chatName =  command .. " - " .. srcName
+		else
+			chatName = srcName
+		end
+
+		consoleChatMessage = chatName ..": " .. message
+
 		for _, player in pairs(GetPlayerList()) do
 			local client = Server.GetOwner(player)
 			if client ~= nil and DAKGetClientCanRunCommand(client, command) then
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, message), true)
+				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, chatName, -1, kTeamReadyRoom, kNeutralTeamType, message), true)
+				ServerAdminPrint(client, consoleChatMessage)
 			end
 		end
 	end
+
 	
 	local originalOnMutePlayer
 	
@@ -27,7 +48,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		if isMuted then
 			for _, player in pairs(GetPlayerList()) do
 				if player:GetClientIndex() == clientIndex then
-					PMAllAdminsWithAccess(client:GetControllingPlayer():GetName() .. " has muted player " .. player:GetName(), "sv_canseemuted")
+					PMAllPlayersWithAccess(nil, client:GetControllingPlayer():GetName() .. " has muted player " .. player:GetName(), "sv_canseemuted", false)
 					break
 				end
 			end
