@@ -34,6 +34,9 @@
 !ns2/lua/plugins/config_notifyAdminOnMutePlayer.lua
 !ns2/lua/plugins/plugin_notifyAdminOnMutePlayer.lua
 
+!ns2/lua/plugins/config_chat.lua
+!ns2/lua/plugins/plugin_chat.lua
+
 !ns2/lua/plugins/config_autoconcede.lua
 !ns2/lua/plugins/config_automapcycle.lua
 !ns2/lua/plugins/config_baseadmincommands.lua
