@@ -78,7 +78,7 @@ if kDAKConfig and kDAKConfig.Taglines then
 	DAKCreateServerAdminCommand("Console_sv_tagline", svTagline, "<tagline> Sets your tagline.", true)
 	
 	local function TaglinesOnClientDelayedConnect(client)
-		if DAKGetClientCanRunCommand(client, "sv_hasreserve") and Shared.GetTime() > 120 then
+		if DAKGetClientCanRunCommand(client, "sv_taglineannounce") and Shared.GetTime() > 120 then
 			local player = client:GetControllingPlayer()
 			local steamId = client:GetUserId()
 			local tagline = LoadTagline(steamId)
