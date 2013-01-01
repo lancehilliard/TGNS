@@ -139,18 +139,32 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	local function DisplayMessage(player, message)
 
-		chatMessage = string.sub(message, 1, kMaxChatLength)
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		if type(message) == "string" then
+			chatMessage = string.sub(message, 1, kMaxChatLength)
+			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		elseif type(message) == "table" then
+			for _, m in pairs(message) do
+				chatMessage = string.sub(m, 1, kMaxChatLength)
+				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			end
+		end
 
 	end
 
 	local function DisplayMessageAll(message)
 
-		chatMessage = string.sub(message, 1, kMaxChatLength)
-		Server.SendNetworkMessage("Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		if type(message) == "string" then
+			chatMessage = string.sub(message, 1, kMaxChatLength)
+			Server.SendNetworkMessage("Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		elseif type(message) == "table" then
+			for _, m in pairs(message) do
+				chatMessage = string.sub(m, 1, kMaxChatLength)
+				Server.SendNetworkMessage("Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			end
+		end
 
 	end
-	
+
 	local function DisplayMessageConsole(player, message)
 		if type(message) == "string" then
 			ServerAdminPrint(Server.GetOwner(player), CHAT_TAG .. " " .. message)
@@ -181,37 +195,50 @@ if kDAKConfig and kDAKConfig.Captains then
 	end
 
 	DAKCreateServerAdminCommand("Console_captains", StartCaptains, "configures the server for Captains Games", false)
-	DAKCreateServerAdminCommand("Console_/captain", function(client) if client ~= nil then makeCaptain(client:GetUserId()) end end, "Make yourself a team captain", true)
-	DAKCreateServerAdminCommand("Console_/notes", function(client) if client ~= nil then showTeamNotesConsole(client:GetUserId()) end end, "Lists all notes assigned to your team", true)
-	DAKCreateServerAdminCommand("Console_/note", function(client, playerName, ...)  if client ~= nil then assignNote(client:GetUserId(), playerName, StringConcatArgs(...)) end end, "<playerName> <note>, Set a note for yourself.  If you are a captain, you can set a note for a teammate", true)
+	DAKCreateServerAdminCommand("Console_/captain", function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)
+	DAKCreateServerAdminCommand("Console_/notes", function(client) if client ~= nil then showTeamNotes(client:GetControllingPlayer()) end end, "Lists all notes assigned to your team", true)
+	DAKCreateServerAdminCommand("Console_/note", function(client, playerName, ...)  if client ~= nil then assignNote(client, playerName, StringConcatArgs(...)) end end, "<playerName> <note>, Set a note for yourself.  If you are a captain, you can set a note for a teammate", true)
 	
-/*
-	local function OnCaptainsChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
-		if client and steamId and steamId ~= 0 and isCaptainsMode() then
-			if isCommand(message, NOTECOMMAND) then
-				local args = getArgs(message, NOTECOMMAND)
-				if args ~= nil then
-					local firstspace = string.find(args, " ")
-					if firstspace ~= nil then
-						local playername = string.sub(args, 1, firstspace - 1)
-						local note = string.sub(args, firstspace + 1)
-						assignNote(steamId, playername, note)
+	local function OnCaptainsChatMessage(client, message)
+		if isCaptainsMode() then
+			if client then
+				local steamId = client:GetUserId()
+				if steamId and steamId ~= 0 and isCaptainsMode() then
+					if isCommand(message, NOTECOMMAND) then
+						local args = getArgs(message, NOTECOMMAND)
+						if args ~= nil then
+							local firstspace = string.find(args, " ")
+							if firstspace ~= nil then
+								local playername = string.sub(args, 1, firstspace - 1)
+								local note = string.sub(args, firstspace + 1)
+								assignNote(client, playername, note, true)
+							end
+						end
+						return true
+					elseif isCommand(message, CAPTAINCOMMAND) then
+						local args = getArgs(message, CAPTAINCOMMAND)
+						makeCaptain(client, args, true)
+						return true
+					elseif isCommand(message, NOTESCOMMAND) then
+						showTeamNotes(client:GetControllingPlayer(), true)
+						return true
 					end
 				end
-			elseif isCommand(message, CAPTAINCOMMAND) then
-				makeCaptain(steamId)
-			elseif isCommand(message, NOTESCOMMAND) then
-				showTeamNotesConsole(steamId)
 			end
 		end
+		return false
 	end
 
-	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnCaptainsChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
-*/
-
-	function assignNote(steamId, targetName, note)
+	function assignNote(client, targetName, note, isChat)
+		local DisplayMessageSelf
+		if isChat then
+			DisplayMessageSelf = DisplayMessage
+		else
+			DisplayMessageSelf = DisplayMessageConsole
+		end
 		if isCaptainsMode() then
-			local sourcePlayer = GetPlayerMatchingSteamId(steamId)
+			local sourcePlayer = client:GetControllingPlayer()
+			local steamId = client:GetUserId()
 			local team = sourcePlayer:GetTeamNumber()
 			if sourcePlayer and team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
 				if targetName ~= nil then
@@ -225,57 +252,88 @@ if kDAKConfig and kDAKConfig.Captains then
 								else
 									notes[targetSteamId] = nil
 								end
-								//showNotes()
 								if note == nil then
 									note = "<Blank>"
 								end
 								DisplayMessage(targetPlayer, string.format("A note has been set for you: \"%s\"", note))
-								DisplayMessageConsole(sourcePlayer, string.format("You set the note for %s to \"%s\"", targetPlayer:GetName(), note))
+								DisplayMessageSelf(sourcePlayer, string.format("You set the note for %s to \"%s\"", targetPlayer:GetName(), note))
+								showNotesToTeam(sourcePlayer:GetTeamNumber())
 							else
-								DisplayMessageConsole(sourcePlayer, "You may only set notes for players on your own team.")
+								DisplayMessageSelf(sourcePlayer, "You may only set notes for players on your own team.")
 							end
 						else
-							DisplayMessageConsole(sourcePlayer, "Only captains may set others' notes.  You may only set your own.")
+							DisplayMessageSelf(sourcePlayer, "Only captains may set others' notes.  You may only set your own.")
 						end
 					else
-						DisplayMessageConsole(sourcePlayer, string.format("'%s' does not uniquely match a teammate.  Try again.", targetName))
+						DisplayMessageSelf(sourcePlayer, string.format("'%s' does not uniquely match a teammate.  Try again.", targetName))
 					end
 				else
-					DisplayMessageConsole(sourcePlayer, "You must enter a player name")
+					DisplayMessageSelf(sourcePlayer, "You must enter a player name")
 				end
 			else
-				DisplayMessageConsole(sourcePlayer, "You must be on a team to use this command.")
+				DisplayMessageSelf(sourcePlayer, "You must be on a team to use this command.")
 			end
 		else
-			DisplayMessageConsole(sourcePlayer, "Captains mode is not enabled.")
+			DisplayMessageSelf(sourcePlayer, "Captains mode is not enabled.")
 		end
 	end
 
-	function makeCaptain(id)
-		local player = GetPlayerMatchingSteamId(id)
+	function makeCaptain(client, playerName, isChat)
+		local DisplayMessageSelf
+		if isChat then
+			DisplayMessageSelf = DisplayMessage
+		else
+			DisplayMessageSelf = DisplayMessageConsole
+		end
+		local sourcePlayer = client:GetControllingPlayer()
 		if isCaptainsMode() then
-			if player:GetTeamNumber() == kTeamReadyRoom then
-				if isCaptain(id) then
-					DisplayMessageConsole(player, "You are already a captain.")
+			if playerName then
+				local targetPlayer = GetPlayerMatching(playerName)
+				if targetPlayer ~= nil then
+					local targetClient = Server.GetOwner(targetPlayer)
+					if targetClient ~= nil then
+						local targetSteamId = targetClient:GetUserId()
+						local targetName = string.sub(targetPlayer:GetName(), 1, PLAYNAME_MAX_LENGTH)
+						if isCaptain(targetSteamId) then
+							if captain1id  == targetSteamId then
+								captain1id = -1
+							elseif captain2id  == targetSteamId then
+								captain2id = -1
+							end
+							DisplayMessageSelf(sourcePlayer, string.format("You have unset %s as a captain.", targetName))
+							DisplayMessageAll(string.format("%s is no longer a captain.",  targetName))
+						else
+							if captain1id  == -1 then
+								captain1id = targetSteamId
+							elseif captain2id  == -1 then
+								captain2id = targetSteamId
+							end
+							if isCaptain(targetSteamId) then
+								DisplayMessageSelf(sourcePlayer, string.format("You have set %s as a captain.", targetName))
+								DisplayMessageAll(string.format("%s is a captain.", targetName))
+							else
+								DisplayMessageSelf(sourcePlayer, "Two captains already exist.  You must first unset a captain.")
+							end
+						end
+					end
 				else
-					if captain1id  == -1 then
-						captain1id = id
-					elseif captain2id  == -1 then
-						captain2id = id
-					end
-					if isCaptain(id) then
-						local name = string.sub(player:GetName(), 1, PLAYNAME_MAX_LENGTH)
-						DisplayMessageAll(string.format("%s is a captain.", name))
-						DisplayMessageConsole(player, "You are now a captain.")
-					else
-						DisplayMessageConsole(player, "Two captains already exist.  You are not a captain.")
-					end
+					DisplayMessageSelf(sourcePlayer, string.format("'%s' does not uniquely match a player.", playerName))
 				end
 			else
-				DisplayMessageConsole(player, "This command must be used from the readyroom")
+				DisplayMessageSelf(sourcePlayer, "Captains are:")
+				local player1 = GetPlayerMatchingSteamId(captain1id)
+				local player2 = GetPlayerMatchingSteamId(captain2id)
+				if player1 then
+					local name = string.sub(player1:GetName(), 1, PLAYNAME_MAX_LENGTH)
+					DisplayMessageSelf(sourcePlayer, name)
+				end
+				if player2 then
+					local name = string.sub(player2:GetName(), 1, PLAYNAME_MAX_LENGTH)
+					DisplayMessageSelf(sourcePlayer, name)
+				end
 			end
 		else
-			DisplayMessageConsole(player, "Captains mode is not enabled.")
+			DisplayMessageSelf(sourcePlayer, "Captains mode is not enabled.")
 		end
 	end
 
@@ -301,14 +359,13 @@ if kDAKConfig and kDAKConfig.Captains then
 	
 	function do_roundbegin()
 		if isCaptainsMode() then
-			//allowNotesDisplay = false
-			//hideNotes()
+			allowNotesDisplay = false
 		end
 	end
 
 	function do_roundend()
 		if isCaptainsMode() then
-			//allowNotesDisplay = true
+			allowNotesDisplay = true
 		end
 	end
 
@@ -395,39 +452,60 @@ if kDAKConfig and kDAKConfig.Captains then
 		return notesTable
 	end
 
-	function showTeamNotesConsole(id)
-		local player = GetPlayerMatchingSteamId(id)
+	function showTeamNotes(player, isChat)
+		local DisplayMessageSelf
+		if isChat then
+			DisplayMessageSelf = DisplayMessage
+		else
+			DisplayMessageSelf = DisplayMessageConsole
+		end
 		local team = player:GetTeamNumber()
 		if isCaptainsMode() then
 			if team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
 				local notes = buildTeamNotes(team)
 				if notes ~= nil and #notes > 0 then
-					DisplayMessageConsole(player, "")
-					DisplayMessageConsole(player, notes)
+					if not isChat then
+						DisplayMessageConsole(player, "")
+					end
+					DisplayMessageSelf(player, notes)
 				else
-					DisplayMessageConsole(player, "There are no notes set for your team.")
+					DisplayMessageSelf(player, "There are no notes set for your team.")
 				end
 			else
-				DisplayMessageConsole(player, "You must be on a team to view the notes")
+				DisplayMessageSelf(player, "You must be on a team to view the notes")
 			end
 		end
 	end
 
-	//function showNotes()
-	//	if allowNotesDisplay == true and isCaptainsMode() then
-	//		for _, player in pairs(GetPlayerList()) do
-	//			if player:GetTeamNumber() ~= kTeamReadyRoom then
-	//				showTeamNotes(player)
-	//			end
-	//		end
-	//	end
-	//end
+	function showNotesToTeam(team)
+		if allowNotesDisplay == true and isCaptainsMode() then
+			for _, player in pairs(GetPlayerList()) do
+				if player:GetTeamNumber() == team then
+					showTeamNotes(player, true)
+				end
+			end
+		end
+	end
 
-	//function hideNotes()
-	//	for _, player in pairs(GetPlayerList()) do
-	//		DisplayMessage(player, "Say /notes to view the captain's notes.")
-	//	end
-	//end
+	local originalOnChatReceived
+	
+	function OnChatReceived(client, message)
+		Print("Chat received: captains")
+		if not OnCaptainsChatMessage(client, message.message) then
+			originalOnChatReceived(client, message)
+		end
+	end
+
+	local originalHookNetworkMessage = Server.HookNetworkMessage
+	
+	Server.HookNetworkMessage = function(networkMessage, callback)
+		if networkMessage == "ChatClient" then
+			originalOnChatReceived = callback
+			callback = OnChatReceived
+		end
+		originalHookNetworkMessage(networkMessage, callback)
+
+	end
 
 end
 
