@@ -5,8 +5,8 @@ local function SetupDefaultConfig(Save)
 	if kDAKConfig.Chat == nil then
 		kDAKConfig.Chat = { }
 	end
-	kDAKConfig.Chat.Types = {}
-	kDAKConfig.Chat.Types["sv_chat"] = "<Message>  Sends a message to every admin on the server."
+	kDAKConfig.Chat.Channels = {}
+	kDAKConfig.Chat.Channels["sv_chat"] = "<Message>  Sends a message to every admin on the server."
 	if Save then
 		SaveDAKConfig()
 	end

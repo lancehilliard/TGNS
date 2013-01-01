@@ -57,7 +57,7 @@ if kDAKConfig and kDAKConfig.Chat then
 		end
 	end
 
-	for command, help in pairs(kDAKConfig.Chat.Types) do
+	for command, help in pairs(kDAKConfig.Chat.Channels) do
 		DAKCreateServerAdminCommand("Console_" .. command, function(client, ...) Chat(client, command, ...) end, help)
 	end
 
