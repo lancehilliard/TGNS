@@ -21,7 +21,7 @@ if kDAKConfig and kDAKConfig.Chat then
 		else
 			srcName = kDAKConfig.DAKLoader.MessageSender
 		end
-		
+
 		if showCommand then
 			chatName =  command .. " - " .. srcName
 		else

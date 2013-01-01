@@ -21,7 +21,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		else
 			srcName = kDAKConfig.DAKLoader.MessageSender
 		end
-		
+
 		if showCommand then
 			chatName =  command .. " - " .. srcName
 		else
@@ -45,12 +45,15 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 	local function OnMutePlayer(client, message)
 		originalOnMutePlayer(client, message)
 		clientIndex, isMuted = ParseMutePlayerMessage(message)
-		if isMuted then
-			for _, player in pairs(GetPlayerList()) do
-				if player:GetClientIndex() == clientIndex then
-					PMAllPlayersWithAccess(nil, client:GetControllingPlayer():GetName() .. " has muted player " .. player:GetName(), "sv_canseemuted", false)
-					break
+		for _, player in pairs(GetPlayerList()) do
+			if player:GetClientIndex() == clientIndex then
+				if isMuted then
+					muteText = "muted"
+				else
+					muteText = "unmuted"
 				end
+				PMAllPlayersWithAccess(nil, client:GetControllingPlayer():GetName() .. " has " .. muteText .. " player " .. player:GetName(), "sv_canseemuted", false)
+				break
 			end
 		end
 	end
@@ -66,6 +69,25 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		originalHookNetworkMessage(networkMessage, callback)
 
 	end
+	
+	local function ListMutes(client)
+		// build look up table for player names by clientindex
+		playerNames = {}
+		
+		ServerAdminPrint(client, "Player Mutes:")
+		for _, player in pairs(GetPlayerList()) do
+			playerNames[player:GetClientIndex()] = player:GetName()
+		end
+		for _, player in pairs(GetPlayerList()) do
+			for clientIndex, name in pairs(playerNames) do
+				if player:GetClientMuted(clientIndex) then
+					ServerAdminPrint(client, player:GetName() .. " : " .. name)
+				end
+			end
+		end
+	end
+	
+	DAKCreateServerAdminCommand("Console_sv_mutes", ListMutes, help)
 
 /* 
 	local originalHookNetworkMessage
