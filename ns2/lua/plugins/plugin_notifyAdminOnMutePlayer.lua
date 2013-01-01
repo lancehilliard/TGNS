@@ -1,8 +1,7 @@
 // NotifyAdminOnMutePlayer
 
 if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader then
-	Print("NotifyAdminOnMutePlayer loaded")
-	
+
 	local function GetPlayerList()
 
 		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
@@ -20,7 +19,10 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		end
 	end
 	
+	local originalOnMutePlayer
+	
 	local function OnMutePlayer(client, message)
+		originalOnMutePlayer(client, message)
 		clientIndex, isMuted = ParseMutePlayerMessage(message)
 		if isMuted then
 			for _, player in pairs(GetPlayerList()) do
@@ -32,11 +34,33 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		end
 	end
 
-	//TODO: Found out alternative to Server.HookNetworkMessage("MutePlayer", OnMutePlayer)
-	// This does not work.  Only 1 function can be hooked to a network message at a time
-	//Server.HookNetworkMessage("MutePlayer", nil)
-	Server.HookNetworkMessage("MutePlayer", OnMutePlayer)
+	// trying this without using Class_ReplaceMethod
+	local originalHookNetworkMessage = Server.HookNetworkMessage
+	
+	Server.HookNetworkMessage = function(networkMessage, callback)
+		if networkMessage == "MutePlayer" then
+			originalOnMutePlayer = callback
+			callback = OnMutePlayer
+		end
+		originalHookNetworkMessage(networkMessage, callback)
 
+	end
+
+/* 
+	local originalHookNetworkMessage
+
+	originalHookNetworkMessage = Class_ReplaceMethod("Server", "HookNetworkMessage", 
+		function(networkMessage, callback)
+
+			if networkMessage == "MutePlayer" then
+				originalOnMutePlayer = callback
+				callback = OnMutePlayer
+			end
+			originalHookNetworkMessage(networkMessage, callback)
+
+		end
+	)
+*/
 end
 
 Shared.Message("NotifyAdminOnMutePlayer Loading Complete")
