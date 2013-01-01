@@ -14,8 +14,6 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 	local function ProhibitedNamesOnClientDelayedConnect(client)
 		local player = client:GetControllingPlayer()
 		
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, numPlayers), true)
-		
 		if PlayerNameIsProhibited(player:GetName()) then
 			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.ProhibitedNames.kProhibitedNamesWarnMessage), true)
 		end
