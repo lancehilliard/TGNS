@@ -5,14 +5,14 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	local kWinOrLoseVoteArray = { }
 	local kWinOrLoseTeamCount = 2
 	local kTimeAtWhichWinOrLoseVoteSucceeded = 0
-	local kTeamWhichWillWinIfWinLoseCountdownExpires = 0
+	local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 
 	local originalGetCanAttack
 	
 	originalGetCanAttack = Class_ReplaceMethod("Player", "GetCanAttack",
 		function(self)
-			local winOrLoseChallengeIsInProgress = kTimeAtWhichWinOrLoseVoteSucceeded > 0
-			local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgress
+			local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
+			local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam
 			
 			/*
 			if winOrLoseChallengeIsInProgress then
@@ -48,7 +48,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	local function UpdateWinOrLoseVotes()
 		local gamerules = GetGamerules()
 		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
-			if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > 10 then
+			if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration then
 				chatMessage = string.sub(string.format("Team %s wins by WinOrLose.", ToString(kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber())), 1, kMaxChatLength)
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 				GetGamerules():EndGame(kTeamWhichWillWinIfWinLoseCountdownExpires)
@@ -85,7 +85,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 					end
 					if totalvotes >= math.ceil((#playerRecords * (kDAKConfig.WinOrLose.kWinOrLoseMinimumPercentage / 100))) then
 				
-						chatMessage = string.sub(string.format("Team %s calls WinOrLose! End it, or they win in 10 seconds!", ToString(i)), 1, kMaxChatLength)
+						chatMessage = string.sub(string.format("Team %s calls WinOrLose! End it, or they win in %s seconds!", ToString(i), kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration), 1, kMaxChatLength)
 						Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 						for i = 1, #playerRecords do
 							if playerRecords[i] ~= nil then
