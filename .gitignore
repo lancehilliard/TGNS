@@ -31,6 +31,9 @@
 !ns2/lua/plugins/config_captains.lua
 !ns2/lua/plugins/plugin_captains.lua
 
+!ns2/lua/plugins/config_winorlose.lua
+!ns2/lua/plugins/plugin_winorlose.lua
+
 !ns2/lua/plugins/config_notifyAdminOnMutePlayer.lua
 !ns2/lua/plugins/plugin_notifyAdminOnMutePlayer.lua
 
