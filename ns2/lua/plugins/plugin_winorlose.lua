@@ -49,8 +49,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		local gamerules = GetGamerules()
 		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 			if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration then
-				chatMessage = string.sub(string.format("Team %s wins by WinOrLose.", ToString(kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber())), 1, kMaxChatLength)
-				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, "WinOrLose! On to the next game!"), true)
 				GetGamerules():EndGame(kTeamWhichWillWinIfWinLoseCountdownExpires)
 				kTimeAtWhichWinOrLoseVoteSucceeded = 0
 			end
@@ -84,8 +83,8 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 					
 					end
 					if totalvotes >= math.ceil((#playerRecords * (kDAKConfig.WinOrLose.kWinOrLoseMinimumPercentage / 100))) then
-				
-						chatMessage = string.sub(string.format("Team %s calls WinOrLose! End it, or they win in %s seconds!", ToString(i), kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration), 1, kMaxChatLength)
+						local teamDescription = i == kMarineTeamType and "Marine" or "Alien"
+						chatMessage = string.sub(string.format("WinOrLose! %s player units can't attack! End it in %s seconds, or THEY WIN!", teamDescription, kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration), 1, kMaxChatLength)
 						Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 						for i = 1, #playerRecords do
 							if playerRecords[i] ~= nil then
@@ -98,7 +97,6 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
-
 					else
 						local chatmessage
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
@@ -162,7 +160,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 								end
 							end
 							if alreadyvoted then
-								chatMessage = string.sub(string.format("You already voted for to call WinOrLose."), 1, kMaxChatLength)
+								chatMessage = string.sub(string.format("You already voted to call WinOrLose."), 1, kMaxChatLength)
 								Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							else
 								chatMessage = string.sub(string.format("You have voted to call WinOrLose."), 1, kMaxChatLength)
