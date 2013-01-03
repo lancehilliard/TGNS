@@ -186,6 +186,19 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 	local function OnCommandSVRandomall(client)
 		PrintToAllAdmins("sv_randomall", client)
 		local playerList = ShufflePlayerList()
+		// random the rookies first... (the duplication in these two randoms needs to be cleaned up)
+		for i = 1, (#playerList) do
+			if playerList[i]:GetTeamNumber() == 0 and playerList[i]:GetIsRookie() then
+				local teamnum = math.fmod(i,2) + 1
+				//Trying just making team decision based on position in array.. two randoms seems to somehow result in similar teams..
+				local gamerules = GetGamerules()
+				if gamerules then
+					gamerules:JoinTeam(playerList[i], teamnum)
+				end
+			end
+		end
+
+		// random everyone else second... (the duplication in these two randoms needs to be cleaned up)
 		for i = 1, (#playerList) do
 			if playerList[i]:GetTeamNumber() == 0 then
 				local teamnum = math.fmod(i,2) + 1
