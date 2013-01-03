@@ -31,6 +31,9 @@
 !ns2/lua/plugins/config_captains.lua
 !ns2/lua/plugins/plugin_captains.lua
 
+!ns2/lua/plugins/config_rookiethrottle.lua
+!ns2/lua/plugins/plugin_rookiethrottle.lua
+
 !ns2/lua/plugins/config_winorlose.lua
 !ns2/lua/plugins/plugin_winorlose.lua
 
