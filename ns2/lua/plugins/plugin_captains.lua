@@ -4,6 +4,7 @@ if kDAKConfig and kDAKConfig.Captains then
 	local NOTE_MAX_LENGTH = 20
 	local PLAYNAME_MAX_LENGTH = 39
 	
+	local CAPTAINSCOMMAND = "captains"
 	local NOTECOMMAND = "/note"
 	local NOTESCOMMAND = "/notes"
 	local CAPTAINCOMMAND = "/captain"
@@ -86,7 +87,7 @@ if kDAKConfig and kDAKConfig.Captains then
 					nameMatchCount = -1
 				end
 			else
-				local index = string.find(string.lower(playerName), string.lower(name)) // partial match
+				local index = string.find(string.lower(playerName), string.lower(name)) // case insensitive partial match
 				if index ~= nil then
 					if team == nil or team == -1 or team == player:GetTeamNumber() then
 						match = player
@@ -99,7 +100,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		AllPlayers(Matches)()
 		
 		if nameMatchCount > 1 then
-			match = nil
+			match = nil // if partial match is not unique, clear the match
 		end
 		
 		return match
@@ -194,11 +195,11 @@ if kDAKConfig and kDAKConfig.Captains then
 		end
 	end
 
-	DAKCreateServerAdminCommand("Console_captains", StartCaptains, "configures the server for Captains Games", false)
-	DAKCreateServerAdminCommand("Console_/captain", function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)
-	DAKCreateServerAdminCommand("Console_/notes", function(client) if client ~= nil then showTeamNotes(client:GetControllingPlayer()) end end, "Lists all notes assigned to your team", true)
-	DAKCreateServerAdminCommand("Console_/note", function(client, playerName, ...)  if client ~= nil then assignNote(client, playerName, StringConcatArgs(...)) end end, "<playerName> <note>, Set a note for yourself.  If you are a captain, you can set a note for a teammate", true)
-	
+	DAKCreateServerAdminCommand("Console_" .. CAPTAINSCOMMAND, StartCaptains, "configures the server for Captains Games", false)
+	DAKCreateServerAdminCommand("Console_" .. CAPTAINCOMMAND, function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)
+	DAKCreateServerAdminCommand("Console_" .. NOTESCOMMAND, function(client) if client ~= nil then showTeamNotes(client:GetControllingPlayer()) end end, "Lists all notes assigned to your team", true)
+	DAKCreateServerAdminCommand("Console_" .. NOTECOMMAND, function(client, playerName, ...)  if client ~= nil then assignNote(client, playerName, StringConcatArgs(...)) end end, "<playerName> <note>, Set a note for yourself.  If you are a captain, you can set a note for a teammate", true)
+
 	local function OnCaptainsChatMessage(client, message)
 		if isCaptainsMode() then
 			if client then
@@ -217,7 +218,9 @@ if kDAKConfig and kDAKConfig.Captains then
 						return true
 					elseif isCommand(message, CAPTAINCOMMAND) then
 						local args = getArgs(message, CAPTAINCOMMAND)
-						makeCaptain(client, args, true)
+						if DAKGetClientCanRunCommand(client, CAPTAINCOMMAND) then
+							makeCaptain(client, args, true)
+						end
 						return true
 					elseif isCommand(message, NOTESCOMMAND) then
 						showTeamNotes(client:GetControllingPlayer(), true)

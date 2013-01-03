@@ -348,7 +348,9 @@ if kDAKConfig and kDAKConfig.TournamentMode then
 		local gamerules = GetGamerules()
 		if gamerules ~= nil and client ~= nil then
 			if GetTournamentMode() and (gamerules:GetGameState() == kGameState.NotStarted or gamerules:GetGameState() == kGameState.PreGame) and not kDAKConfig.TournamentMode.kTournamentModePubMode then
-				ClientReady(client)
+				if DAKGetClientCanRunCommand(client, "ready") then
+					ClientReady(client)
+				end
 			end
 		end
 	end
