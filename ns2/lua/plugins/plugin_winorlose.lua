@@ -6,6 +6,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	local kWinOrLoseTeamCount = 2
 	local kTimeAtWhichWinOrLoseVoteSucceeded = 0
 	local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
+	local kCountdownTimeRemaining = 0
 
 	local originalGetCanAttack
 	
@@ -52,6 +53,13 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, "WinOrLose! On to the next game!"), true)
 				GetGamerules():EndGame(kTeamWhichWillWinIfWinLoseCountdownExpires)
 				kTimeAtWhichWinOrLoseVoteSucceeded = 0
+			else
+				if (math.fmod(kCountdownTimeRemaining, kDAKConfig.WinOrLose.kWinOrLoseWarningInterval) == 0 or kCountdownTimeRemaining <= 5) then
+					local teamDescription = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and "Marine" or "Alien"
+					chatMessage = string.sub(string.format("WinOrLose! The %s team is %s seconds away from winning by default!", teamDescription, kCountdownTimeRemaining), 1, kMaxChatLength)
+					Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				end
+				kCountdownTimeRemaining = kCountdownTimeRemaining - 1
 			end
 		else
 			for i = 1, kWinOrLoseTeamCount do
@@ -90,6 +98,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 							if playerRecords[i] ~= nil then
 								kTimeAtWhichWinOrLoseVoteSucceeded = Shared.GetTime()
 								kTeamWhichWillWinIfWinLoseCountdownExpires = playerRecords[i]:GetTeam()
+								kCountdownTimeRemaining = kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration
 								break
 							end
 						end
@@ -240,17 +249,3 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 end
 
 Shared.Message("WinOrLose Loading Complete")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
