@@ -1,26 +1,25 @@
 TGNS
 ====
 
-Welcome to [TacticalGamer.com][tg]'s open-source mods repository.
-See the [TGNS open-source mods repository][forum] forum thread for more info.
-Mods in this repository are based on xToken's [DAK Admin Kit][dak].
-There are a lot of customizations on [the server][tgns], but some of the highlights include:
+Welcome to the [TGNS open-source mods repository][repoannouncethread]. TGNS is [TacticalGamer.com][tg]'s well-known Natural Selection community. This repository houses most of the mods they use on their NS2 server, many of which are built atop xToken's [DAK Admin Kit][dak].
+
+Some of the more unique customizations on [the TGNS game server][tgns] include:
   
-__Captains__: Start a captains game, like a pickup game/gather/dodgeball
+__Captains__: Start a Captains Game, like a pickup game/gather/dodgeball, wherein teams are picked one at a time by appointed team captains
 
 __WinOrLose__: The losing team can put down their weapons to force a must-end-the-game timer on the winning team
 
-__TagLines__: Players can set text announcements when they join
+__TagLines__: Players can set text announcements when they join the server
 
-__RookieThrottle__: Limit the number of rookies allowed to join when the server is close to full
+__RookieThrottle__: Keeps the number of concurrent rookies low, so regulars can most effectively help them learn the game
 
-There are also other gems here, like admin chat, spreading rookies on the randomall command for more even randoms, admin player mute notifications and more. TGNS welcomes open discussion about any of the plugins and their configuration on [the mod forum][forum].
+Other offerings include: Admin Chat, distributing rookies to both teams during team random operations, admin notifications of player mutes, and more. Tactical Gamer's [Natural Selection - Tactics and Mod Discussions][modforum] forum welcomes "discussion about Natural Selection tactics, maps, and mods," and community members may request server mod changes there.
 
-If you want to see what it's like playing on, [connect to TGNS][connect] right away!
+[Connect to TGNS via Steam][connect] right away to find out what you're missing!
 
-[forum]: http://www.tacticalgamer.com/natural-selection-tactics-mod-discussions/
-[tgns]: tgns.tacticalgamer.com:27015
+[modforum]: http://www.tacticalgamer.com/natural-selection-tactics-mod-discussions/
+[tgns]: http://www.tacticalgamer.com/natural-selection-general-discussion/189377-tacticalgamer-com-natural-selection-2-server-online.html
 [connect]: steam://run/4920//connect%2C+tgns.tacticalgamer.com:27015
 [tg]: http://tacticalgamer.com
-[forum]: http://www.tacticalgamer.com/natural-selection-tactics-mod-discussions/190657-tgns-open-source-mods-repository.html
+[repoannouncethread]: http://www.tacticalgamer.com/natural-selection-tactics-mod-discussions/190657-tgns-open-source-mods-repository.html
 [dak]: https://github.com/xToken/DAK
