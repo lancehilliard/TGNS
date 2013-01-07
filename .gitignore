@@ -46,6 +46,8 @@
 !ns2/lua/plugins/config_publiccommands.lua
 !ns2/lua/plugins/plugin_publiccommands.lua
 
+!ns2/lua/TGNSCommon.lua
+
 
 !ns2/lua/plugins/config_autoconcede.lua
 !ns2/lua/plugins/config_automapcycle.lua

@@ -1,4 +1,8 @@
+// Captains
+
 if kDAKConfig and kDAKConfig.Captains then
+	Script.Load("lua/TGNSCommon.lua")
+
 	// Constants
 	local CHAT_TAG = "[CAPTAINS]"
 	local NOTE_MAX_LENGTH = 20
@@ -18,14 +22,6 @@ if kDAKConfig and kDAKConfig.Captains then
 /******************************************
 	THESE SHOULD BE PUT IN A COMMON FILE
 *******************************************/
-
-	local function GetPlayerList()
-
-		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
-		table.sort(playerList, function(p1, p2) return p1:GetName() < p2:GetName() end)
-		return playerList
-		
-	end
 
 	/**
 	 * Iterates over all players sorted in alphabetically calling the passed in function.
@@ -488,25 +484,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		return false
 	end
 
-	local originalOnChatReceived
-	
-	local function OnChatReceived(client, message)
-		Print("Chat received: captains")
-		if not OnCaptainsChatMessage(client, message.message) then
-			originalOnChatReceived(client, message)
-		end
-	end
-
-	local originalHookNetworkMessage = Server.HookNetworkMessage
-	
-	Server.HookNetworkMessage = function(networkMessage, callback)
-		if networkMessage == "ChatClient" then
-			originalOnChatReceived = callback
-			callback = OnChatReceived
-		end
-		originalHookNetworkMessage(networkMessage, callback)
-
-	end
+	TGNSRegisterChatHook(OnCaptainsChatMessage)
 
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINSCOMMAND, StartCaptains, "configures the server for Captains Games", false)
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINCOMMAND, function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)

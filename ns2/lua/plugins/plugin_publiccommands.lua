@@ -1,17 +1,11 @@
 // PublicCommands
 
 if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Commands then
+	Script.Load("lua/TGNSCommon.lua")
+	
 	// constants used to look up command string in kDAKConfig.PublicCommands.Commands table
 	local TIMELEFTCOMMAND = "timeleft"
 	local NEXTMAPCOMMAND = "nextmap"
-
-	local function GetPlayerList()
-
-		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
-		table.sort(playerList, function(p1, p2) return p1:GetName() < p2:GetName() end)
-		return playerList
-		
-	end
 
 	//////////////
 	// Timeleft //
@@ -93,7 +87,25 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 	end
 	
 	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
-
+	
+	///////////////
+	// PM Admins //
+	///////////////
+	
+	if kDAKConfig.PublicCommands.PMAdmins then
+		local function CheckForAdminChat(client, message)
+			if message and string.sub(message, 1, 1) == "@" then
+				local chatMessage = string.sub(message, 2, -1)
+				if chatMessage then
+					PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true)
+				end
+				return true
+			end
+			return false
+		end
+		
+		TGNSRegisterChatHook(CheckForAdminChat)
+	end
 end
 
 Shared.Message("PublicCommands Loading Complete")
