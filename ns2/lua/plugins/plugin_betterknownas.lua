@@ -116,24 +116,46 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		end
 	end
 	DAKCreateServerAdminCommand("Console_sv_bka", svBka, "<target> <bka> Adds a BKA name to the target.")
-	
-	local function BkaOnTeamJoin(player, newTeamNumber, force)
-		local result = true
-		local client = Server.GetOwner(player)
-		local steamId = client:GetUserId()
-		local bkaData = LoadBkaData(steamId)
-		if bkaData ~= nil and bkaData.names ~= nil and #bkaData.names > 0 then
-			local bkaName = "[" .. bkaData.names[1] .. "]"
-			local playerNameStartsWithBkaName = string.sub(player.name,1,string.len(bkaName))==bkaName
-			if not playerNameStartsWithBkaName then
-				local chatMessage = string.format("Your name must start with '%s' before you play.", bkaName)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-				result = false
+
+	local function EvaluatePlayerName(player, name)
+		name=TrimName(name)
+	    local client = Server.GetOwner(player)
+		if client ~= nil then
+			local steamId = client:GetUserId()
+			local bkaData = LoadBkaData(steamId)
+			if bkaData ~= nil and bkaData.names ~= nil and #bkaData.names > 0 then
+				local bkaName = "[" .. bkaData.names[1] .. "]"
+				local playerNameStartsWithBkaName = string.sub(name,1,string.len(bkaName))==bkaName
+				if not playerNameStartsWithBkaName then
+					local chatMessage = string.format("Your name must start with '%s' before you play.", bkaName)
+					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+					PMAllPlayersWithAccess(nil, name .. " needs to add '" .. bkaName .. "' BKA value to playername.", "sv_bka", false)
+					return false
+				end
 			end
 		end
+		return true
+	end
+
+	local function BkaOnTeamJoin(player, newTeamNumber, force)
+		local result = newTeamNumber == kTeamReadyRoom or EvaluatePlayerName(player, player:GetName())
 		return result
 	end
 	table.insert(kDAKOnTeamJoin, function(player, newTeamNumber, force) return BkaOnTeamJoin(player, newTeamNumber, force) end)
+
+	function BkaOnCommandSetName(client, name)
+		local player = client:GetControllingPlayer()
+		local playerTeamNumber = player:GetTeamNumber()
+		if playerTeamNumber == kMarineTeamType or playerTeamNumber == kAlienTeamType then
+			local gamerules = GetGamerules()
+			if gamerules then
+				if EvaluatePlayerName(player, name) == false then
+					gamerules:JoinTeam(player, kTeamReadyRoom)
+				end
+			end
+		end
+	end
+	Event.Hook("Console_name", BkaOnCommandSetName)
 
 end
 
