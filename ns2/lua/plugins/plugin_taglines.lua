@@ -39,26 +39,26 @@ if kDAKConfig and kDAKConfig.Taglines then
 	end
 
 	local function ShowCurrentTagline(client)
-		ServerAdminPrint(client, "[TAGLINE} Your current tagline:")
+		ServerAdminPrint(client, "[TAGLINE] Your current tagline:")
 		local steamId = client:GetUserId()
 		local tagline = LoadTagline(steamId)
 		if tagline == nil or tagline.message == "" then
-			ServerAdminPrint(client, "[TAGLINE}     You don't currently have a tagline saved.")
+			ServerAdminPrint(client, "[TAGLINE]     You don't currently have a tagline saved.")
 		else
-			ServerAdminPrint(client, "[TAGLINE}     " .. tagline.message)
+			ServerAdminPrint(client, "[TAGLINE]     " .. tagline.message)
 		end
 	end
     
 	local function ShowUsage(client) 
-		ServerAdminPrint(client, "[TAGLINE}")
-		ServerAdminPrint(client, "[TAGLINE} Usage:")
-		ServerAdminPrint(client, "[TAGLINE}     sv_tagline <whatever you want all players to see when you join as a Supporting Member>")
-		ServerAdminPrint(client, "[TAGLINE} Notes:")
-		ServerAdminPrint(client, "[TAGLINE} * Any length may be saved, but displayed character count is dictated by NS2 and may change in the future.")
-		ServerAdminPrint(client, "[TAGLINE} * Taglines do not display to players in the first two minutes after a map loads")
-		ServerAdminPrint(client, "[TAGLINE} * To remove your tagline at any time: sv_tagline remove")
+		ServerAdminPrint(client, "[TAGLINE]")
+		ServerAdminPrint(client, "[TAGLINE] Usage:")
+		ServerAdminPrint(client, "[TAGLINE]     sv_tagline <whatever you want all players to see when you join as a Supporting Member>")
+		ServerAdminPrint(client, "[TAGLINE] Notes:")
+		ServerAdminPrint(client, "[TAGLINE] * Any length may be saved, but displayed character count is dictated by NS2 and may change in the future.")
+		ServerAdminPrint(client, "[TAGLINE] * Taglines do not display to players in the first two minutes after a map loads")
+		ServerAdminPrint(client, "[TAGLINE] * To remove your tagline at any time: sv_tagline remove")
 		ShowCurrentTagline(client)
-		ServerAdminPrint(client, "[TAGLINE}")
+		ServerAdminPrint(client, "[TAGLINE]")
 	end
 	
 	local function svTagline(client, ...)
