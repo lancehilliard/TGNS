@@ -1,6 +1,8 @@
 // TGNS Common
 
-function GetPlayerList()
+TGNS = {}
+
+function TGNS:GetPlayerList()
 
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	table.sort(playerList, function(p1, p2) return p1:GetName() < p2:GetName() end)
@@ -8,11 +10,11 @@ function GetPlayerList()
 
 end
 
-function AllPlayers(doThis)
+function TGNS:AllPlayers(doThis)
 
 	return function(client)
 	
-		local playerList = GetPlayerList()
+		local playerList = self:GetPlayerList()
 		for p = 1, #playerList do
 		
 			local player = playerList[p]
@@ -24,7 +26,7 @@ function AllPlayers(doThis)
 	
 end
 
-function GetPlayerMatchingName(name, team)
+function TGNS:GetPlayerMatchingName(name, team)
 
 	assert(type(name) == "string")
 	
@@ -52,7 +54,7 @@ function GetPlayerMatchingName(name, team)
 		end
 		
 	end
-	AllPlayers(Matches)()
+	self:AllPlayers(Matches)()
 	
 	if nameMatchCount > 1 then
 		match = nil // if partial match is not unique, clear the match
@@ -62,20 +64,45 @@ function GetPlayerMatchingName(name, team)
 
 end
 
-function GetPlayerMatching(id, team)
+function TGNS:GetPlayerMatchingSteamId(steamId, team)
+
+	assert(type(steamId) == "number")
+	
+	local match = nil
+	
+	local function Matches(player)
+	
+		local playerClient = Server.GetOwner(player)
+		if playerClient and playerClient:GetUserId() == steamId then
+			if team == nil or team == -1 or team == player:GetTeamNumber() then
+				match = player
+			end
+		end
+		
+	end
+	self:AllPlayers(Matches)()
+	
+	return match
+
+end
+
+function TGNS:GetPlayerMatching(id, team)
 
 	local idNum = tonumber(id)
 	if idNum then
-		return GetPlayerMatchingGameId(idNum, team) or GetPlayerMatchingSteamId(idNum, team)
+		// note: using DAK's GetPlayerMatchingGameId
+		return GetPlayerMatchingGameId(idNum, team) or self:GetPlayerMatchingSteamId(idNum, team)
 	elseif type(id) == "string" then
-		return GetPlayerMatchingName(id, team)
+		return self:GetPlayerMatchingName(id, team)
 	end
 
 end
 
-
 if kDAKConfig and kDAKConfig.DAKLoader then
-	function PMAllPlayersWithAccess(srcClient, message, command, showCommand)
+
+	// Returns:	builtChatMessage - a ChatMessage object
+	//			consoleChatMessage - a similarly formed string for printing to the console
+	function TGNS:BuildPMChatMessage(srcClient, message, command, showCommand)
 		if srcClient then
 			local srcPlayer = srcClient:GetControllingPlayer()
 			if srcPlayer then
@@ -94,12 +121,19 @@ if kDAKConfig and kDAKConfig.DAKLoader then
 		end
 
 		consoleChatMessage = chatName ..": " .. message
-
-		for _, player in pairs(GetPlayerList()) do
+		builtChatMessage = BuildChatMessage(false, chatName, -1, kTeamReadyRoom, kNeutralTeamType, message)
+		return builtChatMessage, consoleChatMessage
+	end
+	
+	function TGNS:PMAllPlayersWithAccess(srcClient, message, command, showCommand, selfIfNoAccess)
+		builtChatMessage, consoleChatMessage = self:BuildPMChatMessage(srcClient, message, command, showCommand)
+		for _, player in pairs(self:GetPlayerList()) do
 			local client = Server.GetOwner(player)
-			if client ~= nil and DAKGetClientCanRunCommand(client, command) then
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, chatName, -1, kTeamReadyRoom, kNeutralTeamType, message), true)
-				ServerAdminPrint(client, consoleChatMessage)
+			if client ~= nil then
+				if DAKGetClientCanRunCommand(client, command) or (selfIfNoAccess and client == srcClient) then
+					Server.SendNetworkMessage(player, "Chat", builtChatMessage, true)
+					ServerAdminPrint(client, consoleChatMessage)
+				end
 			end
 		end
 	end
@@ -111,14 +145,13 @@ end
 
 kTGNSChatHooks = {}
 
-function TGNSRegisterChatHook(func)
+function TGNS:RegisterChatHook(func)
 	DAKRegisterEventHook(kTGNSChatHooks, func, 1)
 end
 
 local originalOnChatReceived
 
 local function OnChatReceived(client, message)
-	Print("TGNS OnChatReceived")
 	if #kTGNSChatHooks > 0 then
 		for i = #kTGNSChatHooks, 1, -1 do
 			if kTGNSChatHooks[i].func(client, message.message) then

@@ -15,7 +15,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 	local function OnCommandTimeleft(client)
 		if client ~= nil and Shared.GetTime() - timeleftThrottle > kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND].throttle then
 			timeleftThrottle = Shared.GetTime()
-			for _, player in pairs(GetPlayerList()) do
+			for _, player in pairs(TGNS:GetPlayerList()) do
 				if player ~= nil then
 					chatMessage = string.sub(string.format("%.1f Minutes Remaining.", math.max(0,((kDAKMapCycle.time * 60) - Shared.GetTime())/60)), 1, kMaxChatLength)
 					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
@@ -46,7 +46,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 
 		if client ~= nil and Shared.GetTime() - nextmapThrottle > kDAKConfig.PublicCommands.Commands[NEXTMAPCOMMAND].throttle then
 			nextmapThrottle = Shared.GetTime()
-			for _, player in pairs(GetPlayerList()) do
+			for _, player in pairs(TGNS:GetPlayerList()) do
 				if player ~= nil then
 					local mapname = GetMapName(MapCycle_GetNextMapInCycle())
 					if mapname ~= nil then
@@ -95,16 +95,35 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 	if kDAKConfig.PublicCommands.PMAdmins then
 		local function CheckForAdminChat(client, message)
 			if message and string.sub(message, 1, 1) == "@" then
-				local chatMessage = string.sub(message, 2, -1)
-				if chatMessage then
-					PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true)
+				// Admins must direct the message to a player, message is also sent to other admins
+				if DAKGetClientCanRunCommand(client, "sv_psay") then
+					_, _, name, chatMessage = string.find(message, "@([%w%p]+) (.*)")
+					if name ~= nil then
+						local targetplayer = TGNS:GetPlayerMatchingName(name)
+						if targetplayer ~= nil then
+							TGNS:PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true, true)
+							Server.SendNetworkMessage(targetplayer, "Chat", TGNS:BuildPMChatMessage(client, chatMessage, "PMADMIN", true), true)
+						else
+							Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, string.format("'%s' does not uniquely match a player.", name), "PMADMIN", true), true)
+						end
+					else
+						Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>", "PMADMIN", true), true)
+					end
+				// Non admins will send the message to all admins
+				else
+					local chatMessage = string.sub(message, 2, -1)
+					if chatMessage then
+						TGNS:PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true, true)
+					else
+						Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Usage: @<message>", "PMADMIN", true), true)
+					end
 				end
 				return true
 			end
 			return false
 		end
 		
-		TGNSRegisterChatHook(CheckForAdminChat)
+		TGNS:RegisterChatHook(CheckForAdminChat)
 	end
 end
 

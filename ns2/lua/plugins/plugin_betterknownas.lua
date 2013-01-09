@@ -75,8 +75,8 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		ServerAdminPrint(client, "[BKA]")
 	end
 	
-	local function svAka(client, playerName, ...)
-		local targetPlayer = GetPlayerMatching(playerName, nil)
+	local function svBka(client, playerName, ...)
+		local targetPlayer = TGNS:GetPlayerMatching(playerName, nil)
 		if targetPlayer ~= nil then
 			local targetClient = Server.GetOwner(targetPlayer)
 			if targetClient ~= nil then

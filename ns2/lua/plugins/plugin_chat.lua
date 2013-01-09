@@ -16,7 +16,7 @@ if kDAKConfig and kDAKConfig.Chat then
 	local function Chat(client, command, ...)
 		local chatMessage = GetChatMessage(...)
 		if string.len(chatMessage) > 0 then
-			PMAllPlayersWithAccess(client, chatMessage, command, true)
+			TGNS:PMAllPlayersWithAccess(client, chatMessage, command, true)
 		end
 	end
 

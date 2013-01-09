@@ -8,14 +8,14 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 	local function OnMutePlayer(client, message)
 		originalOnMutePlayer(client, message)
 		clientIndex, isMuted = ParseMutePlayerMessage(message)
-		for _, player in pairs(GetPlayerList()) do
+		for _, player in pairs(TGNS:GetPlayerList()) do
 			if player:GetClientIndex() == clientIndex then
 				if isMuted then
 					muteText = "muted"
 				else
 					muteText = "unmuted"
 				end
-				PMAllPlayersWithAccess(nil, client:GetControllingPlayer():GetName() .. " has " .. muteText .. " player " .. player:GetName(), "sv_mutes", false)
+				TGNS:PMAllPlayersWithAccess(nil, client:GetControllingPlayer():GetName() .. " has " .. muteText .. " player " .. player:GetName(), "sv_mutes", false)
 				break
 			end
 		end
@@ -38,10 +38,10 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		playerNames = {}
 		
 		ServerAdminPrint(client, "Player Mutes:")
-		for _, player in pairs(GetPlayerList()) do
+		for _, player in pairs(TGNS:GetPlayerList()) do
 			playerNames[player:GetClientIndex()] = player:GetName()
 		end
-		for _, player in pairs(GetPlayerList()) do
+		for _, player in pairs(TGNS:GetPlayerList()) do
 			for clientIndex, name in pairs(playerNames) do
 				if player:GetClientMuted(clientIndex) then
 					ServerAdminPrint(client, player:GetName() .. " : " .. name)
