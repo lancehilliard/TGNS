@@ -42,13 +42,19 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	local function ShowCurrentBka(client, targetSteamId)
 		local steamId = client:GetUserId()
 		local bkaData = LoadBkaData(targetSteamId)
-		ServerAdminPrint(client, "[BKA] Current BKA:")
+		local player = TGNS:GetPlayerMatchingSteamId(targetSteamId)
+		ServerAdminPrint(client, "[BKA] ")
+		if player ~= nil then
+			ServerAdminPrint(client, "[BKA] For: " .. player:GetName())
+			ServerAdminPrint(client, "[BKA] ")
+		end
+		ServerAdminPrint(client, "[BKA] BKA:")
 		if bkaData == nil or bkaData.BKA == nil or string.len(bkaData.BKA) == 0 then
 			ServerAdminPrint(client, "[BKA]     (none)")
 		else
 			ServerAdminPrint(client, "[BKA]     " .. bkaData.BKA)
 		end
-		ServerAdminPrint(client, "[BKA] Current AKAs:")
+		ServerAdminPrint(client, "[BKA] AKAs:")
 		if bkaData == nil or bkaData.AKAs == nil or #bkaData.AKAs == 0 then
 			ServerAdminPrint(client, "[BKA]     (none)")
 		else
@@ -74,6 +80,28 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		end
 		ServerAdminPrint(client, "[BKA]")
 	end
+
+	local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues)
+		local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
+		table.insert(newBkaData.AKAs, newBkaName)
+		local existingBkaData = LoadBkaData(targetSteamId)
+		if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
+			if existingBkaData ~= nil then
+				if existingBkaData.AKAs ~= nil and #existingBkaData.AKAs > 0 then
+					for i = 1, #existingBkaData.AKAs, 1 do
+						local existingName = existingBkaData.AKAs[i]
+						if existingName ~= newBkaName then
+							table.insert(newBkaData.AKAs, existingName)
+						end
+					end
+				end
+			end
+		end
+		if (existingBkaData ~= nil) then
+			newBkaData.BKA = existingBkaData.BKA
+		end
+		SaveBka(newBkaData)
+	end
 	
 	local function svAka(client, playerName, ...)
 		local targetPlayer = TGNS:GetPlayerMatching(playerName, nil)
@@ -83,25 +111,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 				local targetSteamId = targetClient:GetUserId()
 				local newBkaName = GetBkaName(...)
 				if newBkaName ~= "" then
-					local existingBkaData = LoadBkaData(targetSteamId)
-					local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
-					if newBkaName ~= "clear" then
-						table.insert(newBkaData.AKAs, newBkaName)
-						if existingBkaData ~= nil then
-							if existingBkaData.AKAs ~= nil and #existingBkaData.AKAs > 0 then
-								for i = 1, #existingBkaData.AKAs, 1 do
-									local existingName = existingBkaData.AKAs[i]
-									if existingName ~= newBkaName then
-										table.insert(newBkaData.AKAs, existingName)
-									end
-								end
-							end
-						end
-					end
-					if (existingBkaData ~= nil) then
-						newBkaData.BKA = existingBkaData.BKA
-					end
-					SaveBka(newBkaData)
+					AddAka(targetSteamId, newBkaName, true)
 					ShowCurrentBka(client, targetSteamId)
 				else
 					ShowUsage(client, targetSteamId)
@@ -161,7 +171,6 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	DAKCreateServerAdminCommand("Console_sv_bka", svBka, "<target> <bka> Adds a BKA name to the target.")
 	
 	local function EvaluatePlayerName(player, name)
-		name=TrimName(name)
 	    local client = Server.GetOwner(player)
 		if client ~= nil then
 			local steamId = client:GetUserId()
@@ -188,14 +197,19 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 
 	function BkaOnCommandSetName(client, name)
 		local player = client:GetControllingPlayer()
-		local playerTeamNumber = player:GetTeamNumber()
-		if playerTeamNumber == kMarineTeamType or playerTeamNumber == kAlienTeamType then
-			local gamerules = GetGamerules()
-			if gamerules then
-				if EvaluatePlayerName(player, name) == false then
-					gamerules:JoinTeam(player, kTeamReadyRoom)
+		name=TrimName(name)
+		if name ~= kDefaultPlayerName and string.len(name) > 0 then
+			local playerTeamNumber = player:GetTeamNumber()
+			if playerTeamNumber == kMarineTeamType or playerTeamNumber == kAlienTeamType then
+				local gamerules = GetGamerules()
+				if gamerules then
+					if EvaluatePlayerName(player, name) == false then
+						gamerules:JoinTeam(player, kTeamReadyRoom)
+					end
 				end
 			end
+			local steamId = client:GetUserId()
+			AddAka(steamId, name, false)
 		end
 	end
 	Event.Hook("Console_name", BkaOnCommandSetName)
