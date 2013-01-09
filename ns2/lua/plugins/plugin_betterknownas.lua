@@ -75,7 +75,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		ServerAdminPrint(client, "[BKA]")
 	end
 	
-	local function svBka(client, playerName, ...)
+	local function svAka(client, playerName, ...)
 		local targetPlayer = TGNS:GetPlayerMatching(playerName, nil)
 		if targetPlayer ~= nil then
 			local targetClient = Server.GetOwner(targetPlayer)
@@ -121,7 +121,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	DAKCreateServerAdminCommand("Console_sv_aka", svAka, "<target> <aka> Adds an AKA name to the target.")
 
 	local function svBka(client, playerName, ...)
-		local targetPlayer = GetPlayerMatching(playerName, nil)
+		local targetPlayer = TGNS:GetPlayerMatching(playerName, nil)
 		if targetPlayer ~= nil then
 			local targetClient = Server.GetOwner(targetPlayer)
 			if targetClient ~= nil then
@@ -172,7 +172,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 				if not playerNameStartsWithBkaName then
 					local chatMessage = string.format("Your name must start with '%s' before you play.", bkaName)
 					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-					PMAllPlayersWithAccess(nil, name .. " needs to add '" .. bkaName .. "' BKA value to playername.", "sv_bka", false)
+					TGNS:PMAllPlayersWithAccess(nil, name .. " needs to add '" .. bkaName .. "' BKA value to playername.", "sv_bka", false)
 					return false
 				end
 			end
