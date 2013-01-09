@@ -121,7 +121,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	DAKCreateServerAdminCommand("Console_sv_aka", svAka, "<target> <aka> Adds an AKA name to the target.")
 
 	local function svBka(client, playerName, ...)
-		local targetPlayer = GetPlayerMatching(playerName, nil)
+		local targetPlayer = TGNS:GetPlayerMatching(playerName, nil)
 		if targetPlayer ~= nil then
 			local targetClient = Server.GetOwner(targetPlayer)
 			if targetClient ~= nil then
