@@ -111,7 +111,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 					elseif chatMessage ~= nil then
 						TGNS:PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true, true)
 					else
-						Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>, if name is only admins are messaged", "PMADMIN", true), true)
+						Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>, if name is blank only admins are messaged", "PMADMIN", true), true)
 					end
 				// Non admins will send the message to all admins
 				else
