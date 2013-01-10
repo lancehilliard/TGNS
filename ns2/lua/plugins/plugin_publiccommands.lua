@@ -96,18 +96,22 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 		local function CheckForAdminChat(client, message)
 			if message and string.sub(message, 1, 1) == "@" then
 				// Admins must direct the message to a player, message is also sent to other admins
-				if DAKGetClientCanRunCommand(client, "sv_psay") then
-					_, _, name, chatMessage = string.find(message, "@([%w%p]+) (.*)")
-					if name ~= nil then
+				if DAKGetClientCanRunCommand(client, "PMADMIN") then
+					local name
+					local chatMessage
+					_, _, name, chatMessage = string.find(message, "@([%w%p]*) (.*)")
+					if name ~= nil and string.len(name) > 0 then
 						local targetplayer = TGNS:GetPlayerMatchingName(name)
 						if targetplayer ~= nil then
-							TGNS:PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true, true)
+							TGNS:PMAllPlayersWithAccess(client, string.format("To %s: %s", targetplayer:GetName(), chatMessage), "PMADMIN", true, true)
 							Server.SendNetworkMessage(targetplayer, "Chat", TGNS:BuildPMChatMessage(client, chatMessage, "PMADMIN", true), true)
 						else
 							Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, string.format("'%s' does not uniquely match a player.", name), "PMADMIN", true), true)
 						end
+					elseif chatMessage ~= nil then
+						TGNS:PMAllPlayersWithAccess(client, chatMessage, "PMADMIN", true, true)
 					else
-						Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>", "PMADMIN", true), true)
+						Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>, if name is only admins are messaged", "PMADMIN", true), true)
 					end
 				// Non admins will send the message to all admins
 				else
