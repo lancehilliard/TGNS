@@ -11,7 +11,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	end
 	
 	local function IsPrimerReserved(client, playerList)
-		local result = TGNS:HasClientSignedPrimer(client) and ExcessStrangersArePlaying(playerList) 
+		local result = not TGNS:IsClientSM(client) and TGNS:HasClientSignedPrimer(client) and ExcessStrangersArePlaying(playerList) 
 		return result
 	end
 	
