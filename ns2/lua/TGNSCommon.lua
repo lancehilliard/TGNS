@@ -2,12 +2,77 @@
 
 TGNS = {}
 
+function TGNS:GetClientName(client)
+	local result = client:GetControllingPlayer():GetName()
+	return result
+end
+
+function TGNS:IsClientCommander(client)
+	local result = false
+	if client ~= nil then
+		local player = client:GetControllingPlayer()
+		if player ~= nil then
+			result = player:GetIsCommander()
+		end
+	end
+	return result	
+end
+
+function TGNS:HasClientSignedPrimer(client)
+	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hasprimersignature")
+	return result
+end
+
+function TGNS:IsClientSM(client)
+	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
+	return result
+end
+
+function TGNS:IsClientStranger(client)
+	local result = not self:IsClientSM(client) and not self:HasClientSignedPrimer(client)
+	return result
+end
+
+function TGNS:ConsolePrint(client, message, prefix)
+	if client ~= nil then
+		prefix = prefix == nil and "TGNS" or prefix
+		ServerAdminPrint(client, "[" .. prefix .. "] " .. message)
+	end
+end
+
+function TGNS:GetClientSteamId(client)
+	result = client:GetUserId()
+	return result
+end
+
+function TGNS:GetClientNameSteamIdCombo(client)
+	local result = string.format("%s (%s)", self:GetClientName(client), self:GetClientSteamId(client))
+	return result	
+end
+
+function TGNS:SendChatMessage(player, chatMessage)
+	if player ~= nil then
+		chatMessage = string.sub(chatMessage, 1, kMaxChatLength)
+		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+	end
+end
+
+function TGNS:DisconnectClient(client, reason)
+		client.disconnectreason = reason
+		Server.DisconnectClient(client)
+end
+
 function TGNS:GetPlayerList()
 
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	table.sort(playerList, function(p1, p2) return p1:GetName() < p2:GetName() end)
 	return playerList
 
+end
+
+function TGNS:GetPlayerCount() 
+	local result = #self:GetPlayerList()
+	return result
 end
 
 function TGNS:AllPlayers(doThis)
@@ -24,6 +89,75 @@ function TGNS:AllPlayers(doThis)
 		
 	end
 	
+end
+
+function TGNS:GetMatchingClients(predicate, playerList)
+	local result = {}
+	playerList = playerList == nil and self:GetPlayerList() or playerList
+	for r = #playerList, 1, -1 do
+		if playerList[r] ~= nil then
+			local client = playerList[r]:GetClient()
+			if client ~= nil then
+				if predicate(client, player) then
+					table.insert(result, client)
+				end
+			end
+		end
+	end
+	return result
+end
+
+function TGNS:GetLastMatchingClient(predicate, playerList)
+	local result = nil
+	local playerList = playerList == nil and self:GetPlayerList() or playerList
+	for r = #playerList, 1, -1 do
+		if playerList[r] ~= nil then
+			local client = playerList[r]:GetClient()
+			if client ~= nil then
+				if predicate(client, playerList[r]) then
+					result = client
+				end
+			end
+		end
+	end
+	return result
+end
+
+function TGNS:GetStrangersClients(playerList)
+	local predicate = function(client, player) return self:IsClientStranger(client) end
+	local result = self:GetMatchingClients(predicate, playerList)
+	return result
+end
+
+function TGNS:GetPrimerOnlyClients(playerList)
+	local predicate = function(client, player) return self:HasClientSignedPrimer(client) and not self:IsClientSM(client) end
+	local result = self:GetMatchingClients(predicate, playerList)
+	return result
+end
+
+function TGNS:GetSmClients(playerList)
+	local predicate = function(client, player) return self:IsClientSM(client) end
+	local result = self:GetMatchingClients(predicate, playerList)
+	return result
+end
+
+function TGNS:KickClient(client, chatMessage, disconnectReason, onPreKick)
+	if client ~= nil then
+		local player = client:GetControllingPlayer()
+		if player ~= nil then
+			if onPreKick ~= nil then
+				onPreKick(client, player)
+			end
+			TGNS:SendChatMessage(player, chatMessage)
+		end
+		TGNS:DisconnectClient(client, disconnectReason)
+	end
+end
+
+function TGNS:KickPlayer(player, chatMessage, disconnectReason, onPreKick)
+	if player ~= nil then
+		self:KickClient(player:GetClient(), chatMessage, disconnectReason, onPreKick)
+	end
 end
 
 function TGNS:GetPlayerMatchingName(name, team)
