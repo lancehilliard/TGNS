@@ -28,6 +28,9 @@
 !ns2/lua/plugins/config_afkkick.lua
 !ns2/lua/plugins/plugin_afkkick.lua
 
+!ns2/lua/plugins/config_communityslots.lua
+!ns2/lua/plugins/plugin_communityslots.lua
+
 !ns2/lua/plugins/config_betterknownas.lua
 !ns2/lua/plugins/plugin_betterknownas.lua
 
