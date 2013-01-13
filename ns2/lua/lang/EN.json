@@ -43,7 +43,7 @@
 		"kVoteMapNotRunning": 						"Map vote not running.",
 		"kVoteMapTimeRemaining": 					"%.1f Minutes Remaining.",
 
-		"kTournamentModeTeamReadyAlert": 			"Team %s is ready, waiting on team %s to start game.",
+		"kTournamentModeCountdown": 				"Game starts in %ss. Who is COMM? Who will do what? - tacticalgamer.com",
 		"kTournamentModeCountdown": 				"Game will start in %s seconds!",
 		"kTournamentModePubPlayerWarning": 			"Game will start once each team has %s players.",
 		"kTournamentModeReadyAlert": 				"Both teams need to ready for game to start.",
@@ -77,10 +77,7 @@
 		],
 		
 		"kPeriodicMessages": [
-		"********************************************************************",
-		"****************** Welcome to the XYZ NS2 Servers ******************",
-		"*********** You can also visit our forums at 123.NS2.COM ***********",
-		"********************************************************************"
+		"tacticalgamer.com - come say hello!"
 		],
 		
 		"kUnstuckMoved": 							"You moved since issuing unstuck command?",
