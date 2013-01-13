@@ -14,7 +14,7 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 	end
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, PrintableNamesOnClientDelayedConnect, 5)
 
-	local function PrintableNamesOnTeamJoin(player, newTeamNumber, force)
+	local function PrintableNamesOnTeamJoin(self, player, newTeamNumber, force)
 		local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
 		if nonPrintableCharactersCount>0 and newTeamNumber ~= kTeamReadyRoom then
 			local client = Server.GetOwner(player)

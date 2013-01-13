@@ -21,7 +21,7 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 	end
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, ProhibitedNamesOnClientDelayedConnect, 5)
 
-	local function ProhibitedNamesOnTeamJoin(player, newTeamNumber, force)
+	local function ProhibitedNamesOnTeamJoin(self, player, newTeamNumber, force)
 		if PlayerNameIsProhibited(player:GetName()) and newTeamNumber ~= kTeamReadyRoom then
 			local client = Server.GetOwner(player)
 			client.disconnectreason = kDAKConfig.ProhibitedNames.kProhibitedNamesKickMessage

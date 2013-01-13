@@ -343,7 +343,7 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	DAKRegisterEventHook(kDAKOnClientDisconnect, client_disconnect, 5)
 
-	local function CaptainsJoinTeam(player, newTeamNumber, force)
+	local function CaptainsJoinTeam(self, player, newTeamNumber, force)
 		if isCaptainsMode() then
 			client = Server.GetOwner(player)
 			if client ~= nil then
