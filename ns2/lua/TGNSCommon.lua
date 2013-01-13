@@ -129,8 +129,13 @@ function TGNS:GetStrangersClients(playerList)
 	return result
 end
 
+function TGNS:IsPrimerOnlyClient(client)
+	local result = self:HasClientSignedPrimer(client) and not self:IsClientSM(client)
+	return result
+end
+
 function TGNS:GetPrimerOnlyClients(playerList)
-	local predicate = function(client, player) return self:HasClientSignedPrimer(client) and not self:IsClientSM(client) end
+	local predicate = function(client, player) return self:IsPrimerOnlyClient(client) end
 	local result = self:GetMatchingClients(predicate, playerList)
 	return result
 end
