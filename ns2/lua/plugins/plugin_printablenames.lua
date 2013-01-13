@@ -21,7 +21,6 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 			client.disconnectreason = kDAKConfig.PrintableNames.kPrintableNamesKickMessage
 			Server.DisconnectClient(client)
 		end
-		return true
 	end
 	DAKRegisterEventHook(kDAKOnTeamJoin, PrintableNamesOnTeamJoin, 5)
 

@@ -356,7 +356,6 @@ if kDAKConfig and kDAKConfig.Captains then
 				end
 			end
 		end
-		return true
 	end
 
 	DAKRegisterEventHook(kDAKOnTeamJoin, CaptainsJoinTeam, 5)

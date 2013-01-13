@@ -27,7 +27,6 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 			client.disconnectreason = kDAKConfig.ProhibitedNames.kProhibitedNamesKickMessage
 			Server.DisconnectClient(client)
 		end
-		return true
 	end
 	DAKRegisterEventHook(kDAKOnTeamJoin, ProhibitedNamesOnTeamJoin, 5)
 

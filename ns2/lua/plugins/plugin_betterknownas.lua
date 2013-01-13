@@ -191,7 +191,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 
 	local function BkaOnTeamJoin(self, player, newTeamNumber, force)
 		local result = newTeamNumber == kTeamReadyRoom or EvaluatePlayerName(player, player:GetName())
-		return result
+		return not result
 	end
 	
 	DAKRegisterEventHook(kDAKOnTeamJoin, BkaOnTeamJoin, 5)
