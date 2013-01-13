@@ -5,6 +5,8 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 
 	local actionslog = { }
 	table.insert(actionslog, "COMMUNITY SLOTS DEBUG: ")
+	local victimBumpCounts = {}
+	local rejectBumpCounts = {}
 
 	local function IsTargetProtectedStranger(targetClient, playerList)
 		local result = TGNS:IsClientStranger(targetClient) and #TGNS:GetStrangersClients(playerList) <= kDAKConfig.CommunitySlots.kMinimumStrangers and #TGNS:GetPrimerOnlyClients(playerList) > 0
@@ -77,12 +79,22 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		return result
 	end
 	
+	local function IncrementBumpCount(targetClient, kickCounts)
+		if TGNS:HasClientSignedPrimer(targetClient) then
+			kickCounts.primerOnly = TGNS:GetCountOrZero(kickCounts.primerOnly) + 1
+		elseif TGNS:IsClientStranger(targetClient) then
+			kickCounts.stranger = TGNS:GetCountOrZero(kickCounts.stranger) + 1
+		end
+	end
+	
 	local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
 		Log(string.format("%s: Victim: %s (score: %s) Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS:GetClientNameSteamIdCombo(targetClient), tostring(targetPlayer.score), TGNS:GetClientNameSteamIdCombo(joiningClient)))
+		IncrementBumpCount(victimBumpCounts)
 	end
 
 	local function onPreJoinerKick(targetClient, targetPlayer, playerList)
 		Log(string.format("%s: Reject: %s", GetKickDetails(targetClient, targetClient, playerList).shortReport, TGNS:GetClientNameSteamIdCombo(targetClient)))
+		IncrementBumpCount(rejectBumpCounts)
 	end
 
 	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
@@ -116,12 +128,25 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	table.insert(kDAKOnClientDelayedConnect, function(client) return CommunitySlotsOnClientDelayedConnect(client) end)
 	table.insert(kDAKOnClientDelayedConnect, function(client) return CommunitySlotsOnClientDelayedConnectGreeter(client) end)
 	
+	local function PrintKickCountsReport(client)
+		local primerOnlyVictims = TGNS:GetCountOrZero(victimBumpCounts.primerOnly)
+		local strangerVictims = TGNS:GetCountOrZero(victimBumpCounts.stranger)
+		local primerOnlyRejects = TGNS:GetCountOrZero(rejectBumpCounts.primerOnly)
+		local strangerRejects = TGNS:GetCountOrZero(rejectBumpCounts.stranger) 
+		local totalVictims = primerOnlyVictims + strangerVictims
+		local totalRejects = primerOnlyRejects + strangerRejects
+		TGNS:ConsolePrint(client, "BUMP COUNTS:", "CSDEBUG")
+		TGNS:ConsolePrint(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", totalVictims, primerOnlyVictims, strangerVictims), "CSDEBUG")
+		TGNS:ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", totalRejects, primerOnlyRejects, strangerRejects), "CSDEBUG")
+	end
+	
 	local function DebugCommunitySlots(client)
 		for r = 1, #actionslog, 1 do
 			if actionslog[r] ~= nil then
 				TGNS:ConsolePrint(client, actionslog[r], "CSDEBUG")
 			end
 		end
+		PrintKickCountsReport(client)
 	end
 	DAKCreateServerAdminCommand("Console_sv_csdebug", DebugCommunitySlots, "Will print Community Slots debug messages.")
 	
