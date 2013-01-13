@@ -193,7 +193,8 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		local result = newTeamNumber == kTeamReadyRoom or EvaluatePlayerName(player, player:GetName())
 		return result
 	end
-	table.insert(kDAKOnTeamJoin, function(player, newTeamNumber, force) return BkaOnTeamJoin(player, newTeamNumber, force) end)
+	
+	DAKRegisterEventHook(kDAKOnTeamJoin, BkaOnTeamJoin, 5)
 
 	function BkaOnCommandSetName(client, name)
 		local player = client:GetControllingPlayer()

@@ -35,7 +35,7 @@ if kDAKConfig and kDAKConfig.RookieThrottle then
 		end
 		return true
 	end
-	table.insert(kDAKOnClientDelayedConnect, function(client) return RookieThrottleOnClientDelayedConnect(client) end)
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, RookieThrottleOnClientDelayedConnect, 5)
 end
 
 Shared.Message("RookieThrottle Loading Complete")

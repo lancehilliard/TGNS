@@ -5,8 +5,9 @@ if Server then
 	local settings = { groups = { }, users = { } }
 	
 	local DAKServerAdminFileName = "config://ServerAdmin.json"
-	local DelayedServerAdminCommands = { }
-	local DelayedServerCommands = false
+	local DAKServerAdminWebFileName = "config://ServerAdminWeb.json"
+	local ServerAdminWebCache
+	local initialwebupdate = 0
 	local lastwebupdate = 0
 		
     local function LoadServerAdminSettings()
@@ -43,6 +44,31 @@ if Server then
     end
 	
     LoadServerAdminSettings()
+	
+	local function LoadServerAdminWebSettings()
+    
+        Shared.Message("Loading " .. DAKServerAdminWebFileName)
+		
+		local configFile = io.open(DAKServerAdminWebFileName, "r")
+		local users
+        if configFile then
+            local fileContents = configFile:read("*all")
+            users = json.decode(fileContents)
+			io.close(configFile)
+        end
+		ServerAdminWebCache = users
+		return users
+        
+    end
+	
+	local function SaveServerAdminWebSettings(users)
+		local configFile = io.open(DAKServerAdminWebFileName, "w+")
+		if configFile ~= nil and users ~= nil then
+			configFile:write(json.encode(users, { indent = true, level = 1 }))
+			io.close(configFile)
+		end
+		ServerAdminWebCache = users
+	end	
     
     function DAKGetGroupCanRunCommand(groupName, commandName)
     
@@ -97,6 +123,41 @@ if Server then
         return false
         
     end
+
+    function DAKGetClientIsInGroup(client, gpName)
+		local steamId = client:GetUserId()
+		for name, user in pairs(settings.users) do
+        
+            if user.id == steamId then
+                for g = 1, #user.groups do
+                    local groupName = user.groups[g]
+                    if groupName == gpName then
+						return true
+					end
+                end
+            end
+            
+        end
+	end
+	
+	local function CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
+
+		if kDAKServerAdminCommands == nil then 
+			kDAKServerAdminCommands = { }
+		end
+		local fixedCommandName = string.gsub(commandName, "Console_", "")
+		local newCommand = function(client, ...)
+		
+			if not client or optionalAlwaysAllowed == true or DAKGetClientCanRunCommand(client, fixedCommandName, true) then
+				return commandFunction(client, ...)
+			end
+			
+		end
+		
+		table.insert(kDAKServerAdminCommands, { name = fixedCommandName, help = helpText or "No help provided" })
+		Event.Hook(commandName, newCommand)
+		
+	end
 	
 	local function GetSteamIDLevel(steamId)
     
@@ -127,23 +188,24 @@ if Server then
 	local function GetClientLevel(client)
         local steamId = client:GetUserId()
 		if steamId == nil then return 0 end
-        return DAKGetSteamIDLevel(steamId)
+        return GetSteamIDLevel(steamId)
     end
 	
 	local function GetPlayerLevel(player)
 		local client = Server.GetOwner(player)
+		if client == nil then return 0 end
         local steamId = client:GetUserId()
 		if steamId == nil then return 0 end
-        return DAKGetSteamIDLevel(steamId)
+        return GetSteamIDLevel(steamId)
     end
 	
 	local function GetObjectLevel(target)
 		if tonumber(target) ~= nil then
-			return DAKGetSteamIDLevel(tonumber(target))
-		elseif Server.GetOwner(target) ~= nil then
-			return GetPlayerLevel(target)
+			return GetSteamIDLevel(tonumber(target))
 		elseif VerifyClient(target) ~= nil then
 			return GetClientLevel(target)
+		elseif Server.GetOwner(target) ~= nil then
+			return GetPlayerLevel(target)
 		end
 		return 0
 	end
@@ -156,17 +218,20 @@ if Server then
 	
 	//Internal Globals
 	function DAKCreateServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
-		local ServerAdminCmd = { cmdName = commandName, cmdFunction = commandFunction, helpT = helpText, opt = optionalAlwaysAllowed }
-		table.insert(DelayedServerAdminCommands, ServerAdminCmd)
-		DelayedServerCommands = true
+		//Prefered function for creating ServerAdmin commands, not checked against blacklist
+		CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
 	end
 	
-	function RegisterServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
-		if kDAKConfig and kDAKConfig.BaseAdminCommands and CreateBaseServerAdminCommand then
-			CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
-		else
-			CreateServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
+	function CreateServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
+		//Should catch other plugins commands, filters against blacklist to prevent defaults from being registered twice.
+		for c = 1, #kDAKConfig.BaseAdminCommands.kBlacklistedCommands do
+			local command = kDAKConfig.BaseAdminCommands.kBlacklistedCommands[c]
+			if commandName == command then
+				return
+			end
 		end
+		//Assume its not blacklisted and proceed.
+		CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
 	end
 
 	//Client ID Translators
@@ -269,70 +334,80 @@ if Server then
 	end
 	
 	local function tablemerge(tab1, tab2)
-		for k, v in pairs(tab2) do
-			if (type(v) == "table") and (type(tab1[k] or false) == "table") then
-				tablemerge(tab1[k], tab2[k])
-			else
-				tab1[k] = v
+		if tab2 ~= nil then
+			for k, v in pairs(tab2) do
+				if (type(v) == "table") and (type(tab1[k] or false) == "table") then
+					tablemerge(tab1[k], tab2[k])
+				else
+					tab1[k] = v
+				end
 			end
 		end
 		return tab1
 	end
 	
+	local function ProcessWebResponse(response)
+		local sstart = string.find(response,"<body>")
+		local rstring = string.sub(response, sstart)
+		if rstring then
+			rstring = rstring:gsub("<body>\n", "{")
+			rstring = rstring:gsub("<body>", "{")
+			rstring = rstring:gsub("</body>", "}")
+			rstring = rstring:gsub("<div id=\"username\"> ", "\"")
+			rstring = rstring:gsub(" </div> <div id=\"steamid\"> ", "\": { \"id\": ")
+			rstring = rstring:gsub(" </div> <div id=\"group\"> ", ", \"groups\": [ \"")
+			rstring = rstring:gsub("\\,", "\", \"")
+			rstring = rstring:gsub(" </div> <br>", "\" ] },")
+			rstring = rstring:gsub("\n", "")
+			return json.decode(rstring)
+		end
+		return nil
+	end
+	
 	local function OnServerAdminWebResponse(response)
 		if response then
-			local sstart = string.find(response,"<body>")
-			local rstring = string.sub(response, sstart)
-			if rstring then
-				rstring = rstring:gsub("<body>\n", "{")
-				rstring = rstring:gsub("<body>", "{")
-				rstring = rstring:gsub("</body>", "}")
-				rstring = rstring:gsub("<div id=\"username\"> ", "\"")
-				rstring = rstring:gsub(" </div> <div id=\"steamid\"> ", "\": { \"id\": ")
-				rstring = rstring:gsub(" </div> <div id=\"group\"> ", ", \"groups\": [ \"")
-				rstring = rstring:gsub(" </div> <br>", "\" ] },")
-				rstring = rstring:gsub("\n", "")
-				local addusers = json.decode(rstring)
-				if addusers then
-					settings.users = tablemerge(settings.users, addusers)
-				end
+			local addusers = ProcessWebResponse(response)
+			if addusers and ServerAdminWebCache ~= addusers then
+				//If loading from file, that wont update so its not an issue.  However web queries are realtime so admin abilities can expire mid game and/or be revoked.  Going to have this reload and
+				//purge old list, will insure greater accuracy (still has a couple loose ends).  Considering also adding a periodic check, or a check on command exec (still wouldnt be perfect), this seems good for now.
+				LoadServerAdminSettings()
+				settings.users = tablemerge(settings.users, addusers)
+				SaveServerAdminWebSettings(addusers)
 			end
 		end
 	end
 	
 	local function QueryForAdminList()
-		if kDAKConfig.DAKLoader.ServerAdmin.kQueryURL ~= "" then
-			Shared.SendHTTPRequest(kDAKConfig.DAKLoader.ServerAdmin.kQueryURL, "GET", function(response)
-					OnServerAdminWebResponse(response)
-			end)
-		end
+		Shared.SendHTTPRequest(kDAKConfig.DAKLoader.ServerAdmin.kQueryURL, "GET", OnServerAdminWebResponse)
 		lastwebupdate = Shared.GetTime()
 	end
 	
 	local function OnServerAdminClientConnect(client)
 		local tt = Shared.GetTime()
-		if tt > kDAKConfig.DAKLoader.ServerAdmin.kMapChangeDelay and (lastwebupdate == nil or (lastwebupdate + kDAKConfig.DAKLoader.ServerAdmin.kUpdateDelay) < tt) and kDAKConfig.DAKLoader.ServerAdmin.kQueryURL ~= "" then
+		if tt > kDAKConfig.DAKLoader.ServerAdmin.kMapChangeDelay and (lastwebupdate == nil or (lastwebupdate + kDAKConfig.DAKLoader.ServerAdmin.kUpdateDelay) < tt) and kDAKConfig.DAKLoader.ServerAdmin.kQueryURL ~= "" and initialwebupdate ~= 0 then
 			QueryForAdminList()
 		end
-		return true
 	end
 	
-	table.insert(kDAKOnClientConnect, function(client) return OnServerAdminClientConnect(client) end)
-	
-	local function DelayedServerCommandRegistration()	
-		if DelayedServerCommands then
-			if #DelayedServerAdminCommands > 0 then
-				for i = 1, #DelayedServerAdminCommands do
-					local ServerAdminCmd = DelayedServerAdminCommands[i]
-					RegisterServerAdminCommand(ServerAdminCmd.cmdName, ServerAdminCmd.cmdFunction, ServerAdminCmd.helpT, ServerAdminCmd.opt)
-				end
-			end
-			QueryForAdminList()
-			Shared.Message("Server Commands Registered.")
-			DelayedServerAdminCommands = nil
-			//DelayedServerCommands = false
+	DAKRegisterEventHook(kDAKOnClientConnect, OnServerAdminClientConnect, 5)
+
+	local function DelayedServerCommandRegistration()
+		if kDAKConfig.DAKLoader.ServerAdmin.kQueryURL == "" then
+			DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration)
+			return
 		end
-		DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration)
+		if initialwebupdate == 0 then
+			QueryForAdminList()
+			initialwebupdate = Shared.GetTime() + kDAKConfig.DAKLoader.ServerAdmin.kQueryTimeout	
+		end
+		if initialwebupdate < Shared.GetTime() then
+			if ServerAdminWebCache == nil then
+				Shared.Message("ServerAdmin WebQuery failed, falling back on cached list.")
+				settings.users = tablemerge(settings.users, LoadServerAdminWebSettings())
+				initialwebupdate = 0
+			end
+			DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration)
+		end
 	end
 	
 	DAKRegisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration, 5)
@@ -394,6 +469,15 @@ if Server then
 			if parm1 == "ServerAdminPrint" then
 				if kDAKConfig and kDAKConfig.BaseAdminCommands and DAKIsPluginEnabled("baseadmincommands") then
 					function CreateServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
+						//Should catch other plugins commands, filters against blacklist to prevent defaults from being registered twice.
+						for c = 1, #kDAKConfig.BaseAdminCommands.kBlacklistedCommands do
+							local command = kDAKConfig.BaseAdminCommands.kBlacklistedCommands[c]
+							if commandName == command then
+								return
+							end
+						end
+						//Assume its not blacklisted and proceed.
+						CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
 					end
 				end
 			end

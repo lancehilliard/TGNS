@@ -19,7 +19,7 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 		end
 		return true
 	end
-	table.insert(kDAKOnClientDelayedConnect, function(client) return ProhibitedNamesOnClientDelayedConnect(client) end)
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, ProhibitedNamesOnClientDelayedConnect, 5)
 
 	local function ProhibitedNamesOnTeamJoin(player, newTeamNumber, force)
 		if PlayerNameIsProhibited(player:GetName()) and newTeamNumber ~= kTeamReadyRoom then
@@ -29,7 +29,7 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 		end
 		return true
 	end
-	table.insert(kDAKOnTeamJoin, function(player, newTeamNumber, force) return ProhibitedNamesOnTeamJoin(player, newTeamNumber, force) end)
+	DAKRegisterEventHook(kDAKOnTeamJoin, ProhibitedNamesOnTeamJoin, 5)
 
 	function ProhibitedNamesOnCommandSetName(client, name)
 		if client ~= nil and name ~= nil then

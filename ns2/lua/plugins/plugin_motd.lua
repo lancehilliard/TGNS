@@ -3,7 +3,6 @@
 if kDAKConfig and kDAKConfig.MOTD then
 
 	local MOTDClientTracker = { }
-	local MOTDAcceptedClients = { }
 
 	if kDAKSettings.MOTDAcceptedClients == nil then
 		kDAKSettings.MOTDAcceptedClients = { }
@@ -34,22 +33,30 @@ if kDAKConfig and kDAKConfig.MOTD then
 	local function ProcessMessagesforUser(PEntry)
 		
 		local messagestart = PEntry.Message
-		for i = messagestart, #kDAKConfig.MOTD.kMOTDMessage do
-		
-			if i < kDAKConfig.MOTD.kMOTDMessagesPerTick + messagestart then
-				DisplayMOTDMessage(PEntry.Client, kDAKConfig.MOTD.kMOTDMessage[i])
+		local lang = DAKGetClientLanguageSetting(PEntry.Client)
+		if kDAKLanguageStrings[lang] ~= nil then
+			local ltable = kDAKLanguageStrings[lang]
+			if ltable.kMOTDMessage ~= nil then
+				for i = messagestart, #ltable.kMOTDMessage do
+				
+					if i < kDAKConfig.MOTD.kMOTDMessagesPerTick + messagestart then
+						DisplayMOTDMessage(PEntry.Client, ltable.kMOTDMessage[i])
+					else
+						PEntry.Message = i
+						PEntry.Time = Shared.GetTime() + kDAKConfig.MOTD.kMOTDMessageDelay
+						break
+					end
+					
+				end
+				if #ltable.kMOTDMessage < messagestart + kDAKConfig.MOTD.kMOTDMessagesPerTick then
+					PEntry = nil
+				end
 			else
-				PEntry.Message = i
-				PEntry.Time = Shared.GetTime() + kDAKConfig.MOTD.kMOTDMessageDelay
-				break
+				PEntry = nil
 			end
-			
-		end
-		
-		if #kDAKConfig.MOTD.kMOTDMessage < messagestart + kDAKConfig.MOTD.kMOTDMessagesPerTick then
+		else
 			PEntry = nil
 		end
-	
 		return PEntry
 	end
 
@@ -66,11 +73,10 @@ if kDAKConfig and kDAKConfig.MOTD then
 				end
 			end		
 		end
-		return true
 
 	end
-
-	table.insert(kDAKOnClientDisconnect, function(client) return MOTDOnClientDisconnect(client) end)
+	
+	DAKRegisterEventHook(kDAKOnClientDisconnect, MOTDOnClientDisconnect, 5)
 
 	local function ProcessRemainingMOTDMessages(deltatime)
 
@@ -96,21 +102,21 @@ if kDAKConfig and kDAKConfig.MOTD then
 				DAKDeregisterEventHook(kDAKOnServerUpdate, ProcessRemainingMOTDMessages)
 			end
 		end
-		return true	
+		
 	end
 
 	local function MOTDOnClientConnect(client)
 	
 		if client:GetIsVirtual() then
-			return true
-		end
-		
-		if VerifyClient(client) == nil then
 			return false
 		end
 		
-		if IsAcceptedClient(client) then
+		if VerifyClient(client) == nil then
 			return true
+		end
+		
+		if IsAcceptedClient(client) then
+			return false
 		end
 		
 		local PEntry = { ID = client:GetUserId(), Client = client, Message = 1, Time = 0 }
@@ -121,38 +127,37 @@ if kDAKConfig and kDAKConfig.MOTD then
 			end
 			table.insert(MOTDClientTracker, PEntry)
 		end
-		return true
 	end
-
-	table.insert(kDAKOnClientDelayedConnect, function(client) return MOTDOnClientConnect(client) end)
-
+	
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, MOTDOnClientConnect, 5)
+	
 	local function OnCommandAcceptMOTD(client)
 	
-		local player = client:GetControllingPlayer()
-		local name = "acceptedclient"
+		if client ~= nil then
 
-		if player ~= nil then
 			if IsAcceptedClient(client) then
-				chatMessage = string.sub(string.format("You already accepted the MOTD"), 1, kMaxChatLength)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				DAKDisplayMessageToClient(client, "kMOTDAlreadyAccepted")
 				return
 			end
-			name = player:GetName()
+				
+			local player = client:GetControllingPlayer()
+			local name = "acceptedclient"
+
+			if player ~= nil then
+				name = player:GetName()
+			end
+			
+			local NewClient = { }
+			NewClient.id = client:GetUserId()
+			NewClient.revision = kDAKConfig.MOTD.kMOTDMessageRevision
+			NewClient.name = name
+			
+			DAKDisplayMessageToClient(client, "kMOTDAccepted")
+			table.insert(kDAKSettings.MOTDAcceptedClients, NewClient)
+			
+			SaveDAKSettings()
 		end
 		
-		local NewClient = { }
-		NewClient.id = client:GetUserId()
-		NewClient.revision = kDAKConfig.MOTD.kMOTDMessageRevision
-		NewClient.name = name
-		
-		local player = client:GetControllingPlayer()
-		chatMessage = string.sub(string.format("You accepted the MOTD"), 1, kMaxChatLength)
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-
-		table.insert(kDAKSettings.MOTDAcceptedClients, NewClient)
-		
-		SaveDAKSettings()
-
 	end
 
 	Event.Hook("Console_acceptmotd",                 OnCommandAcceptMOTD)
@@ -193,7 +198,7 @@ if kDAKConfig and kDAKConfig.MOTD then
 	
 	end
 	
-	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnMOTDChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
+	DAKRegisterEventHook(kDAKOnClientChatMessage, OnMOTDChatMessage, 5)
 	
 end
 

@@ -3,26 +3,6 @@
 
 if kDAKConfig and kDAKConfig.BaseAdminCommands then
 
-	function CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
-
-		// Remove the prefix.
-		if kDAKServerAdminCommands == nil then 
-			kDAKServerAdminCommands = { }
-		end
-		local fixedCommandName = string.gsub(commandName, "Console_", "")
-		local newCommand = function(client, ...)
-		
-			if not client or optionalAlwaysAllowed == true or DAKGetClientCanRunCommand(client, fixedCommandName, true) then
-				return commandFunction(client, ...)
-			end
-			
-		end
-		
-		table.insert(kDAKServerAdminCommands, { name = fixedCommandName, help = helpText or "No help provided" })
-		Event.Hook(commandName, newCommand)
-		
-	end
-
 	local function PrintHelpForCommand(client, optionalCommand)
 
 		for c = 1, #kDAKServerAdminCommands do
@@ -41,6 +21,7 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 		end
 		
 	end
+	
 	Event.Hook("Console_sv_help", function(client, command) PrintHelpForCommand(client, command) end)
 
 	local function GetPlayerList()
@@ -150,11 +131,12 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 	local function OnCommandChangeMap(client, mapName)
 		PrintToAllAdmins("sv_changemap", client, mapName)
 
-		if DAKVerifyMapName(mapName) then
+		if MapCycle_VerifyMapName(mapName) then
 			MapCycle_ChangeToMap(mapName)
 		else
-			chatMessage = string.format("Invalid Map Provided.")
-			Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			if client ~= nil then
+				DAKDisplayMessageToClient(client, "InvalidMap")
+			end
 		end
 		
 	end
@@ -387,6 +369,10 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 
 	local bannedPlayers = { }
 	local bannedPlayersFileName = "config://BannedPlayers.json"
+	local bannedPlayersWeb = { }
+	local bannedPlayersWebFileName = "config://BannedPlayersWeb.json"
+	local initialbannedwebupdate = 0
+	local lastbannedwebupdate = 0
 
 	local function LoadBannedPlayers()
 
@@ -409,14 +395,102 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 
 		local bannedPlayersFile = io.open(bannedPlayersFileName, "w+")
 		if bannedPlayersFile then
-			bannedPlayersFile:write(json.encode(bannedPlayers))
+			bannedPlayersFile:write(json.encode(bannedPlayers, { indent = true, level = 1 }))
 			bannedPlayersFile:close()
 		end
 		
 	end
+	
+	local function LoadBannedPlayersWeb()
+
+		Shared.Message("Loading " .. bannedPlayersWebFileName)
+		
+		bannedPlayersWeb = { }
+		
+		// Load the ban settings from file if the file exists.
+		local bannedPlayersWebFile = io.open(bannedPlayersWebFileName, "r")
+		if bannedPlayersWebFile then
+			bannedPlayersWeb = json.decode(bannedPlayersWebFile:read("*all")) or { }
+			bannedPlayersWebFile:close()
+		end
+		
+	end
+
+	local function SaveBannedPlayersWeb()
+
+		local bannedPlayersWebFile = io.open(bannedPlayersWebFileName, "w+")
+		if bannedPlayersWebFile then
+			bannedPlayersWebFile:write(json.encode(bannedPlayersWeb, { indent = true, level = 1 }))
+			bannedPlayersWebFile:close()
+		end
+		
+	end
+	
+	local function ProcessWebResponse(response)
+		local sstart = string.find(response,"<body>")
+		local rstring = string.sub(response, sstart)
+		if rstring then
+			rstring = rstring:gsub("<body>\n", "{")
+			rstring = rstring:gsub("<body>", "{")
+			rstring = rstring:gsub("</body>", "}")
+			rstring = rstring:gsub("<div id=\"username\"> ", "\"")
+			rstring = rstring:gsub(" </div> <div id=\"steamid\"> ", "\": { \"id\": ")
+			rstring = rstring:gsub(" </div> <div id=\"group\"> ", ", \"groups\": [ \"")
+			rstring = rstring:gsub(" </div> <br>", "\" ] },")
+			rstring = rstring:gsub("\n", "")
+			return json.decode(rstring)
+		end
+		return nil
+	end
+	
+	local function OnServerAdminWebResponse(response)
+		if response then
+			local bannedusers = ProcessWebResponse(response)
+			if bannedusers and bannedPlayersWeb ~= bannedusers then
+				bannedPlayersWeb = bannedusers
+				SaveBannedPlayersWeb()
+			end
+		end
+	end
+	
+	local function QueryForBansList()
+		if kDAKConfig.BaseAdminCommands.kBansQueryURL ~= "" then
+			Shared.SendHTTPRequest(kDAKConfig.BaseAdminCommands.kBansQueryURL, "GET", OnServerAdminWebResponse)
+		end
+		lastbannedwebupdate = Shared.GetTime()
+	end
+	
+	local function OnServerAdminClientConnect(client)
+		local tt = Shared.GetTime()
+		if tt > kDAKConfig.BaseAdminCommands.kMapChangeDelay and (lastbannedwebupdate == nil or (lastbannedwebupdate + kDAKConfig.BaseAdminCommands.kUpdateDelay) < tt) and kDAKConfig.BaseAdminCommands.kBansQueryURL ~= "" and initialbannedwebupdate ~= 0 then
+			QueryForBansList()
+		end
+	end
+	
+	local function DelayedBannedPlayersWebUpdate()
+		if kDAKConfig.BaseAdminCommands.kBansQueryURL == "" then
+			DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedBannedPlayersWebUpdate)
+			return
+		end
+		if initialbannedwebupdate == 0 then
+			QueryForBansList()
+			initialbannedwebupdate = Shared.GetTime() + kDAKConfig.BaseAdminCommands.kBansQueryTimeout		
+		end
+		if initialbannedwebupdate < Shared.GetTime() then
+			if bannedPlayersWeb == nil then
+				Shared.Message("Bans WebQuery failed, falling back on cached list.")
+				LoadBannedPlayersWeb()
+				initialbannedwebupdate = 0
+			end
+			DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedBannedPlayersWebUpdate)
+		end
+	end
+	
+	DAKRegisterEventHook(kDAKOnServerUpdate, DelayedBannedPlayersWebUpdate, 5)
 
 	local function OnConnectCheckBan(client)
 
+		OnServerAdminClientConnect()
 		local steamid = client:GetUserId()
 		for b = #bannedPlayers, 1, -1 do
 		
@@ -429,7 +503,7 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 				
 					client.disconnectreason = "Banned"
 					Server.DisconnectClient(client)
-					break
+					return true
 					
 				else
 				
@@ -444,9 +518,48 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 			
 		end
 		
+		for b = #bannedPlayersWeb, 1, -1 do
+		
+			local ban = bannedPlayersWeb[b]
+			if ban.id == steamid then
+			
+				// Check if enough time has passed on a temporary ban.
+				local now = Shared.GetSystemTime()
+				if ban.time == 0 or now < ban.time then
+				
+					client.disconnectreason = "Banned"
+					Server.DisconnectClient(client)
+					return true
+					
+				else
+				
+					// No longer banned.
+					// Remove to prevent confusion, but also should consider if this is supposed to update the PHPDB, or just assume that will handle expiring bans itself.
+					table.remove(bannedPlayersWeb, b)
+					SaveBannedPlayersWeb()
+					
+				end
+				
+			end
+			
+		end
+		
 	end
-
-	Event.Hook("ClientConnect", OnConnectCheckBan)
+	
+	DAKRegisterEventHook(kDAKOnClientConnect, OnConnectCheckBan, 6)
+	
+	local function OnPlayerBannedResponse(response)
+		if response == "TRUE" then
+			//ban successful, update webbans using query URL.
+			 QueryForBansList()
+		end
+	end
+	
+	local function OnPlayerUnBannedResponse(response)
+		if response == "TRUE" then
+			//Unban successful, anything needed here?
+		end
+	end
 
 	/**
 	 * Duration is specified in minutes. Pass in 0 or nil to ban forever.
@@ -467,9 +580,19 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 		end
 		if player then
 			
-			LoadBannedPlayers()
-			table.insert(bannedPlayers, { name = player:GetName(), id = Server.GetOwner(player):GetUserId(), reason = StringConcatArgs(...), time = bannedUntilTime })
-			SaveBannedPlayers()
+			if kDAKConfig.BaseAdminCommands.kBanSubmissionURL ~= "" then
+				//Submit ban with key, working on logic to hash key
+				//Should these be both submitted to database and logged on server?  My thinking is no here, so going with that moving forward.
+				//kDAKConfig.BaseAdminCommands.kBanSubmissionURL
+				//kDAKConfig.BaseAdminCommands.kCryptographyKey
+				//Will also want ban response function to reload web bans.
+				//OnPlayerBannedResponse
+				//Shared.SendHTTPRequest(kDAKConfig.BaseAdminCommands.kBanSubmissionURL, "POST", parms, OnPlayerBannedResponse)
+			else
+				LoadBannedPlayers()
+				table.insert(bannedPlayers, { name = player:GetName(), id = Server.GetOwner(player):GetUserId(), reason = StringConcatArgs(...), time = bannedUntilTime })
+				SaveBannedPlayers()
+			end
 			ServerAdminPrint(client, player:GetName() .. " has been banned")
 			local client = Server.GetOwner(player)
 			client.disconnectreason = "Banned"
@@ -477,9 +600,19 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 			
 		elseif tonumber(playerId) > 0 then
 		
-			LoadBannedPlayers()
-			table.insert(bannedPlayers, { name = "Unknown", id = tonumber(playerId), reason = StringConcatArgs(...), time = bannedUntilTime })
-			SaveBannedPlayers()
+			if kDAKConfig.BaseAdminCommands.kBanSubmissionURL ~= "" then
+				//Submit ban with key, working on logic to hash key
+				//Should these be both submitted to database and logged on server?  My thinking is no here, so going with that moving forward.
+				//kDAKConfig.BaseAdminCommands.kBanSubmissionURL
+				//kDAKConfig.BaseAdminCommands.kCryptographyKey
+				//Will also want ban response function to reload web bans.
+				//OnPlayerBannedResponse
+				//Shared.SendHTTPRequest(kDAKConfig.BaseAdminCommands.kBanSubmissionURL, "POST", parms, OnPlayerBannedResponse)
+			else
+				LoadBannedPlayers()
+				table.insert(bannedPlayers, { name = "Unknown", id = tonumber(playerId), reason = StringConcatArgs(...), time = bannedUntilTime })
+				SaveBannedPlayers()
+			end
 			ServerAdminPrint(client, "Player with SteamId " .. playerId .. " has been banned")
 			
 		else
@@ -493,6 +626,7 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 	local function UnBan(client, steamId)
 
 		local found = false
+		local foundweb = false
 		LoadBannedPlayers()
 		for p = #bannedPlayers, 1, -1 do
 		
@@ -506,9 +640,29 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 			
 		end
 		
+		for p = #bannedPlayersWeb, 1, -1 do
+		
+			if bannedPlayersWeb[p].id == steamId then
+			
+				table.remove(bannedPlayersWeb, p)
+				ServerAdminPrint(client, "Removed " .. steamId .. " from the ban list")
+				foundweb = true
+				
+			end
+			
+		end
+		
 		if found then
 			SaveBannedPlayers()
-		else
+		end
+		if foundweb then
+			//Submit unban with key
+			//kDAKConfig.BaseAdminCommands.kUnBanSubmissionURL
+			//kDAKConfig.BaseAdminCommands.kCryptographyKey
+			//OnPlayerUnBannedResponse
+			//Shared.SendHTTPRequest(kDAKConfig.BaseAdminCommands.kUnBanSubmissionURL, "GET", OnPlayerUnBannedResponse)
+		end
+		if not found and not foundweb then
 			ServerAdminPrint(client, "No matching Steam Id in ban list")
 		end
 		
@@ -533,7 +687,7 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 
 	local function ListBans(client)
 
-		if #bannedPlayers == 0 then
+		if #bannedPlayers == 0 and #bannedPlayersWeb == 0 then
 			ServerAdminPrint(client, "No players are currently banned")
 		end
 		
@@ -545,57 +699,17 @@ if kDAKConfig and kDAKConfig.BaseAdminCommands then
 			
 		end
 		
-	end
-
-	DAKCreateServerAdminCommand("Console_sv_listbans", ListBans, "Lists the banned players")
-
-	local function PLogAll(client)
-
-		Shared.ConsoleCommand("p_logall")
-		ServerAdminPrint(client, "Performance logging enabled")
+		for p = 1, #bannedPlayersWeb do
 		
-	end
-
-	DAKCreateServerAdminCommand("Console_sv_p_logall", PLogAll, "Starts performance logging")
-
-	local function PEndLog(client)
-
-		Shared.ConsoleCommand("p_endlog")
-		ServerAdminPrint(client, "Performance logging disabled")
-		
-	end
-	
-	DAKCreateServerAdminCommand("Console_sv_p_endlog", PEndLog, "Ends performance logging")
-
-	local function AutoBalance(client, enabled, playerCount, seconds)
-
-		if enabled == "true" then
-		
-			playerCount = playerCount and tonumber(playerCount) or 2
-			seconds = seconds and tonumber(seconds) or 10
-			Server.SetConfigSetting("auto_team_balance", { enabled_on_unbalance_amount = playerCount, enabled_after_seconds = seconds })
-			ServerAdminPrint(client, "Auto Team Balance is now Enabled. Player unbalance amount: " .. playerCount .. " Activate delay: " .. seconds)
-			
-		else
-		
-			Server.SetConfigSetting("auto_team_balance", nil)
-			ServerAdminPrint(client, "Auto Team Balance is now Disabled")
+			local ban = bannedPlayersWeb[p]
+			local timeLeft = ban.time == 0 and "Forever" or (((ban.time - Shared.GetSystemTime()) / 60) .. " minutes")
+			ServerAdminPrint(client, "Name: " .. ban.name .. " Id: " .. ban.id .. " Time Remaining: " .. timeLeft .. " Reason: " .. (ban.reason or "Not provided"))
 			
 		end
 		
 	end
-	
-	DAKCreateServerAdminCommand("Console_sv_autobalance", AutoBalance, "<true/false> <player count> <seconds> Toggles auto team balance. The player count and seconds are optional. Count defaults to 2 over balance to enable. Defaults to 10 second wait to enable.")
-	
-	local function EnableEventTesting(client, enabled)
 
-		enabled = not (enabled == "false")
-		SetEventTestingEnabled(enabled)
-		ServerAdminPrint(client, "Event testing " .. (enabled and "enabled" or "disabled"))
-		
-	end
-	
-	DAKCreateServerAdminCommand("Console_sv_test_events", EnableEventTesting, "<true/false> Toggles event testing mode")
+	DAKCreateServerAdminCommand("Console_sv_listbans", ListBans, "Lists the banned players")
 	
 end
 

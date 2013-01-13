@@ -90,7 +90,7 @@ if kDAKConfig and kDAKConfig.Taglines then
 		end
 		return true
 	end
-	table.insert(kDAKOnClientDelayedConnect, function(client) return TaglinesOnClientDelayedConnect(client) end)
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, TaglinesOnClientDelayedConnect, 5)
 
 end
 

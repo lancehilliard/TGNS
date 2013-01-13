@@ -4,14 +4,6 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 
 	local AFKClientTracker = { }
 	local lastAFKUpdate = 0
-
-	local function DisplayMessage(client, message)
-
-		local player = client:GetControllingPlayer()
-		chatMessage = string.sub(string.format(message), 1, kMaxChatLength)
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-
-	end
 	
 	local function DisconnectClientForIdling(client)
 
@@ -24,7 +16,6 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 	
 		if client:GetIsVirtual() then
 			//Bots dont get afk'd
-			return true
 		end
 		
 		if client ~= nil then
@@ -33,13 +24,12 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 				local PEntry = { ID = client:GetUserId(), MVec = player:GetViewAngles(), POrig = player:GetOrigin(), Time = Shared.GetTime() + kDAKConfig.AFKKicker.kAFKKickDelay, Active = true, Warn1 = false, Warn2 = false, kick = false }
 				table.insert(AFKClientTracker, PEntry)
 			end
-			return true
 		end
-		return false
+		
 	end
 	
-	table.insert(kDAKOnClientDelayedConnect, function(client) return AFKOnClientConnect(client) end)
-	
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, AFKOnClientConnect, 5)
+
 	local function UpdateAFKClient(client, PEntry, player)
 		if player ~= nil then
 		
@@ -57,7 +47,7 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 					PEntry.kick = false
 					PEntry.Warn2 = false
 					PEntry.Warn1 = false
-					DisplayMessage(client, kDAKConfig.AFKKicker.kAFKKickReturnMessage)
+					DAKDisplayMessageToClient(client, "kAFKKickReturnMessage")
 				end
 				return PEntry			
 			end
@@ -70,17 +60,17 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 			end
 			
 			if not PEntry.Warn1 and PEntry.Time < (Shared.GetTime() + kDAKConfig.AFKKicker.kAFKKickWarning1) then
-				DisplayMessage(client, string.format(kDAKConfig.AFKKicker.kAFKKickWarningMessage1, kDAKConfig.AFKKicker.kAFKKickWarning1))
+				DAKDisplayMessageToClient(client, "kAFKKickWarningMessage1", kDAKConfig.AFKKicker.kAFKKickWarning1)
 				PEntry.Warn1 = true
 			end
 			
 			if not PEntry.Warn2 and PEntry.Time < (Shared.GetTime() + kDAKConfig.AFKKicker.kAFKKickWarning2) then
-				DisplayMessage(client, string.format(kDAKConfig.AFKKicker.kAFKKickWarningMessage2, kDAKConfig.AFKKicker.kAFKKickWarning2))
+				DAKDisplayMessageToClient(client, "kAFKKickWarningMessage2", kDAKConfig.AFKKicker.kAFKKickWarning2)
 				PEntry.Warn2 = true
 			end
 			
 			if PEntry.Warn2 and PEntry.Warn1 and PEntry.Time < Shared.GetTime() then
-				DisplayMessage(client, string.format(kDAKConfig.AFKKicker.kAFKKickClientMessage, kDAKConfig.AFKKicker.kAFKKickDelay))
+				DAKDisplayMessageToClient(client, "kAFKKickClientMessage", kDAKConfig.AFKKicker.kAFKKickDelay)
 				PEntry.kick = true
 			end
 			
@@ -98,11 +88,10 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 				end
 			end
 		end
-		return true
 		
 	end
-
-	table.insert(kDAKOnClientDisconnect, function(client) return AFKOnClientDisconnect(client) end)
+	
+	DAKRegisterEventHook(kDAKOnClientDisconnect, AFKOnClientDisconnect, 5)
 
 	local function ProcessPlayingUsers(deltatime)
 
@@ -133,10 +122,10 @@ if kDAKConfig and kDAKConfig.AFKKicker then
 			end
 			lastAFKUpdate = Shared.GetTime()
 		end
-		return true
+		
 	end
 
-	DAKRegisterEventHook(kDAKOnServerUpdate, function(deltatime) return ProcessPlayingUsers(deltatime) end, 5)
+	DAKRegisterEventHook(kDAKOnServerUpdate, ProcessPlayingUsers, 5)
 	
 end
 

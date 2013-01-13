@@ -5,9 +5,8 @@
 /*
 local kMaxVoteStringLength = 35
 
-local kVoteBaseUpdateMessage = 
+local kMenuBaseUpdateMessage = 
 {
-	key              	= "integer",
 	header         		= string.format("string (%d)", kMaxVoteStringLength),
 	option1         	= string.format("string (%d)", kMaxVoteStringLength),
 	option1desc         = string.format("string (%d)", kMaxVoteStringLength),
@@ -20,27 +19,16 @@ local kVoteBaseUpdateMessage =
 	option5         	= string.format("string (%d)", kMaxVoteStringLength),
 	option5desc         = string.format("string (%d)", kMaxVoteStringLength),
 	footer         		= string.format("string (%d)", kMaxVoteStringLength),
+	inputallowed		= "boolean",
 	votetime   	  		= "time"
 }
 
-Shared.RegisterNetworkMessage( "GUIVoteBase", kVoteBaseUpdateMessage )
+Shared.RegisterNetworkMessage( "GUIMenuBase", kMenuBaseUpdateMessage )
 
-local function OnMessageBaseVote(client, voteMessage)
-	
-	if voteMessage and client then
-		local votemanager = kGlobalVote[voteMessage.key]
-		if votemanager and votemanager.UpdateTime ~= nil then
-			votemanager.OnVoteFunction(player, voteMessage.optionselected)				
-		end
-	end
-	
-end
-
-local kVoteBaseMessage =
+local kMenuBaseMessage =
 {
-	key = "integer",
 	optionselected = "integer"
 }
 
-Shared.RegisterNetworkMessage("GUIVoteBaseRecieved", kVoteBaseMessage)
+Shared.RegisterNetworkMessage("GUIMenuBaseSelected", kMenuBaseMessage)
 */

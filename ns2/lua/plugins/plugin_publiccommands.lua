@@ -85,9 +85,9 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 		end
 	
 	end
-	
-	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
-	
+
+	DAKRegisterEventHook(kDAKOnClientChatMessage, OnChatMessage, 5)
+
 	///////////////
 	// PM Admins //
 	///////////////

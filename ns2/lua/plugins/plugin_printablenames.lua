@@ -12,7 +12,7 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 		end
 		return true
 	end
-	table.insert(kDAKOnClientDelayedConnect, function(client) return PrintableNamesOnClientDelayedConnect(client) end)
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, PrintableNamesOnClientDelayedConnect, 5)
 
 	local function PrintableNamesOnTeamJoin(player, newTeamNumber, force)
 		local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
@@ -23,7 +23,7 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 		end
 		return true
 	end
-	table.insert(kDAKOnTeamJoin, function(player, newTeamNumber, force) return PrintableNamesOnTeamJoin(player, newTeamNumber, force) end)
+	DAKRegisterEventHook(kDAKOnTeamJoin, PrintableNamesOnTeamJoin, 5)
 
 	function PrintableNamesOnCommandSetName(client, name)
 		if client ~= nil and name ~= nil then

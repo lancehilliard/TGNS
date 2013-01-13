@@ -76,16 +76,14 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 			RandomVotes = { }
 			
 			if kDAKConfig.VoteRandom.kVoteRandomInstantly then
-				chatMessage = string.sub(string.format("Random teams have been enabled, the round will restart."), 1, kMaxChatLength)
-				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				DAKDisplayMessageToAllClients("kVoteRandomEnabled")
 				if Server then
 					Shared.ConsoleCommand("sv_rrall")
 					Shared.ConsoleCommand("sv_reset")
 					ShuffleTeams(true)
 				end
 			else
-				chatMessage = string.sub(string.format("Random teams have been enabled for the next %s Minutes", kDAKConfig.VoteRandom.kVoteRandomDuration), 1, kMaxChatLength)
-				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				DAKDisplayMessageToAllClients("kVoteRandomEnabledDuration", kDAKConfig.VoteRandom.kVoteRandomDuration)
 				kDAKSettings.RandomEnabledTill = Shared.GetSystemTime() + (kDAKConfig.VoteRandom.kVoteRandomDuration * 60)
 				SaveDAKSettings()
 				kVoteRandomTeamsEnabled = true
@@ -93,52 +91,45 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 			
 		elseif not silent then
 		
-			chatMessage = string.sub(string.format("%s voted for random teams. (%s votes, needed %s).", playername, totalvotes, math.ceil((playerRecords:GetSize() * (kDAKConfig.VoteRandom.kVoteRandomMinimumPercentage / 100)))), 1, kMaxChatLength)
-			Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			DAKDisplayMessageToAllClients("kVoteRandomVoteCountAlert", playername, totalvotes, math.ceil((playerRecords:GetSize() * (kDAKConfig.VoteRandom.kVoteRandomMinimumPercentage / 100))))
 			
 		end
-		return true
 		
 	end
 	
-	table.insert(kDAKOnClientDisconnect, function(client) return UpdateRandomVotes(true, "") end)
+	DAKRegisterEventHook(kDAKOnClientDisconnect, UpdateRandomVotes, 5)
 
 	local function VoteRandomClientConnect(client)
 
-		if client ~= nil then
+		if client ~= nil and kVoteRandomTeamsEnabled then
 			local player = client:GetControllingPlayer()
-		
-			if player ~= nil and kVoteRandomTeamsEnabled then 
-				chatMessage = string.sub(string.format("Random teams are enabled, you are being randomed to a team."), 1, kMaxChatLength)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			if player ~= nil then
+				DAKDisplayMessageToClient(client, "kVoteRandomConnectAlert")
 				JoinRandomTeam(player)
 			end
+		end
+		
+	end
+	
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, VoteRandomClientConnect, 5)
+
+	local function VoteRandomJoinTeam(self, player, newTeamNumber, force)
+		if RandomRoundRecentlyEnded ~= nil and RandomRoundRecentlyEnded + RandomNewRoundDelay > Shared.GetTime() and (newTeamNumber == 1 or newTeamNumber == 2) then
+			DAKDisplayMessageToClient(Server.GetOwner(player), "kVoteRandomTeamJoinBlock")
 			return true
 		end
-		return false
 	end
 	
-	table.insert(kDAKOnClientDelayedConnect, function(client) return VoteRandomClientConnect(client) end)
+	DAKRegisterEventHook(kDAKOnTeamJoin, VoteRandomJoinTeam, 5)
 	
-	local function VoteRandomJoinTeam(player, newTeamNumber, force)
-		if RandomRoundRecentlyEnded ~= nil and RandomRoundRecentlyEnded + RandomNewRoundDelay > Shared.GetTime() and (newTeamNumber == 1 or newTeamNumber == 2) then
-			chatMessage = string.sub(string.format("Random teams are enabled, you will be randomed to a team shortly."), 1, kMaxChatLength)
-			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-			return false
-		end
-		return true
-	end
-	
-	table.insert(kDAKOnTeamJoin, function(player, newTeamNumber, force) return VoteRandomJoinTeam(player, newTeamNumber, force) end)
-	
-	local function VoteRandomEndGame(winningTeam)
+	local function VoteRandomEndGame(self, winningTeam)
 		if kVoteRandomTeamsEnabled then
 			RandomRoundRecentlyEnded = Shared.GetTime()
 		end
 	end
 	
-	table.insert(kDAKOnGameEnd, function(winningTeam) return VoteRandomEndGame(winningTeam) end)
-
+	DAKRegisterEventHook(kDAKOnGameEnd, VoteRandomEndGame, 5)
+	
 	local function RandomTeams()
 
 		PROFILE("VoteRandom:RandomTeams")
@@ -156,10 +147,10 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 			end
 			
 		end
-		return true
+		
 	end
 
-	DAKRegisterEventHook(kDAKOnServerUpdate, function(deltatime) return RandomTeams() end, 5)
+	DAKRegisterEventHook(kDAKOnServerUpdate, RandomTeams, 5)
 
 	local function OnCommandVoteRandom(client)
 
@@ -168,15 +159,12 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 			local player = client:GetControllingPlayer()
 			if player ~= nil then
 				if kVoteRandomTeamsEnabled then
-					chatMessage = string.sub(string.format("Random teams already enabled."), 1, kMaxChatLength)
-					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+					DAKDisplayMessageToClient(client, "kVoteRandomAlreadyEnabled")
 					return
 				end
 				if RandomVotes[client:GetUserId()] ~= nil then			
-					chatMessage = string.sub(string.format("You already voted for random teams."), 1, kMaxChatLength)
-					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+					DAKDisplayMessageToClient(client, "kVoteRandomAlreadyVoted")
 				else
-					local playerRecords = Shared.GetEntitiesWithClassname("Player")
 					table.insert(RandomVotes,client:GetUserId())
 					RandomVotes[client:GetUserId()] = true
 					Shared.Message(string.format("%s voted for random teams.", client:GetUserId()))
@@ -205,7 +193,7 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 	
 	end
 	
-	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnVoteRandomChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
+	DAKRegisterEventHook(kDAKOnClientChatMessage, OnVoteRandomChatMessage, 5)
 
 	local function VoteRandomOff(client)
 
@@ -214,8 +202,7 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 			kVoteRandomTeamsEnabled = false
 			kDAKSettings.RandomEnabledTill = 0
 			SaveDAKSettings()
-			chatMessage = string.sub(string.format("Random teams have been disabled."), 1, kMaxChatLength)
-			Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			DAKDisplayMessageToAllClients("kVoteRandomDisabled")
 			if client ~= nil then 
 				local player = client:GetControllingPlayer()
 				if player ~= nil then
@@ -233,16 +220,14 @@ if kDAKConfig and kDAKConfig.VoteRandom then
 		if kVoteRandomTeamsEnabled == false then
 			
 			if kDAKConfig.VoteRandom.kVoteRandomInstantly then
-				chatMessage = string.sub(string.format("Random teams have been enabled, the round will restart."), 1, kMaxChatLength)
-				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				DAKDisplayMessageToAllClients("kVoteRandomEnabled")
 				if Server then
 					Shared.ConsoleCommand("sv_rrall")
 					Shared.ConsoleCommand("sv_reset")
 					ShuffleTeams(true)
 				end
 			else
-				chatMessage = string.sub(string.format("Random teams have been enabled for the next %s Minutes", kDAKConfig.VoteRandom.kVoteRandomDuration), 1, kMaxChatLength)
-				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				DAKDisplayMessageToAllClients("kVoteRandomEnabledDuration", kDAKConfig.VoteRandom.kVoteRandomDuration)
 				kDAKSettings.RandomEnabledTill = Shared.GetSystemTime() + (kDAKConfig.VoteRandom.kVoteRandomDuration * 60)
 				SaveDAKSettings()
 				kVoteRandomTeamsEnabled = true

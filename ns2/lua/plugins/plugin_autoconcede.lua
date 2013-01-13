@@ -7,12 +7,6 @@ if kDAKConfig and kDAKConfig.AutoConcede then
 	local kConcedeCheck = 0
 	local kConcedeCheckInt = 1
 
-	local function DisplayMessage(message)
-
-		chatMessage = string.sub(string.format(message), 1, kMaxChatLength)
-		Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-	end
-
 	if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensions then
 	
 		local originalNS2GRCheckGameEnd
@@ -36,19 +30,19 @@ if kDAKConfig and kDAKConfig.AutoConcede then
 						end
 						if kConcedeTime == 0 then
 							if concede ~= 0 then
-								DisplayMessage(string.format(kDAKConfig.AutoConcede.kWarningMessage, kDAKConfig.AutoConcede.kImbalanceDuration))
+								DAKDisplayMessageToAllClients("kConcedeWarningMessage", kDAKConfig.AutoConcede.kImbalanceDuration)
 								kConcedeTeam = concede
 								kConcedeTime = Shared.GetTime()
 							end
 						else
 							if concede == 0 or kConcedeTeam ~= concede then
-								DisplayMessage(string.format(kDAKConfig.AutoConcede.kConcedeCancelledMessage))
+								DAKDisplayMessageToAllClients("kConcedeCancelledMessage")
 								kConcedeTeam = 0
 								kConcedeTime = 0
 							end
 						end
 					    if kConcedeTime ~= 0 and Shared.GetTime() - kConcedeTime > kDAKConfig.AutoConcede.kImbalanceDuration then
-							DisplayMessage(string.format(kDAKConfig.AutoConcede.kConcedeMessage))
+							DAKDisplayMessageToAllClients("kConcedeMessage")
 							if kConcedeTeam == 2 then
 								self:EndGame(self.team2)
 							elseif kConcedeTeam == 1 then

@@ -5,6 +5,7 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 	local ReservedPlayers = { }
 	local lastconnect = 0
 	local lastdisconnect = 0
+	local disconnectclients = { }
 	local disconnectclienttime = 0
 	local reserveslotactionslog = { }
 
@@ -21,12 +22,6 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 	
 	LoadReservedPlayers()
 
-	local function GetPlayerCount() 
-		local playerRecords = Shared.GetEntitiesWithClassname("Player")
-        local result = playerRecords:GetSize()
-		return result
-	end
-	
 	local function SaveReservedPlayers()
 
 		local ReservedPlayersFile = io.open(reservedPlayersFileName, "w+")
@@ -38,6 +33,14 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 	local function DisconnectClientForReserveSlot(client)
 
 		Server.DisconnectClient(client)
+		lastdisconnect = Shared.GetTime() + kDAKConfig.ReservedSlots.kDelayedSyncTime
+		
+	end
+
+	local function GetPlayerList()
+
+		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
+		return playerList
 		
 	end
 
@@ -49,7 +52,7 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 		end
 		
 		if DAKGetClientCanRunCommand(client, "sv_hasreserve") then
-			if not silent then ServerAdminPrint(client, "Reserved Slot Entry For - id: " .. tostring(client:GetUserId()) .. " - Is Valid (" .. GetPlayerCount() .. " players)") end
+			if not silent then ServerAdminPrint(client, "Reserved Slot Entry For - id: " .. tostring(client:GetUserId()) .. " - Is Valid") end
 			return true
 		end
 		
@@ -65,51 +68,65 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 					if not silent then ServerAdminPrint(client, "Reserved Slot Entry For " .. tostring(ReservePlayer.name) .. " - id: " .. tostring(ReservePlayer.id) .. " - Has Expired") end
 					return false
 				else
-					if not silent then ServerAdminPrint(client, "Reserved Slot Entry For " .. tostring(ReservePlayer.name) .. " - id: " .. tostring(ReservePlayer.id) .. " - Is Valid (" .. GetPlayerCount() .. " players)") end
+					if not silent then ServerAdminPrint(client, "Reserved Slot Entry For " .. tostring(ReservePlayer.name) .. " - id: " .. tostring(ReservePlayer.id) .. " - Is Valid") end
 					return true
 				end
 			end	
 		end
 	end
 	
-	local function ServerIsFull(playerCount)
-		local result = playerCount >= kDAKConfig.ReservedSlots.kMaximumSlots - kDAKConfig.ReservedSlots.kReservedSlots
-		return result
+	local function CheckOccupiedReserveSlots()
+		//check for current number of occupied reserveslots
+		local reserveCount = 0
+		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
+		for r = #playerList, 1, -1 do
+			if playerList[r] ~= nil then
+				local plyr = playerList[r]
+				local clnt = playerList[r]:GetClient()
+				if plyr ~= nil and clnt ~= nil then
+					if CheckReserveStatus(clnt, true) then
+						reserveCount = reserveCount + 1
+					end
+				end
+				if reserveCount >= kDAKConfig.ReservedSlots.kReservedSlots then
+					break
+				end
+			end
+		end
+		return reserveCount
 	end
 	
 	local function UpdateServerLockStatus()
-		local playerCount = GetPlayerCount()
-		if ServerIsFull(playerCount) then
-			Server.SetPassword(kDAKConfig.ReservedSlots.kReservePassword)
-		else
-			Server.SetPassword("")
+		if kDAKConfig.ReservedSlots.kReservePassword ~= "" then
+			local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
+			if kDAKConfig.ReservedSlots.kMaximumSlots - (#playerList - CheckOccupiedReserveSlots()) <= (kDAKConfig.ReservedSlots.kReservedSlots + kDAKConfig.ReservedSlots.kMinimumSlots) then
+				Server.SetPassword(kDAKConfig.ReservedSlots.kReservePassword)
+			else
+				Server.SetPassword("")
+			end
 		end
 	end
 
 	local function OnReserveSlotClientConnected(client)
-		local playerCount = GetPlayerCount() - 1
-		local serverFull = ServerIsFull(playerCount)
-		local serverReallyFull = kDAKConfig.ReservedSlots.kMaximumSlots - playerCount <= kDAKConfig.ReservedSlots.kMinimumSlots
-
-		
-		
-		local reserved = CheckReserveStatus(client, false)
 		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
+		local serverFull = kDAKConfig.ReservedSlots.kMaximumSlots - (#playerList - CheckOccupiedReserveSlots()) < (kDAKConfig.ReservedSlots.kReservedSlots + kDAKConfig.ReservedSlots.kMinimumSlots)
+		local serverReallyFull = kDAKConfig.ReservedSlots.kMaximumSlots - #playerList < kDAKConfig.ReservedSlots.kMinimumSlots
+		local reserved = CheckReserveStatus(client, false)
 
 		UpdateServerLockStatus()
 		
 		if serverFull and not reserved then
+		
+			DAKDisplayMessageToClient(client, "kReserveSlotServerFull")
 			local player = client:GetControllingPlayer()
 			if player ~= nil then
-				chatMessage = string.sub(string.format(kDAKConfig.ReservedSlots.kReserveSlotServerFull), 1, kMaxChatLength)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-				table.insert(reserveslotactionslog, "Kicking player "  .. tostring(player.name) .. " - id: " .. tostring(client:GetUserId()) .. " for no reserve slot (" .. playerCount .. " players).")
+				table.insert(reserveslotactionslog, "Kicking player "  .. tostring(player.name) .. " - id: " .. tostring(client:GetUserId()) .. " for no reserve slot.")
 				EnhancedLog("Kicking player "  .. tostring(player.name) .. " - id: " .. tostring(client:GetUserId()) .. " for no reserve slot.")
 			end
 			client.disconnectreason = kDAKConfig.ReservedSlots.kReserveSlotServerFullDisconnectReason
-			Server.DisconnectClient(client)
+			table.insert(disconnectclients, client)
 			disconnectclienttime = Shared.GetTime() + kDAKConfig.ReservedSlots.kDelayedKickTime
-			return false
+			return true
 		end
 		if serverReallyFull and reserved then
 
@@ -137,12 +154,10 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 
 				table.insert(reserveslotactionslog, "Kicking player "  .. tostring(playertokick.name) .. " - id: " .. tostring(playertokick:GetClient():GetUserId()) .. " with score: " .. tostring(playertokick.score))
 				EnhancedLog("Kicking player "  .. tostring(playertokick.name) .. " - id: " .. tostring(playertokick:GetClient():GetUserId()) .. " with score: " .. tostring(playertokick.score))
-				chatMessage = string.sub(string.format(kDAKConfig.ReservedSlots.kReserveSlotKickedForRoom), 1, kMaxChatLength)
-				Server.SendNetworkMessage(playertokick, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				DAKDisplayMessageToClient(playertokick:GetClient(), "kReserveSlotKickedForRoom")
 				playertokick.disconnectreason = kDAKConfig.ReservedSlots.kReserveSlotKickedDisconnectReason
-				Server.DisconnectClient(playertokick:GetClient())
+				table.insert(disconnectclients, playertokick:GetClient())
 				disconnectclienttime = Shared.GetTime() + kDAKConfig.ReservedSlots.kDelayedKickTime
-				return true
 			else
 				table.insert(reserveslotactionslog, "Attempted to kick player but no valid player could be located")
 				EnhancedLog("Attempted to kick player but no valid player could be located")
@@ -150,25 +165,44 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 
 		end
 		lastconnect = Shared.GetTime() + kDAKConfig.ReservedSlots.kDelayedSyncTime
-		return true
 		
 	end
-
-	table.insert(kDAKOnClientDelayedConnect, function(client) return OnReserveSlotClientConnected(client) end)
+	
+	DAKRegisterEventHook(kDAKOnClientConnect, OnReserveSlotClientConnected, 6)
 
 	local function ReserveSlotClientDisconnect(client)    
 	
 		lastdisconnect = Shared.GetTime() + kDAKConfig.ReservedSlots.kDelayedSyncTime
-		if client ~= nil and VerifyClient(client) ~= nil then
-			UpdateServerLockStatus()
-			return true
-		else
-			return false
+		
+	end
+	
+	DAKRegisterEventHook(kDAKOnClientDisconnect, ReserveSlotClientDisconnect, 5)
+
+	local function CheckReserveSlotSync()
+
+		PROFILE("ReserveSlots:CheckReserveSlotSync")
+
+		if #disconnectclients > 0 and disconnectclienttime < Shared.GetTime() then
+			for r = #disconnectclients, 1, -1 do
+				if disconnectclients[r] ~= nil and VerifyClient(disconnectclients[r]) ~= nil then
+					DisconnectClientForReserveSlot(disconnectclients[r])
+				end
+			end
+			disconnectclients = { }
+			disconnectclienttime = 0
+		end
+
+		if lastconnect ~= 0 or lastdisconnect ~= 0 then
+			if (lastconnect >= lastdisconnect and lastconnect < Shared.GetTime()) or (lastdisconnect >= lastconnect and lastdisconnect < Shared.GetTime()) then
+				lastconnect = 0
+				lastdisconnect = 0
+				UpdateServerLockStatus()
+			end
 		end
 		
 	end
 
-	table.insert(kDAKOnClientDisconnect, function(client) return ReserveSlotClientDisconnect(client) end)
+	DAKRegisterEventHook(kDAKOnServerUpdate, CheckReserveSlotSync, 5)
 
 	local function AddReservePlayer(client, parm1, parm2, parm3, parm4)
 
@@ -177,12 +211,8 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 		if client ~= nil and parm1 and idNum then
 			local ReservePlayer = { name = ToString(parm1), id = idNum, reason = ToString(parm3 or ""), time = ConditionalValue(exptime, exptime, 0) }
 			table.insert(ReservedPlayers, ReservePlayer)
-			local player = client:GetControllingPlayer()
-			if player ~= nil then
-				chatMessage = string.sub(string.format("Player %s added to reserve players list.", ToString(parm2)), 1, kMaxChatLength)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-				PrintToAllAdmins("sv_addreserve", client, ToString(parm1) .. ToString(parm2) .. ToString(parm3) .. ToString(parm4))
-			end
+			PrintToAllAdmins("sv_addreserve", client, ToString(parm1) .. ToString(parm2) .. ToString(parm3) .. ToString(parm4))
+			DAKDisplayMessageToClient(client, "kReserveSlotGranted", ToString(parm2))
 		end
 		
 		SaveReservedPlayers()
@@ -193,7 +223,6 @@ if kDAKConfig and kDAKConfig.ReservedSlots then
 	local function DebugReserveSlots(client)
 	
 		if client ~= nil then
-			ServerAdminPrint(client, "RESERVED SLOTS DEBUG: ")
 			for r = 1, #reserveslotactionslog, 1 do
 				if reserveslotactionslog[r] ~= nil then
 					ServerAdminPrint(client, reserveslotactionslog[r])

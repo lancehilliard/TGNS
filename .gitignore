@@ -14,12 +14,16 @@
 !ns2/lua/DAKLoader_Client.lua
 !ns2/lua/DAKLoader_Config.lua
 !ns2/lua/DAKLoader_EventHooks.lua
+!ns2/lua/DAKLoader_Language.lua
 !ns2/lua/DAKLoader_MapCycle.lua
 !ns2/lua/DAKLoader_Server.lua
 !ns2/lua/DAKLoader_ServerAdmin.lua
 !ns2/lua/DAKLoader_ServerAdminCommands.lua
 !ns2/lua/DAKLoader_Settings.lua
 !ns2/lua/DAKLoader_Shared.lua
+
+!ns2/lua/lang/EN.lua
+!ns2/lua/lang/EN.json
 
 # And then whitelist DAK plugins
 !ns2/lua/plugins/config_replaceGetCanPlayerHearPlayer.lua
@@ -52,8 +56,14 @@
 !ns2/lua/plugins/config_publiccommands.lua
 !ns2/lua/plugins/plugin_publiccommands.lua
 
-!ns2/lua/TGNSCommon.lua
+!ns2/lua/plugins/config_badges.lua
+!ns2/lua/plugins/plugin_badges.lua
 
+!ns2/lua/plugins/config_guivotebase.lua
+!ns2/lua/plugins/plugin_guivotebase.lua
+!ns2/lua/gui/gui_votebase.lua
+
+!ns2/lua/TGNSCommon.lua
 
 !ns2/lua/plugins/config_autoconcede.lua
 !ns2/lua/plugins/config_automapcycle.lua

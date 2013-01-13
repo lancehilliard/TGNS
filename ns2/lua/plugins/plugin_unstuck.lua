@@ -4,19 +4,11 @@ if kDAKConfig and kDAKConfig.Unstuck then
 
 	local UnstuckClientTracker = { }
 	local LastUnstuckTracker = { }
-
-	local function DisplayMessage(client, message)
-
-		local player = client:GetControllingPlayer()
-		chatMessage = string.sub(string.format(message), 1, kMaxChatLength)
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-
-	end
 	
 	local function UnstuckClient(client, player, PEntry)
 
 		if PEntry.Orig ~= player:GetOrigin() then
-			DisplayMessage(client, string.format("You moved since issuing unstuck command?"))
+			DAKDisplayMessageToClient(client, "kUnstuckMoved")
 		else
 			local TechID = kTechId.Skulk
 			if player:GetIsAlive() then
@@ -38,40 +30,10 @@ if kDAKConfig and kDAKConfig.Unstuck then
 					end
 				end
 			end
-			DisplayMessage(client, string.format("Unstuck!"))
+			DAKDisplayMessageToClient(client, "kUnstuck")
 		end
 
 	end
-	
-	local function RegisterClientStuck(client)
-		if client ~= nil then
-			
-			local ID = client:GetUserId()
-			if LastUnstuckTracker[ID] == nil or LastUnstuckTracker[ID] + kDAKConfig.Unstuck.kTimeBetweenUntucks < Shared.GetTime() then
-				local player = client:GetControllingPlayer()
-				local PEntry = { ID = client:GetUserId(), Orig = player:GetOrigin(), Time = Shared.GetTime() + kDAKConfig.Unstuck.kMinimumWaitTime }
-				DisplayMessage(client, string.format("You will be unstuck in %s seconds", kDAKConfig.Unstuck.kMinimumWaitTime))
-				table.insert(UnstuckClientTracker, PEntry)
-			else
-				DisplayMessage(client, string.format("You have unstucked to recently, please wait %.1f seconds", (LastUnstuckTracker[ID] + kDAKConfig.Unstuck.kTimeBetweenUntucks) - Shared.GetTime()))
-			end
-		end
-	end
-	
-	Event.Hook("Console_stuck",               RegisterClientStuck)
-	Event.Hook("Console_unstuck",               RegisterClientStuck)
-	
-	local function OnUnstuckChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
-	
-		if client and steamId and steamId ~= 0 then
-			if message == "stuck" or message == "unstuck" or message == "/stuck" or message == "/unstuck" then
-				RegisterClientStuck(client)
-			end
-		end
-	
-	end
-	
-	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnUnstuckChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
 
 	local function ProcessStuckUsers(deltatime)
 
@@ -106,10 +68,49 @@ if kDAKConfig and kDAKConfig.Unstuck then
 				end
 			end
 		end
-		return true
+		if #UnstuckClientTracker == 0 then
+			DAKDeregisterEventHook(kDAKOnServerUpdate, ProcessStuckUsers)
+		end
+		
 	end
 
-	DAKRegisterEventHook(kDAKOnServerUpdate, function(deltatime) return ProcessStuckUsers(deltatime) end, 5)
+	DAKRegisterEventHook(kDAKOnServerUpdate, ProcessStuckUsers, 5)
+	
+	local function RegisterClientStuck(client)
+		if client ~= nil then
+			
+			local ID = client:GetUserId()
+			if LastUnstuckTracker[ID] == nil or LastUnstuckTracker[ID] + kDAKConfig.Unstuck.kTimeBetweenUntucks < Shared.GetTime() then
+				local player = client:GetControllingPlayer()
+				local PEntry = { ID = client:GetUserId(), Orig = player:GetOrigin(), Time = Shared.GetTime() + kDAKConfig.Unstuck.kMinimumWaitTime }
+				DAKDisplayMessageToClient(client, "kUnstuckIn", kDAKConfig.Unstuck.kMinimumWaitTime)
+				if #UnstuckClientTracker == 0 then
+					DAKRegisterEventHook(kDAKOnServerUpdate, ProcessStuckUsers, 5)
+				end
+				table.insert(UnstuckClientTracker, PEntry)
+			else
+				DAKDisplayMessageToClient(client, "kUnstuckRecently", (LastUnstuckTracker[ID] + kDAKConfig.Unstuck.kTimeBetweenUntucks) - Shared.GetTime())
+			end
+		end
+	end
+	
+	Event.Hook("Console_stuck",               RegisterClientStuck)
+	Event.Hook("Console_unstuck",               RegisterClientStuck)
+	
+	local function OnUnstuckChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
+	
+		if client and steamId and steamId ~= 0 then
+			for c = 1, #kDAKConfig.Unstuck.kUnstuckChatCommands do
+				local chatcommand = kDAKConfig.Unstuck.kUnstuckChatCommands[c]
+				if message == chatcommand then
+					RegisterClientStuck(client)
+				end
+			end
+		end
+	
+	end
+	
+	DAKRegisterEventHook(kDAKOnClientChatMessage, OnUnstuckChatMessage, 5)
 	
 end
 

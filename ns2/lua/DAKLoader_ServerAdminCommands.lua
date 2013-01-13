@@ -60,7 +60,7 @@ local function OnCommandListPlugins(client)
 
 end
 
-DAKCreateServerAdminCommand("Console_sv_listplugins", OnCommandListPlugins, "Will list the state of all plugins.")	
+DAKCreateServerAdminCommand("Console_sv_listplugins", OnCommandListPlugins, "Will list the state of all plugins.")
 
 local function OnCommandListMap(client)
 	local matchingFiles = { }

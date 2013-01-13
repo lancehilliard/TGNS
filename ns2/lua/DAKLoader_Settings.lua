@@ -43,6 +43,6 @@ if Server then
 		SaveDAKSettings()
 	end
 	
-	DAKCreateServerAdminCommand("Console_sv_resetsettings", ResetSettings, "Resets any DAK settings.")
+	DAKCreateServerAdminCommand("Console_sv_resetsettings", ResetSettings, "<optional setting name> Resets specified setting, or all DAK settings.")
 	
 end

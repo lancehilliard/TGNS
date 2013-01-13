@@ -148,7 +148,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		kTimeAtWhichWinOrLoseVoteSucceeded = 0
 	end
 		
-	table.insert(kDAKOnGameEnd, function(winningTeam) return ClearWinOrLoseVotes() end)
+	DAKRegisterEventHook(kDAKOnGameEnd, ClearWinOrLoseVotes, 5)
 
 	local function OnCommandWinOrLose(client)
 	
@@ -207,7 +207,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	
 	end
 	
-	table.insert(kDAKOnClientChatMessage, function(message, playerName, steamId, teamNumber, teamOnly, client) return OnWinOrLoseChatMessage(message, playerName, steamId, teamNumber, teamOnly, client) end)
+	DAKRegisterEventHook(kDAKOnClientChatMessage, OnWinOrLoseChatMessage, 5)
 
 	//local function WinOrLoseOff(client, teamnum)
 	//	local tmNum = tonumber(teamnum)

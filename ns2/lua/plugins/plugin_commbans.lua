@@ -4,10 +4,6 @@ if kDAKConfig and kDAKConfig.CommBans then
 
 	local CommBans = { }
 	local CommBansFileName = "config://CommBans.json"
-	
-	//UpdateVoteManagerFields
-	VoteManager.kMinVotesNeeded = kDAKConfig.CommBans.kMinVotesNeeded
-	VoteManager.kTeamVotePercentage = kDAKConfig.CommBans.kTeamVotePercentage
 
 	local function LoadCommanderBannedPlayers()
 
@@ -141,7 +137,18 @@ if kDAKConfig and kDAKConfig.CommBans then
 		
 	end
 	
-	function CommBansCastVoteByPlayer(gamerules, voteTechId, player)
+	local function DelayedVoteManagerOverride()	
+		if VoteManager ~= nil then
+			//UpdateVoteManagerFields
+			VoteManager.kMinVotesNeeded = kDAKConfig.CommBans.kMinVotesNeeded
+			VoteManager.kTeamVotePercentage = kDAKConfig.CommBans.kTeamVotePercentage
+		end
+		DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedVoteManagerOverride)
+	end
+	
+	DAKRegisterEventHook(kDAKOnServerUpdate, DelayedVoteManagerOverride, 5)
+	
+	function CommBansCastVoteByPlayer(self, voteTechId, player)
 		local commanders = GetEntitiesForTeam("Commander", player:GetTeamNumber())
 		if table.count(commanders) >= 1 then
 			local targetCommander = commanders[1]
@@ -149,15 +156,14 @@ if kDAKConfig and kDAKConfig.CommBans then
 				local client = Server.GetOwner(targetCommander)
 				if client ~= nil then
 					if not DAKGetLevelSufficient(client, playerId) and DAKGetClientCanRunCommand(client, "sv_ejectionprotection") then
-						return false
+						return true
 					end
 				end
 			end
 		end
-		return true
 	end
 	
-	table.insert(kDAKOnCastVoteByPlayer, function(self, voteTechId, player) return CommBansCastVoteByPlayer(self, voteTechId, player) end)
+	DAKRegisterEventHook(kDAKOnCastVoteByPlayer, CommBansCastVoteByPlayer, 5)
 
 	local function OnCommandCommBan(client, playerId, duration, ...)
 

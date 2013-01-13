@@ -6,4 +6,32 @@
 
 Script.Load("lua/Client.lua")
 Script.Load("lua/DAKLoader_Shared.lua")
-//Script.Load("lua/gui/gui_votebase.lua")
+
+/*
+local originalNS2PlayerOnInit
+	
+originalNS2PlayerOnInit = Class_ReplaceMethod("Player", "OnInitLocalClient", 
+	function(self)
+	
+		if self.guivotebase == nil then
+            self.guivotebase = GetGUIManager():CreateGUIScript("gui/gui_votebase")
+        end
+		originalNS2PlayerOnInit(self)
+		
+	end
+)
+
+local originalNS2PlayerOnDestroy
+	
+originalNS2PlayerOnDestroy = Class_ReplaceMethod("Player", "OnDestroy", 
+	function(self)
+	
+		if self.guivotebase ~= nil then
+			GetGUIManager():DestroyGUIScript(self.guivotebase)
+            self.guivotebase = nil
+        end
+		originalNS2PlayerOnDestroy(self)
+		
+	end
+)
+*/
