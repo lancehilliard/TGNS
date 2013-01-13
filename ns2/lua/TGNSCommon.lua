@@ -2,6 +2,11 @@
 
 TGNS = {}
 
+function TGNS:GetCountOrZero(countable)
+	local result = countable == nil and 0 or #countable
+	return result
+end
+
 function TGNS:GetClientName(client)
 	local result = client:GetControllingPlayer():GetName()
 	return result
