@@ -125,8 +125,8 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		end
 		TGNS:ConsolePrint(client, chatMessage)
 	end
-	table.insert(kDAKOnClientDelayedConnect, function(client) return CommunitySlotsOnClientDelayedConnect(client) end)
-	table.insert(kDAKOnClientDelayedConnect, function(client) return CommunitySlotsOnClientDelayedConnectGreeter(client) end)
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, CommunitySlotsOnClientDelayedConnect, 5)
+	DAKRegisterEventHook(kDAKOnClientDelayedConnect, CommunitySlotsOnClientDelayedConnectGreeter, 5)
 	
 	local function PrintKickCountsReport(client)
 		local primerOnlyVictims = TGNS:GetCountOrZero(victimBumpCounts.primerOnly)
@@ -149,6 +149,16 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		PrintKickCountsReport(client)
 	end
 	DAKCreateServerAdminCommand("Console_sv_csdebug", DebugCommunitySlots, "Will print Community Slots debug messages.")
+	
+	//local function PrintPlayerSlotsStatuses(client)
+	//	local playerList = TGNS:GetPlayerList()
+	//	local strangerClients = TGNS:GetStrangersClients(playerList)
+	//	local primerOnlyClients = TGNS:IsPrimerOnlyClient(playerList)
+	//	local smClients = TGNS:GetSmClients(playerList)
+	//	
+	//	PrintKickCountsReport(client)
+	//end
+	//DAKCreateServerAdminCommand("Console_sv_cswho", PrintPlayerSlotsStatuses, "Will print slots status for all players.")
 	
 end
 

@@ -12,6 +12,10 @@ function TGNS:GetClientName(client)
 	return result
 end
 
+//function TGNS:DoForClients(clients, action)
+//	
+//end
+
 function TGNS:IsClientCommander(client)
 	local result = false
 	if client ~= nil then
