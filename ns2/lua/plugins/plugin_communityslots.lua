@@ -6,12 +6,18 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	local actionslog = { }
 	table.insert(actionslog, "COMMUNITY SLOTS DEBUG: ")
 
-	local function ExcessStrangersArePlaying(playerList)
-		local result = #TGNS:GetStrangersClients(playerList) > kDAKConfig.CommunitySlots.kMinimumStrangers
+	local function IsTargetProtectedStranger(targetClient, playerList)
+		local result = TGNS:IsClientStranger(targetClient) and #TGNS:GetStrangersClients(playerList) <= kDAKConfig.CommunitySlots.kMinimumStrangers and #TGNS:GetPrimerOnlyClients(playerList) > 0
+		return result
 	end
 	
-	local function IsPrimerReserved(client, playerList)
-		local result = not TGNS:IsClientSM(client) and TGNS:HasClientSignedPrimer(client) and ExcessStrangersArePlaying(playerList) 
+	local function IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
+		local result = TGNS:IsPrimerOnlyClient(targetClient) and #TGNS:GetStrangersClients(playerList) > kDAKConfig.CommunitySlots.kMinimumStrangers
+		return result
+	end
+	
+	local function TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
+		local result = TGNS:IsPrimerOnlyClient(targetClient) and TGNS:IsPrimerOnlyClient(joiningClient)
 		return result
 	end
 	
@@ -26,23 +32,26 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		EnhancedLog(message)
 	end
 	
-	local function IsBumpable(targetClient, playerList, joiningClient)
-		local targetIsSM = TGNS:IsClientSM(targetClient)
-		local targetIsPrimerReserved = IsPrimerReserved(targetClient, playerList)
-		local targetIsProtectedStranger = not ExcessStrangersArePlaying(playerList) and not TGNS:IsClientSM(joiningClient)
-		local targetIsProtectedPrimerSignee = not TGNS:IsClientSM(joiningClient) and TGNS:HasClientSignedPrimer(targetClient)
+	local function IsTargetBumpable(targetClient, playerList, joiningClient)
 		local joinerIsStranger = TGNS:IsClientStranger(joiningClient)
+		local targetIsSM = TGNS:IsClientSM(targetClient)
 		local targetIsCommander = TGNS:IsClientCommander(targetClient)
-		if targetIsSM or targetIsPrimerReserved or targetIsCommander or joinerIsStranger or targetIsProtectedStranger or targetIsProtectedPrimerSignee then
+		local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
+		local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
+		local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
+	
+		if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetAndJoiningArePrimerOnly
+		then
 			return false
 		end
+
 		return true
 	end
 	
 	local function FindVictimClient(joiningClient, playerList)
 		local lowestBumpableScore = math.huge
 		local predicate = function(targetClient, targetPlayer)
-			if IsBumpable(targetClient, playerList, joiningClient) then
+			if IsTargetBumpable(targetClient, playerList, joiningClient) then
 				targetPlayer.score = targetPlayer.score == nil and 0 or targetPlayer.score
 				if (targetPlayer.score <= lowestBumpableScore) then
 					lowestBumpableScore = targetPlayer.score
@@ -69,7 +78,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	end
 	
 	local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
-		Log(string.format("%s: Victim: %s (score: %s)", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS:GetClientNameSteamIdCombo(targetClient), tostring(targetPlayer.score)))
+		Log(string.format("%s: Victim: %s (score: %s) Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS:GetClientNameSteamIdCombo(targetClient), tostring(targetPlayer.score), TGNS:GetClientNameSteamIdCombo(joiningClient)))
 	end
 
 	local function onPreJoinerKick(targetClient, targetPlayer, playerList)
