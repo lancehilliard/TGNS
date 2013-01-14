@@ -74,13 +74,11 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 			if kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND] and not kDAKConfig.DAKLoader.kPluginsList["mapvote"] and
 				message == kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND].command then
 				OnCommandTimeleft(client)
-				return true
 			end
 			
 			// Nextmap
 			if kDAKConfig.PublicCommands.Commands[NEXTMAPCOMMAND] and message == kDAKConfig.PublicCommands.Commands[NEXTMAPCOMMAND].command then
 				OnCommandNextMap(client)
-				return true
 			end
 		end
 	

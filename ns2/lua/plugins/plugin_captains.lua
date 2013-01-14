@@ -307,7 +307,6 @@ if kDAKConfig and kDAKConfig.Captains then
 		if isCaptainsMode() then
 			DisplayMessage(client:GetControllingPlayer(), "You're joining a captains game.  Please ASK FOR ORDERS when you join a team.")
 		end
-		return true
 	end
 	
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, client_putinserver, 5)
@@ -338,7 +337,6 @@ if kDAKConfig and kDAKConfig.Captains then
 				end
 			end
 		end
-		return true
 	end
 
 	DAKRegisterEventHook(kDAKOnClientDisconnect, client_disconnect, 5)

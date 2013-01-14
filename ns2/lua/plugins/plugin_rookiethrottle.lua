@@ -33,7 +33,6 @@ if kDAKConfig and kDAKConfig.RookieThrottle then
 			client.disconnectreason = kDAKConfig.RookieThrottle.kKickReason
 			Server.DisconnectClient(client)
 		end
-		return true
 	end
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, RookieThrottleOnClientDelayedConnect, 5)
 end

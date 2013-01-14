@@ -2,8 +2,8 @@
 
 TGNS = {}
 
-function TGNS:GetCountOrZero(countable)
-	local result = countable == nil and 0 or #countable
+function TGNS:GetNumericValueOrZero(countable)
+	local result = countable == nil and 0 or countable
 	return result
 end
 

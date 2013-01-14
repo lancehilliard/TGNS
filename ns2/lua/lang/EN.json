@@ -44,7 +44,6 @@
 		"kVoteMapTimeRemaining": 					"%.1f Minutes Remaining.",
 
 		"kTournamentModeCountdown": 				"Game starts in %ss. Who is COMM? Who will do what? - tacticalgamer.com",
-		"kTournamentModeCountdown": 				"Game will start in %s seconds!",
 		"kTournamentModePubPlayerWarning": 			"Game will start once each team has %s players.",
 		"kTournamentModeReadyAlert": 				"Both teams need to ready for game to start.",
 		"kTournamentModeTeamReady": 				"%s has %s for Team %s.",

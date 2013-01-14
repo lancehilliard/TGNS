@@ -1,16 +1,17 @@
 // require printable characters in player names
 
 if kDAKConfig and kDAKConfig.PrintableNames then
-
+	Script.Load("lua/TGNSCommon.lua")
+	
 	local function PrintableNamesOnClientDelayedConnect(client)
 		local player = client:GetControllingPlayer()
 
 		local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
 
 		if nonPrintableCharactersCount>0 then
-			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage), true)
+			TGNS:SendChatMessage(player, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage)
+			//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage), true)
 		end
-		return true
 	end
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, PrintableNamesOnClientDelayedConnect, 5)
 

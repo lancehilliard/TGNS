@@ -88,7 +88,6 @@ if kDAKConfig and kDAKConfig.Taglines then
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, "TGNS", -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 			end
 		end
-		return true
 	end
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, TaglinesOnClientDelayedConnect, 5)
 
