@@ -12,17 +12,65 @@ if kDAKConfig and kDAKConfig.Chat then
 		return ""
 		
 	end
-	
-	local function Chat(client, command, ...)
-		local chatMessage = GetChatMessage(...)
-		if string.len(chatMessage) > 0 then
-			TGNS:PMAllPlayersWithAccess(client, chatMessage, command, true)
+
+	local function ProcessChatCommand(client, channel, message)
+		local label = channel.label
+		local hasAccess = DAKGetClientCanRunCommand(client, command)
+		local name
+		local chatMessage
+		
+		if hasAccess and channel.canPM then
+			_, _, name, chatMessage = string.find(message, "([%w%p]*) (.*)")
+			Print("name: %s, message: %s", ToString(name), ToString(chatMessage))
+			chatMessage = GetChatMessage(chatMessage)
+			if name ~= nil and string.len(name) > 0 then
+				local targetplayer = TGNS:GetPlayerMatchingName(name)
+				if targetplayer ~= nil then
+					TGNS:PMAllPlayersWithAccess(client, string.format("To %s: %s", targetplayer:GetName(), chatMessage), label, true, true)
+					if not DAKGetClientCanRunCommand(client, label) then
+						Server.SendNetworkMessage(targetplayer, "Chat", TGNS:BuildPMChatMessage(client, chatMessage, label, true), true)
+					end
+				else
+					Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, string.format("'%s' does not uniquely match a player.", name), label, true), true)
+				end
+			elseif chatMessage ~= nil and string.len(chatMessage) > 0 then
+				TGNS:PMAllPlayersWithAccess(client, chatMessage, label, true, true)
+			else
+				Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>, if name is blank only admins are messaged", label, true), true)
+			end
+		// Non-admins will send the message to all admins
+		else
+			local chatMessage = GetChatMessage(message)
+			if chatMessage then
+				TGNS:PMAllPlayersWithAccess(client, chatMessage, label, true, true)
+			else
+				Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Usage: @<message>", label, true), true)
+			end
 		end
 	end
 
-	for command, help in pairs(kDAKConfig.Chat.Channels) do
-		DAKCreateServerAdminCommand("Console_" .. command, function(client, ...) Chat(client, command, ...) end, help)
+	for command, channel in pairs(kDAKConfig.Chat.Channels) do
+		DAKCreateServerAdminCommand("Console_" .. command, function(client, ...)
+				local message = StringConcatArgs(...)
+				if message == nil then message = "" end
+				ProcessChatCommand(client, channel, message)
+			end, help)
 	end
+
+	local function CheckForChat(client, message)
+		//Print("CheckForChat")
+		message = StringTrim(message)
+		//Print("--: " .. message)
+		for command, channel in pairs(kDAKConfig.Chat.Channels) do
+			//Print("--: " .. ToString(channel))
+			if message and string.sub(message, 1, 1) == channel.triggerChar then
+				ProcessChatCommand(client, channel, string.sub(message, 2, -1))
+				return true
+			end
+		end
+	end
+	
+	TGNS:RegisterChatHook(CheckForChat)
 
 end
 
