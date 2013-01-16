@@ -14,8 +14,6 @@ local function SetupDefaultConfig(Save)
 	kDAKConfig.PublicCommands.Commands["nextmap"] = { }
 	kDAKConfig.PublicCommands.Commands["nextmap"].command = "nextmap"
 	kDAKConfig.PublicCommands.Commands["nextmap"].throttle = 30
-	// PMAdmins - Chat starting with @ will PM all admins on the server
-	kDAKConfig.PublicCommands.PMAdmins = true
 	if Save then
 		SaveDAKConfig()
 	end
