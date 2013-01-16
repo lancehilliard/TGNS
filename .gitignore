@@ -9,7 +9,6 @@
 !.gitignore
 
 # And then whitelist DAK core files
-!ns2/lua/DAKLoader.lua
 !ns2/lua/DAKLoader_Class.lua
 !ns2/lua/DAKLoader_Client.lua
 !ns2/lua/DAKLoader_Config.lua
