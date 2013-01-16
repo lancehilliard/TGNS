@@ -314,7 +314,6 @@ local originalHookNetworkMessage = Server.HookNetworkMessage
 
 Server.HookNetworkMessage = function(networkMessage, callback)
 	if networkMessage == "ChatClient" then
-		Print("Hook ChatClient network message")
 		originalOnChatReceived = callback
 		callback = OnChatReceived
 	end
