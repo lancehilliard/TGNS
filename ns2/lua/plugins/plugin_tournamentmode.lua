@@ -149,22 +149,22 @@ if kDAKConfig and kDAKConfig.TournamentMode then
 	
 	DAKRegisterEventHook(kDAKOnUpdatePregame, UpdatePregame, 6)
 		
-	//if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensions then
-	//
-	//	local originalNS2GRGetCanJoinTeamNumber
-	//	
-	//	originalNS2GRGetCanJoinTeamNumber = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "GetCanJoinTeamNumber", 
-	//		function(self, teamNumber)
-	//
-	//			if GetTournamentMode() and (teamNumber == 1 or teamNumber == 2) then
-	//				return true
-	//			end
-	//			return originalNS2GRGetCanJoinTeamNumber(self, teamNumber)
-	//			
-	//		end
-	//	)
-	//	
-	//end
+	if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensions then
+		if kDAKConfig.TournamentMode.kTournamentModeOverrideCanJoinTeam then
+			local originalNS2GRGetCanJoinTeamNumber
+			
+			originalNS2GRGetCanJoinTeamNumber = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "GetCanJoinTeamNumber", 
+				function(self, teamNumber)
+		
+					if GetTournamentMode() and (teamNumber == 1 or teamNumber == 2) then
+						return true
+					end
+					return originalNS2GRGetCanJoinTeamNumber(self, teamNumber)
+					
+				end
+			)
+		end
+	end
 	
 	local function EnablePCWMode(client)
 		DAKDisplayMessageToAllClients("kTournamentModePCWMode")

@@ -6,6 +6,7 @@ local function SetupDefaultConfig(Save)
 		kDAKConfig.TournamentMode = { }
 	end
 	kDAKConfig.TournamentMode.kTournamentModePubMode = false
+	kDAKConfig.TournamentMode.kTournamentModeOverrideCanJoinTeam = true
 	kDAKConfig.TournamentMode.kTournamentModePubMinPlayersPerTeam = 3
 	kDAKConfig.TournamentMode.kTournamentModePubMinPlayersOnline = 8
 	kDAKConfig.TournamentMode.kTournamentModeAlertDelay = 30
