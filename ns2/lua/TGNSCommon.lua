@@ -2,6 +2,45 @@
 
 TGNS = {}
 
+function TGNS:PlayerIsOnWinningTeam(player)
+	local result = not player:GetTeam():GetHasTeamLost() // mlh as of build 237, PlayingTeam.lua's GetHasTeamWon() unconditionally returns false
+	return result
+end
+
+function TGNS:IsGameStartingState(gameState)
+	local result = gameState == kGameState.Started
+	return result
+end
+
+function TGNS:IsGameWinningState(gameState)
+	local result = gameState == kGameState.Team1Won or gameState == kGameState.Team2Won
+	return result
+end
+
+function TGNS:IsGameplayTeam(teamNumber)
+	local result = teamNumber == kMarineTeamType or teamNumber == kAlienTeamType
+	return result
+end
+
+function TGNS:GetTeamName(teamNumber)
+	local result
+	if teamNumber == kTeamReadyRoom then
+		result = "Ready Room"
+	elseif teamNumber == kMarineTeamType then
+		result = "Marines"
+	elseif teamNumber == kAlienTeamType then
+		result = "Aliens"
+	elseif teamNumber == kSpectatorIndex then
+		result = "Spectator"
+	end
+	return result
+end
+
+function TGNS:IsPlayerSpectator(player)
+	local result = player:GetTeamNumber() == kSpectatorIndex
+	return result
+end
+
 function TGNS:GetNumericValueOrZero(countable)
 	local result = countable == nil and 0 or countable
 	return result
@@ -11,10 +50,11 @@ function TGNS:GetClientName(client)
 	local result = client:GetControllingPlayer():GetName()
 	return result
 end
-
-//function TGNS:DoForClients(clients, action)
-//	
-//end
+function TGNS:DoFor(elements, elementAction)
+	for i = 1, #elements, 1 do
+		elementAction(elements[i])
+	end
+end
 
 function TGNS:IsClientCommander(client)
 	local result = false
@@ -42,6 +82,11 @@ function TGNS:IsClientStranger(client)
 	return result
 end
 
+function TGNS:ClientAction(player, action)
+	local client = player:GetClient()
+	return action(client)
+end
+
 function TGNS:ConsolePrint(client, message, prefix)
 	if client ~= nil then
 		prefix = prefix == nil and "TGNS" or prefix
@@ -51,6 +96,11 @@ end
 
 function TGNS:GetClientSteamId(client)
 	result = client:GetUserId()
+	return result
+end
+
+function TGNS:GetDataFilename(dataType, steamId)
+	local result = string.format("config://%s/%s.json", dataType, steamId)
 	return result
 end
 
@@ -100,6 +150,29 @@ function TGNS:AllPlayers(doThis)
 	
 end
 
+function TGNS:Has(elements, element)
+	local found = false
+	for i = 1, #elements, 1 do
+		if not found and elements[i] == element then
+			found = true
+		end
+	end
+	return found
+end
+
+function TGNS:GetPlayer(client)
+	local result = client:GetControllingPlayer()
+	return result
+end
+
+function TGNS:GetPlayers(clients)
+	local result = {}
+	for i = 1, #clients, 1 do
+		result.insert(client:GetControllingPlayer())
+	end
+	return result
+end
+
 function TGNS:GetMatchingClients(predicate, playerList)
 	local result = {}
 	playerList = playerList == nil and self:GetPlayerList() or playerList
@@ -107,12 +180,17 @@ function TGNS:GetMatchingClients(predicate, playerList)
 		if playerList[r] ~= nil then
 			local client = playerList[r]:GetClient()
 			if client ~= nil then
-				if predicate(client, player) then
+				if predicate(client, playerList[r]) then
 					table.insert(result, client)
 				end
 			end
 		end
 	end
+	return result
+end
+
+function TGNS:GetPlayingClients(playerList)
+	local result = TGNS:GetMatchingClients(function(c,p) return self:IsGameplayTeam(p:GetTeamNumber()) end, playerList)
 	return result
 end
 
@@ -129,6 +207,12 @@ function TGNS:GetLastMatchingClient(predicate, playerList)
 			end
 		end
 	end
+	return result
+end
+
+function TGNS:GetTeamClients(teamNumber, playerList)
+	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
+	local result = self:GetMatchingClients(predicate, playerList)
 	return result
 end
 
