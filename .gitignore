@@ -31,6 +31,9 @@
 !ns2/lua/plugins/config_afkkick.lua
 !ns2/lua/plugins/plugin_afkkick.lua
 
+!ns2/lua/plugins/config_balance.lua
+!ns2/lua/plugins/plugin_balance.lua
+
 !ns2/lua/plugins/config_communityslots.lua
 !ns2/lua/plugins/plugin_communityslots.lua
 
