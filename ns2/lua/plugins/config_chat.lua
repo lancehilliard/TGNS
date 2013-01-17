@@ -6,7 +6,7 @@ local function SetupDefaultConfig(Save)
 		kDAKConfig.Chat = { }
 	end
 	kDAKConfig.Chat.Channels = {}
-	kDAKConfig.Chat.Channels["sv_chat"] = "<Message>  Sends a message to every admin on the server."
+	kDAKConfig.Chat.Channels["sv_chat"] = { label = "PMADMIN", triggerChar = "@", help = "<Message>  Sends a message to every admin on the server.", canPM = true }
 	if Save then
 		SaveDAKConfig()
 	end

@@ -1,6 +1,7 @@
 //Taglines
 
 if kDAKConfig and kDAKConfig.Taglines then
+	Script.Load("lua/TGNSCommon.lua")
 
 	local taglineFilenamePath = "config://taglines/"
     
@@ -39,7 +40,8 @@ if kDAKConfig and kDAKConfig.Taglines then
 	end
 
 	local function ShowCurrentTagline(client)
-		ServerAdminPrint(client, "[TAGLINE] Your current tagline:")
+		//ServerAdminPrint(client, "[TAGLINE] Your current tagline:")
+		TGNS:ConsolePrint(client, "Your current tagline:", "TAGLINE")
 		local steamId = client:GetUserId()
 		local tagline = LoadTagline(steamId)
 		if tagline == nil or tagline.message == "" then
