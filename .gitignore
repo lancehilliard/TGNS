@@ -65,6 +65,9 @@
 !ns2/lua/plugins/plugin_guivotebase.lua
 !ns2/lua/gui/gui_votebase.lua
 
+!ns2/lua/plugins/config_scoreboardicons.lua
+!ns2/lua/plugins/plugin_scoreboardicons.lua
+
 !ns2/lua/TGNSCommon.lua
 
 !ns2/lua/plugins/config_autoconcede.lua
