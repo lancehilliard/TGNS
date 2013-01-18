@@ -7,6 +7,7 @@ local function SetupDefaultConfig(Save)
 	end
 		kDAKConfig.ScoreboardIcons.GroupIcons = {}
 		kDAKConfig.ScoreboardIcons.GroupIcons["admin_group"] = "\226\152\133"
+		kDAKConfig.ScoreboardIcons.CatchAll = "\239\188\159"
 	if Save then
 		SaveDAKConfig()
 	end
