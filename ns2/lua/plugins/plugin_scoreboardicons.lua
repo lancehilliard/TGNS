@@ -7,7 +7,6 @@ if kDAKConfig and kDAKConfig.ScoreboardIcons then
 	function BuildScoresMessage(scorePlayer, sendToPlayer)
 		local t = originalBuildScoresMessage(scorePlayer, sendToPlayer)
 
-		local label = ""
 		local client = Server.GetOwner(scorePlayer)
 		if client and t and t.playerName then
 			for group, icon in pairs(kDAKConfig.ScoreboardIcons.GroupIcons) do
