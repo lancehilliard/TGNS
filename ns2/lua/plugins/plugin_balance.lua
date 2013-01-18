@@ -5,10 +5,18 @@ if kDAKConfig and kDAKConfig.Balance then
 
 	local steamIdsWhichStartedGame = {}
 	local addWinToBalance = function(balance)
-			balance.wins = balance.wins + 1 
+			balance.wins = balance.wins + 1
+			balance.total = balance.total + 1
+			if balance.wins + balance.losses > 100 then
+				balance.losses = balance.losses - 1
+			end
 		end
 	local addLossToBalance = function(balance) 
 			balance.losses = balance.losses + 1 
+			balance.total = balance.total + 1
+			if balance.wins + balance.losses > 100 then
+				balance.wins = balance.wins - 1
+			end
 		end
 
 	local function GetDataFilename(steamId)
@@ -44,20 +52,35 @@ if kDAKConfig and kDAKConfig.Balance then
 		if balanceFile then
 			result = json.decode(balanceFile:read("*all")) or { }
 			balanceFile:close()
-		else
-			result = { steamId = steamId, wins = 0, losses = 0 }
+		end
+		if result == nil then
+			result = {}
+		end
+		if result.wins == nil then
+			result.wins = 0
+		end
+		if result.losses == nil then
+			result.losses = 0
+		end
+		if result.total == nil then
+			result.total = 0
 		end
 		return result
 	end
 	
-	local function GetPlayerWinLossRatio(player)
+	local function GetPlayerBalance(player)
 		local result
 		TGNS:ClientAction(player, function(c) 
-				local steamId = TGNS:GetClientSteamId(c)
-				local balance = LoadBalance(steamId)
-				result = GetWinLossRatio(balance)
+			local steamId = TGNS:GetClientSteamId(c)
+			result = LoadBalance(steamId)
 			end
 		)
+		return result
+	end
+	
+	local function GetPlayerWinLossRatio(player)
+		local balance = GetPlayerBalance(player)
+		local result = GetWinLossRatio(balance)
 		return result
 	end
     
@@ -72,7 +95,7 @@ if kDAKConfig and kDAKConfig.Balance then
 		table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) < GetPlayerWinLossRatio(p2) end )
 		TGNS:ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
 		TGNS:DoFor(playerList, function(player)
-				TGNS:ConsolePrint(client, string.format("%s: %s", player:GetName(), GetPlayerWinLossRatio(player)), "BALANCE")
+				TGNS:ConsolePrint(client, string.format("%s: %s with %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total), "BALANCE")
 				JoinRandomTeam(player)
 			end
 		)
