@@ -65,6 +65,9 @@ if kDAKConfig and kDAKConfig.Balance then
 		if result.total == nil then
 			result.total = 0
 		end
+		if result.steamId == nil then
+			result.steamId = steamId
+		end
 		return result
 	end
 	
