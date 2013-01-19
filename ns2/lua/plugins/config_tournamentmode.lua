@@ -1,10 +1,12 @@
 //tournamentmode config
 
-kDAKRevisions["TournamentMode"] = 1.8
+kDAKRevisions["TournamentMode"] = "0.1.116a"
+
 local function SetupDefaultConfig(Save)
 	if kDAKConfig.TournamentMode == nil then
 		kDAKConfig.TournamentMode = { }
 	end
+	kDAKConfig.TournamentMode.kTournamentModePauseEnabled = false
 	kDAKConfig.TournamentMode.kTournamentModePubMode = false
 	kDAKConfig.TournamentMode.kTournamentModeOverrideCanJoinTeam = true
 	kDAKConfig.TournamentMode.kTournamentModePubMinPlayersPerTeam = 3
@@ -20,4 +22,4 @@ local function SetupDefaultConfig(Save)
 	end
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "TournamentMode", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+table.insert(kDAKPluginDefaultConfigs, {PluginName = "TournamentMode", DefaultConfig = SetupDefaultConfig })
