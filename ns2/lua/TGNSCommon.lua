@@ -72,6 +72,11 @@ function TGNS:HasClientSignedPrimer(client)
 	return result
 end
 
+function TGNS:IsClientAdmin(client)
+	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hasadmin")
+	return result
+end
+
 function TGNS:IsClientSM(client)
 	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
 	return result
@@ -168,7 +173,7 @@ end
 function TGNS:GetPlayers(clients)
 	local result = {}
 	for i = 1, #clients, 1 do
-		result.insert(client:GetControllingPlayer())
+		table.insert(result, clients[i]:GetControllingPlayer())
 	end
 	return result
 end
