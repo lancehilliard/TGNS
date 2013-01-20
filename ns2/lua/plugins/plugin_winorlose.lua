@@ -1,6 +1,7 @@
 //Win Or Lose (mostly copied from VoteSurrender)
 
 if kDAKConfig and kDAKConfig.WinOrLose then
+	Script.Load("lua/TGNSCommon.lua")
 
 	local kWinOrLoseVoteArray = { }
 	local kWinOrLoseTeamCount = 2
@@ -65,7 +66,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 			for i = 1, kWinOrLoseTeamCount do
 
 				if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and gamerules ~= nil and gamerules:GetGameState() == kGameState.Started and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + kDAKConfig.WinOrLose.kWinOrLoseAlertDelay < Shared.GetTime() then
-					local playerRecords =  GetEntitiesForTeam("Player", i)
+					local playerRecords = TGNS:GetPlayers(TGNS:GetMatchingClients(function(c,p) return p:GetTeamNumber() == i end, TGNS:GetPlayerList())) // GetEntitiesForTeam("Player", i)
 					local totalvotes = 0
 					for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
 						local clientid = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]
