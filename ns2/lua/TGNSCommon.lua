@@ -1,6 +1,29 @@
 // TGNS Common
 
 TGNS = {}
+local scheduledActions = {}
+
+function TGNS:ScheduleAction(delayInSeconds, action)
+	local scheduledAction = {}
+	scheduledAction.when = Shared.GetTime() + delayInSeconds
+	scheduledAction.what = action
+	table.insert(scheduledActions, scheduledAction)
+end
+
+local function ProcessScheduledActions()
+	for r = #scheduledActions, 1, -1 do
+		local scheduledAction = scheduledActions[r]
+		if scheduledAction.when < Shared.GetTime() then
+			table.remove(scheduledActions, r)
+			scheduledAction.what()
+		end
+	end
+end
+
+local function CommonOnServerUpdate(deltatime)
+	ProcessScheduledActions()
+end
+DAKRegisterEventHook(kDAKOnServerUpdate, CommonOnServerUpdate, 5)
 
 function TGNS:PlayerIsOnWinningTeam(player)
 	local result = not player:GetTeam():GetHasTeamLost() // mlh as of build 237, PlayingTeam.lua's GetHasTeamWon() unconditionally returns false
@@ -87,6 +110,20 @@ function TGNS:IsClientStranger(client)
 	return result
 end
 
+function TGNS:PlayerAction(client, action)
+	local player = client:GetControllingPlayer()
+	return action(player)
+end
+
+function TGNS:GetPlayerName(player)
+	return player:GetName()
+end
+
+function TGNS:GetClientName(client)
+	local result = self:PlayerAction(client, function(p) return self:GetPlayerName(p) end)
+	return result
+end
+
 function TGNS:ClientAction(player, action)
 	local client = player:GetClient()
 	return action(client)
@@ -94,7 +131,12 @@ end
 
 function TGNS:ConsolePrint(client, message, prefix)
 	if client ~= nil then
-		prefix = prefix == nil and "TGNS" or prefix
+		if prefix == nil then
+			prefix = "TGNS"
+		end
+		if message == nil then
+			message = ""
+		end
 		ServerAdminPrint(client, "[" .. prefix .. "] " .. message)
 	end
 end
@@ -244,22 +286,22 @@ function TGNS:GetSmClients(playerList)
 	return result
 end
 
-function TGNS:KickClient(client, chatMessage, disconnectReason, onPreKick)
+function TGNS:KickClient(client, disconnectReason, onPreKick)
 	if client ~= nil then
 		local player = client:GetControllingPlayer()
 		if player ~= nil then
 			if onPreKick ~= nil then
 				onPreKick(client, player)
 			end
-			TGNS:SendChatMessage(player, chatMessage)
 		end
-		TGNS:DisconnectClient(client, disconnectReason)
+		self:ConsolePrint(client, disconnectReason)
+		self:ScheduleAction(2, function() self:DisconnectClient(client, disconnectReason) end)		
 	end
 end
 
-function TGNS:KickPlayer(player, chatMessage, disconnectReason, onPreKick)
+function TGNS:KickPlayer(player, disconnectReason, onPreKick)
 	if player ~= nil then
-		self:KickClient(player:GetClient(), chatMessage, disconnectReason, onPreKick)
+		self:KickClient(player:GetClient(), disconnectReason, onPreKick)
 	end
 end
 
