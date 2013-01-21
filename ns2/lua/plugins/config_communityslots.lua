@@ -9,10 +9,7 @@ local function SetupDefaultConfig(Save)
 	kDAKConfig.CommunitySlots.kMaximumSlots = 24
 	kDAKConfig.CommunitySlots.kCommunitySlots = 2
 	kDAKConfig.CommunitySlots.kMinimumStrangers = 8
-	kDAKConfig.CommunitySlots.kKickedForRoom = "** ): You're being auto-kicked due to reserved slots :( **"
-	kDAKConfig.CommunitySlots.kKickedDisconnectReason = "Kicked due to a reserved slot."
-	kDAKConfig.CommunitySlots.kServerFull = "Server is full - You must have a reserved slot to connect."
-	kDAKConfig.CommunitySlots.kServerFullDisconnectReason = "Server is full."
+	kDAKConfig.CommunitySlots.kBumpReason = "%s was bumped by reserved slots. This server is full at %s/%s."
 	if Save then
 		SaveDAKConfig()
 	end

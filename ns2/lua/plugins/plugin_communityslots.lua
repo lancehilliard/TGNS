@@ -23,9 +23,8 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		return result
 	end
 	
-	local function ServerIsFull()
-		local playerCount = TGNS:GetPlayerCount() - 1
-		local result = playerCount >= kDAKConfig.CommunitySlots.kMaximumSlots - kDAKConfig.CommunitySlots.kCommunitySlots
+	local function ServerIsFull(playerList)
+		local result = #playerList - 1 >= kDAKConfig.CommunitySlots.kMaximumSlots - kDAKConfig.CommunitySlots.kCommunitySlots
 		return result
 	end
 	
@@ -87,27 +86,42 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		end
 	end
 	
+	local function GetBumpMessage(targetClient)
+		local result = string.format(kDAKConfig.CommunitySlots.kBumpReason, TGNS:GetClientName(targetClient), kDAKConfig.CommunitySlots.kMaximumSlots - kDAKConfig.CommunitySlots.kCommunitySlots, kDAKConfig.CommunitySlots.kMaximumSlots)
+		return result
+	end
+	
+	local function AnnounceClientBumpToStrangers(targetClient)
+		local playerName = TGNS:PlayerAction(targetClient, function(p) return p:GetName() end)
+		local strangerClients = TGNS:GetMatchingClients(function(c,p) return TGNS:IsClientStranger(c) end, TGNS:GetPlayerList())
+		local strangerPlayers = TGNS:GetPlayers(strangerClients)
+		TGNS:DoFor(strangerPlayers, function(p) TGNS:SendChatMessage(p, GetBumpMessage(targetClient)) end)
+	end
+	
 	local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
 		Log(string.format("%s: Victim: %s (score: %s) Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS:GetClientNameSteamIdCombo(targetClient), tostring(targetPlayer.score), TGNS:GetClientNameSteamIdCombo(joiningClient)))
 		IncrementBumpCount(targetClient, victimBumpCounts)
+		AnnounceClientBumpToStrangers(targetClient)
 	end
 
 	local function onPreJoinerKick(targetClient, targetPlayer, playerList)
 		Log(string.format("%s: Reject: %s", GetKickDetails(targetClient, targetClient, playerList).shortReport, TGNS:GetClientNameSteamIdCombo(targetClient)))
 		IncrementBumpCount(targetClient, rejectBumpCounts)
+		AnnounceClientBumpToStrangers(targetClient)
 	end
 
 	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
 		local playerList = TGNS:GetPlayerList()
-		if ServerIsFull() then
-			local victimClient = FindVictimClient(joiningClient, playerList)
+		local nonSpecPlayers = TGNS:GetPlayers(TGNS:GetMatchingClients(function(c,p) return not TGNS:IsPlayerSpectator(p) end, playerList))
+		if ServerIsFull(nonSpecPlayers) then
+			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
-				TGNS:KickClient(victimClient, kDAKConfig.CommunitySlots.kKickedForRoom, kDAKConfig.CommunitySlots.kKickedDisconnectReason, function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
+				TGNS:KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
 			else
 				if TGNS:IsClientSM(joiningClient) then
 					Log(string.format("No player kicked upon join of SM: ", TGNS:GetClientNameSteamIdCombo(joiningClient)))
 				else
-					TGNS:KickClient(joiningClient, kDAKConfig.CommunitySlots.kServerFull, kDAKConfig.CommunitySlots.kServerFullDisconnectReason, function(c,p) onPreJoinerKick(c,p,playerList) end)
+					TGNS:KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
 					return true
 				end
 			end
@@ -134,7 +148,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		local strangerRejects = TGNS:GetNumericValueOrZero(rejectBumpCounts.stranger) 
 		local totalVictims = primerOnlyVictims + strangerVictims
 		local totalRejects = primerOnlyRejects + strangerRejects
-		TGNS:ConsolePrint(client, "BUMP COUNTS:", "CSDEBUG")
+		TGNS:ConsolePrint(client, string.format("BUMP COUNTS (%s):", totalVictims + totalRejects), "CSDEBUG")
 		TGNS:ConsolePrint(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", totalVictims, primerOnlyVictims, strangerVictims), "CSDEBUG")
 		TGNS:ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", totalRejects, primerOnlyRejects, strangerRejects), "CSDEBUG")
 	end
