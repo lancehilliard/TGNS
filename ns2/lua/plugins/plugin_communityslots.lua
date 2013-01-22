@@ -92,7 +92,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	end
 	
 	local function AnnounceClientBumpToStrangers(targetClient)
-		local playerName = TGNS:PlayerAction(targetClient, function(p) return p:GetName() end)
+		local playerName = TGNS:GetClientName(targetClient)
 		local strangerClients = TGNS:GetMatchingClients(function(c,p) return TGNS:IsClientStranger(c) end, TGNS:GetPlayerList())
 		local strangerPlayers = TGNS:GetPlayers(strangerClients)
 		TGNS:DoFor(strangerPlayers, function(p) TGNS:SendChatMessage(p, GetBumpMessage(targetClient)) end)
