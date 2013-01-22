@@ -130,13 +130,14 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	local function CommunitySlotsOnClientDelayedConnectGreeter(client)
 		local chatMessage
 		if TGNS:IsClientSM(client) then
-			chatMessage = "Welcome back! You have a reserved slot at all times. Thank you for your Supporting Membership!"
+			chatMessage = "Supporting Member! Thank you! Join the full server anytime!"
 		elseif TGNS:HasClientSignedPrimer(client) then
-			chatMessage = string.format("Welcome back! You have a reserved slot when %s+ strangers are playing. Thank you for signing the TGNS Primer!", kDAKConfig.CommunitySlots.kMinimumStrangers)
+			chatMessage = string.format("TGNS Primer signer! Join the full server when %s+ strangers are playing!", kDAKConfig.CommunitySlots.kMinimumStrangers)
 		else
-			chatMessage = "Welcome to TGNS! Visit tacticalgamer.com/natural-selection to learn how to get a reserved slot!"
+			chatMessage = "Welcome! Visit tacticalgamer.com/natural-selection to say hello!"
 		end
 		TGNS:ConsolePrint(client, chatMessage)
+		TGNS:PlayerAction(client, function(p) TGNS:SendChatMessage(p, chatMessage) end)
 	end
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, CommunitySlotsOnClientDelayedConnect, 5)
 	DAKRegisterEventHook(kDAKOnClientDelayedConnect, CommunitySlotsOnClientDelayedConnectGreeter, 5)
