@@ -103,7 +103,7 @@ if kDAKConfig and kDAKConfig.Balance then
 			end
 		)
 	end
-	DAKCreateServerAdminCommand("Console_sv_balance", svBalance, "<balance> Balances all players based on win/loss (percentage) record.")
+	DAKCreateServerAdminCommand("Console_sv_balance", svBalance, "Balances all players based on win/loss (percentage) record.")
 	
 	local function BalanceOnSetGameState(self, state, currentstate)
 		if state ~= currentstate then
