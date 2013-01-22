@@ -185,7 +185,7 @@ if Server then
         return level
     end
 
-	local function AddSteamIDToGroup(steamId, groupNameToAdd)
+	function AddSteamIDToGroup(steamId, groupNameToAdd)
         for name, user in pairs(settings.users) do
             if user.id == steamId then
 				for g = 1, #user.groups do
@@ -194,18 +194,23 @@ if Server then
 					end
 				end
 				if groupNameToAdd ~= nil then
-					user.groups.insert(groupNameToAdd)
+					table.insert(user.groups, groupNameToAdd)
 				end
 				break
             end
         end
     end
 	
-	local function RemoveSteamIDFromGroup(steamId, groupNameToRemove)
+	function RemoveSteamIDFromGroup(steamId, groupNameToRemove)
         for name, user in pairs(settings.users) do
             if user.id == steamId then
-				user.groups.remove(groupNameToRemove)
-				break
+				for r = #user.groups, 1, -1 do
+					if user.groups[r] ~= nil then
+						if user.groups[r] == groupNameToRemove then
+							table.remove(user.groups, r)
+						end
+					end
+				end
             end
         end
     end
