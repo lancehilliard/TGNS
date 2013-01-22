@@ -36,11 +36,10 @@ if kDAKConfig and kDAKConfig.Balance then
 		local result
 		local totalGames = balance.losses + balance.wins
 		local notEnoughGamesToMatter = totalGames < 10
-		local allGamesWon = not noGamesPlayed and balance.losses == 0
 		if notEnoughGamesToMatter then
 			result = .5
 		else
-			result = allGamesWon and 1 or balance.wins / totalGames
+			result = balance.wins / totalGames
 		end
 		return result
 	end
