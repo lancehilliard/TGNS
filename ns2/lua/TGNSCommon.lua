@@ -95,7 +95,7 @@ function TGNS:HasClientSignedPrimer(client)
 	return result
 end
 
-function TGNS:IsClientAdmin(client)
+function TGNS.IsClientAdmin(client)
 	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hasadmin")
 	return result
 end
@@ -115,12 +115,12 @@ function TGNS:PlayerAction(client, action)
 	return action(player)
 end
 
-function TGNS:GetPlayerName(player)
+function TGNS.GetPlayerName(player)
 	return player:GetName()
 end
 
 function TGNS:GetClientName(client)
-	local result = self:PlayerAction(client, function(p) return self:GetPlayerName(p) end)
+	local result = self:PlayerAction(client, self.GetPlayerName)
 	return result
 end
 
@@ -295,7 +295,7 @@ function TGNS:KickClient(client, disconnectReason, onPreKick)
 			end
 		end
 		self:ConsolePrint(client, disconnectReason)
-		self:ScheduleAction(2, function() self:DisconnectClient(client, disconnectReason) end)		
+		self:ScheduleAction(2, function() self:DisconnectClient(client, disconnectReason) end)
 	end
 end
 
