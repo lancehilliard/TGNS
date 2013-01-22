@@ -101,7 +101,7 @@ function TGNS.IsClientAdmin(client)
 end
 
 function TGNS:IsClientTempAdmin(client)
-	local result = not client:GetIsVirtual() and not self:IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
+	local result = not client:GetIsVirtual() and not TGNS.IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
 	return result
 end
 
@@ -130,7 +130,7 @@ function TGNS:GetClientName(client)
 end
 
 function TGNS:ClientAction(player, action)
-	local client = player:GetClient()
+	local client = Server.GetOwner(player)
 	return action(client)
 end
 
