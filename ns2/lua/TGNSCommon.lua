@@ -100,6 +100,11 @@ function TGNS:IsClientAdmin(client)
 	return result
 end
 
+function TGNS:IsClientTempAdmin(client)
+	local result = not client:GetIsVirtual() and not self:IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
+	return result
+end
+
 function TGNS:IsClientSM(client)
 	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
 	return result
@@ -260,6 +265,26 @@ end
 function TGNS:GetTeamClients(teamNumber, playerList)
 	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
 	local result = self:GetMatchingClients(predicate, playerList)
+	return result
+end
+
+function TGNS:GetMarineClients(playerList)
+	local result = self:GetTeamClients(kMarineTeamType, playerList)
+	return result
+end
+
+function TGNS:GetAlienClients(playerList)
+	local result = self:GetTeamClients(kAlienTeamType, playerList)
+	return result
+end
+
+function TGNS:GetMarinePlayers(playerList)
+	local result = self:GetPlayers(self:GetMarineClients(playerList))
+	return result
+end
+
+function TGNS:GetAlienPlayers(playerList)
+	local result = self:GetPlayers(self:GetAlienClients(playerList))
 	return result
 end
 

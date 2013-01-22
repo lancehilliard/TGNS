@@ -184,6 +184,31 @@ if Server then
 		
         return level
     end
+
+	local function AddSteamIDToGroup(steamId, groupNameToAdd)
+        for name, user in pairs(settings.users) do
+            if user.id == steamId then
+				for g = 1, #user.groups do
+					if user.groups[g] == groupNameToAdd then
+						groupNameToAdd = nil
+					end
+				end
+				if groupNameToAdd ~= nil then
+					user.groups.insert(groupNameToAdd)
+				end
+				break
+            end
+        end
+    end
+	
+	local function RemoveSteamIDFromGroup(steamId, groupNameToRemove)
+        for name, user in pairs(settings.users) do
+            if user.id == steamId then
+				user.groups.remove(groupNameToRemove)
+				break
+            end
+        end
+    end
 	
 	local function GetClientLevel(client)
         local steamId = client:GetUserId()
