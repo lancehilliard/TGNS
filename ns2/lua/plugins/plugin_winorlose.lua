@@ -52,7 +52,8 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 			if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration then
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, "WinOrLose! On to the next game!"), true)
-				GetGamerules():EndGame(kTeamWhichWillWinIfWinLoseCountdownExpires)
+				local commandStructures = GetEntitiesForTeam("CommandStructure", kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and kAlienTeamType or kMarineTeamType)
+				TGNS:DoFor(commandStructures, function(s) DestroyEntity(s) end)
 				kTimeAtWhichWinOrLoseVoteSucceeded = 0
 			else
 				if (math.fmod(kCountdownTimeRemaining, kDAKConfig.WinOrLose.kWinOrLoseWarningInterval) == 0 or kCountdownTimeRemaining <= 5) then
