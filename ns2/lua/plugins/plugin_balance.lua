@@ -10,6 +10,7 @@ if kDAKConfig and kDAKConfig.Balance then
 			if balance.wins + balance.losses > 100 then
 				balance.losses = balance.losses - 1
 			end
+			//Shared.Message(balance.steamId .. " WIN")
 		end
 	local addLossToBalance = function(balance) 
 			balance.losses = balance.losses + 1 
@@ -17,6 +18,7 @@ if kDAKConfig and kDAKConfig.Balance then
 			if balance.wins + balance.losses > 100 then
 				balance.wins = balance.wins - 1
 			end
+			//Shared.Message(balance.steamId .. " LOSS")
 		end
 
 	local function GetDataFilename(steamId)
@@ -109,20 +111,23 @@ if kDAKConfig and kDAKConfig.Balance then
 			if TGNS:IsGameStartingState(state) then
 				steamIdsWhichStartedGame = {}
 				TGNS:DoFor(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c) table.insert(steamIdsWhichStartedGame, TGNS:GetClientSteamId(c)) end)
-			elseif TGNS:IsGameWinningState(state) then
-				local winningTeamNumber = state == kGameState.Team1Won and kMarineTeamType or kAlienTeamType
-				TGNS:DoFor(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c)
-						local steamId = TGNS:GetClientSteamId(c)
-						if TGNS:Has(steamIdsWhichStartedGame, steamId) then
-							local changeBalanceFunction = TGNS:PlayerIsOnWinningTeam(TGNS:GetPlayer(c)) and addWinToBalance or addLossToBalance
-							ChangeBalance(steamId, changeBalanceFunction)
-						end
-					end
-				)
 			end
 		end
 	end
 	DAKRegisterEventHook(kDAKOnSetGameState, BalanceOnSetGameState, 5)
+	
+	function BalanceOnGameEnd(self, winningTeam)
+		TGNS:DoFor(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c)
+				local steamId = TGNS:GetClientSteamId(c)
+				if TGNS:Has(steamIdsWhichStartedGame, steamId) then
+					local changeBalanceFunction = TGNS:PlayerIsOnTeam(TGNS:GetPlayer(c), winningTeam) and addWinToBalance or addLossToBalance
+					ChangeBalance(steamId, changeBalanceFunction)
+				end
+			end
+		)
+	end
+	
+	DAKRegisterEventHook(kDAKOnGameEnd, BalanceOnGameEnd, 5)
 end
 
 Shared.Message("Balance Loading Complete")

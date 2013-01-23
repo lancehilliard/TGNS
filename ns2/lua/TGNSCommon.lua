@@ -25,8 +25,8 @@ local function CommonOnServerUpdate(deltatime)
 end
 DAKRegisterEventHook(kDAKOnServerUpdate, CommonOnServerUpdate, 5)
 
-function TGNS:PlayerIsOnWinningTeam(player)
-	local result = not player:GetTeam():GetHasTeamLost() // mlh as of build 237, PlayingTeam.lua's GetHasTeamWon() unconditionally returns false
+function TGNS:PlayerIsOnTeam(player, team)
+	local result = player:GetTeam() == team
 	return result
 end
 
