@@ -99,7 +99,9 @@ if kDAKConfig and kDAKConfig.Balance then
 		table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) < GetPlayerWinLossRatio(p2) end )
 		TGNS:ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
 		TGNS:DoFor(playerList, function(player)
-				TGNS:ConsolePrint(client, string.format("%s: %s with %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total), "BALANCE")
+				if TGNS:IsClientAdmin(client) then
+					TGNS:ConsolePrint(client, string.format("%s: %s with %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total), "BALANCE")
+				end
 				JoinRandomTeam(player)
 			end
 		)
