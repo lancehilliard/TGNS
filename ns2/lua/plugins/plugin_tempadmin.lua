@@ -82,7 +82,8 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 	
 	function RemoveTempAdminFromClient(client)
-		RemoveSteamIDFromGroup(TGNS:GetClientSteamId(client), "tempadmin_group")
+		local steamId = TGNS:GetClientSteamId(client)
+		RemoveSteamIDFromGroup(steamId, "tempadmin_group")
 		TGNS:PlayerAction(client, function(p) TGNS:SendChatMessage(p, "You are no longer Temp Admin.") end)
 	end
 	
@@ -122,7 +123,7 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 			RemoveTempAdmins(teamClients)
 		end
 		if playerIsTempAdmin then
-			RemoveTempAdminFromClient(client)
+			TGNS:ClientAction(player, function(c) RemoveTempAdminFromClient(c) end)
 		end
 	end
 	DAKRegisterEventHook(kDAKOnTeamJoin, TempAdminOnTeamJoin, 5)
