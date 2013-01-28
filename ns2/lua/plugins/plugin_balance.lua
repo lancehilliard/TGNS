@@ -2,8 +2,17 @@
 
 if kDAKConfig and kDAKConfig.Balance then
 	Script.Load("lua/TGNSCommon.lua")
+	Script.Load("lua/TGNSPlayerDataRepository.lua")
 
 	local steamIdsWhichStartedGame = {}
+	local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
+				balance.wins = balance.wins ~= nil and balance.wins or 0
+				balance.losses = balance.losses ~= nil and balance.losses or 0
+				balance.total = balance.total ~= nil and balance.total or 0
+				return balance
+			end
+		)
+		
 	local addWinToBalance = function(balance)
 			balance.wins = balance.wins + 1
 			balance.total = balance.total + 1
@@ -21,19 +30,6 @@ if kDAKConfig and kDAKConfig.Balance then
 			//Shared.Message(balance.steamId .. " LOSS")
 		end
 
-	local function GetDataFilename(steamId)
-		return TGNS:GetDataFilename("balance", steamId)
-	end
-
-	local function SaveBalance(balance)
-		local balanceFilename = GetDataFilename(balance.steamId)
-		local balanceFile = io.open(balanceFilename, "w+")
-		if balanceFile then
-			balanceFile:write(json.encode(balance))
-			balanceFile:close()
-		end
-	end
-	
 	local function GetWinLossRatio(balance)
 		local result
 		local totalGames = balance.losses + balance.wins
@@ -46,37 +42,11 @@ if kDAKConfig and kDAKConfig.Balance then
 		return result
 	end
 
-	local function LoadBalance(steamId)
-		local result = nil
-		local balanceFilename = GetDataFilename(steamId)
-		local balanceFile = io.open(balanceFilename, "r")
-		if balanceFile then
-			result = json.decode(balanceFile:read("*all")) or { }
-			balanceFile:close()
-		end
-		if result == nil then
-			result = {}
-		end
-		if result.wins == nil then
-			result.wins = 0
-		end
-		if result.losses == nil then
-			result.losses = 0
-		end
-		if result.total == nil then
-			result.total = 0
-		end
-		if result.steamId == nil then
-			result.steamId = steamId
-		end
-		return result
-	end
-	
 	local function GetPlayerBalance(player)
 		local result
 		TGNS:ClientAction(player, function(c) 
 			local steamId = TGNS:GetClientSteamId(c)
-			result = LoadBalance(steamId)
+			result = pdr:Load(steamId)
 			end
 		)
 		return result
@@ -89,9 +59,9 @@ if kDAKConfig and kDAKConfig.Balance then
 	end
     
 	local function ChangeBalance(steamId, changeAction)
-		local balance = LoadBalance(steamId)
+		local balance = pdr:Load(steamId)
 		changeAction(balance)
-		SaveBalance(balance)
+		pdr:Save(balance)
 	end
 
 	local function svBalance(client)
@@ -119,8 +89,7 @@ if kDAKConfig and kDAKConfig.Balance then
 	DAKRegisterEventHook(kDAKOnSetGameState, BalanceOnSetGameState, 5)
 	
 	function BalanceOnGameEnd(self, winningTeam)
-		TGNS:DoFor(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c)
-				local steamId = TGNS:GetClientSteamId(c)
+		TGNS:DoForClientsWithId(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c, steamId)
 				if TGNS:Has(steamIdsWhichStartedGame, steamId) then
 					local changeBalanceFunction = TGNS:PlayerIsOnTeam(TGNS:GetPlayer(c), winningTeam) and addWinToBalance or addLossToBalance
 					ChangeBalance(steamId, changeBalanceFunction)
@@ -128,8 +97,8 @@ if kDAKConfig and kDAKConfig.Balance then
 			end
 		)
 	end
-	
 	DAKRegisterEventHook(kDAKOnGameEnd, BalanceOnGameEnd, 5)
+	
 end
 
 Shared.Message("Balance Loading Complete")
