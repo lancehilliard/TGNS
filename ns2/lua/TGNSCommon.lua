@@ -73,6 +73,7 @@ function TGNS:GetClientName(client)
 	local result = client:GetControllingPlayer():GetName()
 	return result
 end
+
 function TGNS:DoFor(elements, elementAction)
 	for i = 1, #elements, 1 do
 		elementAction(elements[i])
@@ -149,6 +150,18 @@ end
 function TGNS:GetClientSteamId(client)
 	result = client:GetUserId()
 	return result
+end
+
+function TGNS:DoForClientsWithId(clients, clientAction)
+	for i = 1, #clients, 1 do
+		local client = clients[i]
+		local steamId = self:GetClientSteamId(client)
+		if steamId == nil then
+			// todo mlh report to admins so they can make sure there aren't rampant problems??
+		else
+			clientAction(client, steamId)
+		end
+	end
 end
 
 function TGNS:GetDataFilename(dataType, steamId)
