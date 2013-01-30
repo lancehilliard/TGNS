@@ -2,9 +2,14 @@
 
 if kDAKConfig and kDAKConfig.Taglines then
 	Script.Load("lua/TGNSCommon.lua")
+	Script.Load("lua/TGNSPlayerDataRepository.lua")
 
-	local taglineFilenamePath = "config://taglines/"
-    
+	local pdr = TGNSPlayerDataRepository.Create("taglines", function(tagline)
+				tagline.message = tagline.message ~= nil and tagline.message or ""
+				return tagline
+			end
+		)
+		
 	local function GetTaglineMessage(...)
 		local result = ""
 		local concatenation = StringConcatArgs(...)
@@ -14,36 +19,10 @@ if kDAKConfig and kDAKConfig.Taglines then
 		return result
 	end
 	
-	local function GetTaglineFilename(steamId)
-		local result = taglineFilenamePath .. steamId .. ".json"
-		return result
-	end
-    
-	local function SaveTagline(tagline)
-		local taglineFilename = GetTaglineFilename(tagline.steamId)
-		local taglineFile = io.open(taglineFilename, "w+")
-		if taglineFile then
-			taglineFile:write(json.encode(tagline))
-			taglineFile:close()
-		end
-	end
-    
-	local function LoadTagline(steamId)
-		local result = nil
-		local taglineFilename = GetTaglineFilename(steamId)
-		local taglineFile = io.open(taglineFilename, "r")
-		if taglineFile then
-			result = json.decode(taglineFile:read("*all")) or { }
-			taglineFile:close()
-		end
-		return result
-	end
-
 	local function ShowCurrentTagline(client)
-		//ServerAdminPrint(client, "[TAGLINE] Your current tagline:")
 		TGNS:ConsolePrint(client, "Your current tagline:", "TAGLINE")
 		local steamId = client:GetUserId()
-		local tagline = LoadTagline(steamId)
+		local tagline = pdr:Load(steamId)
 		if tagline == nil or tagline.message == "" then
 			ServerAdminPrint(client, "[TAGLINE]     You don't currently have a tagline saved.")
 		else
@@ -69,11 +48,12 @@ if kDAKConfig and kDAKConfig.Taglines then
 		if taglineMessage == "" then
 			ShowUsage(client)
 		else
+			local tagline = pdr:Load(steamId)
 			if taglineMessage == "remove" then
 				taglineMessage = ""
 			end
-			local tagline = { steamId = steamId, message = taglineMessage }
-			SaveTagline(tagline)
+			tagline.message = taglineMessage
+			pdr:Save(tagline)
 			ShowCurrentTagline(client)
 		end
 	end
@@ -83,7 +63,7 @@ if kDAKConfig and kDAKConfig.Taglines then
 		if DAKGetClientCanRunCommand(client, "sv_taglineannounce") and Shared.GetTime() > 120 then
 			local player = client:GetControllingPlayer()
 			local steamId = client:GetUserId()
-			local tagline = LoadTagline(steamId)
+			local tagline = pdr:Load(steamId)
 			if tagline ~= nil and tagline.message ~= "" then
 				local message = player:GetName() .. " joined! " .. tagline.message
 				chatMessage = string.sub(message, 1, kMaxChatLength)
