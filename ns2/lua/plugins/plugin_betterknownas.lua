@@ -2,8 +2,14 @@
 
 if kDAKConfig and kDAKConfig.BetterKnownAs then
 	Script.Load("lua/TGNSCommon.lua")
+	Script.Load("lua/TGNSPlayerDataRepository.lua")
 
-	local bkaFilenamePath = "config://bka/"
+	local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
+				bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
+				bkaData.BKA = bkaData.BKA ~= nil and bkaData.BKA or ""
+				return bkaData
+			end
+		)
     
 	local function GetBkaName(...)
 		local result = ""
@@ -13,35 +19,10 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		end
 		return result
 	end
-	
-	local function GetBkaFilename(steamId)
-		local result = bkaFilenamePath .. steamId .. ".json"
-		return result
-	end
-    
-	local function SaveBka(bkaData)
-		local bkaFilename = GetBkaFilename(bkaData.steamId)
-		local bkaFile = io.open(bkaFilename, "w+")
-		if bkaFile then
-			bkaFile:write(json.encode(bkaData))
-			bkaFile:close()
-		end
-	end
-    
-	local function LoadBkaData(steamId)
-		local result = nil
-		local bkaFilename = GetBkaFilename(steamId)
-		local bkaFile = io.open(bkaFilename, "r")
-		if bkaFile then
-			result = json.decode(bkaFile:read("*all")) or { }
-			bkaFile:close()
-		end
-		return result
-	end
 
 	local function ShowCurrentBka(client, targetSteamId)
 		local steamId = client:GetUserId()
-		local bkaData = LoadBkaData(targetSteamId)
+		local bkaData = pdr:Load(targetSteamId)
 		local player = TGNS:GetPlayerMatchingSteamId(targetSteamId)
 		ServerAdminPrint(client, "[BKA] ")
 		if player ~= nil then
@@ -84,7 +65,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues)
 		local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
 		table.insert(newBkaData.AKAs, newBkaName)
-		local existingBkaData = LoadBkaData(targetSteamId)
+		local existingBkaData = pdr:Load(targetSteamId)
 		if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
 			if existingBkaData ~= nil then
 				if existingBkaData.AKAs ~= nil and #existingBkaData.AKAs > 0 then
@@ -100,7 +81,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		if (existingBkaData ~= nil) then
 			newBkaData.BKA = existingBkaData.BKA
 		end
-		SaveBka(newBkaData)
+		pdr:Save(newBkaData)
 	end
 	
 	local function svAka(client, playerName, ...)
@@ -138,7 +119,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 				local targetSteamId = targetClient:GetUserId()
 				local newBkaName = GetBkaName(...)
 				if newBkaName ~= "" then
-					local existingBkaData = LoadBkaData(targetSteamId)
+					local existingBkaData = pdr:Load(targetSteamId)
 					local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
 					if existingBkaData ~= nil then
 						if existingBkaData.AKAs ~= nil then
@@ -151,7 +132,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 					if newBkaName ~= "clear" then
 						newBkaData.BKA = newBkaName
 					end
-					SaveBka(newBkaData)
+					pdr:Save(newBkaData)
 					ShowCurrentBka(client, targetSteamId)
 				else
 					ShowUsage(client, targetSteamId)
@@ -174,7 +155,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	    local client = Server.GetOwner(player)
 		if client ~= nil then
 			local steamId = client:GetUserId()
-			local bkaData = LoadBkaData(steamId)
+			local bkaData = pdr:Load(steamId)
 			if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
 				local bkaName = "[" .. bkaData.BKA .. "]"
 				local playerNameStartsWithBkaName = string.sub(name,1,string.len(bkaName))==bkaName
