@@ -2,44 +2,21 @@
 
 if kDAKConfig and kDAKConfig.TempAdmin then
 	Script.Load("lua/TGNSCommon.lua")
+	Script.Load("lua/TGNSPlayerDataRepository.lua")
 	
 	local RosterCheckInterval = 10
-
+	local pdr = TGNSPlayerDataRepository.Create("tempadmin", function(tempAdminData)
+				tempAdminData.optin = tempAdminData.optin ~= nil and tempAdminData.optin or false
+				return tempAdminData
+			end
+		)
+		
 	local function GetDataFilename(steamId)
 		return TGNS:GetDataFilename("tempadmin", steamId)
 	end
 
-	local function SaveTempAdminData(data)
-		local dataFilename = GetDataFilename(data.steamId)
-		local dataFile = io.open(dataFilename, "w+")
-		if dataFile then
-			dataFile:write(json.encode(data))
-			dataFile:close()
-		end
-	end
-
-	local function LoadTempAdminData(steamId)
-		local result = nil
-		local dataFilename = GetDataFilename(steamId)
-		local dataFile = io.open(dataFilename, "r")
-		if dataFile then
-			result = json.decode(dataFile:read("*all")) or { }
-			dataFile:close()
-		end
-		if result == nil then
-			result = {}
-		end
-		if result.optin == nil then
-			result.optin = false
-		end
-		if result.steamId == nil then
-			result.steamId = steamId
-		end
-		return result
-	end
-	
 	local function IsClientOptedIn(client)
-		local tempAdminData = LoadTempAdminData(TGNS:GetClientSteamId(client))
+		local tempAdminData = pdr:Load(TGNS:GetClientSteamId(client))
 		local result = tempAdminData.optin
 		return result
 	end
@@ -62,9 +39,9 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 	
 	local function svTempAdmin(client)
-		local tempAdminData = LoadTempAdminData(TGNS:GetClientSteamId(client))
+		local tempAdminData = pdr:Load(TGNS:GetClientSteamId(client))
 		tempAdminData.optin = not tempAdminData.optin
-		SaveTempAdminData(tempAdminData)
+		pdr:Save(tempAdminData)
 		local message
 		if tempAdminData.optin then
 			message = "You are opted into Temp Admin. Only Supporting Members who have signed the TGNS Primer are considered."
