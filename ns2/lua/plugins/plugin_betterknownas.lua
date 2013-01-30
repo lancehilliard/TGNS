@@ -63,25 +63,14 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	end
 
 	local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues)
-		local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
-		local existingBkaData = pdr:Load(targetSteamId)
+		local bkaData = pdr:Load(targetSteamId)
 		if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
-			table.insert(newBkaData.AKAs, newBkaName)
-			if existingBkaData ~= nil then
-				if existingBkaData.AKAs ~= nil and #existingBkaData.AKAs > 0 then
-					for i = 1, #existingBkaData.AKAs, 1 do
-						local existingName = existingBkaData.AKAs[i]
-						if existingName ~= newBkaName then
-							table.insert(newBkaData.AKAs, existingName)
-						end
-					end
-				end
-			end
+			table.insert(bkaData.AKAs, newBkaName)
+		else
+			bkaData.AKAs = {}
 		end
-		if (existingBkaData ~= nil) then
-			newBkaData.BKA = existingBkaData.BKA
-		end
-		pdr:Save(newBkaData)
+		bkaData.AKAs = TGNS.TableUnique(bkaData.AKAs)
+		pdr:Save(bkaData)
 	end
 	
 	local function svAka(client, playerName, ...)

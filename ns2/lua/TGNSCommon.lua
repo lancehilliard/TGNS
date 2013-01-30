@@ -3,11 +3,20 @@
 TGNS = {}
 local scheduledActions = {}
 
+function TGNS.TableValueCount(tt, item)
+  local count
+  count = 0
+  for ii,xx in pairs(tt) do
+    if item == xx then count = count + 1 end
+  end
+  return count
+end
+
 function TGNS.TableUnique(tt)
   local newtable
   newtable = {}
   for ii,xx in ipairs(tt) do
-    if(table_count(newtable, xx) == 0) then
+    if(TGNS.TableValueCount(newtable, xx) == 0) then
       newtable[#newtable+1] = xx
     end
   end
