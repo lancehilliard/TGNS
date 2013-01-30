@@ -11,10 +11,6 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 			end
 		)
 		
-	local function GetDataFilename(steamId)
-		return TGNS:GetDataFilename("tempadmin", steamId)
-	end
-
 	local function IsClientOptedIn(client)
 		local tempAdminData = pdr:Load(TGNS:GetClientSteamId(client))
 		local result = tempAdminData.optin

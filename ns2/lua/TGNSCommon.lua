@@ -184,11 +184,6 @@ function TGNS:DoForClientsWithId(clients, clientAction)
 	end
 end
 
-function TGNS:GetDataFilename(dataType, steamId)
-	local result = string.format("config://%s/%s.json", dataType, steamId)
-	return result
-end
-
 function TGNS:GetClientNameSteamIdCombo(client)
 	local result = string.format("%s (%s)", self:GetClientName(client), self:GetClientSteamId(client))
 	return result	
