@@ -3,6 +3,17 @@
 TGNS = {}
 local scheduledActions = {}
 
+function TGNS.TableUnique(tt)
+  local newtable
+  newtable = {}
+  for ii,xx in ipairs(tt) do
+    if(table_count(newtable, xx) == 0) then
+      newtable[#newtable+1] = xx
+    end
+  end
+  return newtable
+end
+
 function TGNS:ScheduleAction(delayInSeconds, action)
 	local scheduledAction = {}
 	scheduledAction.when = Shared.GetTime() + delayInSeconds

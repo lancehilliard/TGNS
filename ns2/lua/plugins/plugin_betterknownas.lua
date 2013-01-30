@@ -64,9 +64,9 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 
 	local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues)
 		local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
-		table.insert(newBkaData.AKAs, newBkaName)
 		local existingBkaData = pdr:Load(targetSteamId)
 		if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
+			table.insert(newBkaData.AKAs, newBkaName)
 			if existingBkaData ~= nil then
 				if existingBkaData.AKAs ~= nil and #existingBkaData.AKAs > 0 then
 					for i = 1, #existingBkaData.AKAs, 1 do
