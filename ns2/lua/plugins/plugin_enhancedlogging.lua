@@ -454,9 +454,8 @@ function EnhancedLoggingCastVoteByPlayer(self, voteTechId, player)
 			local targetCommander = commanders[playerIndex]
 			if targetCommander ~= nil then
 				local targetClient = Server.GetOwner(targetCommander)
-				local Client = Server.GetOwner(targetClient)
-				if targetClient and Client then
-					PrintToEnhancedLog(GetTimeStamp() .. GetClientUIDString(Client) .. " voted to eject " .. GetClientUIDString(targetClient))
+				if targetClient then
+					PrintToEnhancedLog(GetTimeStamp() .. GetClientUIDString(targetClient) .. " voted to eject " .. GetClientUIDString(targetClient))
 				end
 			end
 		end
