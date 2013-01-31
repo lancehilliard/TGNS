@@ -44,8 +44,8 @@ if kDAKConfig and kDAKConfig.Balance then
 
 	local function GetPlayerBalance(player)
 		local result
-		TGNS:ClientAction(player, function(c) 
-			local steamId = TGNS:GetClientSteamId(c)
+		TGNS.ClientAction(player, function(c) 
+			local steamId = TGNS.GetClientSteamId(c)
 			result = pdr:Load(steamId)
 			end
 		)
@@ -65,12 +65,12 @@ if kDAKConfig and kDAKConfig.Balance then
 	end
 
 	local function svBalance(client)
-		local playerList = TGNS:GetPlayerList()
+		local playerList = TGNS.GetPlayerList()
 		table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) < GetPlayerWinLossRatio(p2) end )
-		TGNS:ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
-		TGNS:DoFor(playerList, function(player)
+		TGNS.ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
+		TGNS.DoFor(playerList, function(player)
 				if TGNS.IsClientAdmin(client) then
-					TGNS:ConsolePrint(client, string.format("%s: %s with %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total), "BALANCE")
+					TGNS.ConsolePrint(client, string.format("%s: %s with %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total), "BALANCE")
 				end
 				JoinRandomTeam(player)
 			end
@@ -80,18 +80,18 @@ if kDAKConfig and kDAKConfig.Balance then
 	
 	local function BalanceOnSetGameState(self, state, currentstate)
 		if state ~= currentstate then
-			if TGNS:IsGameStartingState(state) then
+			if TGNS.IsGameStartingState(state) then
 				steamIdsWhichStartedGame = {}
-				TGNS:DoFor(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c) table.insert(steamIdsWhichStartedGame, TGNS:GetClientSteamId(c)) end)
+				TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c) table.insert(steamIdsWhichStartedGame, TGNS.GetClientSteamId(c)) end)
 			end
 		end
 	end
 	DAKRegisterEventHook("kDAKOnSetGameState", BalanceOnSetGameState, 5)
 	
 	function BalanceOnGameEnd(self, winningTeam)
-		TGNS:DoForClientsWithId(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c, steamId)
-				if TGNS:Has(steamIdsWhichStartedGame, steamId) then
-					local changeBalanceFunction = TGNS:PlayerIsOnTeam(TGNS:GetPlayer(c), winningTeam) and addWinToBalance or addLossToBalance
+		TGNS.DoForClientsWithId(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c, steamId)
+				if TGNS.Has(steamIdsWhichStartedGame, steamId) then
+					local changeBalanceFunction = TGNS.PlayerIsOnTeam(TGNS.GetPlayer(c), winningTeam) and addWinToBalance or addLossToBalance
 					ChangeBalance(steamId, changeBalanceFunction)
 				end
 			end

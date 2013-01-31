@@ -53,7 +53,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 			if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > kDAKConfig.WinOrLose.kWinOrLoseNoAttackDuration then
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, "WinOrLose! On to the next game!"), true)
 				local commandStructures = GetEntitiesForTeam("CommandStructure", kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and kAlienTeamType or kMarineTeamType)
-				TGNS:DoFor(commandStructures, function(s) DestroyEntity(s) end)
+				TGNS.DoFor(commandStructures, function(s) DestroyEntity(s) end)
 				kTimeAtWhichWinOrLoseVoteSucceeded = 0
 			else
 				if (math.fmod(kCountdownTimeRemaining, kDAKConfig.WinOrLose.kWinOrLoseWarningInterval) == 0 or kCountdownTimeRemaining <= 5) then
@@ -67,7 +67,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 			for i = 1, kWinOrLoseTeamCount do
 
 				if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and gamerules ~= nil and gamerules:GetGameState() == kGameState.Started and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + kDAKConfig.WinOrLose.kWinOrLoseAlertDelay < Shared.GetTime() then
-					local playerRecords = TGNS:GetPlayers(TGNS:GetMatchingClients(function(c,p) return p:GetTeamNumber() == i end, TGNS:GetPlayerList())) // GetEntitiesForTeam("Player", i)
+					local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(function(c,p) return p:GetTeamNumber() == i end, TGNS.GetPlayerList())) // GetEntitiesForTeam("Player", i)
 					local totalvotes = 0
 					for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
 						local clientid = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]

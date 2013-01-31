@@ -121,7 +121,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		local sourcePlayer = client:GetControllingPlayer()
 		if isCaptainsMode() then
 			if playerName then
-				local targetPlayer = TGNS:GetPlayerMatching(playerName)
+				local targetPlayer = TGNS.GetPlayerMatching(playerName)
 				if targetPlayer ~= nil then
 					local targetClient = Server.GetOwner(targetPlayer)
 					if targetClient ~= nil then
@@ -154,8 +154,8 @@ if kDAKConfig and kDAKConfig.Captains then
 				end
 			else
 				DisplayMessageSelf(sourcePlayer, "Captains are:")
-				local player1 = TGNS:GetPlayerMatchingSteamId(captain1id)
-				local player2 = TGNS:GetPlayerMatchingSteamId(captain2id)
+				local player1 = TGNS.GetPlayerMatchingSteamId(captain1id)
+				local player2 = TGNS.GetPlayerMatchingSteamId(captain2id)
 				if player1 then
 					local name = string.sub(player1:GetName(), 1, PLAYNAME_MAX_LENGTH)
 					DisplayMessageSelf(sourcePlayer, name)
@@ -174,7 +174,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		local notesTable = {}
 		local playername
 		local notesLine
-		for _, player in pairs(TGNS:GetPlayerList()) do
+		for _, player in pairs(TGNS.GetPlayerList()) do
 			local steamId = Server.GetOwner(player):GetUserId()
 			local playername = player:GetName()
 			if player:GetTeamNumber() == team then
@@ -218,7 +218,7 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	local function showNotesToTeam(team)
 		if allowNotesDisplay == true and isCaptainsMode() then
-			for _, player in pairs(TGNS:GetPlayerList()) do
+			for _, player in pairs(TGNS.GetPlayerList()) do
 				if player:GetTeamNumber() == team then
 					showTeamNotes(player, true)
 				end
@@ -239,7 +239,7 @@ if kDAKConfig and kDAKConfig.Captains then
 			local team = sourcePlayer:GetTeamNumber()
 			if sourcePlayer and team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
 				if targetName ~= nil then
-					local targetPlayer = TGNS:GetPlayerMatching(targetName, team)
+					local targetPlayer = TGNS.GetPlayerMatching(targetName, team)
 					if targetPlayer ~= nil then
 						local targetSteamId = Server.GetOwner(targetPlayer):GetUserId()
 						if steamId == targetSteamId or isCaptain(steamId) then
@@ -321,7 +321,7 @@ if kDAKConfig and kDAKConfig.Captains then
 				local id = client:GetUserId()
 				local team = client:GetControllingPlayer():GetTeamNumber()
 				if team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
-					for _, player in pairs(TGNS:GetPlayerList()) do
+					for _, player in pairs(TGNS.GetPlayerList()) do
 						if team == player:GetTeamNumber() and notes[id] ~= nil and string.len(notes[id]) > 0 then
 							DisplayMessage(player, string.format("Teammate with note '%s' has left the server.", notes[id]))
 						end
@@ -390,7 +390,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		return false
 	end
 
-	TGNS:RegisterChatHook(OnCaptainsChatMessage)
+	TGNS.RegisterChatHook(OnCaptainsChatMessage)
 
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINSCOMMAND, StartCaptains, "configures the server for Captains Games", false)
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINCOMMAND, function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)

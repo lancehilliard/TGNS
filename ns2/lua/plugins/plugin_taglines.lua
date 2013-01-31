@@ -20,7 +20,7 @@ if kDAKConfig and kDAKConfig.Taglines then
 	end
 	
 	local function ShowCurrentTagline(client)
-		TGNS:ConsolePrint(client, "Your current tagline:", "TAGLINE")
+		TGNS.ConsolePrint(client, "Your current tagline:", "TAGLINE")
 		local steamId = client:GetUserId()
 		local tagline = pdr:Load(steamId)
 		if tagline == nil or tagline.message == "" then

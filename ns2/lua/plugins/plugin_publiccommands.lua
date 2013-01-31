@@ -15,7 +15,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 	local function OnCommandTimeleft(client)
 		if client ~= nil and Shared.GetTime() - timeleftThrottle > kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND].throttle then
 			timeleftThrottle = Shared.GetTime()
-			for _, player in pairs(TGNS:GetPlayerList()) do
+			for _, player in pairs(TGNS.GetPlayerList()) do
 				if player ~= nil then
 					chatMessage = string.sub(string.format("%.1f Minutes Remaining.", math.max(0,((MapCycle_GetMapCycleTime() * 60) - Shared.GetTime())/60)), 1, kMaxChatLength)
 					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
@@ -46,7 +46,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 
 		if client ~= nil and Shared.GetTime() - nextmapThrottle > kDAKConfig.PublicCommands.Commands[NEXTMAPCOMMAND].throttle then
 			nextmapThrottle = Shared.GetTime()
-			for _, player in pairs(TGNS:GetPlayerList()) do
+			for _, player in pairs(TGNS.GetPlayerList()) do
 				if player ~= nil then
 					local mapname = GetMapName(MapCycle_GetNextMapInCycle())
 					if mapname ~= nil then

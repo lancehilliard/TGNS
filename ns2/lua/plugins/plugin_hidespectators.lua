@@ -18,7 +18,7 @@ Server.SendNetworkMessage = function(arg1, arg2, arg3, ...)
 	end
 	
 	if networkMessage == "Scores" and message and message.teamNumber == kSpectatorIndex then
-		if target and not TGNS:ClientAction(target, TGNS.IsClientAdmin) then
+		if target and not TGNS.ClientAction(target, TGNS.IsClientAdmin) then
 			Server.SendCommand(target, string.format("clientdisconnect %d", message.clientId) )
 			return
 		end

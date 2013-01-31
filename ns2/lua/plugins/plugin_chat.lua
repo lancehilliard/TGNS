@@ -24,27 +24,27 @@ if kDAKConfig and kDAKConfig.Chat then
 			Print("name: %s, message: %s", ToString(name), ToString(chatMessage))
 			chatMessage = GetChatMessage(chatMessage)
 			if name ~= nil and string.len(name) > 0 then
-				local targetplayer = TGNS:GetPlayerMatchingName(name)
+				local targetplayer = TGNS.GetPlayerMatchingName(name)
 				if targetplayer ~= nil then
-					TGNS:PMAllPlayersWithAccess(client, string.format("To %s: %s", targetplayer:GetName(), chatMessage), label, true, true)
+					TGNS.PMAllPlayersWithAccess(client, string.format("To %s: %s", targetplayer:GetName(), chatMessage), label, true, true)
 					 if not DAKGetClientCanRunCommand(Server.GetOwner(targetplayer), label) then
-						Server.SendNetworkMessage(targetplayer, "Chat", TGNS:BuildPMChatMessage(client, chatMessage, label, true), true)
+						Server.SendNetworkMessage(targetplayer, "Chat", TGNS.BuildPMChatMessage(client, chatMessage, label, true), true)
 					end
 				else
-					Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, string.format("'%s' does not uniquely match a player.", name), label, true), true)
+					Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS.BuildPMChatMessage(nil, string.format("'%s' does not uniquely match a player.", name), label, true), true)
 				end
 			elseif chatMessage ~= nil and string.len(chatMessage) > 0 then
-				TGNS:PMAllPlayersWithAccess(client, chatMessage, label, true, true)
+				TGNS.PMAllPlayersWithAccess(client, chatMessage, label, true, true)
 			else
-				Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Admin usage: @<name> <message>, if name is blank only admins are messaged", label, true), true)
+				Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS.BuildPMChatMessage(nil, "Admin usage: @<name> <message>, if name is blank only admins are messaged", label, true), true)
 			end
 		// Non-admins will send the message to all admins
 		else
 			local chatMessage = GetChatMessage(message)
 			if chatMessage then
-				TGNS:PMAllPlayersWithAccess(client, chatMessage, label, true, true)
+				TGNS.PMAllPlayersWithAccess(client, chatMessage, label, true, true)
 			else
-				Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS:BuildPMChatMessage(nil, "Usage: @<message>", label, true), true)
+				Server.SendNetworkMessage(client:GetControllingPlayer(), "Chat", TGNS.BuildPMChatMessage(nil, "Usage: @<message>", label, true), true)
 			end
 		end
 	end
@@ -70,7 +70,7 @@ if kDAKConfig and kDAKConfig.Chat then
 		end
 	end
 	
-	TGNS:RegisterChatHook(CheckForChat)
+	TGNS.RegisterChatHook(CheckForChat)
 
 end
 

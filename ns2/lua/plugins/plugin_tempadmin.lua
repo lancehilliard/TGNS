@@ -12,30 +12,30 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 		)
 		
 	local function IsClientOptedIn(client)
-		local tempAdminData = pdr:Load(TGNS:GetClientSteamId(client))
+		local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
 		local result = tempAdminData.optin
 		return result
 	end
 
 	local function IsTempAdminEligible(client)
-		local result = TGNS:IsClientSM(client) and TGNS:HasClientSignedPrimer(client) and IsClientOptedIn(client)
+		local result = TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) and IsClientOptedIn(client)
 		return result
 	end
 	
 	local function GetTempAdminCandidateClient(teamPlayers)
 		local result = nil
-		local teamNeedsAdmin = TGNS:GetLastMatchingClient(TGNS.IsClientAdmin, teamPlayers) == nil
+		local teamNeedsAdmin = TGNS.GetLastMatchingClient(TGNS.IsClientAdmin, teamPlayers) == nil
 		if teamNeedsAdmin then
-			local existingTempAdmins = TGNS:GetMatchingClients(function(c,p) return TGNS:IsClientTempAdmin(c) end, teamPlayers)
+			local existingTempAdmins = TGNS.GetMatchingClients(function(c,p) return TGNS.IsClientTempAdmin(c) end, teamPlayers)
 			if #existingTempAdmins == 0 then
-				result = TGNS:GetLastMatchingClient(function(c,p) return IsTempAdminEligible(c) end, teamPlayers)
+				result = TGNS.GetLastMatchingClient(function(c,p) return IsTempAdminEligible(c) end, teamPlayers)
 			end
 		end
 		return result
 	end
 	
 	local function svTempAdmin(client)
-		local tempAdminData = pdr:Load(TGNS:GetClientSteamId(client))
+		local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
 		tempAdminData.optin = not tempAdminData.optin
 		pdr:Save(tempAdminData)
 		local message
@@ -44,20 +44,20 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 		else
 			message = "You will no longer be considered for Temp Admin."
 		end
-		TGNS:ConsolePrint(client, message, "TEMPADMIN")
+		TGNS.ConsolePrint(client, message, "TEMPADMIN")
 	end
 	DAKCreateServerAdminCommand("Console_sv_tempadmin", svTempAdmin, "Toggle opt in/out of Temp Admin responsibilities.", true)
 
 	
 	function AddTempAdminToClient(client)
-		AddSteamIDToGroup(TGNS:GetClientSteamId(client), "tempadmin_group")
-		TGNS:PlayerAction(client, function(p) TGNS:SendChatMessage(p, "You are Temp Admin. Apply exemplarily. Console: sv_help") end)
+		AddSteamIDToGroup(TGNS.GetClientSteamId(client), "tempadmin_group")
+		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "You are Temp Admin. Apply exemplarily. Console: sv_help") end)
 	end
 	
 	function RemoveTempAdminFromClient(client)
-		local steamId = TGNS:GetClientSteamId(client)
+		local steamId = TGNS.GetClientSteamId(client)
 		RemoveSteamIDFromGroup(steamId, "tempadmin_group")
-		TGNS:PlayerAction(client, function(p) TGNS:SendChatMessage(p, "You are no longer Temp Admin.") end)
+		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "You are no longer Temp Admin.") end)
 	end
 	
 	function EnsureTempAdminAmongPlayers(players)
@@ -69,19 +69,19 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 	
 	local function CheckRoster()
-		TGNS:ScheduleAction(RosterCheckInterval, CheckRoster)
+		TGNS.ScheduleAction(RosterCheckInterval, CheckRoster)
 
-		local playerList = TGNS:GetPlayerList()
-		local marinePlayers = TGNS:GetMarinePlayers(playerList)
-		local alienPlayers = TGNS:GetAlienPlayers(playerList)
+		local playerList = TGNS.GetPlayerList()
+		local marinePlayers = TGNS.GetMarinePlayers(playerList)
+		local alienPlayers = TGNS.GetAlienPlayers(playerList)
 
 		EnsureTempAdminAmongPlayers(marinePlayers)
 		EnsureTempAdminAmongPlayers(alienPlayers)
 	end
 	
 	local function RemoveTempAdmins(clients)
-		TGNS:DoFor(clients, function(c)
-				if TGNS:IsClientTempAdmin(c) then
+		TGNS.DoFor(clients, function(c)
+				if TGNS.IsClientTempAdmin(c) then
 					RemoveTempAdminFromClient(c)
 				end
 			end
@@ -89,19 +89,19 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 	
 	local function TempAdminOnTeamJoin(self, player, newTeamNumber, force)
-		local playerIsAdmin = TGNS:ClientAction(player, TGNS.IsClientAdmin)
-		local playerIsTempAdmin = TGNS:ClientAction(player, function(c) return TGNS:IsClientTempAdmin(c) end)
+		local playerIsAdmin = TGNS.ClientAction(player, TGNS.IsClientAdmin)
+		local playerIsTempAdmin = TGNS.ClientAction(player, function(c) return TGNS.IsClientTempAdmin(c) end)
 		if playerIsAdmin then
-			local teamClients = TGNS:GetTeamClients(newTeamNumber, TGNS:GetPlayerList())
+			local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 			RemoveTempAdmins(teamClients)
 		end
 		if playerIsTempAdmin then
-			TGNS:ClientAction(player, function(c) RemoveTempAdminFromClient(c) end)
+			TGNS.ClientAction(player, function(c) RemoveTempAdminFromClient(c) end)
 		end
 	end
 	DAKRegisterEventHook("kDAKOnTeamJoin", TempAdminOnTeamJoin, 5)
 
-	TGNS:ScheduleAction(RosterCheckInterval, CheckRoster)
+	TGNS.ScheduleAction(RosterCheckInterval, CheckRoster)
 end
 
 Shared.Message("TempAdmin Loading Complete")

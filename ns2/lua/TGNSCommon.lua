@@ -23,7 +23,7 @@ function TGNS.TableUnique(tt)
   return newtable
 end
 
-function TGNS:ScheduleAction(delayInSeconds, action)
+function TGNS.ScheduleAction(delayInSeconds, action)
 	local scheduledAction = {}
 	scheduledAction.when = Shared.GetTime() + delayInSeconds
 	scheduledAction.what = action
@@ -45,27 +45,27 @@ local function CommonOnServerUpdate(deltatime)
 end
 DAKRegisterEventHook("kDAKOnServerUpdate", CommonOnServerUpdate, 5)
 
-function TGNS:PlayerIsOnTeam(player, team)
+function TGNS.PlayerIsOnTeam(player, team)
 	local result = player:GetTeam() == team
 	return result
 end
 
-function TGNS:IsGameStartingState(gameState)
+function TGNS.IsGameStartingState(gameState)
 	local result = gameState == kGameState.Started
 	return result
 end
 
-function TGNS:IsGameWinningState(gameState)
+function TGNS.IsGameWinningState(gameState)
 	local result = gameState == kGameState.Team1Won or gameState == kGameState.Team2Won
 	return result
 end
 
-function TGNS:IsGameplayTeam(teamNumber)
+function TGNS.IsGameplayTeam(teamNumber)
 	local result = teamNumber == kMarineTeamType or teamNumber == kAlienTeamType
 	return result
 end
 
-function TGNS:GetTeamName(teamNumber)
+function TGNS.GetTeamName(teamNumber)
 	local result
 	if teamNumber == kTeamReadyRoom then
 		result = "Ready Room"
@@ -79,28 +79,28 @@ function TGNS:GetTeamName(teamNumber)
 	return result
 end
 
-function TGNS:IsPlayerSpectator(player)
+function TGNS.IsPlayerSpectator(player)
 	local result = player:GetTeamNumber() == kSpectatorIndex
 	return result
 end
 
-function TGNS:GetNumericValueOrZero(countable)
+function TGNS.GetNumericValueOrZero(countable)
 	local result = countable == nil and 0 or countable
 	return result
 end
 
-function TGNS:GetClientName(client)
+function TGNS.GetClientName(client)
 	local result = client:GetControllingPlayer():GetName()
 	return result
 end
 
-function TGNS:DoFor(elements, elementAction)
+function TGNS.DoFor(elements, elementAction)
 	for i = 1, #elements, 1 do
 		elementAction(elements[i])
 	end
 end
 
-function TGNS:IsClientCommander(client)
+function TGNS.IsClientCommander(client)
 	local result = false
 	if client ~= nil then
 		local player = client:GetControllingPlayer()
@@ -111,7 +111,7 @@ function TGNS:IsClientCommander(client)
 	return result	
 end
 
-function TGNS:HasClientSignedPrimer(client)
+function TGNS.HasClientSignedPrimer(client)
 	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hasprimersignature")
 	return result
 end
@@ -121,22 +121,22 @@ function TGNS.IsClientAdmin(client)
 	return result
 end
 
-function TGNS:IsClientTempAdmin(client)
+function TGNS.IsClientTempAdmin(client)
 	local result = not client:GetIsVirtual() and not TGNS.IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
 	return result
 end
 
-function TGNS:IsClientSM(client)
+function TGNS.IsClientSM(client)
 	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
 	return result
 end
 
-function TGNS:IsClientStranger(client)
-	local result = not self:IsClientSM(client) and not self:HasClientSignedPrimer(client)
+function TGNS.IsClientStranger(client)
+	local result = not TGNS.IsClientSM(client) and not TGNS.HasClientSignedPrimer(client)
 	return result
 end
 
-function TGNS:PlayerAction(client, action)
+function TGNS.PlayerAction(client, action)
 	local player = client:GetControllingPlayer()
 	return action(player)
 end
@@ -145,17 +145,17 @@ function TGNS.GetPlayerName(player)
 	return player:GetName()
 end
 
-function TGNS:GetClientName(client)
-	local result = self:PlayerAction(client, self.GetPlayerName)
+function TGNS.GetClientName(client)
+	local result = TGNS.PlayerAction(client, self.GetPlayerName)
 	return result
 end
 
-function TGNS:ClientAction(player, action)
+function TGNS.ClientAction(player, action)
 	local client = Server.GetOwner(player)
 	return action(client)
 end
 
-function TGNS:ConsolePrint(client, message, prefix)
+function TGNS.ConsolePrint(client, message, prefix)
 	if client ~= nil then
 		if prefix == nil then
 			prefix = "TGNS"
@@ -167,15 +167,15 @@ function TGNS:ConsolePrint(client, message, prefix)
 	end
 end
 
-function TGNS:GetClientSteamId(client)
+function TGNS.GetClientSteamId(client)
 	result = client:GetUserId()
 	return result
 end
 
-function TGNS:DoForClientsWithId(clients, clientAction)
+function TGNS.DoForClientsWithId(clients, clientAction)
 	for i = 1, #clients, 1 do
 		local client = clients[i]
-		local steamId = self:GetClientSteamId(client)
+		local steamId = TGNS.GetClientSteamId(client)
 		if steamId == nil then
 			// todo mlh report to admins so they can make sure there aren't rampant problems??
 		else
@@ -184,24 +184,24 @@ function TGNS:DoForClientsWithId(clients, clientAction)
 	end
 end
 
-function TGNS:GetClientNameSteamIdCombo(client)
-	local result = string.format("%s (%s)", self:GetClientName(client), self:GetClientSteamId(client))
+function TGNS.GetClientNameSteamIdCombo(client)
+	local result = string.format("%s (%s)", TGNS.GetClientName(client), TGNS.GetClientSteamId(client))
 	return result	
 end
 
-function TGNS:SendChatMessage(player, chatMessage)
+function TGNS.SendChatMessage(player, chatMessage)
 	if player ~= nil then
 		chatMessage = string.sub(chatMessage, 1, kMaxChatLength)
 		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 	end
 end
 
-function TGNS:DisconnectClient(client, reason)
+function TGNS.DisconnectClient(client, reason)
 	client.disconnectreason = reason
 	Server.DisconnectClient(client)
 end
 
-function TGNS:GetPlayerList()
+function TGNS.GetPlayerList()
 
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	table.sort(playerList, function(p1, p2) return p1:GetName() < p2:GetName() end)
@@ -209,16 +209,16 @@ function TGNS:GetPlayerList()
 
 end
 
-function TGNS:GetPlayerCount() 
-	local result = #self:GetPlayerList()
+function TGNS.GetPlayerCount() 
+	local result = #TGNS.GetPlayerList()
 	return result
 end
 
-function TGNS:AllPlayers(doThis)
+function TGNS.AllPlayers(doThis)
 
 	return function(client)
 	
-		local playerList = self:GetPlayerList()
+		local playerList = TGNS.GetPlayerList()
 		for p = 1, #playerList do
 		
 			local player = playerList[p]
@@ -230,7 +230,7 @@ function TGNS:AllPlayers(doThis)
 	
 end
 
-function TGNS:Has(elements, element)
+function TGNS.Has(elements, element)
 	local found = false
 	for i = 1, #elements, 1 do
 		if not found and elements[i] == element then
@@ -240,12 +240,12 @@ function TGNS:Has(elements, element)
 	return found
 end
 
-function TGNS:GetPlayer(client)
+function TGNS.GetPlayer(client)
 	local result = client:GetControllingPlayer()
 	return result
 end
 
-function TGNS:GetPlayers(clients)
+function TGNS.GetPlayers(clients)
 	local result = {}
 	for i = 1, #clients, 1 do
 		table.insert(result, clients[i]:GetControllingPlayer())
@@ -253,9 +253,9 @@ function TGNS:GetPlayers(clients)
 	return result
 end
 
-function TGNS:GetMatchingClients(predicate, playerList)
+function TGNS.GetMatchingClients(predicate, playerList)
 	local result = {}
-	playerList = playerList == nil and self:GetPlayerList() or playerList
+	playerList = playerList == nil and TGNS.GetPlayerList() or playerList
 	for r = #playerList, 1, -1 do
 		if playerList[r] ~= nil then
 			local client = playerList[r]:GetClient()
@@ -269,14 +269,14 @@ function TGNS:GetMatchingClients(predicate, playerList)
 	return result
 end
 
-function TGNS:GetPlayingClients(playerList)
-	local result = TGNS:GetMatchingClients(function(c,p) return self:IsGameplayTeam(p:GetTeamNumber()) end, playerList)
+function TGNS.GetPlayingClients(playerList)
+	local result = TGNS.GetMatchingClients(function(c,p) return TGNS.IsGameplayTeam(p:GetTeamNumber()) end, playerList)
 	return result
 end
 
-function TGNS:GetLastMatchingClient(predicate, playerList)
+function TGNS.GetLastMatchingClient(predicate, playerList)
 	local result = nil
-	local playerList = playerList == nil and self:GetPlayerList() or playerList
+	local playerList = playerList == nil and TGNS.GetPlayerList() or playerList
 	for r = #playerList, 1, -1 do
 		if playerList[r] ~= nil then
 			local client = playerList[r]:GetClient()
@@ -290,56 +290,56 @@ function TGNS:GetLastMatchingClient(predicate, playerList)
 	return result
 end
 
-function TGNS:GetTeamClients(teamNumber, playerList)
+function TGNS.GetTeamClients(teamNumber, playerList)
 	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
-	local result = self:GetMatchingClients(predicate, playerList)
+	local result = TGNS.GetMatchingClients(predicate, playerList)
 	return result
 end
 
-function TGNS:GetMarineClients(playerList)
-	local result = self:GetTeamClients(kMarineTeamType, playerList)
+function TGNS.GetMarineClients(playerList)
+	local result = TGNS.GetTeamClients(kMarineTeamType, playerList)
 	return result
 end
 
-function TGNS:GetAlienClients(playerList)
-	local result = self:GetTeamClients(kAlienTeamType, playerList)
+function TGNS.GetAlienClients(playerList)
+	local result = TGNS.GetTeamClients(kAlienTeamType, playerList)
 	return result
 end
 
-function TGNS:GetMarinePlayers(playerList)
-	local result = self:GetPlayers(self:GetMarineClients(playerList))
+function TGNS.GetMarinePlayers(playerList)
+	local result = TGNS.GetPlayers(TGNS.GetMarineClients(playerList))
 	return result
 end
 
-function TGNS:GetAlienPlayers(playerList)
-	local result = self:GetPlayers(self:GetAlienClients(playerList))
+function TGNS.GetAlienPlayers(playerList)
+	local result = TGNS.GetPlayers(TGNS.GetAlienClients(playerList))
 	return result
 end
 
-function TGNS:GetStrangersClients(playerList)
-	local predicate = function(client, player) return self:IsClientStranger(client) end
-	local result = self:GetMatchingClients(predicate, playerList)
+function TGNS.GetStrangersClients(playerList)
+	local predicate = function(client, player) return TGNS.IsClientStranger(client) end
+	local result = TGNS.GetMatchingClients(predicate, playerList)
 	return result
 end
 
-function TGNS:IsPrimerOnlyClient(client)
-	local result = self:HasClientSignedPrimer(client) and not self:IsClientSM(client)
+function TGNS.IsPrimerOnlyClient(client)
+	local result = TGNS.HasClientSignedPrimer(client) and not TGNS.IsClientSM(client)
 	return result
 end
 
-function TGNS:GetPrimerOnlyClients(playerList)
-	local predicate = function(client, player) return self:IsPrimerOnlyClient(client) end
-	local result = self:GetMatchingClients(predicate, playerList)
+function TGNS.GetPrimerOnlyClients(playerList)
+	local predicate = function(client, player) return TGNS.IsPrimerOnlyClient(client) end
+	local result = TGNS.GetMatchingClients(predicate, playerList)
 	return result
 end
 
-function TGNS:GetSmClients(playerList)
-	local predicate = function(client, player) return self:IsClientSM(client) end
-	local result = self:GetMatchingClients(predicate, playerList)
+function TGNS.GetSmClients(playerList)
+	local predicate = function(client, player) return TGNS.IsClientSM(client) end
+	local result = TGNS.GetMatchingClients(predicate, playerList)
 	return result
 end
 
-function TGNS:KickClient(client, disconnectReason, onPreKick)
+function TGNS.KickClient(client, disconnectReason, onPreKick)
 	if client ~= nil then
 		local player = client:GetControllingPlayer()
 		if player ~= nil then
@@ -347,18 +347,18 @@ function TGNS:KickClient(client, disconnectReason, onPreKick)
 				onPreKick(client, player)
 			end
 		end
-		self:ConsolePrint(client, disconnectReason)
-		self:ScheduleAction(2, function() self:DisconnectClient(client, disconnectReason) end)
+		TGNS.ConsolePrint(client, disconnectReason)
+		TGNS.ScheduleAction(2, function() TGNS.DisconnectClient(client, disconnectReason) end)
 	end
 end
 
-function TGNS:KickPlayer(player, disconnectReason, onPreKick)
+function TGNS.KickPlayer(player, disconnectReason, onPreKick)
 	if player ~= nil then
-		self:KickClient(player:GetClient(), disconnectReason, onPreKick)
+		TGNS.KickClient(player:GetClient(), disconnectReason, onPreKick)
 	end
 end
 
-function TGNS:GetPlayerMatchingName(name, team)
+function TGNS.GetPlayerMatchingName(name, team)
 
 	assert(type(name) == "string")
 	
@@ -386,7 +386,7 @@ function TGNS:GetPlayerMatchingName(name, team)
 		end
 		
 	end
-	self:AllPlayers(Matches)()
+	TGNS.AllPlayers(Matches)()
 	
 	if nameMatchCount > 1 then
 		match = nil // if partial match is not unique, clear the match
@@ -396,7 +396,7 @@ function TGNS:GetPlayerMatchingName(name, team)
 
 end
 
-function TGNS:GetPlayerMatchingSteamId(steamId, team)
+function TGNS.GetPlayerMatchingSteamId(steamId, team)
 
 	assert(type(steamId) == "number")
 	
@@ -412,20 +412,20 @@ function TGNS:GetPlayerMatchingSteamId(steamId, team)
 		end
 		
 	end
-	self:AllPlayers(Matches)()
+	TGNS.AllPlayers(Matches)()
 	
 	return match
 
 end
 
-function TGNS:GetPlayerMatching(id, team)
+function TGNS.GetPlayerMatching(id, team)
 
 	local idNum = tonumber(id)
 	if idNum then
 		// note: using DAK's GetPlayerMatchingGameId
-		return GetPlayerMatchingGameId(idNum, team) or self:GetPlayerMatchingSteamId(idNum, team)
+		return GetPlayerMatchingGameId(idNum, team) or TGNS.GetPlayerMatchingSteamId(idNum, team)
 	elseif type(id) == "string" then
-		return self:GetPlayerMatchingName(id, team)
+		return TGNS.GetPlayerMatchingName(id, team)
 	end
 
 end
@@ -434,7 +434,7 @@ if kDAKConfig and kDAKConfig.DAKLoader then
 
 	// Returns:	builtChatMessage - a ChatMessage object
 	//			consoleChatMessage - a similarly formed string for printing to the console
-	function TGNS:BuildPMChatMessage(srcClient, message, command, showCommand)
+	function TGNS.BuildPMChatMessage(srcClient, message, command, showCommand)
 		if srcClient then
 			local srcPlayer = srcClient:GetControllingPlayer()
 			if srcPlayer then
@@ -457,9 +457,9 @@ if kDAKConfig and kDAKConfig.DAKLoader then
 		return builtChatMessage, consoleChatMessage
 	end
 	
-	function TGNS:PMAllPlayersWithAccess(srcClient, message, command, showCommand, selfIfNoAccess)
-		builtChatMessage, consoleChatMessage = self:BuildPMChatMessage(srcClient, message, command, showCommand)
-		for _, player in pairs(self:GetPlayerList()) do
+	function TGNS.PMAllPlayersWithAccess(srcClient, message, command, showCommand, selfIfNoAccess)
+		builtChatMessage, consoleChatMessage = TGNS.BuildPMChatMessage(srcClient, message, command, showCommand)
+		for _, player in pairs(TGNS.GetPlayerList()) do
 			local client = Server.GetOwner(player)
 			if client ~= nil then
 				if DAKGetClientCanRunCommand(client, command) or (selfIfNoAccess and client == srcClient) then
@@ -477,7 +477,7 @@ end
 
 kTGNSChatHooks = {}
 
-function TGNS:RegisterChatHook(func)
+function TGNS.RegisterChatHook(func)
 	table.insert(kTGNSChatHooks, func)
 end
 

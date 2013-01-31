@@ -9,7 +9,7 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 		local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
 
 		if nonPrintableCharactersCount>0 then
-			TGNS:SendChatMessage(player, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage)
+			TGNS.SendChatMessage(player, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage)
 			//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage), true)
 		end
 	end
