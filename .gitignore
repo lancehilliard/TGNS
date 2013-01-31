@@ -15,6 +15,7 @@
 !ns2/lua/DAKLoader_EventHooks.lua
 !ns2/lua/DAKLoader_Language.lua
 !ns2/lua/DAKLoader_MapCycle.lua
+!ns2/lua/DAKLoader_PluginLoader.lua
 !ns2/lua/DAKLoader_Server.lua
 !ns2/lua/DAKLoader_ServerAdmin.lua
 !ns2/lua/DAKLoader_ServerAdminCommands.lua
@@ -67,9 +68,17 @@
 !ns2/lua/plugins/config_badges.lua
 !ns2/lua/plugins/plugin_badges.lua
 
+!ns2/lua/plugins/config_pause.lua
+!ns2/lua/plugins/plugin_pause.lua
+
+# mlh todo remove guivotebase files from repo
 !ns2/lua/plugins/config_guivotebase.lua
 !ns2/lua/plugins/plugin_guivotebase.lua
 !ns2/lua/gui/gui_votebase.lua
+
+!ns2/lua/plugins/config_guimenubase.lua
+!ns2/lua/plugins/plugin_guimenubase.lua
+!ns2/lua/gui/GUIMenuBase.lua
 
 !ns2/lua/plugins/config_scoreboardicons.lua
 !ns2/lua/plugins/plugin_scoreboardicons.lua

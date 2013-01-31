@@ -5,6 +5,7 @@ if Server then
 	Script.Load("lua/dkjson.lua")
 
 	local mapCycleFileName = "config://MapCycle.json"
+	local DAKMapCycle = { }
 		
     local function LoadMapCycle()
     
@@ -13,14 +14,14 @@ if Server then
 		local configFile = io.open(mapCycleFileName, "r")
         if configFile then
             local fileContents = configFile:read("*all")
-            kDAKMapCycle = json.decode(fileContents) or { maps = { "ns2_docking", "ns2_summit", "ns2_tram", "ns2_veil" }, time = 30, mode = "order", mods = { "5f4f178" } }
+            DAKMapCycle = json.decode(fileContents) or { maps = { "ns2_docking", "ns2_summit", "ns2_tram", "ns2_veil" }, time = 30, mode = "order", mods = { "5f4f178" } }
 			io.close(configFile)
 		else
 		    local defaultConfig = { maps = { "ns2_docking", "ns2_summit", "ns2_tram", "ns2_veil" }, time = 30, mode = "order", mods = { "5f4f178" } }
-			kDAKMapCycle = defaultConfig
+			DAKMapCycle = defaultConfig
         end
-		assert(type(kDAKMapCycle.time) == 'number')
-		assert(type(kDAKMapCycle.maps) == 'table')
+		assert(type(DAKMapCycle.time) == 'number')
+		assert(type(DAKMapCycle.maps) == 'table')
         
     end
 	
@@ -28,7 +29,7 @@ if Server then
 	
 	local function SaveMapCycle()
 		local configFile = io.open(mapCycleFileName, "w+")
-		configFile:write(json.encode(kDAKMapCycle, { indent = true, level = 1 }))
+		configFile:write(json.encode(DAKMapCycle, { indent = true, level = 1 }))
 		io.close(configFile)
 	end	
 	
@@ -40,21 +41,21 @@ if Server then
 	end
 	
 	function MapCycle_MeetsPlayerRequirements(map)
-		local playerRecords = Shared.GetEntitiesWithClassname("Player")
-		for i = #kDAKMapCycle.maps, 1, -1 do
-			if GetMapName(kDAKMapCycle.maps[i]) == map then
-				if (tonumber(kDAKMapCycle.maps[i].minPlayers) or 0) <= playerRecords:GetSize() and
-					(tonumber(kDAKMapCycle.maps[i].maxPlayers) or 99) >= playerRecords:GetSize() then
+		local CurPlayers = Server.GetNumPlayers()
+		for i = #DAKMapCycle.maps, 1, -1 do
+			if GetMapName(DAKMapCycle.maps[i]) == map then
+				if (tonumber(DAKMapCycle.maps[i].minPlayers) or 0) <= CurPlayers and
+					(tonumber(DAKMapCycle.maps[i].maxPlayers) or 99) >= CurPlayers then
 					return true
 				end
 				break
 			end
 		end
-		if kDAKMapCycle.votemaps ~= nil and #kDAKMapCycle.votemaps > 0 then
-			for i = #kDAKMapCycle.votemaps, 1, -1 do
-				if GetMapName(kDAKMapCycle.votemaps[i]) == map then
-					if (tonumber(kDAKMapCycle.votemaps[i].minPlayers) or 0) <= playerRecords:GetSize() and
-						(tonumber(kDAKMapCycle.votemaps[i].maxPlayers) or 99) >= playerRecords:GetSize() then
+		if DAKMapCycle.votemaps ~= nil and #DAKMapCycle.votemaps > 0 then
+			for i = #DAKMapCycle.votemaps, 1, -1 do
+				if GetMapName(DAKMapCycle.votemaps[i]) == map then
+					if (tonumber(DAKMapCycle.votemaps[i].minPlayers) or 0) <= CurPlayers and
+						(tonumber(DAKMapCycle.votemaps[i].maxPlayers) or 99) >= CurPlayers then
 						return true
 					end
 					break
@@ -62,6 +63,36 @@ if Server then
 			end
 		end
 		return false
+	end
+	
+	function MapCycle_VerifyMapInCycle(mapName)
+		if DAKMapCycle and DAKMapCycle.maps and mapName then
+			for i = 1, #DAKMapCycle.maps do
+				if GetMapName(DAKMapCycle.maps[i]):upper() == mapName:upper() then
+					return true
+				end
+			end
+		end
+		if DAKMapCycle and DAKMapCycle.votemaps and mapName then
+			for i = 1, #DAKMapCycle.votemaps do
+				if GetMapName(DAKMapCycle.votemaps[i]):upper() == mapName:upper() then
+					return true
+				end
+			end
+		end
+		return false
+	end
+	
+	function MapCycle_GetMapCycleTime()
+		return DAKMapCycle.time
+	end
+	
+	function MapCycle_GetMapCycleArray()
+		return DAKMapCycle.maps or nil
+	end
+	
+	function MapCycle_GetVoteMapCycleArray()
+		return DAKMapCycle.votemaps or nil
 	end
 	
 	function MapCycle_VerifyMapName(mapName)
@@ -79,9 +110,9 @@ if Server then
 		
 		//Map file not available currently, check mapcycle for map and corresponding mod.  If no mod, dont change
 		
-		for i = #kDAKMapCycle.maps, 1, -1 do
-			if GetMapName(kDAKMapCycle.maps[i]) == mapName then
-				if type(kDAKMapCycle.maps[i]) == "table" and type(kDAKMapCycle.maps[i].mods) == "table" then
+		for i = #DAKMapCycle.maps, 1, -1 do
+			if GetMapName(DAKMapCycle.maps[i]) == mapName then
+				if type(DAKMapCycle.maps[i]) == "table" and type(DAKMapCycle.maps[i].mods) == "table" then
 					//Mods table is set, map is probably valid
 					return true
 				end
@@ -93,11 +124,11 @@ if Server then
 	end
 	
 	function MapCycle_GetMapCycle()
-		return kDAKMapCycle
+		return DAKMapCycle
 	end
 	
 	function MapCycle_SetMapCycle(newCycle)
-		kDAKMapCycle = newCycle
+		DAKMapCycle = newCycle
 		SaveMapCycle()
 	end
 	
@@ -105,23 +136,23 @@ if Server then
 		local mods = { }
 		
 		// Copy the global defined mods.
-		if type(kDAKMapCycle.mods) == "table" then
-			table.copy(kDAKMapCycle.mods, mods, true)
+		if type(DAKMapCycle.mods) == "table" then
+			table.copy(DAKMapCycle.mods, mods, true)
 		end
 		
 		local map = nil
 			
-		for i = #kDAKMapCycle.maps, 1, -1 do
-			if GetMapName(kDAKMapCycle.maps[i]) == mapName then
-				map = kDAKMapCycle.maps[i]
+		for i = #DAKMapCycle.maps, 1, -1 do
+			if GetMapName(DAKMapCycle.maps[i]) == mapName then
+				map = DAKMapCycle.maps[i]
 				break
 			end
 		end
 		
-		if map == nil and kDAKMapCycle.votemaps ~= nil and #kDAKMapCycle.votemaps > 0 then
-			for i = #kDAKMapCycle.votemaps, 1, -1 do
-				if GetMapName(kDAKMapCycle.votemaps[i]) == mapName then
-					map = kDAKMapCycle.votemaps[i]
+		if map == nil and DAKMapCycle.votemaps ~= nil and #DAKMapCycle.votemaps > 0 then
+			for i = #DAKMapCycle.votemaps, 1, -1 do
+				if GetMapName(DAKMapCycle.votemaps[i]) == mapName then
+					map = DAKMapCycle.votemaps[i]
 					break
 				end
 			end
@@ -144,18 +175,18 @@ if Server then
 	
 	function MapCycle_GetNextMapInCycle()
 		local currentMap = Shared.GetMapName()
-		local numMaps = #kDAKMapCycle.maps
+		local numMaps = #DAKMapCycle.maps
 		local map = nil
 		
 		if numMaps == 0 then
 			return map
 		end
 		
-		if kDAKMapCycle.mode == "random" then
+		if DAKMapCycle.mode == "random" then
 		
 			// Choose a random map to switch to.
 			local mapIndex = math.random(1, numMaps)
-			map = kDAKMapCycle.maps[mapIndex]
+			map = DAKMapCycle.maps[mapIndex]
 			
 			// Don't change to the map we're currently playing.
 			if GetMapName(map) == currentMap then
@@ -165,8 +196,8 @@ if Server then
 					if mapIndex > numMaps then
 						mapIndex = 1
 					end
-					if MapCycle_MeetsPlayerRequirements(GetMapName(kDAKMapCycle.maps[mapIndex])) then
-						map = kDAKMapCycle.maps[mapIndex]
+					if MapCycle_MeetsPlayerRequirements(GetMapName(DAKMapCycle.maps[mapIndex])) then
+						map = DAKMapCycle.maps[mapIndex]
 						break
 					end
 				end
@@ -179,8 +210,8 @@ if Server then
 			// in case the same map has been specified multiple times.
 			local mapIndex = 0
 			
-			for i = #kDAKMapCycle.maps, 1, -1 do
-				if GetMapName(kDAKMapCycle.maps[i]) == currentMap then
+			for i = #DAKMapCycle.maps, 1, -1 do
+				if GetMapName(DAKMapCycle.maps[i]) == currentMap then
 					mapIndex = i
 					break
 				end
@@ -191,8 +222,8 @@ if Server then
 				if mapIndex > numMaps then
 					mapIndex = 1
 				end
-				if MapCycle_MeetsPlayerRequirements(GetMapName(kDAKMapCycle.maps[mapIndex])) then
-					map = kDAKMapCycle.maps[mapIndex]
+				if MapCycle_MeetsPlayerRequirements(GetMapName(DAKMapCycle.maps[mapIndex])) then
+					map = DAKMapCycle.maps[mapIndex]
 					break
 				end
 			end
@@ -204,7 +235,7 @@ if Server then
 	
 	function MapCycle_CycleMap()
 
-		if DAKExecuteEventHooks(kDAKOverrideMapChange) then
+		if DAKExecuteEventHooks("kDAKOverrideMapChange") then
 			return false
 		end
 
@@ -224,12 +255,12 @@ if Server then
 
 	function MapCycle_TestCycleMap()
 	
-		if DAKExecuteEventHooks(kDAKCheckMapChange) then
+		if DAKExecuteEventHooks("kDAKCheckMapChange") then
 			return false
 		end
 
 		// time is stored as minutes so convert to seconds.
-		if Shared.GetTime() < (kDAKMapCycle.time * 60) then
+		if Shared.GetTime() < (DAKMapCycle.time * 60) then
 			// We haven't been on the current map for long enough.
 			return false
 		end

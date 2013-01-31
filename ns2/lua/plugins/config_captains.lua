@@ -1,13 +1,8 @@
 //Captains config
 
-kDAKRevisions["Captains"] = 1.0
+kDAKRevisions["captains"] = "1.0"
 local function SetupDefaultConfig(Save)
-	if kDAKConfig.Captains == nil then
-		kDAKConfig.Captains = { }
-	end
-	if Save then
-		SaveDAKConfig()
-	end
+	kDAKConfig.Captains = { }
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "Captains", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "captains", DefaultConfig = SetupDefaultConfig })

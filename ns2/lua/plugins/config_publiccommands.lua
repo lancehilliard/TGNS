@@ -1,10 +1,8 @@
 //PublicCommands config
 
-kDAKRevisions["PublicCommands"] = 0.1
+kDAKRevisions["publiccommands"] = "0.1"
 local function SetupDefaultConfig(Save)
-	if kDAKConfig.PublicCommands == nil then
-		kDAKConfig.PublicCommands = { }
-	end
+	kDAKConfig.PublicCommands = { }
 	kDAKConfig.PublicCommands.Commands = {}
 	// ["feature"].command = "command string"
 	// ["feature"].throttle = min seconds between execution of command
@@ -14,9 +12,6 @@ local function SetupDefaultConfig(Save)
 	kDAKConfig.PublicCommands.Commands["nextmap"] = { }
 	kDAKConfig.PublicCommands.Commands["nextmap"].command = "nextmap"
 	kDAKConfig.PublicCommands.Commands["nextmap"].throttle = 30
-	if Save then
-		SaveDAKConfig()
-	end
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "PublicCommands", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "publiccommands", DefaultConfig = SetupDefaultConfig })

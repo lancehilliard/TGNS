@@ -43,25 +43,6 @@ end
 
 DAKCreateServerAdminCommand("Console_sv_alltalk", OnCommandAllTalk, "Will toggle the alltalk setting on server.")
 
-local function OnCommandListPlugins(client)
-
-	if client ~= nil and kDAKConfig then
-		for k,v in pairs(kDAKConfig) do
-			local plugin = k
-			local version = kDAKRevisions[plugin]
-			if plugin ~= nil then
-				if version ~= nil then
-					ServerAdminPrint(client, string.format("Plugin %s v%.1f is loaded.", plugin, version))
-					//Shared.Message(string.format("Plugin %s v%.1f is loaded.", plugin, version))
-				end
-			end
-		end
-	end
-
-end
-
-DAKCreateServerAdminCommand("Console_sv_listplugins", OnCommandListPlugins, "Will list the state of all plugins.")
-
 local function OnCommandListMap(client)
 	local matchingFiles = { }
 	Shared.GetMatchingFileNames("maps/*.level", false, matchingFiles)
@@ -76,19 +57,19 @@ end
 
 DAKCreateServerAdminCommand("Console_sv_maps", OnCommandListMap, "Will list all the maps currently on the server.")
 
-local function OnCommandCheats(client, parm)
-	local num = tonumber(parm)
-	if client ~= nil and num ~= nil then
-		ServerAdminPrint(client, string.format("Command sv_cheats %s executed.", parm))
-		Shared.ConsoleCommand("cheats " .. parm)
+/*local function OnCommandCheats(client)
+	if client ~= nil then
+		local statuschange = ConditionalValue(Shared.GetCheatsEnabled(), 0, 1)
+		ServerAdminPrint(client, string.format("Cheats have been %s.", ConditionalValue(statuschange == 1,"enabled", "disabled")))
+		Shared.ConsoleCommand("cheats " .. statuschange)
 		local player = client:GetControllingPlayer()
 		if player ~= nil then
-			PrintToAllAdmins("sv_cheats", client, " " .. parm)
+			PrintToAllAdmins("sv_cheats", client, " " .. statuschange)
 		end
 	end
 end
 
-DAKCreateServerAdminCommand("Console_sv_cheats", OnCommandCheats, "<1/0> Will enable/disable cheats.")
+DAKCreateServerAdminCommand("Console_sv_cheats", OnCommandCheats, "Will enable/disable cheats.")*/
 
 local function OnCommandKillServer(client)
 
@@ -102,25 +83,8 @@ local function OnCommandKillServer(client)
 	
 	//Shared.ConsoleCommand("exit")
 	//They finally fixed seek crash bug :<
+	Server.GetClientAddress(nil)
+	//Alriiight found a new crash bug
 end
 
-//DAKCreateServerAdminCommand("Console_sv_killserver", OnCommandKillServer, "Will crash the server (lol).")
-
-//Load Plugins
-local function LoadPlugins()
-	if kDAKConfig == nil or kDAKConfig == { } or kDAKConfig.DAKLoader == nil or kDAKConfig.DAKLoader == { } or kDAKConfig.DAKLoader.kPluginsList == nil then
-		DAKGenerateDefaultDAKConfig(true)
-	end
-	if kDAKConfig ~= nil and kDAKConfig.DAKLoader ~= nil  then
-		for i = 1, #kDAKConfig.DAKLoader.kPluginsList do
-			local filename = string.format("lua/plugins/plugin_%s.lua", kDAKConfig.DAKLoader.kPluginsList[i])
-			Script.Load(filename)
-		end
-	else
-		Shared.Message("Something may be wrong with your config file.")
-	end
-end
-
-LoadPlugins()
-
-DAKCreateServerAdminCommand("Console_sv_reloadplugins", LoadPlugins, "Reloads all plugins.")
+DAKCreateServerAdminCommand("Console_sv_killserver", OnCommandKillServer, "Will crash the server (lol).")

@@ -1,15 +1,11 @@
 //CommBans default config
 
-kDAKRevisions["CommBans"] = 1.0
-local function SetupDefaultConfig(Save)
-	if kDAKConfig.CommBans == nil then
-		kDAKConfig.CommBans = { }
-	end
+kDAKRevisions["commbans"] = "0.1.128a"
+
+local function SetupDefaultConfig()
+	kDAKConfig.CommBans = { }
 	kDAKConfig.CommBans.kMinVotesNeeded = 2
-	kDAKConfig.CommBans.kTeamVotePercentage = .4
-	if Save then
-		SaveDAKConfig()
-	end
+	kDAKConfig.CommBans.kTeamVotePercentage = .5
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "CommBans", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "commbans", DefaultConfig = SetupDefaultConfig })

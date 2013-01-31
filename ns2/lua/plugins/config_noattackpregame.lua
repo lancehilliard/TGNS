@@ -1,14 +1,8 @@
 //NoAttackPregame config
 
-kDAKRevisions["NoAttackPregame"] = 1.0
+kDAKRevisions["noattackpregame"] = "1.0"
 local function SetupDefaultConfig(Save)
-	if kDAKConfig.NoAttackPregame == nil then
-		kDAKConfig.NoAttackPregame = { }
-	end
-	
-	if Save then
-		SaveDAKConfig()
-	end
+	kDAKConfig.NoAttackPregame = { }
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "NoAttackPregame", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "noattackpregame", DefaultConfig = SetupDefaultConfig })

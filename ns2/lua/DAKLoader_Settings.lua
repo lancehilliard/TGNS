@@ -30,19 +30,32 @@ if Server then
 	end
 	
 	//Reset Settings file
-	local function ResetSettings(setting)
-		local Settings = setting or kDAKSettings
-		for i = 1, #Settings do
-			local setting = kDAKSettings[i]
-			if type(setting) == "table" then
-				ResetSettings(setting)
-			else
-				setting = nil
+	local function ResetDAKSetting(client, setting)
+
+		if setting ~= nil then
+			kDAKSettings[setting] = nil
+		else
+			setting = "All"
+			for k, v in pairs(kDAKSettings) do
+				if (type(v) == "table") then
+					kDAKSettings[k] = { }
+				else
+					kDAKSettings[k] = nil
+				end
 			end
 		end
+		
 		SaveDAKSettings()
+
+		if client ~= nil then 
+			ServerAdminPrint(client, string.format("Setting %s cleared.", setting))
+			local player = client:GetControllingPlayer()
+			if player ~= nil then
+				PrintToAllAdmins("sv_resetsettings", client, " " .. setting)
+			end
+		end
 	end
 	
-	DAKCreateServerAdminCommand("Console_sv_resetsettings", ResetSettings, "<optional setting name> Resets specified setting, or all DAK settings.")
+	DAKCreateServerAdminCommand("Console_sv_resetsettings", ResetDAKSetting, "<optional setting name> Resets specified setting, or all DAK settings.")
 	
 end

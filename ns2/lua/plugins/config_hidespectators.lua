@@ -1,5 +1,9 @@
 //Hide Spectators config
 
-kDAKRevisions["HideSpectators"] = 1.0
+kDAKRevisions["hidespectators"] = "1.0"
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "HideSpectators", DefaultConfig = function() end })
+local function SetupDefaultConfig(Save)
+	kDAKConfig.HideSpectators = { }
+end
+
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "hidespectators", DefaultConfig = SetupDefaultConfig })

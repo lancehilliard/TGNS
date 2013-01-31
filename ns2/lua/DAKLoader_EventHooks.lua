@@ -14,8 +14,7 @@ local function DAKOnClientConnected(client)
 
 	if kDAKConfig and kDAKConfig.DAKLoader then
 		if client ~= nil and VerifyClient(client) ~= nil then
-			table.insert(kDAKGameID, client)
-			DAKExecuteEventHooks(kDAKOnClientConnect, client)
+			DAKExecuteEventHooks("kDAKOnClientConnect", client)
 			if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.kDelayedClientConnect then
 				local CEntry = { Client = client, Time = Shared.GetTime() + kDAKConfig.DAKLoader.kDelayedClientConnect }
 				table.insert(DelayedClientConnect, CEntry)
@@ -30,7 +29,7 @@ local function DAKOnClientDisconnected(client)
 
 	if kDAKConfig and kDAKConfig.DAKLoader then
 		if client ~= nil and VerifyClient(client) ~= nil then
-			DAKExecuteEventHooks(kDAKOnClientDisconnect, client)
+			DAKExecuteEventHooks("kDAKOnClientDisconnect", client)
 		end
 	end
 	
@@ -44,16 +43,17 @@ local function DAKUpdateServer(deltaTime)
 	
 	if kDAKConfig and kDAKConfig.DAKLoader then
 		serverupdatetime = serverupdatetime + deltaTime
+		DAKExecuteEventHooks("kDAKOnServerUpdateEveryFrame", deltaTime)
 		if kDAKConfig.DAKLoader.kDelayedServerUpdate and serverupdatetime > kDAKConfig.DAKLoader.kDelayedServerUpdate then
 		
-			DAKExecuteEventHooks(kDAKOnServerUpdate, deltaTime)
+			DAKExecuteEventHooks("kDAKOnServerUpdate", serverupdatetime)
 			
 			if #DelayedClientConnect > 0 then
 				for i = #DelayedClientConnect, 1, -1 do
 					local CEntry = DelayedClientConnect[i]
 					if CEntry ~= nil and CEntry.Client ~= nil and VerifyClient(CEntry.Client) ~= nil then
 						if CEntry.Time < Shared.GetTime() then
-							DAKExecuteEventHooks(kDAKOnClientDelayedConnect, CEntry.Client)
+							DAKExecuteEventHooks("kDAKOnClientDelayedConnect", CEntry.Client)
 							DelayedClientConnect[i] = nil
 						end
 					else
@@ -82,7 +82,7 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 	originalNS2GRJoinTeam = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "JoinTeam", 
 		function(self, player, newTeamNumber, force)
 		
-			if not DAKExecuteEventHooks(kDAKOnTeamJoin, self, player, newTeamNumber, force) then
+			if not DAKExecuteEventHooks("kDAKOnTeamJoin", self, player, newTeamNumber, force) then
 				return originalNS2GRJoinTeam(self, player, newTeamNumber, force)
 			end
 			return false, player
@@ -95,7 +95,7 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 	originalNS2GREndGame = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "EndGame", 
 		function(self, winningTeam)
 		
-			DAKExecuteEventHooks(kDAKOnGameEnd, self, winningTeam)
+			DAKExecuteEventHooks("kDAKOnGameEnd", self, winningTeam)
 			originalNS2GREndGame(self, winningTeam)
 			
 		end
@@ -107,7 +107,7 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 		function(self, targetEntity, attacker, doer, point, direction)
 		
 			if attacker and targetEntity and doer then
-				DAKExecuteEventHooks(kDAKOnEntityKilled, self, targetEntity, attacker, doer, point, direction)
+				DAKExecuteEventHooks("kDAKOnEntityKilled", self, targetEntity, attacker, doer, point, direction)
 			end
 			originalNS2GREntityKilled(self, targetEntity, attacker, doer, point, direction)
 		
@@ -119,7 +119,7 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 	originalNS2GRUpdatePregame = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "UpdatePregame", 
 		function(self, timePassed)
 
-			if not DAKExecuteEventHooks(kDAKOnUpdatePregame, self, timePassed) then
+			if not DAKExecuteEventHooks("kDAKOnUpdatePregame", self, timePassed) then
 				originalNS2GRUpdatePregame(self, timePassed)
 			end
 		
@@ -131,7 +131,7 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 	originalNS2GRCastVoteByPlayer = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "CastVoteByPlayer", 
 		function(self, voteTechId, player)
 		
-			if not DAKExecuteEventHooks(kDAKOnCastVoteByPlayer, self, voteTechId, player) then
+			if not DAKExecuteEventHooks("kDAKOnCastVoteByPlayer", self, voteTechId, player) then
 				originalNS2GRCastVoteByPlayer(self, voteTechId, player)
 			end
 
@@ -145,7 +145,23 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 
 			local currentstate = self.gameState
 			originalNS2GRSetGameState( self, state )
-			DAKExecuteEventHooks(kDAKOnSetGameState, self, state, currentstate)
+			DAKExecuteEventHooks("kDAKOnSetGameState", self, state, currentstate)
+		
+		end
+	)
+	
+	local originalNS2GRGetFriendlyFire
+	
+	originalNS2GRGetFriendlyFire = Class_ReplaceMethod(kDAKConfig.DAKLoader.GamerulesClassName, "GetFriendlyFire", 
+		function(self)
+		
+			if kDAKSettings.FriendlyFire == nil then
+				kDAKSettings.FriendlyFire = false
+			end
+			if kDAKSettings.FriendlyFire then
+				return kDAKSettings.FriendlyFire
+			end
+			return originalNS2GRGetFriendlyFire( self )
 		
 		end
 	)
@@ -176,16 +192,16 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.GamerulesExtensi
 				originalServerAddChatToHistory(message, playerName, steamId, teamNumber, teamOnly)
 
 				local client = GetClientMatchingSteamId(steamId)
-				DAKExecuteEventHooks(kDAKOnClientChatMessage, message, playerName, steamId, teamNumber, teamOnly, client)
+				DAKExecuteEventHooks("kDAKOnClientChatMessage", message, playerName, steamId, teamNumber, teamOnly, client)
 
 			end
 		)
 
 		Script.Load("lua/DAKLoader_MapCycle.lua")
-		DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedEventOverride)
+		DAKDeregisterEventHook("kDAKOnServerUpdate", DelayedEventOverride)
 	end
 
-	DAKRegisterEventHook(kDAKOnServerUpdate, DelayedEventOverride, 5)
+	DAKRegisterEventHook("kDAKOnServerUpdate", DelayedEventOverride, 5)
 	
 end
 	
@@ -197,6 +213,6 @@ if kDAKConfig and kDAKConfig.DAKLoader and kDAKConfig.DAKLoader.OverrideInterp a
 		end
 	end
 
-	DAKRegisterEventHook(kDAKOnClientConnect, SetInterpOnClientConnected, 5)
+	DAKRegisterEventHook("kDAKOnClientConnect", SetInterpOnClientConnected, 5)
 	
 end

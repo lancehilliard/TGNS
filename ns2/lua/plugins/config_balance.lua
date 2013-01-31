@@ -1,14 +1,9 @@
 //Balance config
 
-kDAKRevisions["Balance"] = 0.1
+kDAKRevisions["balance"] = "0.1"
 
 local function SetupDefaultConfig(Save)
-	if kDAKConfig.Balance == nil then
-		kDAKConfig.Balance = { }
-	end
-	if Save then
-		SaveDAKConfig()
-	end
+	kDAKConfig.Balance = { }
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "Balance", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "balance", DefaultConfig = SetupDefaultConfig })

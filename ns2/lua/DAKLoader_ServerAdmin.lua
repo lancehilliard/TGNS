@@ -3,7 +3,8 @@
 if Server then
 	
 	local settings = { groups = { }, users = { } }
-	
+	local DAKServerAdminCommands = { }
+	local DAKGameID = { }
 	local DAKServerAdminFileName = "config://ServerAdmin.json"
 	local DAKServerAdminWebFileName = "config://ServerAdminWeb.json"
 	local ServerAdminWebCache
@@ -142,9 +143,6 @@ if Server then
 	
 	local function CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
 
-		if kDAKServerAdminCommands == nil then 
-			kDAKServerAdminCommands = { }
-		end
 		local fixedCommandName = string.gsub(commandName, "Console_", "")
 		local newCommand = function(client, ...)
 		
@@ -154,7 +152,7 @@ if Server then
 			
 		end
 		
-		table.insert(kDAKServerAdminCommands, { name = fixedCommandName, help = helpText or "No help provided" })
+		table.insert(DAKServerAdminCommands, { name = fixedCommandName, help = helpText or "No help provided" })
 		Event.Hook(commandName, newCommand)
 		
 	end
@@ -183,36 +181,6 @@ if Server then
 		end
 		
         return level
-    end
-
-	function AddSteamIDToGroup(steamId, groupNameToAdd)
-        for name, user in pairs(settings.users) do
-            if user.id == steamId then
-				for g = 1, #user.groups do
-					if user.groups[g] == groupNameToAdd then
-						groupNameToAdd = nil
-					end
-				end
-				if groupNameToAdd ~= nil then
-					table.insert(user.groups, groupNameToAdd)
-				end
-				break
-            end
-        end
-    end
-	
-	function RemoveSteamIDFromGroup(steamId, groupNameToRemove)
-        for name, user in pairs(settings.users) do
-            if user.id == steamId then
-				for r = #user.groups, 1, -1 do
-					if user.groups[r] ~= nil then
-						if user.groups[r] == groupNameToRemove then
-							table.remove(user.groups, r)
-						end
-					end
-				end
-            end
-        end
     end
 	
 	local function GetClientLevel(client)
@@ -283,11 +251,22 @@ if Server then
 	
 	end
 	
+	function GetPlayerMatching(id)
+
+		local idNum = tonumber(id)
+		if idNum then
+			return GetPlayerMatchingGameId(idNum) or GetPlayerMatchingSteamId(idNum)
+		elseif type(id) == "string" then
+			return GetPlayerMatchingName(id)
+		end
+			
+	end
+	
 	function GetPlayerMatchingGameId(id)
 	
 		assert(type(id) == "number")
-		if id > 0 and id <= #kDAKGameID then
-			local client = kDAKGameID[id]
+		if id > 0 and id <= #DAKGameID then
+			local client = DAKGameID[id]
 			if client ~= nil and VerifyClient(client) ~= nil then
 				return client:GetControllingPlayer()
 			end
@@ -300,8 +279,8 @@ if Server then
 	function GetClientMatchingGameId(id)
 	
 		assert(type(id) == "number")
-		if id > 0 and id <= #kDAKGameID then
-			local client = kDAKGameID[id]
+		if id > 0 and id <= #DAKGameID then
+			local client = DAKGameID[id]
 			if client ~= nil and VerifyClient(client) ~= nil then
 				return client
 			end
@@ -315,9 +294,9 @@ if Server then
 	
 		local client = Server.GetOwner(player)
 		if client ~= nil and VerifyClient(client) ~= nil then
-			for p = 1, #kDAKGameID do
+			for p = 1, #DAKGameID do
 			
-				if client == kDAKGameID[p] then
+				if client == DAKGameID[p] then
 					return p
 				end
 				
@@ -330,9 +309,9 @@ if Server then
 	function GetGameIdMatchingClient(client)
 	
 		if client ~= nil and VerifyClient(client) ~= nil then
-			for p = 1, #kDAKGameID do
+			for p = 1, #DAKGameID do
 			
-				if client == kDAKGameID[p] then
+				if client == DAKGameID[p] then
 					return p
 				end
 				
@@ -357,6 +336,45 @@ if Server then
 					end
 				end
 			end				
+		end
+		
+		return nil
+		
+	end
+	
+	function GetPlayerMatchingSteamId(steamId)
+
+		assert(type(steamId) == "number")
+		
+		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
+		for r = #playerList, 1, -1 do
+			if playerList[r] ~= nil then
+				local plyr = playerList[r]
+				local clnt = playerList[r]:GetClient()
+				if plyr ~= nil and clnt ~= nil then
+					if clnt:GetUserId() == steamId then
+						return plyr
+					end
+				end
+			end				
+		end
+		
+		return nil
+		
+	end
+	
+	function GetPlayerMatchingName(name)
+	
+		assert(type(name) == "string")
+		
+		local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
+		for r = #playerList, 1, -1 do
+			if playerList[r] ~= nil then
+				local plyr = playerList[r]
+				if plyr:GetName() == name then
+					return plyr
+				end
+			end
 		end
 		
 		return nil
@@ -413,17 +431,18 @@ if Server then
 	end
 	
 	local function OnServerAdminClientConnect(client)
+		table.insert(DAKGameID, client)
 		local tt = Shared.GetTime()
 		if tt > kDAKConfig.DAKLoader.ServerAdmin.kMapChangeDelay and (lastwebupdate == nil or (lastwebupdate + kDAKConfig.DAKLoader.ServerAdmin.kUpdateDelay) < tt) and kDAKConfig.DAKLoader.ServerAdmin.kQueryURL ~= "" and initialwebupdate ~= 0 then
 			QueryForAdminList()
 		end
 	end
 	
-	DAKRegisterEventHook(kDAKOnClientConnect, OnServerAdminClientConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientConnect", OnServerAdminClientConnect, 5)
 
 	local function DelayedServerCommandRegistration()
 		if kDAKConfig.DAKLoader.ServerAdmin.kQueryURL == "" then
-			DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration)
+			DAKDeregisterEventHook("kDAKOnServerUpdate", DelayedServerCommandRegistration)
 			return
 		end
 		if initialwebupdate == 0 then
@@ -436,11 +455,11 @@ if Server then
 				settings.users = tablemerge(settings.users, LoadServerAdminWebSettings())
 				initialwebupdate = 0
 			end
-			DAKDeregisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration)
+			DAKDeregisterEventHook("kDAKOnServerUpdate", DelayedServerCommandRegistration)
 		end
 	end
 	
-	DAKRegisterEventHook(kDAKOnServerUpdate, DelayedServerCommandRegistration, 5)
+	DAKRegisterEventHook("kDAKOnServerUpdate", DelayedServerCommandRegistration, 5)
 	
 	local function OnCommandListAdmins(client)
 	
@@ -488,6 +507,27 @@ if Server then
 	end
 
     DAKCreateServerAdminCommand("Console_sv_who", OnCommandWho, "Will list all online admins.", true)
+	
+	local function PrintHelpForCommand(client, optionalCommand)
+
+		for c = 1, #DAKServerAdminCommands do
+		
+			local command = DAKServerAdminCommands[c]
+			if optionalCommand == command.name or optionalCommand == nil then
+			
+				if not client or DAKGetClientCanRunCommand(client, command.name, false) then
+					ServerAdminPrint(client, command.name .. ": " .. command.help)
+				elseif optionalCommand then
+					ServerAdminPrint(client, "You do not have access to " .. optionalCommand)
+				end
+				
+			end
+			
+		end
+		
+	end
+	
+	DAKCreateServerAdminCommand("Console_sv_help", PrintHelpForCommand, "Prints help for all commands or the specified command.", true)
 	
 	//This is so derp, but re-registering function to override builtin admin system without having to modify core NS2 files
 	//Using registration of ServerAdminPrint network message for the correct timing

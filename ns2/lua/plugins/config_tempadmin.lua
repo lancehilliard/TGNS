@@ -1,14 +1,9 @@
 //TempAdmin config
 
-kDAKRevisions["TempAdmin"] = 0.1
+kDAKRevisions["tempadmin"] = "0.1"
 
 local function SetupDefaultConfig(Save)
-	if kDAKConfig.TempAdmin == nil then
-		kDAKConfig.TempAdmin = { }
-	end
-	if Save then
-		SaveDAKConfig()
-	end
+	kDAKConfig.TempAdmin = { }
 end
 
-table.insert(kDAKPluginDefaultConfigs, {PluginName = "TempAdmin", DefaultConfig = function(Save) SetupDefaultConfig(Save) end })
+DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "tempadmin", DefaultConfig = SetupDefaultConfig })

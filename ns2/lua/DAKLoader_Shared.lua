@@ -2,28 +2,27 @@
 
 //Shared Defs
 
-/*
-local kMaxVoteStringLength = 35
+local kMaxMenuStringLength = 35
 
 local kMenuBaseUpdateMessage = 
 {
-	header         		= string.format("string (%d)", kMaxVoteStringLength),
-	option1         	= string.format("string (%d)", kMaxVoteStringLength),
-	option1desc         = string.format("string (%d)", kMaxVoteStringLength),
-	option2        		= string.format("string (%d)", kMaxVoteStringLength),
-	option2desc         = string.format("string (%d)", kMaxVoteStringLength),
-	option3        		= string.format("string (%d)", kMaxVoteStringLength),
-	option3desc         = string.format("string (%d)", kMaxVoteStringLength),
-	option4        		= string.format("string (%d)", kMaxVoteStringLength),
-	option4desc         = string.format("string (%d)", kMaxVoteStringLength),
-	option5         	= string.format("string (%d)", kMaxVoteStringLength),
-	option5desc         = string.format("string (%d)", kMaxVoteStringLength),
-	footer         		= string.format("string (%d)", kMaxVoteStringLength),
+	header         		= string.format("string (%d)", kMaxMenuStringLength),
+	option1         	= string.format("string (%d)", kMaxMenuStringLength),
+	option1desc         = string.format("string (%d)", kMaxMenuStringLength),
+	option2        		= string.format("string (%d)", kMaxMenuStringLength),
+	option2desc         = string.format("string (%d)", kMaxMenuStringLength),
+	option3        		= string.format("string (%d)", kMaxMenuStringLength),
+	option3desc         = string.format("string (%d)", kMaxMenuStringLength),
+	option4        		= string.format("string (%d)", kMaxMenuStringLength),
+	option4desc         = string.format("string (%d)", kMaxMenuStringLength),
+	option5         	= string.format("string (%d)", kMaxMenuStringLength),
+	option5desc         = string.format("string (%d)", kMaxMenuStringLength),
+	footer         		= string.format("string (%d)", kMaxMenuStringLength),
 	inputallowed		= "boolean",
-	votetime   	  		= "time"
+	menutime   	  		= "time"
 }
 
-Shared.RegisterNetworkMessage( "GUIMenuBase", kMenuBaseUpdateMessage )
+Shared.RegisterNetworkMessage("GUIMenuBase", kMenuBaseUpdateMessage)
 
 local kMenuBaseMessage =
 {
@@ -31,4 +30,3 @@ local kMenuBaseMessage =
 }
 
 Shared.RegisterNetworkMessage("GUIMenuBaseSelected", kMenuBaseMessage)
-*/
