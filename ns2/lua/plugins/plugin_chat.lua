@@ -27,7 +27,7 @@ if kDAKConfig and kDAKConfig.Chat then
 				local targetplayer = TGNS:GetPlayerMatchingName(name)
 				if targetplayer ~= nil then
 					TGNS:PMAllPlayersWithAccess(client, string.format("To %s: %s", targetplayer:GetName(), chatMessage), label, true, true)
-					if not DAKGetClientCanRunCommand(client, label) then
+					 if not DAKGetClientCanRunCommand(Server.GetOwner(targetplayer), label) then
 						Server.SendNetworkMessage(targetplayer, "Chat", TGNS:BuildPMChatMessage(client, chatMessage, label, true), true)
 					end
 				else
@@ -54,7 +54,7 @@ if kDAKConfig and kDAKConfig.Chat then
 				local message = StringConcatArgs(...)
 				if message == nil then message = "" end
 				ProcessChatCommand(client, channel, message)
-			end, help)
+			end, channel.help)
 	end
 
 	local function CheckForChat(client, message)
