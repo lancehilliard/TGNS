@@ -13,7 +13,7 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 			//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.PrintableNames.kPrintableNamesWarnMessage), true)
 		end
 	end
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, PrintableNamesOnClientDelayedConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", PrintableNamesOnClientDelayedConnect, 5)
 
 	local function PrintableNamesOnTeamJoin(self, player, newTeamNumber, force)
 		local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
@@ -23,7 +23,7 @@ if kDAKConfig and kDAKConfig.PrintableNames then
 			Server.DisconnectClient(client)
 		end
 	end
-	DAKRegisterEventHook(kDAKOnTeamJoin, PrintableNamesOnTeamJoin, 5)
+	DAKRegisterEventHook("kDAKOnTeamJoin", PrintableNamesOnTeamJoin, 5)
 
 	function PrintableNamesOnCommandSetName(client, name)
 		if client ~= nil and name ~= nil then

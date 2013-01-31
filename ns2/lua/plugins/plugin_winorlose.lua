@@ -139,7 +139,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		end
 	end
 	
-	DAKRegisterEventHook(kDAKOnServerUpdate, function(deltatime) return UpdateWinOrLoseVotes() end, 5)
+	DAKRegisterEventHook("kDAKOnServerUpdate", function(deltatime) return UpdateWinOrLoseVotes() end, 5)
 	
 	local function ClearWinOrLoseVotes()
 		for i = 1, kWinOrLoseTeamCount do
@@ -150,7 +150,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		kTimeAtWhichWinOrLoseVoteSucceeded = 0
 	end
 		
-	DAKRegisterEventHook(kDAKOnGameEnd, ClearWinOrLoseVotes, 5)
+	DAKRegisterEventHook("kDAKOnGameEnd", ClearWinOrLoseVotes, 5)
 
 	local function OnCommandWinOrLose(client)
 	
@@ -209,7 +209,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	
 	end
 	
-	DAKRegisterEventHook(kDAKOnClientChatMessage, OnWinOrLoseChatMessage, 5)
+	DAKRegisterEventHook("kDAKOnClientChatMessage", OnWinOrLoseChatMessage, 5)
 
 	//local function WinOrLoseOff(client, teamnum)
 	//	local tmNum = tonumber(teamnum)

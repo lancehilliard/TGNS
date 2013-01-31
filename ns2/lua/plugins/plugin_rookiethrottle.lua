@@ -34,7 +34,7 @@ if kDAKConfig and kDAKConfig.RookieThrottle then
 			Server.DisconnectClient(client)
 		end
 	end
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, RookieThrottleOnClientDelayedConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", RookieThrottleOnClientDelayedConnect, 5)
 end
 
 Shared.Message("RookieThrottle Loading Complete")

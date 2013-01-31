@@ -99,7 +99,7 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 			TGNS:ClientAction(player, function(c) RemoveTempAdminFromClient(c) end)
 		end
 	end
-	DAKRegisterEventHook(kDAKOnTeamJoin, TempAdminOnTeamJoin, 5)
+	DAKRegisterEventHook("kDAKOnTeamJoin", TempAdminOnTeamJoin, 5)
 
 	TGNS:ScheduleAction(RosterCheckInterval, CheckRoster)
 end

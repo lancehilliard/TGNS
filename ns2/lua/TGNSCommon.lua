@@ -43,7 +43,7 @@ end
 local function CommonOnServerUpdate(deltatime)
 	ProcessScheduledActions()
 end
-DAKRegisterEventHook(kDAKOnServerUpdate, CommonOnServerUpdate, 5)
+DAKRegisterEventHook("kDAKOnServerUpdate", CommonOnServerUpdate, 5)
 
 function TGNS:PlayerIsOnTeam(player, team)
 	local result = player:GetTeam() == team
@@ -197,8 +197,8 @@ function TGNS:SendChatMessage(player, chatMessage)
 end
 
 function TGNS:DisconnectClient(client, reason)
-		client.disconnectreason = reason
-		Server.DisconnectClient(client)
+	client.disconnectreason = reason
+	Server.DisconnectClient(client)
 end
 
 function TGNS:GetPlayerList()
@@ -478,7 +478,7 @@ end
 kTGNSChatHooks = {}
 
 function TGNS:RegisterChatHook(func)
-	DAKRegisterEventHook(kTGNSChatHooks, func, 1)
+	table.insert(kTGNSChatHooks, func)
 end
 
 local originalOnChatReceived

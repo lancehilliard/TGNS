@@ -11,7 +11,7 @@ if kDAKConfig and kDAKConfig.SpecLimit then
 		end
 		return cancel
 	end
-	DAKRegisterEventHook(kDAKOnTeamJoin, SpecLimitOnTeamJoin, 5)
+	DAKRegisterEventHook("kDAKOnTeamJoin", SpecLimitOnTeamJoin, 5)
 end
 
 Shared.Message("SpecLimit Loading Complete")

@@ -71,7 +71,7 @@ if kDAKConfig and kDAKConfig.Taglines then
 			end
 		end
 	end
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, TaglinesOnClientDelayedConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", TaglinesOnClientDelayedConnect, 5)
 
 end
 

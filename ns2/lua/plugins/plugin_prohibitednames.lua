@@ -18,7 +18,7 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.ProhibitedNames.kProhibitedNamesWarnMessage), true)
 		end
 	end
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, ProhibitedNamesOnClientDelayedConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", ProhibitedNamesOnClientDelayedConnect, 5)
 
 	local function ProhibitedNamesOnTeamJoin(self, player, newTeamNumber, force)
 		if PlayerNameIsProhibited(player:GetName()) and newTeamNumber ~= kTeamReadyRoom then
@@ -27,7 +27,7 @@ if kDAKConfig and kDAKConfig.ProhibitedNames then
 			Server.DisconnectClient(client)
 		end
 	end
-	DAKRegisterEventHook(kDAKOnTeamJoin, ProhibitedNamesOnTeamJoin, 5)
+	DAKRegisterEventHook("kDAKOnTeamJoin", ProhibitedNamesOnTeamJoin, 5)
 
 	function ProhibitedNamesOnCommandSetName(client, name)
 		if client ~= nil and name ~= nil then

@@ -301,7 +301,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		
 	end
 
-	DAKRegisterEventHook(kDAKOnSetGameState, onGameStateChange, 5)
+	DAKRegisterEventHook("kDAKOnSetGameState", onGameStateChange, 5)
 
 	local function client_putinserver(client)
 		if isCaptainsMode() then
@@ -309,7 +309,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		end
 	end
 	
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, client_putinserver, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", client_putinserver, 5)
 
 	local function announceCaptDisc()
 		DisplayMessageAll("A captain has left the server.")
@@ -339,7 +339,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		end
 	end
 
-	DAKRegisterEventHook(kDAKOnClientDisconnect, client_disconnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDisconnect", client_disconnect, 5)
 
 	local function CaptainsJoinTeam(self, player, newTeamNumber, force)
 		if isCaptainsMode() then
@@ -356,7 +356,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		end
 	end
 
-	DAKRegisterEventHook(kDAKOnTeamJoin, CaptainsJoinTeam, 5)
+	DAKRegisterEventHook("kDAKOnTeamJoin", CaptainsJoinTeam, 5)
 
 	local function OnCaptainsChatMessage(client, message)
 		if isCaptainsMode() then

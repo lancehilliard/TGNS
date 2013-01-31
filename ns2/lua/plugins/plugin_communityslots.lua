@@ -139,8 +139,8 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		TGNS:ConsolePrint(client, chatMessage)
 		TGNS:PlayerAction(client, function(p) TGNS:SendChatMessage(p, chatMessage) end)
 	end
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, CommunitySlotsOnClientDelayedConnect, 5)
-	DAKRegisterEventHook(kDAKOnClientDelayedConnect, CommunitySlotsOnClientDelayedConnectGreeter, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnectGreeter, 5)
 	
 	local function PrintbumpCountsReport(client)
 		local primerOnlyVictims = TGNS:GetNumericValueOrZero(victimBumpCounts.primerOnly)

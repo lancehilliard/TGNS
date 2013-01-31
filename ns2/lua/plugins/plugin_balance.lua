@@ -86,7 +86,7 @@ if kDAKConfig and kDAKConfig.Balance then
 			end
 		end
 	end
-	DAKRegisterEventHook(kDAKOnSetGameState, BalanceOnSetGameState, 5)
+	DAKRegisterEventHook("kDAKOnSetGameState", BalanceOnSetGameState, 5)
 	
 	function BalanceOnGameEnd(self, winningTeam)
 		TGNS:DoForClientsWithId(TGNS:GetPlayingClients(TGNS:GetPlayerList()), function(c, steamId)
@@ -97,7 +97,7 @@ if kDAKConfig and kDAKConfig.Balance then
 			end
 		)
 	end
-	DAKRegisterEventHook(kDAKOnGameEnd, BalanceOnGameEnd, 5)
+	DAKRegisterEventHook("kDAKOnGameEnd", BalanceOnGameEnd, 5)
 	
 end
 

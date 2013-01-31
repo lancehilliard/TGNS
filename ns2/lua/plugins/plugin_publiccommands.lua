@@ -84,7 +84,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 	
 	end
 
-	DAKRegisterEventHook(kDAKOnClientChatMessage, OnChatMessage, 5)
+	DAKRegisterEventHook("kDAKOnClientChatMessage", OnChatMessage, 5)
 end
 
 Shared.Message("PublicCommands Loading Complete")
