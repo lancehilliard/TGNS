@@ -146,7 +146,7 @@ function TGNS.GetPlayerName(player)
 end
 
 function TGNS.GetClientName(client)
-	local result = TGNS.PlayerAction(client, self.GetPlayerName)
+	local result = TGNS.PlayerAction(client, TGNS.GetPlayerName)
 	return result
 end
 
