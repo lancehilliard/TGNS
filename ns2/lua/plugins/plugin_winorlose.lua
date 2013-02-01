@@ -215,6 +215,19 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	
 	DAKRegisterEventHook("kDAKOnClientChatMessage", OnWinOrLoseChatMessage, 5)
 
+	local function onChatClient(client, networkMessage)
+		local teamOnly = networkMessage.teamOnly
+		local message = StringTrim(networkMessage.message)
+		for c = 1, #kDAKConfig.WinOrLose.kWinOrLoseChatCommands do
+			local chatcommand = kDAKConfig.WinOrLose.kWinOrLoseChatCommands[c]
+			if message == chatcommand and not teamOnly then
+				return true
+			end
+		end
+	end
+
+	TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient)
+
 	//local function WinOrLoseOff(client, teamnum)
 	//	local tmNum = tonumber(teamnum)
 	//	if tmNum ~= nil and ValidateTeamNumber(tmNum) and kWinOrLoseRunning[tmNum] ~= 0 then
