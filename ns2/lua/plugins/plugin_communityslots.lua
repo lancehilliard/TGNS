@@ -162,7 +162,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	
 	local function PrintBumpCountsChatMessages()
 		local bumpCounts = GetBumpCounts()
-		TGNS.DoForClientsWithId(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
+		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 				PrintBumpCountsReport(c)
 				TGNS.PlayerAction(c, function(p)
 						TGNS.SendChatMessage(p, string.format("Bump totals this map: %s Victims; %s Rejects", bumpCounts.totalVictims, bumpCounts.totalRejects))
@@ -171,8 +171,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 			end
 		)
 	end
-	DAKRegisterEventHook("kDAKOnGameEnd", PrintBumpCountsChatMessages, 5)
-	DAKRegisterEventHook("kDAKOnClientDelayedConnect", PrintBumpCountsChatMessages, 5)
+	DAKRegisterEventHook("kDAKOnGameEnd", function() TGNS.ScheduleAction(8, PrintBumpCountsChatMessages) end, 5)
 	
 	local function DebugCommunitySlots(client)
 		TGNS.DoFor(actionslog, function(logline) 
