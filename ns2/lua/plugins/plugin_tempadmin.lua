@@ -24,11 +24,11 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	
 	local function GetTempAdminCandidateClient(teamPlayers)
 		local result = nil
-		local teamNeedsAdmin = TGNS.GetLastMatchingClient(TGNS.IsClientAdmin, teamPlayers) == nil
+		local teamNeedsAdmin = TGNS.GetLastMatchingClient(teamPlayers, TGNS.IsClientAdmin) == nil
 		if teamNeedsAdmin then
-			local existingTempAdmins = TGNS.GetMatchingClients(function(c,p) return TGNS.IsClientTempAdmin(c) end, teamPlayers)
+			local existingTempAdmins = TGNS.GetMatchingClients(teamPlayers, function(c,p) return TGNS.IsClientTempAdmin(c) end)
 			if #existingTempAdmins == 0 then
-				result = TGNS.GetLastMatchingClient(function(c,p) return IsTempAdminEligible(c) end, teamPlayers)
+				result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p) return IsTempAdminEligible(c) end)
 			end
 		end
 		return result

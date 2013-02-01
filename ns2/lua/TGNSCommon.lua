@@ -253,7 +253,7 @@ function TGNS.GetPlayers(clients)
 	return result
 end
 
-function TGNS.GetMatchingClients(predicate, playerList)
+function TGNS.GetMatchingClients(playerList, predicate)
 	local result = {}
 	playerList = playerList == nil and TGNS.GetPlayerList() or playerList
 	for r = #playerList, 1, -1 do
@@ -270,11 +270,11 @@ function TGNS.GetMatchingClients(predicate, playerList)
 end
 
 function TGNS.GetPlayingClients(playerList)
-	local result = TGNS.GetMatchingClients(function(c,p) return TGNS.IsGameplayTeam(p:GetTeamNumber()) end, playerList)
+	local result = TGNS.GetMatchingClients(playerList, function(c,p) return TGNS.IsGameplayTeam(p:GetTeamNumber()) end)
 	return result
 end
 
-function TGNS.GetLastMatchingClient(predicate, playerList)
+function TGNS.GetLastMatchingClient(playerList, predicate)
 	local result = nil
 	local playerList = playerList == nil and TGNS.GetPlayerList() or playerList
 	for r = #playerList, 1, -1 do
@@ -292,7 +292,7 @@ end
 
 function TGNS.GetTeamClients(teamNumber, playerList)
 	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
-	local result = TGNS.GetMatchingClients(predicate, playerList)
+	local result = TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
 
@@ -318,7 +318,7 @@ end
 
 function TGNS.GetStrangersClients(playerList)
 	local predicate = function(client, player) return TGNS.IsClientStranger(client) end
-	local result = TGNS.GetMatchingClients(predicate, playerList)
+	local result = TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
 
@@ -329,13 +329,13 @@ end
 
 function TGNS.GetPrimerOnlyClients(playerList)
 	local predicate = function(client, player) return TGNS.IsPrimerOnlyClient(client) end
-	local result = TGNS.GetMatchingClients(predicate, playerList)
+	local result = TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
 
 function TGNS.GetSmClients(playerList)
 	local predicate = function(client, player) return TGNS.IsClientSM(client) end
-	local result = TGNS.GetMatchingClients(predicate, playerList)
+	local result = TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
 

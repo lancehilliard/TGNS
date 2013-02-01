@@ -61,7 +61,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 			end
 			return false
 		end
-		local result = TGNS.GetLastMatchingClient(predicate, playerList)
+		local result = TGNS.GetLastMatchingClient(playerList, predicate)
 		return result
 	end
 	
@@ -93,7 +93,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	
 	local function AnnounceClientBumpToStrangers(targetClient)
 		local playerName = TGNS.GetClientName(targetClient)
-		local strangerClients = TGNS.GetMatchingClients(function(c,p) return TGNS.IsClientStranger(c) end, TGNS.GetPlayerList())
+		local strangerClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.IsClientStranger(c) end)
 		local strangerPlayers = TGNS.GetPlayers(strangerClients)
 		TGNS.DoFor(strangerPlayers, function(p) TGNS.SendChatMessage(p, GetBumpMessage(targetClient)) end)
 	end
@@ -112,7 +112,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 
 	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
 		local playerList = TGNS.GetPlayerList()
-		local nonSpecPlayers = TGNS.GetPlayers(TGNS.GetMatchingClients(function(c,p) return not TGNS.IsPlayerSpectator(p) end, playerList))
+		local nonSpecPlayers = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return not TGNS.IsPlayerSpectator(p) end))
 		if ServerIsFull(nonSpecPlayers) then
 			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
@@ -142,25 +142,44 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnect, 5)
 	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnectGreeter, 5)
 	
-	local function PrintbumpCountsReport(client)
-		local primerOnlyVictims = TGNS.GetNumericValueOrZero(victimBumpCounts.primerOnly)
-		local strangerVictims = TGNS.GetNumericValueOrZero(victimBumpCounts.stranger)
-		local primerOnlyRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.primerOnly)
-		local strangerRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.stranger) 
-		local totalVictims = primerOnlyVictims + strangerVictims
-		local totalRejects = primerOnlyRejects + strangerRejects
-		TGNS.ConsolePrint(client, string.format("BUMP COUNTS (%s):", totalVictims + totalRejects), "CSDEBUG")
-		TGNS.ConsolePrint(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", totalVictims, primerOnlyVictims, strangerVictims), "CSDEBUG")
-		TGNS.ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", totalRejects, primerOnlyRejects, strangerRejects), "CSDEBUG")
+	local function GetBumpCounts()
+		local result = {}
+		local result.primerOnlyVictims = TGNS.GetNumericValueOrZero(victimBumpCounts.primerOnly)
+		local result.strangerVictims = TGNS.GetNumericValueOrZero(victimBumpCounts.stranger)
+		local result.primerOnlyRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.primerOnly)
+		local result.strangerRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.stranger) 
+		local result.totalVictims = primerOnlyVictims + strangerVictims
+		local result.totalRejects = primerOnlyRejects + strangerRejects
+		return result
+	end
+	
+//	local function PrintBumpCountsToAdmins()
+//		TGNS.DoForClientsWithId(TGNS.GetMatchingClients(TGNS.IsClientAdmin), function(c)
+//				
+//			end
+//		)
+//		for i = 1, kWinOrLoseTeamCount do
+//			kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
+//			kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
+//			kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
+//		end
+//		kTimeAtWhichWinOrLoseVoteSucceeded = 0
+//	end
+//	DAKRegisterEventHook("kDAKOnGameEnd", PrintBumpCountsToAdmins, 5)
+
+	local function PrintBumpCountsReport(client)
+		local bumpCounts = GetBumpCounts()
+		TGNS.ConsolePrint(client, string.format("BUMP COUNTS (%s):", bumpCounts.totalVictims + bumpCounts.totalRejects), "CSDEBUG")
+		TGNS.ConsolePrint(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", bumpCounts.totalVictims, bumpCounts.primerOnlyVictims, bumpCounts.strangerVictims), "CSDEBUG")
+		TGNS.ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", bumpCounts.totalRejects, bumpCounts.primerOnlyRejects, bumpCounts.strangerRejects), "CSDEBUG")
 	end
 	
 	local function DebugCommunitySlots(client)
-		for r = 1, #actionslog, 1 do
-			if actionslog[r] ~= nil then
-				TGNS.ConsolePrint(client, actionslog[r], "CSDEBUG")
+		TGNS.DoFor(actionslog, function(logline) 
+				TGNS.ConsolePrint(client, logline, "CSDEBUG")
 			end
-		end
-		PrintbumpCountsReport(client)
+		)
+		PrintBumpCountsReport(client)
 	end
 	DAKCreateServerAdminCommand("Console_sv_csdebug", DebugCommunitySlots, "Will print Community Slots debug messages.")
 	
@@ -170,7 +189,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	//	local primerOnlyClients = TGNS.IsPrimerOnlyClient(playerList)
 	//	local smClients = TGNS.GetSmClients(playerList)
 	//	
-	//	PrintbumpCountsReport(client)
+	//	PrintBumpCountsReport(client)
 	//end
 	//DAKCreateServerAdminCommand("Console_sv_cswho", PrintPlayerSlotsStatuses, "Will print slots status for all players.")
 	

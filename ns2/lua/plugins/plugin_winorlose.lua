@@ -67,7 +67,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 			for i = 1, kWinOrLoseTeamCount do
 
 				if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and gamerules ~= nil and gamerules:GetGameState() == kGameState.Started and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + kDAKConfig.WinOrLose.kWinOrLoseAlertDelay < Shared.GetTime() then
-					local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(function(c,p) return p:GetTeamNumber() == i end, TGNS.GetPlayerList())) // GetEntitiesForTeam("Player", i)
+					local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return p:GetTeamNumber() == i end)) // GetEntitiesForTeam("Player", i)
 					local totalvotes = 0
 					for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
 						local clientid = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]
@@ -149,7 +149,6 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		end
 		kTimeAtWhichWinOrLoseVoteSucceeded = 0
 	end
-		
 	DAKRegisterEventHook("kDAKOnGameEnd", ClearWinOrLoseVotes, 5)
 
 	local function OnCommandWinOrLose(client)
