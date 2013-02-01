@@ -95,9 +95,20 @@ function TGNS.GetClientName(client)
 end
 
 function TGNS.DoFor(elements, elementAction)
-	for i = 1, #elements, 1 do
-		elementAction(elements[i])
+	if elements ~= nil then
+		for i = 1, #elements, 1 do
+			elementAction(elements[i])
+		end
 	end
+end
+
+function TGNS.Any(elements, predicate)
+	local result = false
+	TGNS.DoFor(elements, function(e)
+			result = result or (predicate == nil and true or predicate(e))
+		end
+	)
+	return result
 end
 
 function TGNS.IsClientCommander(client)
@@ -194,6 +205,20 @@ function TGNS.SendChatMessage(player, chatMessage)
 		chatMessage = string.sub(chatMessage, 1, kMaxChatLength)
 		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 	end
+end
+
+function TGNS.SendAdminChat(chatMessage)
+	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
+			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage) end)
+		end
+	)
+end
+
+function TGNS.SendAdminConsole(message, prefix)
+	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
+			TGNS.ConsolePrint(c, message, prefix)
+		end
+	)
 end
 
 function TGNS.DisconnectClient(client, reason)
