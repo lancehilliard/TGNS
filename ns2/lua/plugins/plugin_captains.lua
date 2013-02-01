@@ -358,7 +358,8 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	DAKRegisterEventHook("kDAKOnTeamJoin", CaptainsJoinTeam, 5)
 
-	local function OnCaptainsChatMessage(client, message)
+	local function OnCaptainsChatMessage(client, networkMessage)
+		local message = networkMessage.message
 		if isCaptainsMode() then
 			if client then
 				local steamId = client:GetUserId()
@@ -390,7 +391,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		return false
 	end
 
-	TGNS.RegisterChatHook(OnCaptainsChatMessage)
+	TGNS.RegisterNetworkMessageHook("ChatClient", OnCaptainsChatMessage)
 
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINSCOMMAND, StartCaptains, "configures the server for Captains Games", false)
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINCOMMAND, function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)

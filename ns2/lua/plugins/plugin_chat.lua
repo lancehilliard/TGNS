@@ -21,7 +21,6 @@ if kDAKConfig and kDAKConfig.Chat then
 		
 		if hasAccess and channel.canPM then
 			_, _, name, chatMessage = string.find(message, "([%w%p]*) (.*)")
-			Print("name: %s, message: %s", ToString(name), ToString(chatMessage))
 			chatMessage = GetChatMessage(chatMessage)
 			if name ~= nil and string.len(name) > 0 then
 				local targetplayer = TGNS.GetPlayerMatchingName(name)
@@ -57,12 +56,11 @@ if kDAKConfig and kDAKConfig.Chat then
 			end, channel.help)
 	end
 
-	local function CheckForChat(client, message)
-		//Print("CheckForChat")
+	local function CheckForChat(client, networkMessage)
+		local message = networkMessage.message
 		message = StringTrim(message)
-		//Print("--: " .. message)
+
 		for command, channel in pairs(kDAKConfig.Chat.Channels) do
-			//Print("--: " .. ToString(channel))
 			if message and string.sub(message, 1, 1) == channel.triggerChar then
 				ProcessChatCommand(client, channel, string.sub(message, 2, -1))
 				return true
@@ -70,7 +68,7 @@ if kDAKConfig and kDAKConfig.Chat then
 		end
 	end
 	
-	TGNS.RegisterChatHook(CheckForChat)
+	TGNS.RegisterNetworkMessageHook("ChatClient", CheckForChat)
 
 end
 

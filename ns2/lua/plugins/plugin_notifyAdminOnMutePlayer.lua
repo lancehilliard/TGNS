@@ -2,12 +2,9 @@
 
 if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader then
 	Script.Load("lua/TGNSCommon.lua")
-	
-	local originalOnMutePlayer
-	
-	local function OnMutePlayer(client, message)
-		originalOnMutePlayer(client, message)
-		clientIndex, isMuted = ParseMutePlayerMessage(message)
+
+	local function OnMutePlayer(client, networkMessage)
+		clientIndex, isMuted = ParseMutePlayerMessage(networkMessage)
 		for _, player in pairs(TGNS.GetPlayerList()) do
 			if player:GetClientIndex() == clientIndex then
 				if isMuted then
@@ -21,16 +18,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		end
 	end
 
-	// trying this without using Class_ReplaceMethod
-	local originalHookNetworkMessage = Server.HookNetworkMessage
-	
-	Server.HookNetworkMessage = function(networkMessage, callback)
-		if networkMessage == "MutePlayer" then
-			originalOnMutePlayer = callback
-			callback = OnMutePlayer
-		end
-		originalHookNetworkMessage(networkMessage, callback)
-	end
+	TGNS.RegisterNetworkMessageHook("MutePlayer", OnMutePlayer)
 
 	local function GetPlayerMutes()
 		local result = {}
@@ -85,21 +73,6 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 	
 	DAKCreateServerAdminCommand("Console_sv_mutes", ListMutes, help)
 
-/* 
-	local originalHookNetworkMessage
-
-	originalHookNetworkMessage = Class_ReplaceMethod("Server", "HookNetworkMessage", 
-		function(networkMessage, callback)
-
-			if networkMessage == "MutePlayer" then
-				originalOnMutePlayer = callback
-				callback = OnMutePlayer
-			end
-			originalHookNetworkMessage(networkMessage, callback)
-
-		end
-	)
-*/
 end
 
 Shared.Message("NotifyAdminOnMutePlayer Loading Complete")

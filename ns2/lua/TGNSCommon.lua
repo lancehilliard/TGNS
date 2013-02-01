@@ -496,36 +496,43 @@ if kDAKConfig and kDAKConfig.DAKLoader then
 	end
 end
 
-////////////////////
-// Intercept Chat //
-////////////////////
+////////////////////////////////
+// Intercept Network Messages //
+////////////////////////////////
 
-kTGNSChatHooks = {}
+kTGNSNetworkMessageHooks = {}
+kTGNSNetworkMessageHooks["ChatClient"] = {}
+kTGNSNetworkMessageHooks["MutePlayer"] = {}
 
-function TGNS.RegisterChatHook(func)
-	table.insert(kTGNSChatHooks, func)
+function TGNS.RegisterNetworkMessageHook(messageName, func)
+	table.insert(kTGNSNetworkMessageHooks[messageName], func)
 end
 
-local originalOnChatReceived
+local originalOnNetworkMessage = {}
 
-local function OnChatReceived(client, message)
-	if #kTGNSChatHooks > 0 then
-		for i = #kTGNSChatHooks, 1, -1 do
-			if kTGNSChatHooks[i].func(client, message.message) then
+local function onNetworkMessage(messageName, ...)
+	if #kTGNSNetworkMessageHooks[messageName] > 0 then
+		for i = #kTGNSNetworkMessageHooks[messageName], 1, -1 do
+			Print("Running an event hander for %s", messageName)
+			if kTGNSNetworkMessageHooks[messageName][i](...) then
 				return
 			end
 		end
 	end
-	originalOnChatReceived(client, message)
+	originalOnNetworkMessage[messageName](...)
 end
 
 local originalHookNetworkMessage = Server.HookNetworkMessage
 
-Server.HookNetworkMessage = function(networkMessage, callback)
-	if networkMessage == "ChatClient" then
-		originalOnChatReceived = callback
-		callback = OnChatReceived
+Server.HookNetworkMessage = function(messageName, callback)
+
+	for key, _ in pairs(kTGNSNetworkMessageHooks) do
+		if messageName == key then
+			Print("Hooking: %s", key)
+			originalOnNetworkMessage[messageName] = callback
+			callback = function(...) onNetworkMessage(messageName, ...) end
+		end
 	end
-	originalHookNetworkMessage(networkMessage, callback)
+	originalHookNetworkMessage(messageName, callback)
 
 end
