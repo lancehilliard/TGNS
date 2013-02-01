@@ -3,6 +3,16 @@
 TGNS = {}
 local scheduledActions = {}
 
+function TGNS.GetPlayerTeamNumber(player)
+	local result = player:GetTeamNumber()
+	return result
+end
+
+function TGNS.PlayersAreTeammates(player1, player2)
+	local result = TGNS.GetPlayerTeamNumber(player1) == TGNS.GetPlayerTeamNumber(player2)
+	return result
+end
+
 function TGNS.TableValueCount(tt, item)
   local count
   count = 0
