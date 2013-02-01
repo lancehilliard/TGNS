@@ -52,7 +52,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 	end
 	
 	function TellAdminsAboutPlayerMutes()
-		TGNS.ScheduleAction(5, TellAdminsAboutPlayerMutes)
+		TGNS.ScheduleAction(30, TellAdminsAboutPlayerMutes)
 		local playerMutes = GetPlayerMutes()
 		if TGNS.Any(playerMutes) then
 			local firstPlayerMute = playerMutes[0]
@@ -63,7 +63,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 			)
 		end		
 	end
-	TGNS.ScheduleAction(5, TellAdminsAboutPlayerMutes)
+	TGNS.ScheduleAction(60, TellAdminsAboutPlayerMutes)
 	
 	local function ListMutes(client)
 		// build look up table for player names by clientindex
