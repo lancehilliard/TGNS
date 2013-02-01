@@ -23,15 +23,13 @@ if kDAKConfig and kDAKConfig.RookieThrottle then
 	end
 	
 	local function RookieThrottleOnClientDelayedConnect(client)
-		local player = client:GetControllingPlayer()
+		local player = TGNS.GetPlayer(client)
 		local playerCount = GetPlayerCount()
 		local rookieCount = GetRookieCount()
 		local playerIsRookie = player:GetIsRookie()
 		if playerCount > kDAKConfig.RookieThrottle.kPlayerCountThreshold and rookieCount > kDAKConfig.RookieThrottle.kRookieCountThreshold and playerIsRookie then
-			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, kDAKConfig.RookieThrottle.kPreKickChatMessage), true)
-			local client = Server.GetOwner(player)
-			client.disconnectreason = kDAKConfig.RookieThrottle.kKickReason
-			Server.DisconnectClient(client)
+			TGNS.SendChatMessage(player, kDAKConfig.RookieThrottle.kPreKickChatMessage)
+			TGNS.KickClient(client, kDAKConfig.RookieThrottle.kKickReason)
 		end
 	end
 	DAKRegisterEventHook("kDAKOnClientDelayedConnect", RookieThrottleOnClientDelayedConnect, 5)
