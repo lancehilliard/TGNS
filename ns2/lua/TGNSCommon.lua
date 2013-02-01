@@ -214,7 +214,7 @@ function TGNS.SendAdminChat(chatMessage)
 	)
 end
 
-function TGNS.SendAdminConsole(message, prefix)
+function TGNS.SendAdminConsoles(message, prefix)
 	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			TGNS.ConsolePrint(c, message, prefix)
 		end

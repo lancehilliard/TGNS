@@ -44,6 +44,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 				)
 			end
 		)
+		return result
 	end
 	
 	function GetPlayerMuteMessage(playerMute)
@@ -55,10 +56,10 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		TGNS.ScheduleAction(30, TellAdminsAboutPlayerMutes)
 		local playerMutes = GetPlayerMutes()
 		if TGNS.Any(playerMutes) then
-			local firstPlayerMute = playerMutes[0]
+			local firstPlayerMute = playerMutes[1]
 			TGNS.SendAdminChat(GetPlayerMuteMessage(firstPlayerMute))
 			TGNS.DoFor(playerMutes, function(m)
-					TGNS.SendAdminConsole(c, GetPlayerMuteMessage(m), "MUTES")
+					TGNS.SendAdminConsoles(GetPlayerMuteMessage(m), "MUTES")
 				end
 			)
 		end		
