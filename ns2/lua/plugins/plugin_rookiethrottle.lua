@@ -1,6 +1,7 @@
 // disallow too many concurrent rookies
 
 if kDAKConfig and kDAKConfig.RookieThrottle then
+	Script.Load("lua/TGNSCommon.lua")
 
 	local function GetRookieCount()
 		local rookieClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p)
