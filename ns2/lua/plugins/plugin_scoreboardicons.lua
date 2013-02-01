@@ -17,17 +17,21 @@ if kDAKConfig and kDAKConfig.ScoreboardIcons then
 		local match = false
 		local client = Server.GetOwner(scorePlayer)
 		if client and t and t.playerName then
-			local groupIcons = kDAKConfig.ScoreboardIcons.GroupIcons
-			table.sort(groupIcons, function(t1, t2) return t1.sort < t2.sort end)
-			for _, groupicon in ipairs(groupIcons) do
-				if DAKGetClientIsInGroup(client, groupicon.group) then
-					t.playerName = prependPlayerName(t.playerName, groupicon.icon)
-					match = true
-					break
+			if DAKIsPlayerAFK(scorePlayer) then
+				t.playerName = prependPlayerName(t.playerName, kDAKConfig.ScoreboardIcons.AFK)
+			else
+				local groupIcons = kDAKConfig.ScoreboardIcons.GroupIcons
+				table.sort(groupIcons, function(t1, t2) return t1.sort < t2.sort end)
+				for _, groupicon in ipairs(groupIcons) do
+					if DAKGetClientIsInGroup(client, groupicon.group) then
+						t.playerName = prependPlayerName(t.playerName, groupicon.icon)
+						match = true
+						break
+					end
 				end
-			end
-			if not match then
-				t.playerName = prependPlayerName(t.playerName, kDAKConfig.ScoreboardIcons.CatchAll)
+				if not match then
+					t.playerName = prependPlayerName(t.playerName, kDAKConfig.ScoreboardIcons.CatchAll)
+				end
 			end
 		end
 		

@@ -8,6 +8,7 @@ local function SetupDefaultConfig(Save)
 			{group = "mod_group", icon = "MOD", sort = 2}
 		}
 	kDAKConfig.ScoreboardIcons.CatchAll = "\239\188\159"
+	kDAKConfig.ScoreboardIcons.AFK = "!"
 end
 
 DAKRegisterEventHook("kDAKPluginDefaultConfigs", {PluginName = "scoreboardicons", DefaultConfig = SetupDefaultConfig })
