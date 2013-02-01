@@ -35,7 +35,7 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 		else
 			TGNS.ConsolePrint(client, string.format("     %s", bkaData.BKA), "BKA")
 		end
-		TGNS.ConsolePrint(client, "[BKA] AKAs:")
+		TGNS.ConsolePrint(client, " AKAs:", "BKA")
 		if bkaData == nil or bkaData.AKAs == nil or #bkaData.AKAs == 0 then
 			TGNS.ConsolePrint(client, "     (none)", "BKA")
 		else
