@@ -26,7 +26,7 @@ if kDAKConfig and kDAKConfig.PublicCommands and kDAKConfig.PublicCommands.Comman
 	end
 
 	// This command is already defined by the mapvote plugin.  If mapvote is in the plugin list, don't hook it again.
-	if kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND] and not kDAKConfig.DAKLoader.kPluginsList["mapvote"] then
+	if kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND] and not DAKIsPluginEnabled("mapvote") then
 		Event.Hook("Console_" .. kDAKConfig.PublicCommands.Commands[TIMELEFTCOMMAND].command,               OnCommandTimeleft)
 	end
 	
