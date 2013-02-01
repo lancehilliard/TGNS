@@ -186,7 +186,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	local function PrintPlayerSlotsStatuses(client)
 		local playerList = TGNS.GetPlayerList()
 		local smClients = TGNS.GetSmClients(playerList)
-		local primerOnlyClients = TGNS.IsPrimerOnlyClient(playerList)
+		local primerOnlyClients = TGNS.GetPrimerOnlyClients(playerList)
 		local strangerClients = TGNS.GetStrangersClients(playerList)
 		TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimer(c) and "(signed TGNS Primer)" or ""), "COMMUNITY") end)
 		TGNS.DoFor(primerOnlyClients, function(c) TGNS.ConsolePrint(client, string.format("Primer Only: %s", TGNS.GetClientName(c)), "COMMUNITY") end)
