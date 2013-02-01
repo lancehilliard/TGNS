@@ -21,28 +21,25 @@ if kDAKConfig and kDAKConfig.BetterKnownAs then
 	end
 
 	local function ShowCurrentBka(client, targetSteamId)
-		local steamId = client:GetUserId()
+		local steamId = TGNS.GetClientSteamId(client)
 		local bkaData = pdr:Load(targetSteamId)
 		local player = TGNS.GetPlayerMatchingSteamId(targetSteamId)
-		ServerAdminPrint(client, "[BKA] ")
+		TGNS.ConsolePrint(client, " ", "BKA")
 		if player ~= nil then
-			ServerAdminPrint(client, "[BKA] For: " .. player:GetName())
-			ServerAdminPrint(client, "[BKA] ")
+			TGNS.ConsolePrint(client, string.format(" For: %s", player:GetName()), "BKA")
+			TGNS.ConsolePrint(client, " ", "BKA")
 		end
-		ServerAdminPrint(client, "[BKA] BKA:")
+		TGNS.ConsolePrint(client, " BKA:", "BKA")
 		if bkaData == nil or bkaData.BKA == nil or string.len(bkaData.BKA) == 0 then
-			ServerAdminPrint(client, "[BKA]     (none)")
+			TGNS.ConsolePrint(client, "     (none)", "BKA")
 		else
-			ServerAdminPrint(client, "[BKA]     " .. bkaData.BKA)
+			TGNS.ConsolePrint(client, string.format("     %s", bkaData.BKA), "BKA")
 		end
-		ServerAdminPrint(client, "[BKA] AKAs:")
+		TGNS.ConsolePrint(client, "[BKA] AKAs:")
 		if bkaData == nil or bkaData.AKAs == nil or #bkaData.AKAs == 0 then
-			ServerAdminPrint(client, "[BKA]     (none)")
+			TGNS.ConsolePrint(client, "     (none)", "BKA")
 		else
-			for i = 1, #bkaData.AKAs, 1 do
-				local name = bkaData.AKAs[i]
-				ServerAdminPrint(client, "[BKA]     " .. name)
-			end
+			TGNS.DoFor(bkaData.AKAs, function(a) TGNS.ConsolePrint(client, string.format("     %s", a), "BKA") end)
 		end
 	end
     
