@@ -513,7 +513,6 @@ local originalOnNetworkMessage = {}
 local function onNetworkMessage(messageName, ...)
 	if #kTGNSNetworkMessageHooks[messageName] > 0 then
 		for i = #kTGNSNetworkMessageHooks[messageName], 1, -1 do
-			Print("Running an event hander for %s", messageName)
 			if kTGNSNetworkMessageHooks[messageName][i](...) then
 				return
 			end
@@ -528,7 +527,7 @@ Server.HookNetworkMessage = function(messageName, callback)
 
 	for key, _ in pairs(kTGNSNetworkMessageHooks) do
 		if messageName == key then
-			Print("Hooking: %s", key)
+			Print("TGNS Hooking: %s", key)
 			originalOnNetworkMessage[messageName] = callback
 			callback = function(...) onNetworkMessage(messageName, ...) end
 		end

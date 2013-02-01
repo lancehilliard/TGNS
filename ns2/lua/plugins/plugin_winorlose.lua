@@ -221,6 +221,10 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		for c = 1, #kDAKConfig.WinOrLose.kWinOrLoseChatCommands do
 			local chatcommand = kDAKConfig.WinOrLose.kWinOrLoseChatCommands[c]
 			if message == chatcommand and not teamOnly then
+				TGNS.PlayerAction(client, function(p)
+						TGNS.SendChatMessage(p, "WinOrLose must be used via team chat. No vote has been cast.")
+					end
+				)
 				return true
 			end
 		end
