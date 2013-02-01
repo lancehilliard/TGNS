@@ -2,7 +2,7 @@
 
 if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader then
 	Script.Load("lua/TGNSCommon.lua")
-
+	
 	local originalOnMutePlayer
 	
 	local function OnMutePlayer(client, message)
@@ -30,8 +30,40 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 			callback = OnMutePlayer
 		end
 		originalHookNetworkMessage(networkMessage, callback)
-
 	end
+
+	local function GetPlayerMutes()
+		local result = {}
+		local playerList = TGNS.GetPlayerList()
+		TGNS.DoFor(playerList, function(sourcePlayer)
+				TGNS.DoFor(playerList, function(targetPlayer)
+						if sourcePlayer:GetClientMuted(targetPlayer:GetClientIndex()) then
+							table.insert(result, { sourcePlayer = sourcePlayer, targetPlayer = targetPlayer })
+						end
+					end
+				)
+			end
+		)
+	end
+	
+	function GetPlayerMuteMessage(playerMute)
+		local result = string.format("%s has %s muted.", TGNS.GetPlayerName(playerMute.sourcePlayer), TGNS.GetPlayerName(playerMute.targetPlayer))
+		return result
+	end
+	
+	function TellAdminsAboutPlayerMutes()
+		TGNS.ScheduleAction(5, TellAdminsAboutPlayerMutes)
+		local playerMutes = GetPlayerMutes()
+		if TGNS.Any(playerMutes) then
+			local firstPlayerMute = playerMutes[0]
+			TGNS.SendAdminChat(GetPlayerMuteMessage(firstPlayerMute))
+			TGNS.DoFor(playerMutes, function(m)
+					TGNS.SendAdminConsole(c, GetPlayerMuteMessage(m), "MUTES")
+				end
+			)
+		end		
+	end
+	TGNS.ScheduleAction(5, TellAdminsAboutPlayerMutes)
 	
 	local function ListMutes(client)
 		// build look up table for player names by clientindex
