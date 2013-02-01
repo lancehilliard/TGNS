@@ -196,16 +196,21 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	Event.Hook("Console_winorlose", OnCommandWinOrLose)
 	
 	local function OnWinOrLoseChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
-	
-		if client and steamId and steamId ~= 0 then
-			for c = 1, #kDAKConfig.WinOrLose.kWinOrLoseChatCommands do
-				local chatcommand = kDAKConfig.WinOrLose.kWinOrLoseChatCommands[c]
-				if message == chatcommand then
-					OnCommandWinOrLose(client)
+		if teamOnly then
+			if client and steamId and steamId ~= 0 then
+				for c = 1, #kDAKConfig.WinOrLose.kWinOrLoseChatCommands do
+					local chatcommand = kDAKConfig.WinOrLose.kWinOrLoseChatCommands[c]
+					if message == chatcommand then
+						OnCommandWinOrLose(client)
+					end
 				end
 			end
+		else
+			TGNS.PlayerAction(client, function(p)
+					TGNS.SendChatMessage(p, "WinOrLose must be used via team chat. No vote has been cast.")
+				end
+			)
 		end
-	
 	end
 	
 	DAKRegisterEventHook("kDAKOnClientChatMessage", OnWinOrLoseChatMessage, 5)
