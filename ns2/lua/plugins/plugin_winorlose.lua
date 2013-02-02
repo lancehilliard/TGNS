@@ -192,8 +192,18 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		end
 		
 	end
-
 	Event.Hook("Console_winorlose", OnCommandWinOrLose)
+
+	local function WinOrLoseOnCastVoteByPlayer(self, voteTechId, player)
+		local cancel = false
+		if voteTechId == kTechId.VoteConcedeRound then
+			cancel = true
+			TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s voted for WinOrLose using the Vote Concede menu.", TGNS.GetPlayerName(player)))
+			TGNS.ClientAction(player, function(c) OnCommandWinOrLose(c) end)
+		end
+		return cancel
+	end
+	DAKRegisterEventHook("kDAKOnCastVoteByPlayer", WinOrLoseOnCastVoteByPlayer, 5)
 
 	local function onChatClient(client, networkMessage)
 		local teamOnly = networkMessage.teamOnly
