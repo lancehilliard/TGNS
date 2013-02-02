@@ -224,6 +224,13 @@ function TGNS.SendAdminChat(chatMessage)
 	)
 end
 
+function TGNS.SendTeamChat(teamNumber, chatMessage)
+	TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
+			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage) end)
+		end
+	)
+end
+
 function TGNS.SendAdminConsoles(message, prefix)
 	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			TGNS.ConsolePrint(c, message, prefix)
