@@ -210,10 +210,13 @@ function TGNS.GetClientNameSteamIdCombo(client)
 	return result	
 end
 
-function TGNS.SendChatMessage(player, chatMessage)
+function TGNS.SendChatMessage(player, chatMessage, prefix)
 	if player ~= nil then
+		if prefix == nil or prefix == "" then
+			prefix = "PM - " .. kDAKConfig.DAKLoader.MessageSender
+		end
 		chatMessage = string.sub(chatMessage, 1, kMaxChatLength)
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, prefix, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 	end
 end
 

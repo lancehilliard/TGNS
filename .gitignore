@@ -32,6 +32,9 @@
 !ns2/lua/plugins/config_tempadmin.lua
 !ns2/lua/plugins/plugin_tempadmin.lua
 
+!ns2/lua/plugins/config_playcodes.lua
+!ns2/lua/plugins/plugin_playcodes.lua
+
 !ns2/lua/plugins/config_speclimit.lua
 !ns2/lua/plugins/plugin_speclimit.lua
 
