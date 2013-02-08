@@ -3,6 +3,18 @@
 TGNS = {}
 local scheduledActions = {}
 
+
+function TGNS.Join(list, delimiter)
+  if #list == 0 then 
+    return "" 
+  end
+  local string = list[1]
+  for i = 2, #list do 
+    string = string .. delimiter .. list[i] 
+  end
+  return string
+end
+
 function TGNS.GetPlayerTeamNumber(player)
 	local result = player:GetTeamNumber()
 	return result
@@ -107,7 +119,9 @@ end
 function TGNS.DoFor(elements, elementAction)
 	if elements ~= nil then
 		for i = 1, #elements, 1 do
-			elementAction(elements[i])
+			if elementAction(elements[i]) then
+				break
+			end
 		end
 	end
 end
@@ -220,16 +234,16 @@ function TGNS.SendChatMessage(player, chatMessage, prefix)
 	end
 end
 
-function TGNS.SendAdminChat(chatMessage)
+function TGNS.SendAdminChat(chatMessage, prefix)
 	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage) end)
+			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage, prefix) end)
 		end
 	)
 end
 
-function TGNS.SendTeamChat(teamNumber, chatMessage)
+function TGNS.SendTeamChat(teamNumber, chatMessage, prefix)
 	TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
-			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage) end)
+			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage, prefix) end)
 		end
 	)
 end
