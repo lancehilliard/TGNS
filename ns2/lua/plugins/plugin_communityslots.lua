@@ -4,6 +4,8 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	Script.Load("lua/TGNSCommon.lua")
 
 	local actionslog = { }
+	local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
+	local MESSAGE_PREFIX = "SLOTS"
 	table.insert(actionslog, "COMMUNITY SLOTS DEBUG: ")
 	local victimBumpCounts = {}
 	local rejectBumpCounts = {}
@@ -40,8 +42,9 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
 		local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
 		local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
+		local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
 	
-		if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetAndJoiningArePrimerOnly
+		if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetAndJoiningArePrimerOnly or targetIsNotYetConnectedEnoughToBeConsideredBumpable
 		then
 			return false
 		end
@@ -126,6 +129,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 				end
 			end
 		end
+		table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
 	end
 	local function CommunitySlotsOnClientDelayedConnectGreeter(client)
 		local chatMessage
@@ -155,9 +159,9 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	
 	local function PrintBumpCountsReport(client)
 		local bumpCounts = GetBumpCounts()
-		TGNS.ConsolePrint(client, string.format("BUMP TOTALS SO FAR THIS MAP (%s):", bumpCounts.totalVictims + bumpCounts.totalRejects), "CSDEBUG")
-		TGNS.ConsolePrint(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", bumpCounts.totalVictims, bumpCounts.primerOnlyVictims, bumpCounts.strangerVictims), "CSDEBUG")
-		TGNS.ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", bumpCounts.totalRejects, bumpCounts.primerOnlyRejects, bumpCounts.strangerRejects), "CSDEBUG")
+		TGNS.ConsolePrint(client, string.format("BUMP TOTALS SO FAR THIS MAP (%s):", bumpCounts.totalVictims + bumpCounts.totalRejects), MESSAGE_PREFIX)
+		TGNS.ConsolePrint(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", bumpCounts.totalVictims, bumpCounts.primerOnlyVictims, bumpCounts.strangerVictims), MESSAGE_PREFIX)
+		TGNS.ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", bumpCounts.totalRejects, bumpCounts.primerOnlyRejects, bumpCounts.strangerRejects), MESSAGE_PREFIX)
 	end
 	
 	local function PrintBumpCountsChatMessages()
@@ -175,7 +179,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	
 	local function DebugCommunitySlots(client)
 		TGNS.DoFor(actionslog, function(logline) 
-				TGNS.ConsolePrint(client, logline, "CSDEBUG")
+				TGNS.ConsolePrint(client, logline, MESSAGE_PREFIX)
 			end
 		)
 		PrintBumpCountsReport(client)
@@ -187,12 +191,13 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		local smClients = TGNS.GetSmClients(playerList)
 		local primerOnlyClients = TGNS.GetPrimerOnlyClients(playerList)
 		local strangerClients = TGNS.GetStrangersClients(playerList)
-		TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimer(c) and "(signed TGNS Primer)" or ""), "COMMUNITY") end)
-		TGNS.DoFor(primerOnlyClients, function(c) TGNS.ConsolePrint(client, string.format("Primer Only: %s", TGNS.GetClientName(c)), "COMMUNITY") end)
-		TGNS.DoFor(strangerClients, function(c) TGNS.ConsolePrint(client, string.format("Say Hello To: %s", TGNS.GetClientName(c)), "COMMUNITY") end)
+		TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimer(c) and "(signed TGNS Primer)" or ""), MESSAGE_PREFIX) end)
+		TGNS.DoFor(primerOnlyClients, function(c) TGNS.ConsolePrint(client, string.format("Primer Only: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
+		TGNS.DoFor(strangerClients, function(c) TGNS.ConsolePrint(client, string.format("Say Hello To: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
+		TGNS.ConsolePrint(client, string.format("S: %s | P: %s | ?: %s", #smClients, #primerOnlyClients, #strangerClients), MESSAGE_PREFIX)
 		PrintBumpCountsReport(client)
 	end
-	DAKCreateServerAdminCommand("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.")
+	DAKCreateServerAdminCommand("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 	
 end
 
