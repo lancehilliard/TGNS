@@ -99,7 +99,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 			if p.isActive then
 				local client = GetClientMatchingSteamId(p.steamId)
 				if client == nil then
-					TGNS.SendAdminChat(string.format("No client found for SteamId %s.", p.steamId), "PlayCodesDebug")
+					//TGNS.SendAdminChat(string.format("No client found for SteamId %s.", p.steamId), "PlayCodesDebug")
 					p.notFoundCount = p.notFoundCount + 1
 					if p.notFoundCount > 3 then
 						p.isActive = false
