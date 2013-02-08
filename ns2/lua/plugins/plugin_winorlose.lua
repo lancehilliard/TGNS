@@ -111,16 +111,23 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 					else
 						local chatmessage
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
-							chatMessage = string.sub(string.format("A vote has started for your team to call WinOrLose. %s votes are needed.", 
+							chatMessage = string.sub(string.format("WinOrLose vote started. %s votes are needed.", 
 							 math.ceil((#playerRecords * (kDAKConfig.WinOrLose.kWinOrLoseMinimumPercentage / 100))) ), 1, kMaxChatLength)
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
 						elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + kDAKConfig.WinOrLose.kWinOrLoseVotingTime < Shared.GetTime() then
-							chatMessage = string.sub(string.format("The WinOrLose vote for your team has expired."), 1, kMaxChatLength)
+							local abstainedNames = {}
+							TGNS.DoFor(playerRecords, function(p)
+								local playerSteamId = TGNS.ClientAction(p, TGNS.GetClientSteamId)
+								if not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, playerSteamId) then
+									table.insert(abstainedNames, TGNS.GetPlayerName(p))
+								end
+							end)
+							chatMessage = string.sub(string.format("WinOrLose vote expired. Abstained: %s", TGNS.Join(abstainedNames, ", ")), 1, kMaxChatLength)
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 							kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 							kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 						else
-							chatMessage = string.sub(string.format("%s votes to call WinOrLose, %s needed, %s seconds left. type winorlose to vote", totalvotes, 
+							chatMessage = string.sub(string.format("%s votes to call WinOrLose, %s needed, %s seconds left.", totalvotes, 
 							 math.ceil((#playerRecords * (kDAKConfig.WinOrLose.kWinOrLoseMinimumPercentage / 100))), 
 							 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kDAKConfig.WinOrLose.kWinOrLoseVotingTime) - Shared.GetTime()) ), 1, kMaxChatLength)
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
@@ -174,12 +181,12 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 								Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							else
 								chatMessage = string.sub(string.format("You have voted to call WinOrLose."), 1, kMaxChatLength)
-								Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+								//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 								table.insert(kWinOrLoseVoteArray[teamnumber].WinOrLoseVotes, clientID)
 							end						
 						else
 							chatMessage = string.sub(string.format("You have voted to call WinOrLose."), 1, kMaxChatLength)
-							Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+							//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							kWinOrLoseVoteArray[teamnumber].WinOrLoseRunning = Shared.GetTime()
 							table.insert(kWinOrLoseVoteArray[teamnumber].WinOrLoseVotes, clientID)
 						end
