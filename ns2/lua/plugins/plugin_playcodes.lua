@@ -2,6 +2,13 @@
 
 if kDAKConfig and kDAKConfig.PlayCodes then
 	Script.Load("lua/TGNSCommon.lua")
+	Script.Load("lua/TGNSPlayerDataRepository.lua")
+
+	local pdr = TGNSPlayerDataRepository.Create("playcodes", function(data)
+				data.showShorthandCodes = data.showShorthandCodes ~= nil and data.showShorthandCodes or false
+				return data
+			end
+		)
 	
 	local profiles = {}
 	local mapPlayCode = math.random(100, 999)
@@ -39,8 +46,8 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 	local function OnClientVetted(client, playCode)
 		MarkAllProfilesInactive(client)
 		MarkProfileAsVettedForClient(client, playCode)
-		TGNS.SendTeamChat(TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber), string.format("%s communicated with the team!", TGNS.GetClientName(client)))
-		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "Tired of PlayCodes? Become a regular at tacticalgamer.com/natural-selection") end)
+		TGNS.SendTeamChat(TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber), string.format("COMMS established. %s can stay!", TGNS.GetClientName(client)), "PlayCodes")
+		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "Do you like teamwork? Become a regular at tacticalgamer.com/natural-selection", "PlayCodes") end)
 	end
 	
 	local function PlayCodeVetsClient(client, playCode)
@@ -74,11 +81,16 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 	end
 	
 	local function SendChatMessages(client, playCode)
-		local displayName = string.sub(TGNS.GetClientName(client), 1, 17)
-		local teamMessage = string.format("COMMS CHECK! Tell %s to type %s into Team Chat to prevent kick!", displayName, playCode)
+		local displayName = string.sub(TGNS.GetClientName(client), 1, 12)
 		local teamRegularClients = GetTeamRegularClients(client)
-		TGNS.DoFor(TGNS.GetPlayers(teamRegularClients), function(p) TGNS.SendChatMessage(p, teamMessage, "PlayCodes") end)
-		TGNS.PlayerAction(client, function(player) TGNS.SendChatMessage(player, "Listen on team voicecomm for your PlayCode to avoid getting kicked!", "PlayCodes") end)
+		TGNS.DoFor(TGNS.GetPlayers(teamRegularClients), function(p)
+			local steamId = TGNS.ClientAction(p, TGNS.GetClientSteamId)
+			local prefs = pdr:Load(steamId)
+			local teamMessageTemplate = prefs.showShorthandCodes and "%s: %s" or "VOICECOMMS CHECK! Tell %s to type %s into Team Chat to prevent kick!"
+			local teamMessage = string.format(teamMessageTemplate, displayName, playCode)
+			TGNS.SendChatMessage(p, teamMessage, "PlayCodes")
+		end)
+		TGNS.PlayerAction(client, function(player) TGNS.SendChatMessage(player, "Make sure you can hear team voicecomm to avoid getting kicked!", "PlayCodes") end)
 	end
 	
 	local function ProcessProfiles()
@@ -87,22 +99,32 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 			if p.isActive then
 				local client = GetClientMatchingSteamId(p.steamId)
 				if client == nil then
+					TGNS.SendAdminChat(string.format("No client found for SteamId %s.", p.steamId), "PlayCodesDebug")
 					p.notFoundCount = p.notFoundCount + 1
 					if p.notFoundCount > 3 then
 						p.isActive = false
 					end
 				else
-					local teamRegularClients = GetTeamRegularClients(client)
-					if #teamRegularClients > 5 then
-						if p.noticesRemaining > 0 then
-							p.noticesRemaining = p.noticesRemaining - 1
-							SendChatMessages(client, p.playCode)
-						else
-							TGNS.KickClient(client, "You did not enter your PlayCode. You are being kicked.")
+					local clientIsOnGameplayTeam
+					local clientIsActive
+					TGNS.PlayerAction(client, function(p)
+						clientIsOnGameplayTeam = TGNS.GetPlayerTeamNumber(p) ~= kTeamReadyRoom
+						clientIsActive = not DAKIsPlayerAFK(p)
+					end)
+					if clientIsOnGameplayTeam and clientIsActive then
+						local teamRegularClients = GetTeamRegularClients(client)
+						if #teamRegularClients >= 1 then
+							if p.noticesRemaining > 0 then
+								p.noticesRemaining = p.noticesRemaining - 1
+								SendChatMessages(client, p.playCode)
+								return true
+							else
+								TGNS.KickClient(client, "You did not enter your three-digit PlayCode. You are being kicked.")
+								p.isActive = false
+							end
+						elseif p.noticesRemaining < 2 then
 							p.isActive = false
 						end
-					elseif p.noticesRemaining < 2 then
-						p.isActive = false
 					end
 				end
 			end
@@ -124,6 +146,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 	local function PlayCodesOnTeamJoin(self, player, newTeamNumber, force)
 		TGNS.ClientAction(player, function(c)
 			if TGNS.IsClientStranger(c) then
+				MarkAllProfilesInactive(c)
 				if not HasClientBeenVetted(c) then
 					local profile = CreateProfile(c)
 					table.insert(profiles, profile)
@@ -132,6 +155,17 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 		end)
 	end
 	DAKRegisterEventHook("kDAKOnTeamJoin", PlayCodesOnTeamJoin, 5)
+
+	local function svPlayCodes(client)
+		local steamId = TGNS.GetClientSteamId(client)
+		local prefs = pdr:Load(steamId)
+		prefs.showShorthandCodes = not prefs.showShorthandCodes
+		pdr:Save(prefs)
+		local notificationsLengthDescriptor = prefs.showShorthandCodes and "short" or "long"
+		local message = string.format("You will see %s PlayCodes notifications.", notificationsLengthDescriptor)
+		TGNS.ConsolePrint(client, message, "PLAYCODES")
+	end
+	DAKCreateServerAdminCommand("Console_sv_playcodes", svPlayCodes, "Toggle short/long PlayCodes notifications.")
 
 end
 
