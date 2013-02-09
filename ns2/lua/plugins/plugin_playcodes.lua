@@ -111,7 +111,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 						clientIsOnGameplayTeam = TGNS.GetPlayerTeamNumber(p) ~= kTeamReadyRoom
 						clientIsActive = not DAKIsPlayerAFK(p)
 					end)
-					if clientIsOnGameplayTeam and clientIsActive then
+					if clientIsOnGameplayTeam and clientIsActive and p.doNotEnforceBefore < Shared.GetTime() then
 						local teamRegularClients = GetTeamRegularClients(client)
 						if #teamRegularClients >= 1 then
 							if p.noticesRemaining > 0 then
@@ -140,6 +140,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 		result.noticesRemaining = 12
 		result.playCode = mapPlayCode
 		result.steamId = TGNS.GetClientSteamId(client)
+		result.doNotEnforceBefore = Shared.GetTime() + 30
 		return result
 	end
 	
