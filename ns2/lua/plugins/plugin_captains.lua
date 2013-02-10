@@ -46,12 +46,10 @@ if kDAKConfig and kDAKConfig.Captains then
 	local function DisplayMessage(player, message)
 
 		if type(message) == "string" then
-			chatMessage = string.sub(message, 1, kMaxChatLength)
-			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			TGNS.SendChatMessage(player, message, CHAT_TAG)
 		elseif type(message) == "table" then
 			for _, m in pairs(message) do
-				chatMessage = string.sub(m, 1, kMaxChatLength)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, CHAT_TAG, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				TGNS.SendChatMessage(player, m, CHAT_TAG)
 			end
 		end
 
@@ -73,21 +71,19 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	local function DisplayMessageConsole(player, message)
 		if type(message) == "string" then
-			ServerAdminPrint(Server.GetOwner(player), CHAT_TAG .. " " .. message)
+			TGNS.ConsolePrint(client, message, CHAT_TAG)
 		elseif type(message) == "table" then
 			for _, m in pairs(message) do
-				ServerAdminPrint(Server.GetOwner(player), CHAT_TAG .. " " .. m)
+				TGNS.ConsolePrint(client, m, CHAT_TAG)
 			end
 		end
 	end
 
-// Not local, is used by plugin_tournamentmode.lua
-	function isCaptainsMode()
+	local function isCaptainsMode()
 		return captainsEnabled
 	end
 	
-// Not local, is used by plugin_tournamentmode.lua
-	function isCaptain(id)
+	local function isCaptain(id)
 		return captain1id == id or captain2id == id
 	end
 
@@ -104,7 +100,7 @@ if kDAKConfig and kDAKConfig.Captains then
 			// TODO: Adjust server settings (time limit, others?)
 				// server_cmd("mp_timelimit 45")
 			if Server then
-				Shared.ConsoleCommand("sv_tournamentmode 1 0 0")
+				Shared.ConsoleCommand("sv_tournamentmode 1 0 1")
 			end
 			//todo: make sure pubmode gets reset after a map change
 			kDAKConfig.TournamentMode.kTournamentModePubMode = false
@@ -118,14 +114,14 @@ if kDAKConfig and kDAKConfig.Captains then
 		else
 			DisplayMessageSelf = DisplayMessageConsole
 		end
-		local sourcePlayer = client:GetControllingPlayer()
+		local sourcePlayer = TGNS.GetPlayer(client)
 		if isCaptainsMode() then
 			if playerName then
 				local targetPlayer = TGNS.GetPlayerMatching(playerName)
 				if targetPlayer ~= nil then
 					local targetClient = Server.GetOwner(targetPlayer)
 					if targetClient ~= nil then
-						local targetSteamId = targetClient:GetUserId()
+						local targetSteamId = TGNS.GetClientSteamId(targetClient)
 						local targetName = string.sub(targetPlayer:GetName(), 1, PLAYNAME_MAX_LENGTH)
 						if isCaptain(targetSteamId) then
 							if captain1id  == targetSteamId then
@@ -138,8 +134,10 @@ if kDAKConfig and kDAKConfig.Captains then
 						else
 							if captain1id  == -1 then
 								captain1id = targetSteamId
+								Shared.ConsoleCommand(string.format("sv_setcaptain 1 %d", targetSteamId))
 							elseif captain2id  == -1 then
 								captain2id = targetSteamId
+								Shared.ConsoleCommand(string.format("sv_setcaptain 2 %d", targetSteamId))
 							end
 							if isCaptain(targetSteamId) then
 								DisplayMessageSelf(sourcePlayer, string.format("You have set %s as a captain.", targetName))
@@ -175,7 +173,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		local playername
 		local notesLine
 		for _, player in pairs(TGNS.GetPlayerList()) do
-			local steamId = Server.GetOwner(player):GetUserId()
+			local steamId = ClientAction(player, TGNS.GetClientSteamId)
 			local playername = player:GetName()
 			if player:GetTeamNumber() == team then
 				if isCaptain(steamId) then
@@ -234,14 +232,14 @@ if kDAKConfig and kDAKConfig.Captains then
 			DisplayMessageSelf = DisplayMessageConsole
 		end
 		if isCaptainsMode() then
-			local sourcePlayer = client:GetControllingPlayer()
-			local steamId = client:GetUserId()
+			local sourcePlayer = TGNS.GetPlayer(client)
+			local steamId = TGNS.GetClientSteamId(client)
 			local team = sourcePlayer:GetTeamNumber()
 			if sourcePlayer and team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
 				if targetName ~= nil then
 					local targetPlayer = TGNS.GetPlayerMatching(targetName, team)
 					if targetPlayer ~= nil then
-						local targetSteamId = Server.GetOwner(targetPlayer):GetUserId()
+						local targetSteamId = ClientAction(targetPlayer, TGNS.GetClientSteamId)
 						if steamId == targetSteamId or isCaptain(steamId) then
 							if sourcePlayer:GetTeamNumber() == targetPlayer:GetTeamNumber() then
 								if note ~= nil and string.len(note) > 0 then
@@ -305,7 +303,7 @@ if kDAKConfig and kDAKConfig.Captains then
 
 	local function client_putinserver(client)
 		if isCaptainsMode() then
-			DisplayMessage(client:GetControllingPlayer(), "You're joining a captains game.  Please ASK FOR ORDERS when you join a team.")
+			DisplayMessage(TGNS.GetPlayer(client), "You're joining a captains game.  Please ASK FOR ORDERS when you join a team.")
 		end
 	end
 	
@@ -318,8 +316,8 @@ if kDAKConfig and kDAKConfig.Captains then
 	local function client_disconnect(client)
 		if client ~= nil and VerifyClient(client) ~= nil then
 			if isCaptainsMode() then
-				local id = client:GetUserId()
-				local team = client:GetControllingPlayer():GetTeamNumber()
+				local id = TGNS.GetClientSteamId(client)
+				local team = TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber)
 				if team ~= kTeamReadyRoom and team ~= kSpectatorIndex then
 					for _, player in pairs(TGNS.GetPlayerList()) do
 						if team == player:GetTeamNumber() and notes[id] ~= nil and string.len(notes[id]) > 0 then
@@ -345,7 +343,7 @@ if kDAKConfig and kDAKConfig.Captains then
 		if isCaptainsMode() then
 			client = Server.GetOwner(player)
 			if client ~= nil then
-				local steamId = client:GetUserId()
+				local steamId = TGNS.GetClientSteamId(client)
 				//if isCaptain(steamId) and newTeamNumber ~= kTeamReadyRoom and GetGamerules():GetGameState() == kGameState.PreGame then
 				//	allowNotesDisplay = true
 				//end
@@ -362,8 +360,8 @@ if kDAKConfig and kDAKConfig.Captains then
 		local message = networkMessage.message
 		if isCaptainsMode() then
 			if client then
-				local steamId = client:GetUserId()
-				if steamId and steamId ~= 0 and isCaptainsMode() then
+				local steamId = TGNS.GetClientSteamId(client)
+				if steamId and steamId ~= 0 then
 					if isCommand(message, NOTECOMMAND) then
 						local args = getArgs(message, NOTECOMMAND)
 						if args ~= nil then
@@ -382,7 +380,7 @@ if kDAKConfig and kDAKConfig.Captains then
 						end
 						return true
 					elseif isCommand(message, NOTESCOMMAND) then
-						showTeamNotes(client:GetControllingPlayer(), true)
+						showTeamNotes(TGNS.GetPlayer(client), true)
 						return true
 					end
 				end
@@ -391,12 +389,59 @@ if kDAKConfig and kDAKConfig.Captains then
 		return false
 	end
 
-	TGNS.RegisterNetworkMessageHook("ChatClient", OnCaptainsChatMessage)
+	TGNS.RegisterNetworkMessageHook("ChatClient", OnCaptainsChatMessage, 5)
 
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINSCOMMAND, StartCaptains, "configures the server for Captains Games", false)
 	DAKCreateServerAdminCommand("Console_" .. CAPTAINCOMMAND, function(client, playerName) if client ~= nil then makeCaptain(client, playerName) end end, "<playerName> Set/unset a team captain.", false)
-	DAKCreateServerAdminCommand("Console_" .. NOTESCOMMAND, function(client) if client ~= nil then showTeamNotes(client:GetControllingPlayer()) end end, "Lists all notes assigned to your team", true)
+	DAKCreateServerAdminCommand("Console_" .. NOTESCOMMAND, function(client) if client ~= nil then TGNS.PlayerAction(client, showTeamNotes) end end, "Lists all notes assigned to your team", true)
 	DAKCreateServerAdminCommand("Console_" .. NOTECOMMAND, function(client, playerName, ...)  if client ~= nil then assignNote(client, playerName, StringConcatArgs(...)) end end, "<playerName> <note>, Set a note for yourself.  If you are a captain, you can set a note for a teammate", true)
+
+/*
+	// Mute team picking functionality in progress
+	local function OnMutePlayer(client, networkMessage)
+		local cancel = false
+		if isCaptainsMode() then
+			local steamId = TGNS.GetClientSteamId(client)
+			if isCaptain(steamId) then
+				clientIndex, isMuted = ParseMutePlayerMessage(networkMessage)
+				for _, player in pairs(TGNS.GetPlayerList()) do
+					if player:GetClientIndex() == clientIndex then
+Print("found clicked player")
+						local teamNumber
+						if captain1id == steamId then
+							teamNumber = kTeam1Index
+						else
+							teamNumber = kTeam2Index
+						end
+						
+						if player:GetTeamNumber() == kTeamReadyRoom then
+Print("player is in readyroom")
+							local gamerules = GetGamerules()
+							if gamerules then
+								gamerules:JoinTeam(player, teamNumber)
+							end
+							
+							DisplayMessageAll(string.format("%s was selected for %s.", player:GetName(), TGNS.GetTeamName(teamNumber)))
+							Print("Selected")
+						elseif player:GetTeamNumber() == teamNumber then
+Print("player is on captain's team")
+							local gamerules = GetGamerules()
+							if gamerules then
+								gamerules:JoinTeam(player, kTeamReadyRoom)
+							end
+							Print("Unselected")
+						end
+						break
+					end
+				end
+				cancel = true
+			end
+		end
+		return cancel
+	end
+
+	TGNS.RegisterNetworkMessageHook("MutePlayer", OnMutePlayer, 10)
+*/
 
 end
 
