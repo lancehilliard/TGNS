@@ -18,7 +18,7 @@ if kDAKConfig and kDAKConfig.NotifyAdminOnMutePlayer and kDAKConfig.DAKLoader th
 		end
 	end
 
-	TGNS.RegisterNetworkMessageHook("MutePlayer", OnMutePlayer)
+	TGNS.RegisterNetworkMessageHook("MutePlayer", OnMutePlayer, 5)
 
 	local function GetPlayerMutes()
 		local result = {}

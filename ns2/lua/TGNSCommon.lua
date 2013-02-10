@@ -535,37 +535,30 @@ end
 ////////////////////////////////
 
 kTGNSNetworkMessageHooks = {}
-kTGNSNetworkMessageHooks["ChatClient"] = {}
-kTGNSNetworkMessageHooks["MutePlayer"] = {}
 
-function TGNS.RegisterNetworkMessageHook(messageName, func)
-	table.insert(kTGNSNetworkMessageHooks[messageName], func)
+function TGNS.RegisterNetworkMessageHook(messageName, func, priority)
+	local eventName = "kTGNSOn" .. messageName
+	DAKRegisterEventHook(eventName , func, priority)
 end
 
 local originalOnNetworkMessage = {}
 
 local function onNetworkMessage(messageName, ...)
-	if #kTGNSNetworkMessageHooks[messageName] > 0 then
-		for i = #kTGNSNetworkMessageHooks[messageName], 1, -1 do
-			if kTGNSNetworkMessageHooks[messageName][i](...) then
-				return
-			end
-		end
+	local eventName = "kTGNSOn" .. messageName
+	if not DAKExecuteEventHooks(eventName, ...) then
+		originalOnNetworkMessage[messageName](...)
 	end
-	originalOnNetworkMessage[messageName](...)
 end
 
 local originalHookNetworkMessage = Server.HookNetworkMessage
 
 Server.HookNetworkMessage = function(messageName, callback)
 
-	for key, _ in pairs(kTGNSNetworkMessageHooks) do
-		if messageName == key then
-			Print("TGNS Hooking: %s", key)
-			originalOnNetworkMessage[messageName] = callback
-			callback = function(...) onNetworkMessage(messageName, ...) end
-		end
-	end
+	Print("TGNS Hooking: %s", messageName)
+	originalOnNetworkMessage[messageName] = callback
+	callback = function(...) onNetworkMessage(messageName, ...) end
+	kTGNSNetworkMessageHooks[messageName] = callback
+
 	originalHookNetworkMessage(messageName, callback)
 
 end

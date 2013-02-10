@@ -227,7 +227,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		end
 	end
 
-	TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient)
+	TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient, 5)
 
 	//local function WinOrLoseOff(client, teamnum)
 	//	local tmNum = tonumber(teamnum)
