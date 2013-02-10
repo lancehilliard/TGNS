@@ -31,6 +31,9 @@ if Server then
 		//Register Event in Array
 		p = tonumber(p)
 		if p == nil then p = 5 end
+		if kDAKEvents[functionarray] == nil then
+			kDAKEvents[functionarray] = { }
+		end
 		if functionarray ~= nil and kDAKEvents[functionarray] ~= nil then
 			table.insert(kDAKEvents[functionarray], {func = eventfunction, priority = p})
 			table.sort(kDAKEvents[functionarray], function(f1, f2) return f1.priority < f2.priority end)
