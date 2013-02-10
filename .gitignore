@@ -89,6 +89,9 @@
 !ns2/lua/plugins/config_hidespectators.lua
 !ns2/lua/plugins/plugin_hidespectators.lua
 
+!ns2/lua/plugins/config_blockmutes.lua
+!ns2/lua/plugins/plugin_blockmutes.lua
+
 !ns2/lua/TGNSPlayerDataRepository.lua
 !ns2/lua/TGNSCommon.lua
 
