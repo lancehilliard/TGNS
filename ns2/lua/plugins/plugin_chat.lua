@@ -68,7 +68,7 @@ if kDAKConfig and kDAKConfig.Chat then
 		end
 	end
 	
-	TGNS.RegisterNetworkMessageHook("ChatClient", CheckForChat)
+	TGNS.RegisterNetworkMessageHook("ChatClient", CheckForChat, 5)
 
 end
 
