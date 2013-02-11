@@ -20,13 +20,13 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 			if winOrLoseChallengeIsInProgress then
 				Shared.Message("winOrLoseChallengeIsInProgress")
 			else
-				Shared.Message("NOT winOrLoseChallengeIsInProgress");
+				Shared.Message("NOT winOrLoseChallengeIsInProgress")
 			end
 
 			if canAttack then
 				Shared.Message("Can Attack")
 			else
-				Shared.Message("Can NOT Attack");
+				Shared.Message("Can NOT Attack")
 			end
 			*/
 			
@@ -111,7 +111,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 					else
 						local chatmessage
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
-							chatMessage = string.sub(string.format("WinOrLose vote started. %s votes are needed.", 
+							chatMessage = string.sub(string.format("Concede vote started. %s votes are needed.", 
 							 math.ceil((#playerRecords * (kDAKConfig.WinOrLose.kWinOrLoseMinimumPercentage / 100))) ), 1, kMaxChatLength)
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
 						elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + kDAKConfig.WinOrLose.kWinOrLoseVotingTime < Shared.GetTime() then
@@ -122,12 +122,12 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 									table.insert(abstainedNames, TGNS.GetPlayerName(p))
 								end
 							end)
-							chatMessage = string.sub(string.format("WinOrLose vote expired. Abstained: %s", TGNS.Join(abstainedNames, ", ")), 1, kMaxChatLength)
+							chatMessage = string.sub(string.format("Concede vote expired. Abstained: %s", TGNS.Join(abstainedNames, ", ")), 1, kMaxChatLength)
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 							kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 							kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 						else
-							chatMessage = string.sub(string.format("%s votes to call WinOrLose, %s needed, %s seconds left.", totalvotes, 
+							chatMessage = string.sub(string.format("%s votes to concede; %s needed; %s seconds left.", totalvotes, 
 							 math.ceil((#playerRecords * (kDAKConfig.WinOrLose.kWinOrLoseMinimumPercentage / 100))), 
 							 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kDAKConfig.WinOrLose.kWinOrLoseVotingTime) - Shared.GetTime()) ), 1, kMaxChatLength)
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
@@ -177,15 +177,15 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 								end
 							end
 							if alreadyvoted then
-								chatMessage = string.sub(string.format("You already voted to call WinOrLose."), 1, kMaxChatLength)
+								chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
 								Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							else
-								chatMessage = string.sub(string.format("You have voted to call WinOrLose."), 1, kMaxChatLength)
+								chatMessage = string.sub(string.format("You have voted to concede."), 1, kMaxChatLength)
 								//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 								table.insert(kWinOrLoseVoteArray[teamnumber].WinOrLoseVotes, clientID)
 							end						
 						else
-							chatMessage = string.sub(string.format("You have voted to call WinOrLose."), 1, kMaxChatLength)
+							chatMessage = string.sub(string.format("You have voted to concede."), 1, kMaxChatLength)
 							//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							kWinOrLoseVoteArray[teamnumber].WinOrLoseRunning = Shared.GetTime()
 							table.insert(kWinOrLoseVoteArray[teamnumber].WinOrLoseVotes, clientID)
@@ -193,7 +193,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 					end
 				end
 			else
-				chatMessage = string.sub(string.format("You may call WinOrLose only when you have a single command structure."), 1, kMaxChatLength)
+				chatMessage = string.sub(string.format("You may concede only when you have a single command structure."), 1, kMaxChatLength)
 				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 			end
 		end
@@ -205,7 +205,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 		local cancel = false
 		if voteTechId == kTechId.VoteConcedeRound then
 			cancel = true
-			TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s voted for WinOrLose using the Vote Concede menu.", TGNS.GetPlayerName(player)))
+			TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s voted to concede.", TGNS.GetPlayerName(player)))
 			TGNS.ClientAction(player, function(c) OnCommandWinOrLose(c) end)
 		end
 		return cancel
@@ -219,7 +219,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 			local chatcommand = kDAKConfig.WinOrLose.kWinOrLoseChatCommands[c]
 			if message == chatcommand and not teamOnly then
 				TGNS.PlayerAction(client, function(p)
-						TGNS.SendChatMessage(p, "WinOrLose must be used via team chat. No vote has been cast.")
+						TGNS.SendChatMessage(p, "Use the Vote Concede menu (or team chat) to concede. No vote has been cast.")
 					end
 				)
 				return true
@@ -228,44 +228,6 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 	end
 
 	TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient)
-
-	//local function WinOrLoseOff(client, teamnum)
-	//	local tmNum = tonumber(teamnum)
-	//	if tmNum ~= nil and ValidateTeamNumber(tmNum) and kWinOrLoseRunning[tmNum] ~= 0 then
-	//		kSurrenderVoteArray[tmNum].SurrenderVotesAlertTime = 0
-	//		kSurrenderVoteArray[tmNum].WinOrLoseRunning = 0
-	//		kSurrenderVoteArray[tmNum].SurrenderVotes = { }
-	//		chatMessage = string.sub(string.format("Surrender vote for team %s has been cancelled.", tmNum), 1, kMaxChatLength)
-	//		Server.SendNetworkMessage("Chat", BuildChatMessage(false, kDAKConfig.DAKLoader.MessageSender, -1, tmNum, kNeutralTeamType, chatMessage), true)
-	//		if client ~= nil then 
-	//			ServerAdminPrint(client, string.format("Surrender vote cancelled for team %s.", ToString(tmNum)))
-	//			local player = client:GetControllingPlayer()
-	//			if player ~= nil then
-	//				PrintToAllAdmins("sv_cancelsurrendervote", client, teamnum)
-	//			end
-	//		end
-	//	end
-    //
-	//end
-    //
-	//DAKCreateServerAdminCommand("Console_sv_cancelsurrendervote", WinOrLoseOff, "<teamnumber> Cancelles a currently running surrender vote for the provided team.")
-
-	local function WinOrLoseOn(client)
-		local player = client:GetControllingPlayer()
-		local tmNum = player:GetTeam()
-		if tmNum ~= nil and ValidateTeamNumber(tmNum) and kWinOrLoseRunning[tmNum] == 0 then
-			kWinOrLoseVoteArray[tmNum].WinOrLoseRunning = Shared.GetTime()
-			if client ~= nil then
-				ServerAdminPrint(client, string.format("WinOrLose vote started for team %s.", ToString(tmNum)))
-				if player ~= nil then
-					PrintToAllAdmins("sv_winorlose", client, teamnum)
-				end			
-			end
-		end
-
-	end
-
-	DAKCreateServerAdminCommand("Console_sv_winorlose", WinOrLoseOn, "Begins a vote to call WinOrLose on the other team.")
 end
 
 Shared.Message("WinOrLose Loading Complete")
