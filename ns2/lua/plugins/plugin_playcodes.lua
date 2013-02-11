@@ -86,7 +86,8 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 		TGNS.DoFor(TGNS.GetPlayers(teamRegularClients), function(p)
 			local steamId = TGNS.ClientAction(p, TGNS.GetClientSteamId)
 			local prefs = pdr:Load(steamId)
-			local teamMessageTemplate = prefs.showShorthandCodes and "%s: %s" or "VOICECOMMS CHECK! Tell %s to type %s into Team Chat to prevent kick!"
+			local teamMessageTemplate = prefs.showShorthandCodes and "%s: %s" or "VOICECOMMS! Can %s hear you? Can they type %s into Team Chat to stay?"
+			//local teamMessageTemplate = prefs.showShorthandCodes and "%s: %s" or "VOICECOMMS CHECK! Tell %s to type %s into Team Chat to prevent kick!"
 			local teamMessage = string.format(teamMessageTemplate, displayName, playCode)
 			TGNS.SendChatMessage(p, teamMessage, "PlayCodes")
 		end)
