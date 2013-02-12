@@ -114,7 +114,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 					end)
 					if clientIsOnGameplayTeam and clientIsActive and p.doNotEnforceBefore < Shared.GetTime() then
 						local teamRegularClients = GetTeamRegularClients(client)
-						if #teamRegularClients >= 1 then
+						if #teamRegularClients >= 4 then
 							if p.noticesRemaining > 0 then
 								p.noticesRemaining = p.noticesRemaining - 1
 								SendChatMessages(client, p.playCode)
