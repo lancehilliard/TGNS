@@ -1,0 +1,4 @@
+{
+"check": [ "game_setup.xml", "*.lua", "*.fx", "*.screenfx", "*.surface_shader", "*.fxh", "*.render_setup", "*.shader_template", "*.fsb", "*.material", "*.level", "*.cinematic", "crag*.dds", "cyst*.dds", "drifter*.dds", "egg*.dds", "fade*.dds", "gorge*.dds", "harvester*.dds", "hive*.dds", "infestation*.dds", "lerk*.dds", "onos*.dds", "shade*.dds", "shell*.dds", "shift*.dds", "skulk*.dds", "spur*.dds", "veil*.dds", "whip*.dds", "exo*.dds", "marine*.dds", "muzzle*.dds", "phase*.dds", "sparks*.dds", "male*.dds", "mine*.dds", "pistol*.dds", "rifle*.dds", "shotgun*.dds", "blink*.dds", "blood*.dds", "explosion*.dds", "fire*.dds", "jetpack*.dds", "smoke*.dds", "spore*.dds" ]
+"ignore": [ "crosshairs.dds", "crosshairs-hit.dds", "exosuit_HUD1.dds", "exosuit_HUD4.dds", "descent_wall_02_a.material", "descent_floor_01_a.material" ]
+}

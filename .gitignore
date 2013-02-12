@@ -8,6 +8,9 @@
 !.gitattributes
 !.gitignore
 
+# And then whitelist ConsistencyConfig.json
+!config/ConsistencyConfig.json
+
 # And then whitelist DAK core files
 !ns2/lua/DAKLoader_Class.lua
 !ns2/lua/DAKLoader_Client.lua
