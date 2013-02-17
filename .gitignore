@@ -96,6 +96,7 @@
 !ns2/lua/plugins/plugin_blockmutes.lua
 
 !ns2/lua/TGNSPlayerDataRepository.lua
+!ns2/lua/TGNSPlayerBlacklistRepository.lua
 !ns2/lua/TGNSCommon.lua
 
 !ns2/lua/plugins/config_autoconcede.lua
