@@ -67,7 +67,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 		local teamOnly = networkMessage.teamOnly
 		local message = StringTrim(networkMessage.message)
 		local playCode = tonumber(message)
-		if teamOnly and playCode ~= nil then
+		if playCode ~= nil then
 			if PlayCodeVetsClient(client, playCode) then
 				OnClientVetted(client, message)
 			end
