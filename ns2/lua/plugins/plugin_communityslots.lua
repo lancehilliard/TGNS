@@ -121,12 +121,12 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 			if victimClient ~= nil then
 				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
 			else
-				if TGNS.IsClientSM(joiningClient) then
-					Log(string.format("No player kicked upon join of SM: ", TGNS.GetClientNameSteamIdCombo(joiningClient)))
-				else
+				//if TGNS.IsClientSM(joiningClient) then
+				//	Log(string.format("No player kicked upon join of SM: ", TGNS.GetClientNameSteamIdCombo(joiningClient)))
+				//else
 					TGNS.KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
 					return true
-				end
+				//end
 			end
 		end
 		table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
