@@ -126,12 +126,18 @@ function TGNS.DoFor(elements, elementAction)
 	end
 end
 
-function TGNS.Any(elements, predicate)
-	local result = false
+function TGNS.Where(elements, predicate)
+	local result = {}
 	TGNS.DoFor(elements, function(e)
-			result = result or (predicate == nil and true or predicate(e))
+		if predicate ~= nil and predicate(e) then
+			table.insert(result, e)
 		end
-	)
+	end)
+	return result
+end
+
+function TGNS.Any(elements, predicate)
+	local result = #TGNS.Where(elements, predicate) > 0
 	return result
 end
 
