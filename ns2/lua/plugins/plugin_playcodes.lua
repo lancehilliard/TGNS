@@ -12,6 +12,7 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 	
 	local profiles = {}
 	local mapPlayCode = math.random(100, 999)
+	local nextTestAllowedAt = 0
 
 	local function MarkAllProfilesInactive(client)
 		local steamId = TGNS.GetClientSteamId(client)
@@ -46,8 +47,9 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 	local function OnClientVetted(client, playCode)
 		MarkAllProfilesInactive(client)
 		MarkProfileAsVettedForClient(client, playCode)
-		TGNS.SendTeamChat(TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber), string.format("COMMS established. %s can stay!", TGNS.GetClientName(client)), "PlayCodes")
+		TGNS.SendTeamChat(TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber), string.format("COMMS Established! %s entered the PlayCode!", TGNS.GetClientName(client)), "PlayCodes")
 		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "Do you like teamwork? Become a regular at tacticalgamer.com/natural-selection", "PlayCodes") end)
+		nextTestAllowedAt = Shared.GetTime() + 60
 	end
 	
 	local function PlayCodeVetsClient(client, playCode)
@@ -91,45 +93,47 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 			local teamMessage = string.format(teamMessageTemplate, displayName, playCode)
 			TGNS.SendChatMessage(p, teamMessage, "PlayCodes")
 		end)
-		TGNS.PlayerAction(client, function(player) TGNS.SendChatMessage(player, "Make sure you can hear team voicecomm to avoid getting kicked!", "PlayCodes") end)
+		TGNS.PlayerAction(client, function(player) TGNS.SendChatMessage(player, "Listen to your team for your 3-digit PlayCode!", "PlayCodes") end)
 	end
 	
 	local function ProcessProfiles()
 		TGNS.ScheduleAction(10, ProcessProfiles)
-		TGNS.DoFor(profiles, function(p)
-			if p.isActive then
-				local client = GetClientMatchingSteamId(p.steamId)
-				if client == nil then
-					//TGNS.SendAdminChat(string.format("No client found for SteamId %s.", p.steamId), "PlayCodesDebug")
-					p.notFoundCount = p.notFoundCount + 1
-					if p.notFoundCount > 3 then
-						p.isActive = false
-					end
-				else
-					local clientIsOnGameplayTeam
-					local clientIsActive
-					TGNS.PlayerAction(client, function(p)
-						clientIsOnGameplayTeam = TGNS.GetPlayerTeamNumber(p) ~= kTeamReadyRoom
-						clientIsActive = not DAKIsPlayerAFK(p)
-					end)
-					if clientIsOnGameplayTeam and clientIsActive and p.doNotEnforceBefore < Shared.GetTime() then
-						local teamRegularClients = GetTeamRegularClients(client)
-						if #teamRegularClients >= 4 then
-							if p.noticesRemaining > 0 then
-								p.noticesRemaining = p.noticesRemaining - 1
-								SendChatMessages(client, p.playCode)
-								return true
-							else
-								TGNS.KickClient(client, "You did not enter your three-digit PlayCode. You are being kicked.")
+		if nextTestAllowedAt < Shared.GetTime() then
+			TGNS.DoFor(profiles, function(p)
+				if p.isActive then
+					local client = GetClientMatchingSteamId(p.steamId)
+					if client == nil then
+						//TGNS.SendAdminChat(string.format("No client found for SteamId %s.", p.steamId), "PlayCodesDebug")
+						p.notFoundCount = p.notFoundCount + 1
+						if p.notFoundCount > 3 then
+							p.isActive = false
+						end
+					else
+						local clientIsOnGameplayTeam
+						local clientIsActive
+						TGNS.PlayerAction(client, function(p)
+							clientIsOnGameplayTeam = TGNS.GetPlayerTeamNumber(p) ~= kTeamReadyRoom
+							clientIsActive = not DAKIsPlayerAFK(p)
+						end)
+						if clientIsOnGameplayTeam and clientIsActive and p.doNotEnforceBefore < Shared.GetTime() then
+							local teamRegularClients = GetTeamRegularClients(client)
+							if #teamRegularClients >= 4 then
+								if p.noticesRemaining > 0 then
+									p.noticesRemaining = p.noticesRemaining - 1
+									SendChatMessages(client, p.playCode)
+									return true
+								else
+									TGNS.KickClient(client, "You did not enter your three-digit PlayCode. You are being kicked.")
+									p.isActive = false
+								end
+							elseif p.noticesRemaining < 2 then
 								p.isActive = false
 							end
-						elseif p.noticesRemaining < 2 then
-							p.isActive = false
 						end
 					end
 				end
-			end
-		end)
+			end)
+		end
 	end
 	ProcessProfiles()
 	
