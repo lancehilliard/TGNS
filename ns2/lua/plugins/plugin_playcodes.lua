@@ -204,14 +204,14 @@ if kDAKConfig and kDAKConfig.PlayCodes then
 		result.steamId = TGNS.GetClientSteamId(client)
 		result.doNotEnforceBefore = Shared.GetTime() + NUMBER_OF_SECONDS_TO_WAIT_AFTER_TEAMJOIN_BEFORE_VETTING
 		
-		TGNS.SendAdminChat(string.format("Profile created for %s", result.steamId))
+		//TGNS.SendAdminChat(string.format("Profile created for %s", result.steamId))
 		
 		return result
 	end
 	
 	local function PlayCodesOnTeamJoin(self, player, newTeamNumber, force)
 		TGNS.ClientAction(player, function(c)
-			if TGNS.IsClientAdmin(c) and IsTimeToVetClientAgain(c) then
+			if TGNS.IsClientStranger(c) and IsTimeToVetClientAgain(c) then
 				MarkAllProfilesInactive(c)
 				if not HasClientBeenVetted(c) then
 					local profile = CreateProfile(c)
