@@ -3,6 +3,7 @@
 if kDAKConfig and kDAKConfig.TempAdmin then
 	Script.Load("lua/TGNSCommon.lua")
 	Script.Load("lua/TGNSPlayerDataRepository.lua")
+	Script.Load("lua/TGNSPlayerBlacklistRepository.lua")
 	
 	local RosterCheckInterval = 10
 	local pdr = TGNSPlayerDataRepository.Create("tempadmin", function(tempAdminData)
@@ -10,6 +11,8 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 				return tempAdminData
 			end
 		)
+
+	local pbr = TGNSPlayerBlacklistRepository.Create("tempadmin")
 		
 	local function IsClientOptedIn(client)
 		local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
@@ -18,7 +21,7 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 
 	local function IsTempAdminEligible(client)
-		local result = TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) and IsClientOptedIn(client)
+		local result = TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) and IsClientOptedIn(client) and not pbr:IsClientBlacklisted(client)
 		return result
 	end
 	
@@ -35,14 +38,18 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 	
 	local function svTempAdmin(client)
-		local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
-		tempAdminData.optin = not tempAdminData.optin
-		pdr:Save(tempAdminData)
 		local message
-		if tempAdminData.optin then
-			message = "You are opted into Temp Admin. Only Supporting Members who have signed the TGNS Primer are considered."
+		if pbr:IsClientBlacklisted(client) then
+			message = "Contact an Admin to get access to Temp Admin: tacticalgamer.com/natural-selection-contact-admin"
 		else
-			message = "You will no longer be considered for Temp Admin."
+			local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
+			tempAdminData.optin = not tempAdminData.optin
+			pdr:Save(tempAdminData)
+			if tempAdminData.optin then
+				message = "You are opted into Temp Admin. Only Supporting Members who have signed the TGNS Primer are considered."
+			else
+				message = "You will no longer be considered for Temp Admin."
+			end
 		end
 		TGNS.ConsolePrint(client, message, "TEMPADMIN")
 	end
