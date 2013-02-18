@@ -3,6 +3,22 @@
 TGNS = {}
 local scheduledActions = {}
 
+function TGNS.SendToRandomTeam(player)
+	local playerList = TGNS.GetPlayerList()
+	local marinesCount = #TGNS.GetMarineClients(playerList)
+	local aliensCount = #TGNS.GetAlienClients(playerList)
+	local teamNumber
+	if marinesCount == aliensCount then
+		teamNumber = math.random(1,2)
+	else
+		teamNumber = marinesCount < aliensCount and 1 or 2
+	end
+	TGNS.SendToTeam(player, teamNumber)
+end
+
+function TGNS.SendToTeam(player, teamNumber)
+	GetGamerules():JoinTeam(player, teamNumber)
+end
 
 function TGNS.Join(list, delimiter)
   if #list == 0 then 
@@ -13,6 +29,11 @@ function TGNS.Join(list, delimiter)
     string = string .. delimiter .. list[i] 
   end
   return string
+end
+
+function TGNS.GetPlayerTeamName(player)
+	local result = TGNS.GetTeamName(TGNS.GetPlayerTeamNumber(player))
+	return result
 end
 
 function TGNS.GetPlayerTeamNumber(player)
@@ -98,6 +119,11 @@ function TGNS.GetTeamName(teamNumber)
 	elseif teamNumber == kSpectatorIndex then
 		result = "Spectator"
 	end
+	return result
+end
+
+function TGNS.IsPlayerReadyRoom(player)
+	local result = player:GetTeamNumber() == kTeamReadyRoom
 	return result
 end
 
