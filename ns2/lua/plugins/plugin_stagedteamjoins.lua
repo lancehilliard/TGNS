@@ -23,15 +23,18 @@ if kDAKConfig and kDAKConfig.StagedTeamJoins then
 
 	local function StagedTeamJoinsOnTeamJoin(self, player, newTeamNumber, force)
 		local cancel = false
+		local balanceIsInProgress = Balance and Balance.IsInProgress()
+		if not balanceIsInProgress then
 			if newTeamNumber ~= kTeamReadyRoom then
-			local atLeastOneSmIsOnTheServer = TGNS.Any(TGNS.GetPlayerList(), function(p) return TGNS.ClientAction(p, function(c) return TGNS.IsClientSM(c) end) end)
-			if atLeastOneSmIsOnTheServer then
-				local secondsRemainingBeforeAllMayJoin = math.floor(allMayJoinAt - Shared.GetTime())
-				if secondsRemainingBeforeAllMayJoin > 0 then
-					if not TGNS.ClientAction(player, function(c) return TGNS.IsClientSM(c) end) then
-						local chatMessage = string.format("Supporting Members may join teams now. Wait %s seconds and try again.", secondsRemainingBeforeAllMayJoin)
-						TGNS.SendChatMessage(player, chatMessage, "TGNS")
-						cancel = true
+				local atLeastOneSmIsOnTheServer = TGNS.Any(TGNS.GetPlayerList(), function(p) return TGNS.ClientAction(p, function(c) return TGNS.IsClientSM(c) end) end)
+				if atLeastOneSmIsOnTheServer then
+					local secondsRemainingBeforeAllMayJoin = math.floor(allMayJoinAt - Shared.GetTime())
+					if secondsRemainingBeforeAllMayJoin > 0 then
+						if not TGNS.ClientAction(player, function(c) return TGNS.IsClientSM(c) end) then
+							local chatMessage = string.format("Supporting Members may join teams now. Wait %s seconds and try again.", secondsRemainingBeforeAllMayJoin)
+							TGNS.SendChatMessage(player, chatMessage, "TGNS")
+							cancel = true
+						end
 					end
 				end
 			end
@@ -39,7 +42,6 @@ if kDAKConfig and kDAKConfig.StagedTeamJoins then
 		return cancel
 	end
 	DAKRegisterEventHook("kDAKOnTeamJoin", StagedTeamJoinsOnTeamJoin, 5)
-
 
 end
 
