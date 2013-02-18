@@ -63,18 +63,65 @@ if kDAKConfig and kDAKConfig.Balance then
 		changeAction(balance)
 		pdr:Save(balance)
 	end
-
+	
+	local function GetWinLossAverage(clients)
+		local result = 0
+		if #clients > 0 then
+			local total = 0
+			TGNS.DoFor(clients, function(c)
+				total = total + TGNS.PlayerAction(c, function(p) return GetPlayerWinLossRatio(p) end)
+			end)
+			result = total / #clients
+		end
+		return result
+	end
+	
+	local function PrintPostBalanceReport(client, actions)
+		TGNS.DoFor(actions, function(a)
+			TGNS.ConsolePrint(client, a, "BALANCE")
+		end)
+		local playerList = TGNS.GetPlayerList()
+		local marineClients = TGNS.GetMarineClients(playerList)
+		local alienClients = TGNS.GetAlienClients(playerList)
+		local marineAvg = GetWinLossAverage(marineClients)
+		local alienAvg = GetWinLossAverage(alienClients)
+		local message = string.format("MarineAvg: %s | AlienAvg: %s", marineAvg, alienAvg)
+		TGNS.ConsolePrint(client, message, "BALANCE")
+	end
+	
 	local function svBalance(client)
 		local playerList = TGNS.GetPlayerList()
-		table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) < GetPlayerWinLossRatio(p2) end )
+		table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) > GetPlayerWinLossRatio(p2) end )
 		TGNS.ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
+		local actions = {}
+		local teamNumber
 		TGNS.DoFor(playerList, function(player)
-				if TGNS.IsClientAdmin(client) then
-					TGNS.ConsolePrint(client, string.format("%s: %s with %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total), "BALANCE")
+			local actionMessage
+			if TGNS.IsPlayerReadyRoom(player) then
+				local updatedPlayerList = TGNS.GetPlayerList()
+				local marineClients = TGNS.GetMarineClients(updatedPlayerList)
+				local alienClients = TGNS.GetAlienClients(updatedPlayerList)
+				local marineAvg = GetWinLossAverage(marineClients)
+				local alienAvg = GetWinLossAverage(alienClients)
+				local marineCount = #marineClients
+				local alienCount = #alienClients
+				if marineAvg <= alienAvg then
+					teamNumber = marineCount <= alienCount and kMarineTeamType or kAlienTeamType
+				else
+					teamNumber = alienCount <= marineCount and kAlienTeamType or kMarineTeamType
 				end
-				JoinRandomTeam(player)
+				actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
+			else
+				actionMessage = string.format("ALREADY on %s", TGNS.GetPlayerTeamName(player))
 			end
-		)
+			table.insert(actions, string.format("%s: %s with %s = %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total, actionMessage))
+			if teamNumber ~= nil then
+				TGNS.SendToTeam(player, teamNumber)
+			end
+		end)
+		if TGNS.IsClientAdmin(client) then
+			TGNS.ScheduleAction(1, function() PrintPostBalanceReport(client, actions) end)
+		end
 	end
 	DAKCreateServerAdminCommand("Console_sv_balance", svBalance, "Balances all players based on win/loss (percentage) record.")
 	
