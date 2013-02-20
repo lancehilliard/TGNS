@@ -7,11 +7,6 @@ if kDAKConfig and kDAKConfig.Balance then
 	local balanceLog = {}
 	local balanceInProgress = false
 	
-	Balance = {}
-	function Balance.IsInProgress()
-		return balanceInProgress
-	end
-	
 	local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
 				balance.wins = balance.wins ~= nil and balance.wins or 0
 				balance.losses = balance.losses ~= nil and balance.losses or 0
@@ -20,6 +15,17 @@ if kDAKConfig and kDAKConfig.Balance then
 			end
 		)
 		
+	Balance = {}
+	function Balance.IsInProgress()
+		return balanceInProgress
+	end
+	function Balance.GetTotalGamesPlayed(client)
+		local steamId = TGNS.GetClientSteamId(client)
+		local data = pdr:Load(steamId)
+		local result = data.total
+		return result
+	end
+	
 	local addWinToBalance = function(balance)
 			balance.wins = balance.wins + 1
 			balance.total = balance.total + 1
