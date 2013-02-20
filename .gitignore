@@ -35,6 +35,9 @@
 !ns2/lua/plugins/config_tempadmin.lua
 !ns2/lua/plugins/plugin_tempadmin.lua
 
+!ns2/lua/plugins/config_greetings.lua
+!ns2/lua/plugins/plugin_greetings.lua
+
 !ns2/lua/plugins/config_stagedteamjoins.lua
 !ns2/lua/plugins/plugin_stagedteamjoins.lua
 
