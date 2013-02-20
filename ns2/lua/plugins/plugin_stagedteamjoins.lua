@@ -25,7 +25,7 @@ if kDAKConfig and kDAKConfig.StagedTeamJoins then
 		local cancel = false
 		local balanceIsInProgress = Balance and Balance.IsInProgress()
 		if not balanceIsInProgress then
-			if newTeamNumber ~= kTeamReadyRoom then
+			if TGNS.IsGameplayTeam(newTeamNumber) then
 				local atLeastOneSmIsOnTheServer = TGNS.Any(TGNS.GetPlayerList(), function(p) return TGNS.ClientAction(p, function(c) return TGNS.IsClientSM(c) end) end)
 				if atLeastOneSmIsOnTheServer then
 					local secondsRemainingBeforeAllMayJoin = math.floor(allMayJoinAt - Shared.GetTime())
