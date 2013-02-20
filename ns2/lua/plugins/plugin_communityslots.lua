@@ -120,7 +120,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
 				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
-				TGNS.IsPrimerOnlyClient(victimClient) then
+				if TGNS.IsPrimerOnlyClient(victimClient) then
 					TGNS.SendAdminConsole(string.format("Kicking %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
 				end
 			else
