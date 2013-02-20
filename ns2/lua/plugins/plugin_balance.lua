@@ -104,9 +104,9 @@ if kDAKConfig and kDAKConfig.Balance then
 			table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) > GetPlayerWinLossRatio(p2) end )
 			TGNS.ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
 			balanceLog = {}
-			local teamNumber
 			balanceInProgress = true
 			TGNS.DoFor(playerList, function(player)
+				local teamNumber = nil
 				local actionMessage
 				if TGNS.IsPlayerReadyRoom(player) then
 					local updatedPlayerList = TGNS.GetPlayerList()
