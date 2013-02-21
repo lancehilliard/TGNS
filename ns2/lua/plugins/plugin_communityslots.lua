@@ -120,14 +120,14 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
 				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
-				TGNS.SendAdminConsole(string.format("Kicking VICTIM %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
+				TGNS.SendAdminConsoles(string.format("Kicking VICTIM %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
 				return true
 			else
 				//if TGNS.IsClientSM(joiningClient) then
 				//	Log(string.format("No player kicked upon join of SM: ", TGNS.GetClientNameSteamIdCombo(joiningClient)))
 				//else
 					TGNS.KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
-					TGNS.SendAdminConsole(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
+					TGNS.SendAdminConsoles(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
 					return true
 				//end
 			end
