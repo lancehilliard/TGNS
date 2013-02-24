@@ -25,12 +25,23 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 		return result
 	end
 	
+	local function GetExistingTempAdminsCount(teamPlayers)
+		local existingTempAdmins = TGNS.GetMatchingClients(teamPlayers, function(c,p) return TGNS.IsClientTempAdmin(c) end)
+		local result = #existingTempAdmins
+		return result
+	end
+	
+	local function GetExistingAdminsCount(teamPlayers)
+		local existingAdmins = TGNS.GetMatchingClients(teamPlayers, function(c,p) return TGNS.IsClientAdmin(c) end)
+		local result = #existingAdmins
+		return result
+	end
+	
 	local function GetTempAdminCandidateClient(teamPlayers)
 		local result = nil
 		local teamNeedsAdmin = TGNS.GetLastMatchingClient(teamPlayers, TGNS.IsClientAdmin) == nil
 		if teamNeedsAdmin then
-			local existingTempAdmins = TGNS.GetMatchingClients(teamPlayers, function(c,p) return TGNS.IsClientTempAdmin(c) end)
-			if #existingTempAdmins == 0 then
+			if GetExistingTempAdminsCount(teamPlayers) == 0 then
 				result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p) return IsTempAdminEligible(c) end)
 			end
 		end
@@ -55,19 +66,20 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	end
 	DAKCreateServerAdminCommand("Console_sv_tempadmin", svTempAdmin, "Toggle opt in/out of Temp Admin responsibilities.", true)
 
-	
-	function AddTempAdminToClient(client)
+	local function AddTempAdminToClient(client)
 		AddSteamIDToGroup(TGNS.GetClientSteamId(client), "tempadmin_group")
 		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "You are Temp Admin. Apply exemplarily. Console: sv_help") end)
+		TGNS.UpdateAllScoreboards()
 	end
 	
-	function RemoveTempAdminFromClient(client)
+	local function RemoveTempAdminFromClient(client)
 		local steamId = TGNS.GetClientSteamId(client)
 		RemoveSteamIDFromGroup(steamId, "tempadmin_group")
 		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "You are no longer Temp Admin.") end)
+		TGNS.UpdateAllScoreboards()
 	end
 	
-	function EnsureTempAdminAmongPlayers(players)
+	local function EnsureTempAdminAmongPlayers(players)
 		local tempAdminCandidateClient = GetTempAdminCandidateClient(players)
 		
 		if tempAdminCandidateClient ~= nil then
@@ -81,7 +93,9 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 		local playerList = TGNS.GetPlayerList()
 		local marinePlayers = TGNS.GetMarinePlayers(playerList)
 		local alienPlayers = TGNS.GetAlienPlayers(playerList)
+		local readyRoomPlayers = TGNS.GetReadyRoomPlayers(playerList)
 
+		EnsureTempAdminAmongPlayers(readyRoomPlayers)
 		EnsureTempAdminAmongPlayers(marinePlayers)
 		EnsureTempAdminAmongPlayers(alienPlayers)
 	end
@@ -98,12 +112,19 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 	local function TempAdminOnTeamJoin(self, player, newTeamNumber, force)
 		local playerIsAdmin = TGNS.ClientAction(player, TGNS.IsClientAdmin)
 		local playerIsTempAdmin = TGNS.ClientAction(player, function(c) return TGNS.IsClientTempAdmin(c) end)
+		local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 		if playerIsAdmin then
-			local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 			RemoveTempAdmins(teamClients)
 		end
 		if playerIsTempAdmin then
-			TGNS.ClientAction(player, function(c) RemoveTempAdminFromClient(c) end)
+			local teamPlayers = TGNS.GetPlayers(teamClients)
+			local numberOfTempAdminsOnNewTeam = GetExistingTempAdminsCount(teamPlayers)
+			Shared.Message(tostring(numberOfTempAdminsOnNewTeam))
+			local numberOfAdminsOnNewTeam = GetExistingAdminsCount(teamPlayers)
+			Shared.Message(tostring(numberOfAdminsOnNewTeam))
+			if (numberOfTempAdminsOnNewTeam > 0 or numberOfAdminsOnNewTeam > 0) then
+				TGNS.ClientAction(player, RemoveTempAdminFromClient)
+			end
 		end
 	end
 	DAKRegisterEventHook("kDAKOnTeamJoin", TempAdminOnTeamJoin, 5)
