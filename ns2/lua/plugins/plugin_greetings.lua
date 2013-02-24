@@ -18,16 +18,16 @@ if kDAKConfig and kDAKConfig.Greetings then
 			if totalGames >= GAMES_TO_PLAY_BEFORE_GREETINGS and totalGames <= GAMES_TO_PLAY_BEFORE_NO_MORE_GREETINGS then
 				if totalGames >= GAMES_TO_PLAY_BEFORE_FORUM_REMINDERS then
 					TGNS.SendChatMessage(player, "Enjoying the server? Say hello at tacticalgamer.com/natural-selection", "Welcome")
-					TGNS.SendAdminChat(string.format("FORUM REMINDER sent to %s", playerName), "DEBUG")
+					//TGNS.SendAdminChat(string.format("FORUM REMINDER sent to %s", playerName), "DEBUG")
 				end
 				local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
-				DoFor(teamClients, function(c)
+				TGNS.DoFor(teamClients, function(c)
 					if not TGNS.IsClientStranger(c) then
 						local chatMessage = string.format("Welcome: %s (%s games)", playerName, totalGames)
 						TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage, "Greetings") end)
 					end
 				end)
-				TGNS.SendAdminChat(string.format("GREETING sent to team for %s", playerName), "DEBUG")
+				//TGNS.SendAdminChat(string.format("GREETING sent to team for %s", playerName), "DEBUG")
 			end
 		end
 		return cancel
