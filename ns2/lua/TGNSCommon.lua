@@ -381,6 +381,12 @@ function TGNS.GetLastMatchingClient(playerList, predicate)
 	return result
 end
 
+function TGNS.UpdateAllScoreboards()
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		p:SetScoreboardChanged(true)
+	end)
+end
+
 function TGNS.GetTeamClients(teamNumber, playerList)
 	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
 	local result = TGNS.GetMatchingClients(playerList, predicate)
@@ -392,8 +398,18 @@ function TGNS.GetMarineClients(playerList)
 	return result
 end
 
+function TGNS.GetReadyRoomClients(playerList)
+	local result = TGNS.GetTeamClients(kTeamReadyRoom, playerList)
+	return result
+end
+
 function TGNS.GetAlienClients(playerList)
 	local result = TGNS.GetTeamClients(kAlienTeamType, playerList)
+	return result
+end
+
+function TGNS.GetReadyRoomPlayers(playerList)
+	local result = TGNS.GetPlayers(TGNS.GetReadyRoomClients(playerList))
 	return result
 end
 
