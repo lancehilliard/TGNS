@@ -186,6 +186,7 @@ if kDAKConfig and kDAKConfig.WinOrLose then
 								table.insert(kWinOrLoseVoteArray[teamnumber].WinOrLoseVotes, clientID)
 							end						
 						else
+							TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s started a concede vote. Press X to Vote.", TGNS.GetPlayerName(player)))
 							chatMessage = string.sub(string.format("You have voted to concede."), 1, kMaxChatLength)
 							//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. kDAKConfig.DAKLoader.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							kWinOrLoseVoteArray[teamnumber].WinOrLoseRunning = Shared.GetTime()
