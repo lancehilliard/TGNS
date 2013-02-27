@@ -128,7 +128,7 @@ function TGNS.IsPlayerReadyRoom(player)
 end
 
 function TGNS.IsPlayerSpectator(player)
-	local result = player:GetTeamNumber() == kSpectatorIndex
+	local result = player:isa("Spectator")
 	return result
 end
 
