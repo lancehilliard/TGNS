@@ -3,6 +3,7 @@
 if kDAKConfig and kDAKConfig.CommunitySlots then
 	Script.Load("lua/TGNSCommon.lua")
 
+	local VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
 	local actionslog = { }
 	local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
 	local MESSAGE_PREFIX = "SLOTS"
@@ -10,8 +11,23 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	local victimBumpCounts = {}
 	local rejectBumpCounts = {}
 
+	//local function PrintAdmins()
+	//	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+	//		if TGNS.ClientAction(p, TGNS.IsClientAdmin) then
+	//			Shared.Message(tostring(TGNS.IsPlayerSpectator(p)))
+	//		end
+	//	end)
+	//	TGNS.ScheduleAction(1, PrintAdmins)
+	//end
+	//TGNS.ScheduleAction(1, PrintAdmins)
+	
 	local function IsTargetProtectedStranger(targetClient, playerList)
-		local result = TGNS.IsClientStranger(targetClient) and #TGNS.GetStrangersClients(playerList) <= kDAKConfig.CommunitySlots.kMinimumStrangers and #TGNS.GetPrimerOnlyClients(playerList) > 0
+		local result = TGNS.IsClientStranger(targetClient) and #TGNS.GetStrangersClients(playerList) <= kDAKConfig.CommunitySlots.kMinimumStrangers
+		return result
+	end
+	
+	local function IsTargetProtectedPrimerOnly(targetClient, playerList)
+		local result = TGNS.IsPrimerOnlyClient(targetClient) and #TGNS.GetPrimerOnlyClients(playerList) <= kDAKConfig.CommunitySlots.kMinimumPrimerOnlys
 		return result
 	end
 	
@@ -26,7 +42,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	end
 	
 	local function ServerIsFull(playerList)
-		local result = #playerList - 1 >= kDAKConfig.CommunitySlots.kMaximumSlots - kDAKConfig.CommunitySlots.kCommunitySlots
+		local result = #playerList >= kDAKConfig.CommunitySlots.kMaximumSlots - kDAKConfig.CommunitySlots.kCommunitySlots
 		return result
 	end
 	
@@ -40,11 +56,12 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		local targetIsSM = TGNS.IsClientSM(targetClient)
 		local targetIsCommander = TGNS.IsClientCommander(targetClient)
 		local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
+		local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
 		local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
 		local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
 		local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
 	
-		if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetAndJoiningArePrimerOnly or targetIsNotYetConnectedEnoughToBeConsideredBumpable
+		if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsNotYetConnectedEnoughToBeConsideredBumpable
 		then
 			return false
 		end
@@ -77,7 +94,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		result.strangerCount = #TGNS.GetStrangersClients(playerList)
 		result.primerOnlyCount = #TGNS.GetPrimerOnlyClients(playerList)
 		result.smCount = #TGNS.GetSmClients(playerList)
-		result.shortReport = string.format("T: %s%s J:%s%s %s %s %s", result.targetIsSM, result.targetHasSignedPrimer, result.joinerIsSM, result.joinerHasSignedPrimer, result.strangerCount, result.primerOnlyCount, result.smCount)
+		result.shortReport = string.format("T: %s%s J:%s%s ?:%s P:%s S:%s T:%s", result.targetIsSM, result.targetHasSignedPrimer, result.joinerIsSM, result.joinerHasSignedPrimer, result.strangerCount, result.primerOnlyCount, result.smCount, #playerList)
 		return result
 	end
 	
@@ -113,31 +130,42 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		AnnounceClientBumpToStrangers(targetClient)
 	end
 
+	local function GetFullyConnectedPlayers()
+		local allPlayers = TGNS.GetPlayerList()
+		local result = {}
+		TGNS.DoFor(allPlayers, function(p)
+			local client = TGNS.ClientAction(p, function(c) return c end)
+			if TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
+				table.insert(result, p)
+			end
+		end)
+		return result
+	end
+	
 	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
-		local playerList = TGNS.GetPlayerList()
+		local cancel = false
+		local playerList = GetFullyConnectedPlayers()
 		local nonSpecPlayers = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return not TGNS.IsPlayerSpectator(p) end))
+		Shared.Message("Checking if server is full with #playerList = " .. #playerList)
+		Shared.Message("Checking if server is full with #nonSpecPlayers = " .. #nonSpecPlayers)
 		if ServerIsFull(nonSpecPlayers) then
 			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
 				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
 				TGNS.SendAdminConsoles(string.format("Kicking VICTIM %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
-				return true
 			else
-				//if TGNS.IsClientSM(joiningClient) then
-				//	Log(string.format("No player kicked upon join of SM: ", TGNS.GetClientNameSteamIdCombo(joiningClient)))
-				//else
-					TGNS.KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
-					TGNS.SendAdminConsoles(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
-					return true
-				//end
+				TGNS.KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
+				TGNS.SendAdminConsoles(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
+				cancel = true
 			end
 		end
 		table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+		return cancel
 	end
 	local function CommunitySlotsOnClientDelayedConnectGreeter(client)
 		local chatMessage
 		if TGNS.IsClientSM(client) then
-			chatMessage = "Supporting Member! Thank you! Join the full server anytime!"
+			chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
 		elseif TGNS.HasClientSignedPrimer(client) then
 			chatMessage = string.format("TGNS Primer signer! Join the full server when %s+ strangers are playing!", kDAKConfig.CommunitySlots.kMinimumStrangers)
 		else
@@ -146,7 +174,7 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		TGNS.ConsolePrint(client, chatMessage)
 		TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, chatMessage) end)
 	end
-	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnect, 5)
+	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnect, VERY_HIGH_EVENT_HANDLER_PRIORITY)
 	DAKRegisterEventHook("kDAKOnClientDelayedConnect", CommunitySlotsOnClientDelayedConnectGreeter, 5)
 	
 	local function GetBumpCounts()
