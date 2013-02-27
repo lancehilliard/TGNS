@@ -11,16 +11,6 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	local victimBumpCounts = {}
 	local rejectBumpCounts = {}
 
-	//local function PrintAdmins()
-	//	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-	//		if TGNS.ClientAction(p, TGNS.IsClientAdmin) then
-	//			Shared.Message(tostring(TGNS.IsPlayerSpectator(p)))
-	//		end
-	//	end)
-	//	TGNS.ScheduleAction(1, PrintAdmins)
-	//end
-	//TGNS.ScheduleAction(1, PrintAdmins)
-	
 	local function IsTargetProtectedStranger(targetClient, playerList)
 		local result = TGNS.IsClientStranger(targetClient) and #TGNS.GetStrangersClients(playerList) <= kDAKConfig.CommunitySlots.kMinimumStrangers
 		return result
@@ -146,8 +136,8 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		local cancel = false
 		local playerList = GetFullyConnectedPlayers()
 		local nonSpecPlayers = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return not TGNS.IsPlayerSpectator(p) end))
-		Shared.Message("Checking if server is full with #playerList = " .. #playerList)
-		Shared.Message("Checking if server is full with #nonSpecPlayers = " .. #nonSpecPlayers)
+		TGNS.SendAdminConsoles("Checking if server is full with #playerList = " .. #playerList, "SLOTSDEBUG")
+		TGNS.SendAdminConsoles("Checking if server is full with #nonSpecPlayers = " .. #nonSpecPlayers, "SLOTSDEBUG")
 		if ServerIsFull(nonSpecPlayers) then
 			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
@@ -159,7 +149,9 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 				cancel = true
 			end
 		end
-		table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+		if not cancel then
+			table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+		end
 		return cancel
 	end
 	local function CommunitySlotsOnClientDelayedConnectGreeter(client)
