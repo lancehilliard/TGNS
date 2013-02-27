@@ -128,7 +128,7 @@ function TGNS.IsPlayerReadyRoom(player)
 end
 
 function TGNS.IsPlayerSpectator(player)
-	local result = player:isa("Spectator")
+	local result = player:isa("Spectator") and player:GetTeamNumber() == kSpectatorIndex
 	return result
 end
 
@@ -179,22 +179,34 @@ function TGNS.IsClientCommander(client)
 end
 
 function TGNS.HasClientSignedPrimer(client)
-	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hasprimersignature")
+	local result = false
+	if client ~= nil then
+		result = DAKGetClientCanRunCommand(client, "sv_hasprimersignature")
+	end
 	return result
 end
 
 function TGNS.IsClientAdmin(client)
-	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hasadmin")
+	local result = false
+	if client ~= nil then
+		result = DAKGetClientCanRunCommand(client, "sv_hasadmin")
+	end
 	return result
 end
 
 function TGNS.IsClientTempAdmin(client)
-	local result = not client:GetIsVirtual() and not TGNS.IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
+	local result = false
+	if client ~= nil then
+		result = not TGNS.IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
+	end
 	return result
 end
 
 function TGNS.IsClientSM(client)
-	local result = not client:GetIsVirtual() and DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
+	local result = false
+	if client ~= nil then
+		result = DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
+	end
 	return result
 end
 
