@@ -3,6 +3,15 @@
 TGNS = {}
 local scheduledActions = {}
 
+function TGNS.SetPlayerName(player, name)
+	// todo mlh replace with player:SetName(name) ??
+	Server.ClientCommand(player, string.format("name %s", name))
+end
+
+function TGNS.EndsWith(s, send)
+	return #s >= #send and s:find(send, #s-#send+1, true) and true or false
+end
+
 function TGNS.RespawnPlayer(player)
 	GetGamerules():RespawnPlayer(player)
 end
@@ -405,6 +414,12 @@ end
 
 function TGNS.GetTeamClients(teamNumber, playerList)
 	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
+	local result = TGNS.GetMatchingClients(playerList, predicate)
+	return result
+end
+
+function TGNS.GetSpectatorClients(playerList)
+	local predicate = function(client, player) return TGNS.IsPlayerSpectator(player) end
 	local result = TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
