@@ -3,6 +3,10 @@
 TGNS = {}
 local scheduledActions = {}
 
+function TGNS.RespawnPlayer(player)
+	GetGamerules():RespawnPlayer(player)
+end
+
 function TGNS.SendToRandomTeam(player)
 	local playerList = TGNS.GetPlayerList()
 	local marinesCount = #TGNS.GetMarineClients(playerList)
