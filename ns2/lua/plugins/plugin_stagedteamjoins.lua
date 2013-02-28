@@ -33,6 +33,7 @@ if kDAKConfig and kDAKConfig.StagedTeamJoins then
 						if not TGNS.ClientAction(player, TGNS.IsClientSM) then
 							local chatMessage = string.format("Supporting Members may join teams now. Wait %s seconds and try again.", secondsRemainingBeforeAllMayJoin)
 							TGNS.SendChatMessage(player, chatMessage, "TGNS")
+							TGNS.RespawnPlayer(player)
 							cancel = true
 						end
 					end
