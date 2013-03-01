@@ -119,9 +119,7 @@ if kDAKConfig and kDAKConfig.TempAdmin then
 		if playerIsTempAdmin then
 			local teamPlayers = TGNS.GetPlayers(teamClients)
 			local numberOfTempAdminsOnNewTeam = GetExistingTempAdminsCount(teamPlayers)
-			Shared.Message(tostring(numberOfTempAdminsOnNewTeam))
 			local numberOfAdminsOnNewTeam = GetExistingAdminsCount(teamPlayers)
-			Shared.Message(tostring(numberOfAdminsOnNewTeam))
 			if (numberOfTempAdminsOnNewTeam > 0 or numberOfAdminsOnNewTeam > 0) then
 				TGNS.ClientAction(player, RemoveTempAdminFromClient)
 			end
