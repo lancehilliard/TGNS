@@ -3,10 +3,8 @@
 TGNS = {}
 local scheduledActions = {}
 
-function TGNS.SetPlayerName(player, name)
-	// todo mlh replace with player:SetName(name) ??
-	Server.ClientCommand(player, string.format("name %s", name))
-end
+TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 2000
+TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
 
 function TGNS.EndsWith(s, send)
 	return #s >= #send and s:find(send, #s-#send+1, true) and true or false
@@ -320,7 +318,9 @@ end
 function TGNS.GetPlayerList()
 
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
-	table.sort(playerList, function(p1, p2) return p1:GetName() < p2:GetName() end)
+	table.sort(playerList, function(p1, p2) 
+		return (p1 == nil and "" or p1:GetName()) < (p2 == nil and "" or p2:GetName())
+	end)
 	return playerList
 
 end
