@@ -89,47 +89,39 @@ if kDAKConfig and kDAKConfig.Balance then
 		return result
 	end
 	
-	local function PrintBalanceLog(client)
+	local function PrintBalanceLog()
 		TGNS.DoFor(balanceLog, function(logline)
-			TGNS.ConsolePrint(client, logline, "BALANCE")
+			TGNS.SendAdminConsoles(logline, "BALANCE")
 		end)
 	end
 	
-	local function svBalance(client)
-		local gameState = GetGamerules():GetGameState()
-		local whenDescriptor
-		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
-			whenDescriptor = "JUST NOW"
-			local playerList = TGNS.GetPlayerList()
-			table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) > GetPlayerWinLossRatio(p2) end )
-			TGNS.ConsolePrint(client, "Win/Loss Ratios:", "BALANCE")
-			balanceLog = {}
-			balanceInProgress = true
-			TGNS.DoFor(playerList, function(player)
-				local teamNumber = nil
-				local actionMessage
-				if TGNS.IsPlayerReadyRoom(player) then
-					local updatedPlayerList = TGNS.GetPlayerList()
-					local marineClients = TGNS.GetMarineClients(updatedPlayerList)
-					local alienClients = TGNS.GetAlienClients(updatedPlayerList)
-					local marineAvg = GetWinLossAverage(marineClients)
-					local alienAvg = GetWinLossAverage(alienClients)
-					local marineCount = #marineClients
-					local alienCount = #alienClients
-					if marineAvg <= alienAvg then
-						teamNumber = marineCount <= alienCount and kMarineTeamType or kAlienTeamType
-					else
-						teamNumber = alienCount <= marineCount and kAlienTeamType or kMarineTeamType
-					end
-					actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
-				else
-					actionMessage = string.format("ALREADY on %s", TGNS.GetPlayerTeamName(player))
-				end
-				table.insert(balanceLog, string.format("%s: %s with %s = %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total, actionMessage))
-				if teamNumber ~= nil then
-					TGNS.SendToTeam(player, teamNumber)
-				end
-			end)
+	local function SendNextPlayer()
+		local playerList = TGNS.GetPlayerList()
+		table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) > GetPlayerWinLossRatio(p2) end )
+		local readyRoomClient = TGNS.GetLastMatchingClient(playerList, function(c,p) return TGNS.IsPlayerReadyRoom(p) end)
+		if readyRoomClient then
+			local player = TGNS.GetPlayer(readyRoomClient)
+			local teamNumber = nil
+			local actionMessage
+
+			local updatedPlayerList = TGNS.GetPlayerList()
+			local marineClients = TGNS.GetMarineClients(updatedPlayerList)
+			local alienClients = TGNS.GetAlienClients(updatedPlayerList)
+			local marineAvg = GetWinLossAverage(marineClients)
+			local alienAvg = GetWinLossAverage(alienClients)
+			local marineCount = #marineClients
+			local alienCount = #alienClients
+			if marineAvg <= alienAvg then
+				teamNumber = marineCount <= alienCount and kMarineTeamType or kAlienTeamType
+			else
+				teamNumber = alienCount <= marineCount and kAlienTeamType or kMarineTeamType
+			end
+			actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
+
+			table.insert(balanceLog, string.format("%s: %s with %s = %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total, actionMessage))
+			TGNS.SendToTeam(player, teamNumber)
+			TGNS.ScheduleAction(0.25, SendNextPlayer)
+		else
 			balanceInProgress = false
 			playerList = TGNS.GetPlayerList()
 			marineClients = TGNS.GetMarineClients(playerList)
@@ -138,12 +130,17 @@ if kDAKConfig and kDAKConfig.Balance then
 			alienAvg = GetWinLossAverage(alienClients)
 			local averagesReport = string.format("MarineAvg: %s | AlienAvg: %s", marineAvg, alienAvg)
 			table.insert(balanceLog, averagesReport)
-		else
-			whenDescriptor = "EARLIER"
+			TGNS.ScheduleAction(1, PrintBalanceLog)
 		end
-		if TGNS.IsClientAdmin(client) then
-			TGNS.ConsolePrint(client, string.format("%s:", whenDescriptor), "BALANCE")
-			TGNS.ScheduleAction(1, function() PrintBalanceLog(client) end)
+	end
+	
+	local function svBalance(client)
+		local gameState = GetGamerules():GetGameState()
+		local whenDescriptor
+		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
+			balanceLog = {}
+			balanceInProgress = true
+			SendNextPlayer()
 		end
 	end
 	DAKCreateServerAdminCommand("Console_sv_balance", svBalance, "Balances all players based on win/loss (percentage) record.")
