@@ -119,6 +119,7 @@ if kDAKConfig and kDAKConfig.Balance then
 			actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
 
 			table.insert(balanceLog, string.format("%s: %s with %s = %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total, actionMessage))
+			TGNS.SendAllChat("Teams are now being balanced using Win/Loss histories. - tacticalgamer.com", "BALANCE")
 			TGNS.SendToTeam(player, teamNumber)
 			TGNS.ScheduleAction(0.25, SendNextPlayer)
 		else
