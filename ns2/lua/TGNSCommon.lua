@@ -368,6 +368,11 @@ function TGNS.Has(elements, element)
 	return found
 end
 
+function TGNS.GetClient(player)
+	local result = Server.GetOwner(player)
+	return result
+end
+
 function TGNS.GetPlayer(client)
 	local result = client:GetControllingPlayer()
 	return result
