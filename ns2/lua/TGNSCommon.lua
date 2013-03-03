@@ -308,6 +308,12 @@ function TGNS.SendAdminChat(chatMessage, prefix)
 	)
 end
 
+function TGNS.SendAllChat(chatMessage, prefix)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		TGNS.SendChatMessage(p, chatMessage, prefix)
+	end)
+end
+
 function TGNS.SendTeamChat(teamNumber, chatMessage, prefix)
 	TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatMessage, prefix) end)
