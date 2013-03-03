@@ -6,6 +6,18 @@ local scheduledActions = {}
 TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 2000
 TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
 
+function TGNS.GetClientCommunityDesignationCharacter(client)
+	local result
+	if TGNS.IsClientSM(client) then
+		result = "S"
+	elseif TGNS.IsPrimerOnlyClient(client) then
+		result = "P"
+	else
+		result = "?"
+	end
+	return result
+end
+
 function TGNS.EndsWith(s, send)
 	return #s >= #send and s:find(send, #s-#send+1, true) and true or false
 end
