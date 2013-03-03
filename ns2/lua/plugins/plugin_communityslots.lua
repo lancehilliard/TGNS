@@ -132,6 +132,16 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		return result
 	end
 	
+	local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
+		local supportingMembersCount = #TGNS.GetSmClients(playerList)
+		local primerOnlysCount = #TGNS.GetPrimerOnlyClients(playerList)
+		local strangersCount = #TGNS.GetStrangersClients(playerList)
+		local clientName = TGNS.GetClientName(bumpedClient)
+		local communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
+		local result = string.format("Kicking %s %s> %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, supportingMembersCount, primerOnlysCount, strangersCount)
+		return result
+	end
+	
 	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
 		local cancel = false
 		local playerList = GetFullyConnectedPlayers()
@@ -141,11 +151,13 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		if ServerIsFull(nonSpecPlayers) then
 			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
 			if victimClient ~= nil then
+				TGNS.SendAdminConsoles(GetBumpSummary(playerList, victimClient, "VICTIM"), "SLOTSDEBUG")
 				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
-				TGNS.SendAdminConsoles(string.format("Kicking VICTIM %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
+				//TGNS.SendAdminConsoles(string.format("Kicking VICTIM %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
 			else
+				TGNS.SendAdminConsoles(GetBumpSummary(playerList, joiningClient, "JOINER"), "SLOTSDEBUG")
 				TGNS.KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
-				TGNS.SendAdminConsoles(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
+				//TGNS.SendAdminConsoles(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
 				cancel = true
 			end
 		end
