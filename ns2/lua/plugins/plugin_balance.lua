@@ -43,12 +43,12 @@ if kDAKConfig and kDAKConfig.Balance then
 			//Shared.Message(balance.steamId .. " LOSS")
 		end
 
-	local function GetWinLossRatio(balance)
+	local function GetWinLossRatio(player, balance)
 		local result
 		local totalGames = balance.losses + balance.wins
 		local notEnoughGamesToMatter = totalGames < 10
 		if notEnoughGamesToMatter then
-			result = .5
+			result = TGNS.PlayerIsRookie(player) and 0 or .5
 		else
 			result = balance.wins / totalGames
 		end
@@ -67,7 +67,7 @@ if kDAKConfig and kDAKConfig.Balance then
 	
 	local function GetPlayerWinLossRatio(player)
 		local balance = GetPlayerBalance(player)
-		local result = GetWinLossRatio(balance)
+		local result = GetWinLossRatio(player, balance)
 		return result
 	end
     
@@ -138,7 +138,7 @@ if kDAKConfig and kDAKConfig.Balance then
 		local gameState = GetGamerules():GetGameState()
 		local whenDescriptor
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
-			TGNS.SendAllChat("Teams are being balanced using local Win/Loss histories. - tacticalgamer.com", "BALANCE")
+			TGNS.SendAllChat("Teams are being balanced using TG Win/Loss histories. - tacticalgamer.com", "BALANCE")
 			balanceLog = {}
 			balanceInProgress = true
 			SendNextPlayer()
