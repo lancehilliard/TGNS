@@ -4,7 +4,7 @@ if kDAKConfig and kDAKConfig.StagedTeamJoins then
 	Script.Load("lua/TGNSCommon.lua")
 
 	local FIRSTCLIENT_TIME_BEFORE_ALLJOIN = 30
-	local GAMEEND_TIME_BEFORE_ALLJOIN = 18
+	local GAMEEND_TIME_BEFORE_ALLJOIN = 23
 	local allMayJoinAt = 0
 	local firstClientProcessed = false
 
