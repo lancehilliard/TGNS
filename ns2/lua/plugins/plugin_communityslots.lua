@@ -120,12 +120,12 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		AnnounceClientBumpToStrangers(targetClient)
 	end
 
-	local function GetFullyConnectedPlayers()
+	local function GetFullyConnectedPlayers(clientToExclude)
 		local allPlayers = TGNS.GetPlayerList()
 		local result = {}
 		TGNS.DoFor(allPlayers, function(p)
 			local client = TGNS.ClientAction(p, function(c) return c end)
-			if TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
+			if client ~= clientToExclude and TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
 				table.insert(result, p)
 			end
 		end)
@@ -141,29 +141,31 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 		local result = string.format("Kicking %s %s> %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, supportingMembersCount, primerOnlysCount, strangersCount)
 		return result
 	end
-	
-	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
-		local cancel = false
-		local playerList = GetFullyConnectedPlayers()
+
+	local function IsClientBumped(client)
+		local result = false
+		local playerList = GetFullyConnectedPlayers(client)
 		local nonSpecPlayers = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return not TGNS.IsPlayerSpectator(p) end))
-		TGNS.SendAdminConsoles("Checking if server is full with #playerList = " .. #playerList, "SLOTSDEBUG")
-		TGNS.SendAdminConsoles("Checking if server is full with #nonSpecPlayers = " .. #nonSpecPlayers, "SLOTSDEBUG")
 		if ServerIsFull(nonSpecPlayers) then
-			local victimClient = FindVictimClient(joiningClient, nonSpecPlayers)
+			local victimClient = FindVictimClient(client, nonSpecPlayers)
 			if victimClient ~= nil then
 				TGNS.SendAdminConsoles(GetBumpSummary(playerList, victimClient, "VICTIM"), "SLOTSDEBUG")
-				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
-				//TGNS.SendAdminConsoles(string.format("Kicking VICTIM %s with %s strangers present.", TGNS.GetClientName(victimClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
+				TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
 			else
-				TGNS.SendAdminConsoles(GetBumpSummary(playerList, joiningClient, "JOINER"), "SLOTSDEBUG")
-				TGNS.KickClient(joiningClient, GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
-				//TGNS.SendAdminConsoles(string.format("Kicking JOINER %s with %s strangers present.", TGNS.GetClientName(joiningClient), #TGNS.GetStrangersClients(playerList)), "SLOTSDEBUG")
-				cancel = true
+				TGNS.SendAdminConsoles(GetBumpSummary(playerList, client, "JOINER"), "SLOTSDEBUG")
+				TGNS.KickClient(client, GetBumpMessage(client), function(c,p) onPreJoinerKick(c,p,playerList) end)
+				result = true
 			end
 		end
-		if not cancel then
-			table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+		if not result then
+			table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
 		end
+		return result
+	end
+	
+	local function CommunitySlotsOnClientDelayedConnect(joiningClient)
+		TGNS.SendAdminConsoles(string.format("SERVERJOINED: %s", TGNS.GetClientName(joiningClient)), "SLOTSDEBUG")
+		local cancel = IsClientBumped(joiningClient)
 		return cancel
 	end
 	local function CommunitySlotsOnClientDelayedConnectGreeter(client)
@@ -234,6 +236,13 @@ if kDAKConfig and kDAKConfig.CommunitySlots then
 	end
 	DAKCreateServerAdminCommand("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 	
+	local function CommunitySlotsOnTeamJoin(self, player, newTeamNumber, force)
+		TGNS.SendAdminConsoles(string.format("TEAMJOINING: %s", TGNS.GetPlayerName(player)), "SLOTSDEBUG")
+		local joiningClient = TGNS.GetClient(player)
+		local cancel = IsClientBumped(joiningClient)
+		return cancel
+	end
+	DAKRegisterEventHook("kDAKOnTeamJoin", CommunitySlotsOnTeamJoin, 5)
 end
 
 Shared.Message("CommunitySlots Loading Complete")
