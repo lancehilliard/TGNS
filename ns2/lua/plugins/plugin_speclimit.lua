@@ -6,7 +6,7 @@ if kDAKConfig and kDAKConfig.SpecLimit then
 	local allowedSpectatorSteamIds = {}
 	local NAME_REMINDER_INTERVAL_IN_SECONDS = 400
 	local NAME_REMINDER_MESSAGE = "Remember to remove '-spectate' from your name before reconnecting."
-	local DISCONNECT_REASON = "No spectator slots open. You are being disconnected."
+	local DISCONNECT_REASON = "No Spectator slots open. You are being disconnected."
 	
 	local function RemindSpectatorsToRemoveSpecFromName()
 		TGNS.DoFor(TGNS.GetSpectatorClients(), function(c)
@@ -69,9 +69,17 @@ if kDAKConfig and kDAKConfig.SpecLimit then
 				local steamId = TGNS.GetClientSteamId(client)
 				AddSteamIDToGroup(TGNS.GetClientSteamId(client), "spectator_group")
 			end
-		elseif TGNS.IsPlayerSpectator(player) and not playerIsAdmin then
-			TGNS.SendChatMessage(player, "Reconnect to leave spectator.")
-			cancel = true
+		elseif TGNS.IsPlayerSpectator(player) then
+			if playerIsAdmin then
+				local playerName = TGNS.GetPlayerName(player)
+				if TGNS.EndsWith(playerName, "-spectate") then
+					TGNS.SendChatMessage(player, "Admins must remove -spectate from name to leave Spectator.", "SPECJOIN")
+					cancel = true
+				end
+			else
+				TGNS.SendChatMessage(player, "Reconnect to leave Spectator.", "SPECJOIN")
+				cancel = true
+			end
 		end
 		return cancel
 	end
