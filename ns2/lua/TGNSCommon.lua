@@ -6,6 +6,11 @@ local scheduledActions = {}
 TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 2000
 TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
 
+function TGNS.PlayerIsRookie(player)
+	local result = player:GetIsRookie()
+	return result
+end
+
 function TGNS.GetClientCommunityDesignationCharacter(client)
 	local result
 	if TGNS.IsClientSM(client) then
