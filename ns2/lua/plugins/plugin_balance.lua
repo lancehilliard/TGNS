@@ -119,7 +119,6 @@ if kDAKConfig and kDAKConfig.Balance then
 			actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
 
 			table.insert(balanceLog, string.format("%s: %s with %s = %s", player:GetName(), GetPlayerWinLossRatio(player), GetPlayerBalance(player).total, actionMessage))
-			TGNS.SendAllChat("Teams are now being balanced using Win/Loss histories. - tacticalgamer.com", "BALANCE")
 			TGNS.SendToTeam(player, teamNumber)
 			TGNS.ScheduleAction(0.25, SendNextPlayer)
 		else
@@ -139,6 +138,7 @@ if kDAKConfig and kDAKConfig.Balance then
 		local gameState = GetGamerules():GetGameState()
 		local whenDescriptor
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
+			TGNS.SendAllChat("Teams are being balanced using local Win/Loss histories. - tacticalgamer.com", "BALANCE")
 			balanceLog = {}
 			balanceInProgress = true
 			SendNextPlayer()
