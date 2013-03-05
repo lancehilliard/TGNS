@@ -4,14 +4,15 @@ if kDAKConfig and kDAKConfig.SpecLimit then
 	Script.Load("lua/TGNSCommon.lua")
 	
 	local allowedSpectatorSteamIds = {}
+	local NAME_PREFIX = "spec-"
 	local NAME_REMINDER_INTERVAL_IN_SECONDS = 400
-	local NAME_REMINDER_MESSAGE = "Remember to remove '-spectate' from your name before reconnecting."
+	local NAME_REMINDER_MESSAGE = "Remember to remove '" .. NAME_PREFIX .. "' from your name before reconnecting."
 	local DISCONNECT_REASON = "No Spectator slots open. You are being disconnected."
 	
 	local function RemindSpectatorsToRemoveSpecFromName()
 		TGNS.DoFor(TGNS.GetSpectatorClients(), function(c)
 			local clientName = TGNS.GetClientName(c)
-			if TGNS.EndsWith(clientName, "-spectate") then
+			if TGNS.StartsWith(clientName, NAME_PREFIX) then
 				TGNS.PlayerAction(c, function(p)
 					TGNS.SendChatMessage(p, NAME_REMINDER_MESSAGE, "SPECJOIN")
 				end)
@@ -30,7 +31,7 @@ if kDAKConfig and kDAKConfig.SpecLimit then
 		table.remove(allowedSpectatorSteamIds, steamId)
 		if TGNS.IsClientSM(client) then
 			local clientName = TGNS.GetClientName(client)
-			if TGNS.EndsWith(clientName, "-spectate") then
+			if TGNS.StartsWith(clientName, NAME_PREFIX) then
 				local steamId = TGNS.GetClientSteamId(client)
 				if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < 4 or TGNS.IsClientAdmin(client) then
 					table.insert(allowedSpectatorSteamIds, steamId)
@@ -72,8 +73,8 @@ if kDAKConfig and kDAKConfig.SpecLimit then
 		elseif TGNS.IsPlayerSpectator(player) then
 			if playerIsAdmin then
 				local playerName = TGNS.GetPlayerName(player)
-				if TGNS.EndsWith(playerName, "-spectate") then
-					TGNS.SendChatMessage(player, "Admins must remove -spectate from name to leave Spectator.", "SPECJOIN")
+				if TGNS.StartsWith(playerName, NAME_PREFIX) then
+					TGNS.SendChatMessage(player, "Admins must remove " .. NAME_PREFIX .. " from name to leave Spectator.", "SPECJOIN")
 					cancel = true
 				end
 			else
