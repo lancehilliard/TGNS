@@ -6,6 +6,11 @@ local scheduledActions = {}
 TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 2000
 TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
 
+function TGNS.HasNonEmptyValue(stringValue)
+	local result = stringValue ~= nil and stringValue ~= ""
+	return result
+end
+
 function TGNS.PlayerIsRookie(player)
 	local result = player:GetIsRookie()
 	return result
