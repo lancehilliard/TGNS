@@ -4,24 +4,17 @@ Script.Load("lua/GUIScript.lua")
 
 class 'GUIMenuBase' (GUIScript)
 
-local kScale = 1.2
-
 GUIMenuBase.kFontName = "fonts/AgencyFB_medium.fnt"
 GUIMenuBase.kFontScale = GUIScale(Vector(1,1,0)) * 0.7
-
-GUIMenuBase.kBgSize = GUIScale(Vector(230, 50, 0)) * kScale
-
-GUIMenuBase.kTextYOffset = GUIScale(6) * kScale
-GUIMenuBase.kTextYIncrement = GUIScale(2) * kScale
-GUIMenuBase.kTextXOffset = GUIScale(10) * kScale
-GUIMenuBase.kDescriptionTextXOffset = GUIScale(15) * kScale
-
-GUIMenuBase.kUpdateLifetime = 5
-
-GUIMenuBase.kBgPosition = Vector(GUIMenuBase.kBgSize.x * -.5, GUIScale(-150) * kScale, 0)
+GUIMenuBase.kBgSize = GUIScale(Vector(450, 150, 0))
+GUIMenuBase.kTextYOffset = GUIScale(10)
+GUIMenuBase.kTextYIncrement = GUIScale(5)
+GUIMenuBase.kTextXOffset = GUIScale(0)
+GUIMenuBase.kDescriptionTextXOffset = GUIScale(15)
+GUIMenuBase.kUpdateLifetime = 10
+GUIMenuBase.kBgPosition = Vector(GUIMenuBase.kBgSize.x, GUIMenuBase.kBgSize.y, 0)
 
 local kBackgroundPixelCoords = { 0, 0, 230, 50 }
-local kForegroundPixelCoords = { 0, 50, 230, 100 }
 
 local function OnCommandMenuUpdate(MenuBaseUpdateMessage)
 	local GUIMenuBase = GetGUIManager():GetGUIScriptSingle("gui/GUIMenuBase")
@@ -186,11 +179,29 @@ function GUIMenuBase:Initialize()
 	self.mainmenu:SetIsVisible(false)
 	self.lastupdate = nil
 	self.lastupdatetime = 0
-	self.menuvisible = false
 end
 
 function GUIMenuBase:MenuUpdate(MenuBaseUpdateMessage)
-	self.lastupdate = MenuBaseUpdateMessage
+	if MenuBaseUpdateMessage == nil then
+		self:OnClose()
+	else
+		self.headerText:SetText(MenuBaseUpdateMessage.header)
+		self.option1text:SetText(MenuBaseUpdateMessage.option1)
+		self.option2text:SetText(MenuBaseUpdateMessage.option2)
+		self.option3text:SetText(MenuBaseUpdateMessage.option3)
+		self.option4text:SetText(MenuBaseUpdateMessage.option4)
+		self.option5text:SetText(MenuBaseUpdateMessage.option5)
+		self.option1desctext:SetText(MenuBaseUpdateMessage.option1desc)
+		self.option2desctext:SetText(MenuBaseUpdateMessage.option2desc)
+		self.option3desctext:SetText(MenuBaseUpdateMessage.option3desc)
+		self.option4desctext:SetText(MenuBaseUpdateMessage.option4desc)
+		self.option5desctext:SetText(MenuBaseUpdateMessage.option5desc)
+		self.footerText:SetText(MenuBaseUpdateMessage.footer)
+		self.lastupdatetime = MenuBaseUpdateMessage.menutime
+		self.lastupdate = MenuBaseUpdateMessage
+		Print(ToString(self.lastupdatetime))
+		self:DisplayUpdate()
+	end
 end
 
 function GUIMenuBase:Uninitialize()
@@ -202,46 +213,29 @@ end
 
 function GUIMenuBase:DisplayUpdate()
     if self.lastupdate ~= nil then
-		self.menuvisible = true
-        self.mainmenu:SetIsVisible(self.menuvisible)
+        self.mainmenu:SetIsVisible(true)
+		Print("Displayed")
     end
 end
 
 function GUIMenuBase:OnClose()
-	self.menuvisible = false
-	self.mainmenu:SetIsVisible(self.menuvisible)
+	self.mainmenu:SetIsVisible(false)
+	Print("Hidden")
 	self.lastupdate = nil
 end
 
 function GUIMenuBase:Update(deltaTime)
-	if self.lastupdate ~= nil then
-		if self.lastupdate.menutime < Shared.GetTime() + GUIMenuBase.kUpdateLifetime then
-			self:OnClose()
-		else
-			if self.lastupdate.menutime > self.lastupdatetime then
-				self.headerText:SetText(self.lastupdate.header)
-				self.option1text:SetText(self.lastupdate.option1)
-				self.option2text:SetText(self.lastupdate.option2)
-				self.option3text:SetText(self.lastupdate.option3)
-				self.option4text:SetText(self.lastupdate.option4)
-				self.option5text:SetText(self.lastupdate.option5)
-				self.option1desctext:SetText(self.lastupdate.option1desc)
-				self.option2desctext:SetText(self.lastupdate.option2desc)
-				self.option3desctext:SetText(self.lastupdate.option3desc)
-				self.option4desctext:SetText(self.lastupdate.option4desc)
-				self.option5desctext:SetText(self.lastupdate.option5desc)
-				self.footerText:SetText(self.lastupdate.footer)
-				self.lastupdatetime = self.lastupdate.menutime
-				Print(ToString(self.lastupdatetime))
-				self:DisplayUpdate()
-			end
-		end
+	if self.lastupdate ~= nil and self.lastupdate.menutime + GUIMenuBase.kUpdateLifetime < Shared.GetTime() then
+		self:OnClose()
 	end
-	
 end
 
 function GUIMenuBase:OverrideInput(input)
-
+	
+	Print("Override Test")
+	if self.lastupdate ~= nil then
+		Print(ToString(self.lastupdate.inputallowed))
+	end
 	if self.lastupdate ~= nil and self.lastupdate.inputallowed then
 		local weaponSwitchCommands = { Move.Weapon1, Move.Weapon2, Move.Weapon3, Move.Weapon4, Move.Weapon5 }
 		for index, weaponSwitchCommand in ipairs(weaponSwitchCommands) do

@@ -5,6 +5,66 @@ local scheduledActions = {}
 
 TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 2000
 TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
+TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
+TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
+
+function TGNS.IsTournamentMode()
+	local result = DAK:GetTournamentMode()
+	return result
+end
+
+function TGNS.AddSteamIDToGroup(steamId, groupName)
+	DAK:AddSteamIDToGroup(steamId, groupName)
+end
+
+function TGNS.RemoveSteamIDFromGroup(steamId, groupName)
+	DAK:RemoveSteamIDFromGroup(steamId, groupName)
+end
+
+function TGNS.EnhancedLog(message)
+	DAK:ExecutePluginGlobalFunction("enhancedlogging", EnhancedLogMessage, message)
+end
+
+function TGNS.VerifyClient(client)
+	local result = DAK:VerifyClient(client)
+	return result
+end
+
+function TGNS.ClientIsInGroup(client, groupName)
+	local result = DAK:GetClientIsInGroup(client, groupName)
+	return result
+end
+
+function TGNS.IsPlayerAFK(player)
+	local result = DAK:IsPlayerAFK(player)
+	return result
+end
+
+function TGNS.IsPluginEnabled(pluginName)
+	local result = DAK:IsPluginEnabled(pluginName)
+	return result
+end
+
+function TGNS.ClientCanRunCommand(client, command)
+	local result = DAK:GetClientCanRunCommand(client, command)
+	return result
+end
+
+function TGNS.RegisterPluginConfig(pluginName, pluginVersion, defaultConfig, defaultLanguageStrings)
+	defaultConfig = defaultConfig ~= nil and defaultConfig or {}
+	defaultLanguageStrings = defaultLanguageStrings ~= nil and defaultLanguageStrings or {}
+	DAK.revisions[pluginName] = pluginVersion
+	DAK:RegisterEventHook("PluginDefaultConfigs", {PluginName = pluginName, DefaultConfig = function() return defaultConfig end })
+	DAK:RegisterEventHook("PluginDefaultLanguageDefinitions", function() return defaultLanguageStrings end)
+end
+
+function TGNS.RegisterCommandHook(command, handler, helpText, availableToAllPlayers)
+	DAK:CreateServerAdminCommand(command, handler, helpText, availableToAllPlayers)
+end
+
+function TGNS.RegisterEventHook(eventName, handler, priority)
+	DAK:RegisterEventHook(eventName, handler, priority ~= nil and priority or TGNS.NORMAL_EVENT_HANDLER_PRIORITY)
+end
 
 function TGNS.HasNonEmptyValue(stringValue)
 	local result = stringValue ~= nil and stringValue ~= ""
@@ -123,7 +183,7 @@ end
 local function CommonOnServerUpdate(deltatime)
 	ProcessScheduledActions()
 end
-DAKRegisterEventHook("kDAKOnServerUpdate", CommonOnServerUpdate, 5)
+TGNS.RegisterEventHook("OnServerUpdate", CommonOnServerUpdate)
 
 function TGNS.PlayerIsOnTeam(player, team)
 	local result = player:GetTeam() == team
@@ -182,8 +242,10 @@ end
 function TGNS.DoFor(elements, elementAction)
 	if elements ~= nil then
 		for i = 1, #elements, 1 do
-			if elementAction(elements[i]) then
-				break
+			if elements[i] ~= nil then
+				if elementAction(elements[i]) then
+					break
+				end
 			end
 		end
 	end
@@ -218,7 +280,7 @@ end
 function TGNS.HasClientSignedPrimer(client)
 	local result = false
 	if client ~= nil then
-		result = DAKGetClientCanRunCommand(client, "sv_hasprimersignature")
+		result = TGNS.ClientCanRunCommand(client, "sv_hasprimersignature")
 	end
 	return result
 end
@@ -226,7 +288,7 @@ end
 function TGNS.IsClientAdmin(client)
 	local result = false
 	if client ~= nil then
-		result = DAKGetClientCanRunCommand(client, "sv_hasadmin")
+		result = TGNS.ClientCanRunCommand(client, "sv_hasadmin")
 	end
 	return result
 end
@@ -234,7 +296,7 @@ end
 function TGNS.IsClientTempAdmin(client)
 	local result = false
 	if client ~= nil then
-		result = not TGNS.IsClientAdmin(client) and DAKGetClientCanRunCommand(client, "sv_istempadmin")
+		result = not TGNS.IsClientAdmin(client) and TGNS.ClientCanRunCommand(client, "sv_istempadmin")
 	end
 	return result
 end
@@ -242,7 +304,7 @@ end
 function TGNS.IsClientSM(client)
 	local result = false
 	if client ~= nil then
-		result = DAKGetClientCanRunCommand(client, "sv_hassupportingmembership")
+		result = TGNS.ClientCanRunCommand(client, "sv_hassupportingmembership")
 	end
 	return result
 end
@@ -308,7 +370,7 @@ end
 function TGNS.SendChatMessage(player, chatMessage, prefix)
 	if player ~= nil then
 		if prefix == nil or prefix == "" then
-			prefix = "PM - " .. kDAKConfig.DAKLoader.MessageSender
+			prefix = "PM - " .. DAK.config.language.MessageSender
 		end
 		chatMessage = string.sub(chatMessage, 1, kMaxChatLength)
 		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, prefix, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
@@ -597,15 +659,14 @@ function TGNS.GetPlayerMatching(id, team)
 
 	local idNum = tonumber(id)
 	if idNum then
-		// note: using DAK's GetPlayerMatchingGameId
-		return GetPlayerMatchingGameId(idNum, team) or TGNS.GetPlayerMatchingSteamId(idNum, team)
+		return DAK:GetPlayerMatchingGameId(idNum, team) or TGNS.GetPlayerMatchingSteamId(idNum, team)
 	elseif type(id) == "string" then
 		return TGNS.GetPlayerMatchingName(id, team)
 	end
 
 end
 
-if kDAKConfig and kDAKConfig.DAKLoader then
+if DAK.config and DAK.config.loader then
 
 	// Returns:	builtChatMessage - a ChatMessage object
 	//			consoleChatMessage - a similarly formed string for printing to the console
@@ -615,10 +676,10 @@ if kDAKConfig and kDAKConfig.DAKLoader then
 			if srcPlayer then
 				srcName = srcPlayer:GetName()
 			else
-				srcName = kDAKConfig.DAKLoader.MessageSender
+				srcName = DAK.config.language.MessageSender
 			end
 		else
-			srcName = kDAKConfig.DAKLoader.MessageSender
+			srcName = DAK.config.language.MessageSender
 		end
 
 		if showCommand then
@@ -637,7 +698,7 @@ if kDAKConfig and kDAKConfig.DAKLoader then
 		for _, player in pairs(TGNS.GetPlayerList()) do
 			local client = Server.GetOwner(player)
 			if client ~= nil then
-				if DAKGetClientCanRunCommand(client, command) or (selfIfNoAccess and client == srcClient) then
+				if TGNS.ClientCanRunCommand(client, command) or (selfIfNoAccess and client == srcClient) then
 					Server.SendNetworkMessage(player, "Chat", builtChatMessage, true)
 					ServerAdminPrint(client, consoleChatMessage)
 				end
@@ -654,14 +715,14 @@ kTGNSNetworkMessageHooks = {}
 
 function TGNS.RegisterNetworkMessageHook(messageName, func, priority)
 	local eventName = "kTGNSOn" .. messageName
-	DAKRegisterEventHook(eventName , func, priority)
+	TGNS.RegisterEventHook(eventName , func, priority)
 end
 
 local originalOnNetworkMessage = {}
 
 local function onNetworkMessage(messageName, ...)
 	local eventName = "kTGNSOn" .. messageName
-	if not DAKExecuteEventHooks(eventName, ...) then
+	if not DAK:ExecuteEventHooks(eventName, ...) then
 		originalOnNetworkMessage[messageName](...)
 	end
 end
