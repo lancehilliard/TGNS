@@ -28,8 +28,12 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 	return result
 end
 
-function TGNS.EndsWith(s, send)
-	return #s >= #send and s:find(send, #s-#send+1, true) and true or false
+function TGNS.StartsWith(s,part)
+   return string.sub(s,1,string.len(part))==part
+end
+
+function TGNS.EndsWith(s, part)
+	return #s >= #part and s:find(part, #s-#part+1, true) and true or false
 end
 
 function TGNS.RespawnPlayer(player)
