@@ -82,3 +82,19 @@ local function SpecLimitOnTeamJoin(self, player, newTeamNumber, force)
 	return cancel
 end
 TGNS.RegisterEventHook("OnTeamJoin", SpecLimitOnTeamJoin)
+
+local function onChatClient(client, networkMessage)
+	local cancel = false
+	local teamOnly = networkMessage.teamOnly
+	local message = StringTrim(networkMessage.message)
+	if not teamOnly then
+		TGNS.PlayerAction(client, function(p)
+			if TGNS.IsPlayerSpectator(p) and not TGNS.IsClientAdmin(client) then
+				TGNS.SendChatMessage(p, "Spectators may chat only to other Spectators.")
+				cancel = true
+			end
+		end)
+	end
+	return cancel
+end
+TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient, 5)
