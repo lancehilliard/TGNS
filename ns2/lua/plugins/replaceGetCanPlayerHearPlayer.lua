@@ -4,7 +4,7 @@ if DAK.config.loader and DAK.config.loader.GamerulesClassName then
 
 			local canHear = false
 			
-			// Check if the listerner has the speaker muted.
+			// Check if the listener has the speaker muted.
 			if listenerPlayer:GetClientMuted(speakerPlayer:GetClientIndex()) then
 				return false
 			end
@@ -23,8 +23,8 @@ if DAK.config.loader and DAK.config.loader.GamerulesClassName then
 				canHear = true
 			end
 			
-			// If we're spectating, we can hear any player not in the ready room
-			if listenerPlayer:GetTeamNumber() == kSpectatorIndex and speakerPlayer:GetTeamNumber() ~= kTeamReadyRoom then
+			// If we're spectating, we can hear any player
+			if listenerPlayer:GetTeamNumber() == kSpectatorIndex then
 				canHear = true
 			end
 			
