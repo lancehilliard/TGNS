@@ -330,7 +330,9 @@ end
 
 function TGNS.ClientAction(player, action)
 	local client = Server.GetOwner(player)
-	return action(client)
+	if client then
+		return action(client)
+	end
 end
 
 function TGNS.ConsolePrint(client, message, prefix)
