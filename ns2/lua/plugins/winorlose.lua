@@ -55,7 +55,7 @@ local function UpdateWinOrLoseVotes()
 		else
 			if (math.fmod(kCountdownTimeRemaining, DAK.config.winorlose.kWinOrLoseWarningInterval) == 0 or kCountdownTimeRemaining <= 5) then
 				local teamDescription = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and "Marine" or "Alien"
-				chatMessage = string.sub(string.format("WinOrLose! The %s team is %s seconds away from winning by default!", teamDescription, kCountdownTimeRemaining), 1, kMaxChatLength)
+				chatMessage = string.sub(string.format("WinOrLose! %s units cannot attack. Game ends in %s seconds. Hurry!", teamDescription, kCountdownTimeRemaining), 1, kMaxChatLength)
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 			end
 			kCountdownTimeRemaining = kCountdownTimeRemaining - 1
