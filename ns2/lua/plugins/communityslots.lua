@@ -47,7 +47,7 @@ local function IsTargetBumpable(targetClient, playerList, joiningClient)
 	local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
 	local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
 
-	if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsNotYetConnectedEnoughToBeConsideredBumpable
+	if joinerIsStranger or targetIsSM or targetIsCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable
 	then
 		return false
 	end
