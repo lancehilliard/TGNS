@@ -14,6 +14,11 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 7
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 9
 
+function TGNS.DestroyAllEntities(className, teamNumber)
+	local entities = GetEntitiesForTeam(className, teamNumber)
+	TGNS.DoFor(entities, function(s) DestroyEntity(s) end)
+end
+
 function TGNS.IsTournamentMode()
 	local result = DAK:GetTournamentMode()
 	return result
