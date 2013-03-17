@@ -5,6 +5,7 @@ local kWinOrLoseTeamCount = 2
 local kTimeAtWhichWinOrLoseVoteSucceeded = 0
 local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 local kCountdownTimeRemaining = 0
+local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra" }
 
 local originalGetCanAttack
 
@@ -49,14 +50,16 @@ local function UpdateWinOrLoseVotes()
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 		if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > DAK.config.winorlose.kWinOrLoseNoAttackDuration then
 			Server.SendNetworkMessage("Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, "WinOrLose! On to the next game!"), true)
-			local commandStructures = GetEntitiesForTeam("CommandStructure", kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and kAlienTeamType or kMarineTeamType)
-			TGNS.DoFor(commandStructures, function(s) DestroyEntity(s) end)
+			TGNS.DestroyAllEntities("CommandStructure", kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and kAlienTeamType or kMarineTeamType)
 			kTimeAtWhichWinOrLoseVoteSucceeded = 0
 		else
 			if (math.fmod(kCountdownTimeRemaining, DAK.config.winorlose.kWinOrLoseWarningInterval) == 0 or kCountdownTimeRemaining <= 5) then
 				local teamDescription = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and "Marine" or "Alien"
 				chatMessage = string.sub(string.format("WinOrLose! %s units cannot attack. Game ends in %s seconds. Hurry!", teamDescription, kCountdownTimeRemaining), 1, kMaxChatLength)
 				Server.SendNetworkMessage("Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
+					TGNS.DestroyAllEntities(className, kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber())
+				end)
 			end
 			kCountdownTimeRemaining = kCountdownTimeRemaining - 1
 		end
