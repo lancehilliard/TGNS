@@ -5,7 +5,7 @@ local kWinOrLoseTeamCount = 2
 local kTimeAtWhichWinOrLoseVoteSucceeded = 0
 local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 local kCountdownTimeRemaining = 0
-local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra" }
+local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag" }
 
 local originalGetCanAttack
 
