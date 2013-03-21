@@ -3,16 +3,19 @@
 TGNS = {}
 local scheduledActions = {}
 
-//TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 2000
-//TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 1000
-//TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
-//TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
-
 TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 1
 TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 3
 TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 7
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 9
+
+function TGNS.RemoveAllMatching(elements, element)
+	for r = #elements, 1, -1 do
+		if elements[r] == element then
+			table.remove(elements, r)
+		end
+	end
+end
 
 function TGNS.DestroyAllEntities(className, teamNumber)
 	local entities = GetEntitiesForTeam(className, teamNumber)
