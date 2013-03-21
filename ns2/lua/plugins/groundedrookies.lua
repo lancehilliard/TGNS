@@ -4,10 +4,11 @@ local notifiedPlayerIds = {}
 
 local originalNS2GRGetPlayerBannedFromCommand = Class_ReplaceMethod(DAK.config.loader.GamerulesClassName, "GetPlayerBannedFromCommand", function(self, playerId)
 	local player = DAK:GetPlayerMatching(playerId)
-	local cancel = TGNS.PlayerIsRookie(player) and #TGNS.GetPlayerList() >= 10
+	local numberOfNonRookiesOnTeam = #TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.PlayersAreTeammates(player, p) and not TGNS.PlayerIsRookie(p) end)
+	local cancel = TGNS.PlayerIsRookie(player) and numberOfNonRookiesOnTeam >= 0
 	if cancel then
 		if not TGNS.Has(notifiedPlayerIds, playerId) then
-			TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("Rookies may not command. %s, help %s any way you can!", TGNS.GetPlayerTeamName(player), TGNS.GetPlayerName(player)), "TGNS")
+			TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s! Rookies will fight from the ground this game. Help them!", TGNS.GetPlayerTeamName(player)), "TGNS")
 			table.insert(notifiedPlayerIds, playerId)
 			TGNS.ScheduleAction(3, function() TGNS.RemoveAllMatching(notifiedPlayerIds, playerId) end)
 		end
