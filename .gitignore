@@ -114,6 +114,9 @@
 !ns2/lua/configs/greetings.lua
 !ns2/lua/plugins/greetings.lua
 
+!ns2/lua/configs/groundedrookies.lua
+!ns2/lua/plugins/groundedrookies.lua
+
 !ns2/lua/configs/hidespectators.lua
 !ns2/lua/plugins/hidespectators.lua
 
