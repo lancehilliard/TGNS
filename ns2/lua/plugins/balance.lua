@@ -41,13 +41,15 @@ local addLossToBalance = function(balance)
 	end
 
 local function GetWinLossRatio(player, balance)
-	local result
-	local totalGames = balance.losses + balance.wins
-	local notEnoughGamesToMatter = totalGames < 10
-	if notEnoughGamesToMatter then
-		result = TGNS.PlayerIsRookie(player) and 0 or .5
-	else
-		result = balance.wins / totalGames
+	local result = 0.5
+	if balance ~= nil then
+		local totalGames = balance.losses + balance.wins
+		local notEnoughGamesToMatter = totalGames < 10
+		if notEnoughGamesToMatter then
+			result = TGNS.PlayerIsRookie(player) and 0 or .5
+		else
+			result = balance.wins / totalGames
+		end
 	end
 	return result
 end
