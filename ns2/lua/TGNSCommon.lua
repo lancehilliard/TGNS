@@ -9,6 +9,87 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 7
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 9
 
+function TGNS.SecondsToClock(sSeconds)
+	local result = "00:00:00"
+	local nSeconds = tonumber(sSeconds)
+	if nSeconds ~= 0 then
+		nHours = string.format("%02.f", math.floor(nSeconds/3600));
+		nMins = string.format("%02.f", math.floor(nSeconds/60 - (nHours*60)));
+		nSecs = string.format("%02.f", math.floor(nSeconds - nHours*3600 - nMins *60));
+		result = nHours..":"..nMins..":"..nSecs
+	end
+	return result
+end
+
+function TGNS.KillPlayer(player)
+	player:Kill(nil, nil, player:GetOrigin())
+end
+
+function TGNS.GetPlayerClassName(player)
+	local result = player:GetClassName()
+	return result
+end
+
+function TGNS.GetMarineWeaponsTotalPurchaseCost(player)
+	local marineWeaponPurchaseCosts = {
+      [Welder.kMapName] = kWelderCost,
+      [LayMines.kMapName] = kMineCost,
+      [Shotgun.kMapName] = kShotgunCost,
+      [GrenadeLauncher.kMapName] = kGrenadeLauncherCost,
+      [Flamethrower.kMapName] = kFlamethrowerCost
+    }
+	local result = 0
+	TGNS.DoForPairs(marineWeaponPurchaseCosts, function(key,value)
+		if player:GetWeapon(key) then
+			result = result + value
+		end
+	end)
+	return result
+end
+
+function TGNS.GetPlayerClassPurchaseCost(player)
+	local playerClassNamePurchaseCosts = {
+      ["JetpackMarine"] = kJetpackCost,
+      ["Onos"] = kOnosCost,
+      ["Fade"] = kFadeCost,
+      ["Lerk"] = kLerkCost,
+      ["Gorge"] = kGorgeCost
+    }
+	local exoLayoutNamePurchaseCosts = {
+      ["ClawMinigun"] = kExosuitCost,
+      ["ClawRailgun"] = kClawRailgunExosuitCost,
+      ["MinigunMinigun"] = kDualExosuitCost
+    }
+	local playerClassNameResCost
+	if (player.layout) then
+		playerClassNameResCost = exoLayoutNamePurchaseCosts[player.layout]
+	else
+		playerClassNameResCost = playerClassNamePurchaseCosts[TGNS.GetPlayerClassName(player)]
+	end
+	local result = playerClassNameResCost ~= nil and playerClassNameResCost or 0
+	return result
+end
+
+function TGNS.IsGameInProgress()
+	local result = GetGamerules():GetGameState() == kGameState.Started
+	return result
+end
+
+function TGNS.RoundPositiveNumber(num, numberOfDecimalPlaces)
+	local mult = 10^(numberOfDecimalPlaces or 0)
+	local result = math.floor(num * mult + 0.5) / mult
+	return result
+end
+
+function TGNS.GetPlayerResources(player)
+	local result = player:GetResources()
+	return result
+end
+
+function TGNS.SetPlayerResources(player, value)
+	player:SetResources(value)
+end
+
 function TGNS.RemoveAllMatching(elements, element)
 	for r = #elements, 1, -1 do
 		if elements[r] == element then
@@ -265,6 +346,18 @@ function TGNS.DoFor(elements, elementAction)
 	end
 end
 
+function TGNS.DoForPairs(t, pairAction)
+	if t ~= nil then
+		for key, value in pairs(t) do
+			if value ~= nil then
+				if pairAction(key, value) then
+					break
+				end
+			end
+		end
+	end
+end
+
 function TGNS.Where(elements, predicate)
 	local result = {}
 	TGNS.DoFor(elements, function(e)
@@ -357,7 +450,9 @@ function TGNS.ConsolePrint(client, message, prefix)
 		if message == nil then
 			message = ""
 		end
-		ServerAdminPrint(client, "[" .. prefix .. "] " .. message)
+		if not TGNS.GetIsClientVirtual(client) then
+			ServerAdminPrint(client, "[" .. prefix .. "] " .. message)
+		end
 	end
 end
 
@@ -383,13 +478,20 @@ function TGNS.GetClientNameSteamIdCombo(client)
 	return result	
 end
 
+function TGNS.GetIsClientVirtual(client)
+	local result = client:GetIsVirtual()
+	return result
+end
+
 function TGNS.SendChatMessage(player, chatMessage, prefix)
 	if player ~= nil then
 		if prefix == nil or prefix == "" then
 			prefix = "PM - " .. DAK.config.language.MessageSender
 		end
 		chatMessage = string.sub(chatMessage, 1, kMaxChatLength)
-		Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, prefix, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		if not TGNS.ClientAction(player, TGNS.GetIsClientVirtual) then
+			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, prefix, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+		end
 	end
 end
 
@@ -479,7 +581,15 @@ end
 function TGNS.GetPlayers(clients)
 	local result = {}
 	for i = 1, #clients, 1 do
-		table.insert(result, clients[i]:GetControllingPlayer())
+		table.insert(result, TGNS.GetPlayer(clients[i]))
+	end
+	return result
+end
+
+function TGNS.GetClients(players)
+	local result = {}
+	for i = 1, #players, 1 do
+		table.insert(result, TGNS.GetClient(players[i]))
 	end
 	return result
 end
@@ -592,7 +702,14 @@ function TGNS.GetSmClients(playerList)
 	return result
 end
 
+function TGNS.GetSumUpTo(operand1, operand2, sumLimit)
+	local sum = operand1 + operand2
+	local result = sum <= sumLimit and sum or sumLimit
+	return result
+end
+
 function TGNS.KickClient(client, disconnectReason, onPreKick)
+	// notes to improve as standalone object: send player to readyroom, spam chat with "look to console" message every second for 5 seconds, hide all other players from scoreboard
 	if client ~= nil then
 		local player = client:GetControllingPlayer()
 		if player ~= nil then
@@ -600,8 +717,9 @@ function TGNS.KickClient(client, disconnectReason, onPreKick)
 				onPreKick(client, player)
 			end
 		end
+		TGNS.SendChatMessage(player, "Kicked. See console for details.", "KICK")
 		TGNS.ConsolePrint(client, disconnectReason)
-		TGNS.ScheduleAction(2, function() TGNS.DisconnectClient(client, disconnectReason) end)
+		TGNS.ScheduleAction(5, function() TGNS.DisconnectClient(client, disconnectReason) end)
 	end
 end
 
