@@ -1,4 +1,7 @@
 Script.Load("lua/TGNSCommon.lua")
+Script.Load("lua/TGNSPlayerDataRepository.lua")
+Script.Load("lua/TGNSClientKicker.lua")
+Script.Load("lua/TGNSConnectedTimesTracker.lua")
 
 local actionslog = { }
 local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
@@ -6,6 +9,17 @@ local MESSAGE_PREFIX = "SLOTS"
 table.insert(actionslog, "COMMUNITY SLOTS DEBUG: ")
 local victimBumpCounts = {}
 local rejectBumpCounts = {}
+local abandonedResources
+local lastKnownGameplayTeamNumber
+
+local function ResetAbandonedResources()
+	abandonedResources = {
+      [1] = {},
+      [2] = {}
+    }
+	lastKnownGameplayTeamNumber = {}
+end
+ResetAbandonedResources()
 
 local function IsTargetProtectedStranger(targetClient, playerList)
 	local result = TGNS.IsClientStranger(targetClient) and #TGNS.GetStrangersClients(playerList) <= DAK.config.communityslots.kMinimumStrangers
@@ -56,13 +70,15 @@ local function IsTargetBumpable(targetClient, playerList, joiningClient)
 end
 
 local function FindVictimClient(joiningClient, playerList)
-	local lowestBumpableScore = math.huge
+	local oldestConnectionTime = Shared.GetSystemTime()
 	local predicate = function(targetClient, targetPlayer)
 		if IsTargetBumpable(targetClient, playerList, joiningClient) then
-			targetPlayer.score = targetPlayer.score == nil and 0 or targetPlayer.score
-			if (targetPlayer.score <= lowestBumpableScore) then
-				lowestBumpableScore = targetPlayer.score
-				return true
+			local targetClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnected(targetClient)
+			if targetClientConnectedTime ~= nil then
+				if (targetClientConnectedTime < oldestConnectionTime) then
+					oldestConnectionTime = targetClientConnectedTime
+					return true
+				end
 			end
 		end
 		return false
@@ -80,7 +96,7 @@ local function GetKickDetails(targetClient, joiningClient, playerList)
 	result.strangerCount = #TGNS.GetStrangersClients(playerList)
 	result.primerOnlyCount = #TGNS.GetPrimerOnlyClients(playerList)
 	result.smCount = #TGNS.GetSmClients(playerList)
-	result.shortReport = string.format("T: %s%s J:%s%s ?:%s P:%s S:%s T:%s", result.targetIsSM, result.targetHasSignedPrimer, result.joinerIsSM, result.joinerHasSignedPrimer, result.strangerCount, result.primerOnlyCount, result.smCount, #playerList)
+	result.shortReport = string.format("T: %s%s J:%s%s ?:%s P:%s S:%s Total:%s", result.targetIsSM, result.targetHasSignedPrimer, result.joinerIsSM, result.joinerHasSignedPrimer, result.strangerCount, result.primerOnlyCount, result.smCount, #playerList)
 	return result
 end
 
@@ -105,7 +121,7 @@ local function AnnounceClientBumpToStrangers(targetClient)
 end
 
 local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
-	Log(string.format("%s: Victim: %s (score: %s) Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS.GetClientNameSteamIdCombo(targetClient), tostring(targetPlayer.score), TGNS.GetClientNameSteamIdCombo(joiningClient)))
+	Log(string.format("%s: Victim: %s Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS.GetClientNameSteamIdCombo(targetClient), TGNS.GetClientNameSteamIdCombo(joiningClient)))
 	IncrementBumpCount(targetClient, victimBumpCounts)
 	AnnounceClientBumpToStrangers(targetClient)
 end
@@ -134,8 +150,36 @@ local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
 	local strangersCount = #TGNS.GetStrangersClients(playerList)
 	local clientName = TGNS.GetClientName(bumpedClient)
 	local communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
-	local result = string.format("Kicking %s %s> %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, supportingMembersCount, primerOnlysCount, strangersCount)
+	local bumpedClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnected(bumpedClient)
+	local bumpedClientConnectedDurationClock = "UNKNOWNTIME"
+	if type(bumpedClientConnectedTime) == "number" then
+		bumpedClientConnectedDuration = Shared.GetSystemTime() - bumpedClientConnectedTime
+		bumpedClientConnectedDurationClock = TGNS.SecondsToClock(bumpedClientConnectedDuration)
+	end
+	local result = string.format("Kicking %s %s> %s after %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, bumpedClientConnectedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount)
 	return result
+end
+
+local function AnnounceAbandonedResources(client, resources)
+	local debugMessage = string.format("%s abandoned %s resources.", TGNS.GetClientName(client), math.floor(resources))
+	if math.floor(resources) > 0 then
+		TGNS.SendAdminConsoles(debugMessage, "RESERVEDSLOTSDEBUG")
+	end
+end
+
+local function AbandonResources(client)
+	if TGNS.IsGameInProgress() then
+		local player = TGNS.GetPlayer(client)
+		local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
+		if TGNS.IsGameplayTeam(playerTeamNumber) then
+			if abandonedResources[playerTeamNumber][client] == nil then
+				local resources = TGNS.GetPlayerClassPurchaseCost(player) + TGNS.GetMarineWeaponsTotalPurchaseCost(player) + TGNS.GetPlayerResources(player)
+				abandonedResources[playerTeamNumber][client] = resources
+				TGNS.SetPlayerResources(player, 0)
+				AnnounceAbandonedResources(client, resources)
+			end
+		end
+	end
 end
 
 local function IsClientBumped(client)
@@ -146,10 +190,10 @@ local function IsClientBumped(client)
 		local victimClient = FindVictimClient(client, nonSpecPlayers)
 		if victimClient ~= nil then
 			TGNS.SendAdminConsoles(GetBumpSummary(playerList, victimClient, "VICTIM"), "SLOTSDEBUG")
-			TGNS.KickClient(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
+			TGNSClientKicker.Kick(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
 		else
 			TGNS.SendAdminConsoles(GetBumpSummary(playerList, client, "JOINER"), "SLOTSDEBUG")
-			TGNS.KickClient(client, GetBumpMessage(client), function(c,p) onPreJoinerKick(c,p,playerList) end)
+			TGNSClientKicker.Kick(client, GetBumpMessage(client), function(c,p) onPreJoinerKick(c,p,playerList) end)
 			result = true
 		end
 	end
@@ -160,8 +204,10 @@ local function IsClientBumped(client)
 end
 
 local function CommunitySlotsOnClientDelayedConnect(joiningClient)
-	TGNS.SendAdminConsoles(string.format("SERVERJOINED: %s", TGNS.GetClientName(joiningClient)), "SLOTSDEBUG")
 	local cancel = IsClientBumped(joiningClient)
+	if not cancel then
+		TGNSConnectedTimesTracker.SetClientConnected(joiningClient)
+	end
 	return cancel
 end
 local function CommunitySlotsOnClientDelayedConnectGreeter(client)
@@ -197,7 +243,7 @@ local function PrintBumpCountsReport(client)
 	TGNS.ConsolePrint(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", bumpCounts.totalRejects, bumpCounts.primerOnlyRejects, bumpCounts.strangerRejects), MESSAGE_PREFIX)
 end
 
-local function PrintBumpCountsChatMessages()
+local function OnGameEnd()
 	local bumpCounts = GetBumpCounts()
 	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			PrintBumpCountsReport(c)
@@ -207,8 +253,9 @@ local function PrintBumpCountsChatMessages()
 			)
 		end
 	)
+	ResetAbandonedResources()
 end
-TGNS.RegisterEventHook("OnGameEnd", function() TGNS.ScheduleAction(8, PrintBumpCountsChatMessages) end)
+TGNS.RegisterEventHook("OnGameEnd", function() TGNS.ScheduleAction(8, OnGameEnd) end)
 
 local function DebugCommunitySlots(client)
 	TGNS.DoFor(actionslog, function(logline) 
@@ -232,10 +279,82 @@ local function PrintPlayerSlotsStatuses(client)
 end
 TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
+local function AnnounceReceivedResources(player, resources)
+	local message = string.format("%s got %s resources from a departed teammate.", TGNS.GetPlayerName(player), math.floor(resources))
+	if math.floor(resources) > 0 then
+		TGNS.SendChatMessage(player, message, "TEAMRES")
+		TGNS.SendAdminConsoles(message, "RESERVEDSLOTSDEBUG")
+	end
+end
+
+local function DistributeAbandonedResources(client, teamNumber)
+	local player = TGNS.GetPlayer(client)
+	local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
+	if TGNS.IsGameplayTeam(playerTeamNumber) then
+		if playerTeamNumber == teamNumber then
+			local resKey
+			local giveableResources
+			if lastKnownGameplayTeamNumber[client] == teamNumber then
+				resKey = client
+				giveableResources = abandonedResources[playerTeamNumber][client]
+			else
+				TGNS.DoForPairs(abandonedResources[playerTeamNumber], function(key, resources)
+					if resources ~= nil and (giveableResources == nil or resources > giveableResources) then
+						giveableResources = resources
+						resKey = key
+					end
+				end)
+			end
+			if giveableResources ~= nil then
+				local originalResources = TGNS.GetPlayerResources(player)
+				if math.floor(giveableResources) > math.floor(originalResources) then
+					TGNS.SetPlayerResources(player, giveableResources)
+					abandonedResources[playerTeamNumber][resKey] = math.floor(originalResources) > 0 and originalResources or nil
+					AnnounceAbandonedResources(client, originalResources)
+					AnnounceReceivedResources(player, giveableResources)
+				end
+			end
+			lastKnownGameplayTeamNumber[client] = teamNumber
+		end
+	end
+end
+
 local function CommunitySlotsOnTeamJoin(self, player, newTeamNumber, force)
-	TGNS.SendAdminConsoles(string.format("TEAMJOINING: %s", TGNS.GetPlayerName(player)), "SLOTSDEBUG")
+	local cancel = false
 	local joiningClient = TGNS.GetClient(player)
-	local cancel = IsClientBumped(joiningClient)
+	if TGNS.IsGameplayTeam(TGNS.GetPlayerTeamNumber(player)) and newTeamNumber == kTeamReadyRoom then
+		AbandonResources(joiningClient)
+	elseif TGNS.IsGameplayTeam(newTeamNumber) then
+		cancel = IsClientBumped(joiningClient)
+		if not cancel then
+			TGNS.ScheduleAction(2, function() DistributeAbandonedResources(joiningClient, newTeamNumber) end)
+		end
+	end
 	return cancel
 end
-TGNS.RegisterEventHook("OnTeamJoin", CommunitySlotsOnTeamJoin)
+TGNS.RegisterEventHook("OnTeamJoin", CommunitySlotsOnTeamJoin, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
+
+local function WriteLastSeenTimes()
+	TGNS.DoFor(GetFullyConnectedPlayers(), function(p)
+		TGNS.ClientAction(p, TGNSConnectedTimesTracker.SetClientLastSeen)
+	end)
+	TGNS.ScheduleAction(30, WriteLastSeenTimes)
+end
+TGNS.ScheduleAction(30, WriteLastSeenTimes)
+
+local function PrintConnectedTimes(client)
+	local clientList = TGNS.GetClients(GetFullyConnectedPlayers())
+	TGNSConnectedTimesTracker.PrintConnectedTimes(client, clientList)
+end
+TGNS.RegisterCommandHook("Console_sv_showtimes", PrintConnectedTimes, "Print connected time of each client.")
+
+local function ShowPlayerCosts(client)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		local name = TGNS.GetPlayerName(p)
+		local className = TGNS.GetPlayerClassName(p)
+		local classPurchaseCost = TGNS.GetPlayerClassPurchaseCost(p)
+		local weaponsCost = TGNS.GetMarineWeaponsTotalPurchaseCost(p)
+		TGNS.ConsolePrint(client, string.format("%s: %s %s %s", name, className, classPurchaseCost, weaponsCost), "COSTS")
+	end)
+end
+TGNS.RegisterCommandHook("Console_sv_showcosts", ShowPlayerCosts, "Print costs of all players.")
