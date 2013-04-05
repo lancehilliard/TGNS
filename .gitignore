@@ -13,6 +13,8 @@
 !config/ConsistencyConfig.json
 
 # And then whitelist TGNS common/shared files
+!ns2/lua/TGNSClientKicker.lua
+!ns2/lua/TGNSConnectedTimesTracker.lua
 !ns2/lua/TGNSPlayerDataRepository.lua
 !ns2/lua/TGNSPlayerBlacklistRepository.lua
 !ns2/lua/TGNSCommon.lua
