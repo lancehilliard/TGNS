@@ -127,7 +127,7 @@ local function UpdateWinOrLoseVotes()
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 					else
-						chatMessage = string.sub(string.format("%s votes to concede; %s needed; %s seconds left.", totalvotes, 
+						chatMessage = string.sub(string.format("%s votes to concede; %s needed; %s seconds left. Press X to Vote.", totalvotes, 
 						 math.ceil((#playerRecords * (DAK.config.winorlose.kWinOrLoseMinimumPercentage / 100))), 
 						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + DAK.config.winorlose.kWinOrLoseVotingTime) - Shared.GetTime()) ), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
