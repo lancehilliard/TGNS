@@ -1,8 +1,8 @@
 Script.Load("lua/TGNSCommon.lua")
 
-local FIRSTCLIENT_TIME_BEFORE_ALLJOIN = 30
-local GAMEEND_TIME_BEFORE_ALLJOIN = 23
-local allMayJoinAt = 0
+local FIRSTCLIENT_TIME_BEFORE_ALLJOIN = 60
+local GAMEEND_TIME_BEFORE_ALLJOIN = 33
+local allMayJoinAt = System.GetSystemTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
 local firstClientProcessed = false
 
 local function StagedTeamJoinsOnClientDelayedConnect(client)
@@ -21,7 +21,7 @@ TGNS.RegisterEventHook("OnGameEnd", StagedTeamJoinsGameEnd)
 local function StagedTeamJoinsOnTeamJoin(self, player, newTeamNumber, force)
 	local cancel = false
 	local balanceIsInProgress = Balance and Balance.IsInProgress()
-	if not balanceIsInProgress then
+	if not balanceIsInProgress and not TGNS.ClientAction(player, TGNS.GetIsClientVirtual) then
 		if TGNS.IsGameplayTeam(newTeamNumber) then
 			local atLeastOneSmIsOnTheServer = TGNS.Any(TGNS.GetPlayerList(), function(p) return TGNS.ClientAction(p, TGNS.IsClientSM) end)
 			if atLeastOneSmIsOnTheServer then
