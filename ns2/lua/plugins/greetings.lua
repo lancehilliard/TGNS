@@ -9,11 +9,9 @@ local function GreetingsOnTeamJoin(self, player, newTeamNumber, force)
 	if Balance and TGNS.IsGameplayTeam(newTeamNumber) then
 		local totalGames = TGNS.ClientAction(player, function(c) return Balance.GetTotalGamesPlayed(c) end)
 		local playerName = TGNS.GetPlayerName(player)
-		TGNS.SendAdminConsoles(string.format("%s joined a team with %s games completed.", playerName, totalGames), "GREETINGSDEBUG")
 		if totalGames >= GAMES_TO_PLAY_BEFORE_GREETINGS and totalGames <= GAMES_TO_PLAY_BEFORE_NO_MORE_GREETINGS then
 			if totalGames >= GAMES_TO_PLAY_BEFORE_FORUM_REMINDERS then
 				TGNS.SendChatMessage(player, "Enjoying the server? Say hello at tacticalgamer.com/natural-selection", "Welcome")
-				//TGNS.SendAdminChat(string.format("FORUM REMINDER sent to %s", playerName), "DEBUG")
 			end
 			local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 			TGNS.DoFor(teamClients, function(c)
