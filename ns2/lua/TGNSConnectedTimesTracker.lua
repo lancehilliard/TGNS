@@ -1,4 +1,5 @@
 Script.Load("lua/TGNSCommon.lua")
+Script.Load("lua/TGNSPlayerDataRepository.lua")
 
 TGNSConnectedTimesTracker = {}
 
