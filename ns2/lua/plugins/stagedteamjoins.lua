@@ -2,7 +2,7 @@ Script.Load("lua/TGNSCommon.lua")
 
 local FIRSTCLIENT_TIME_BEFORE_ALLJOIN = 60
 local GAMEEND_TIME_BEFORE_ALLJOIN = 33
-local allMayJoinAt = System.GetSystemTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
+local allMayJoinAt = Shared.GetSystemTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
 local firstClientProcessed = false
 
 local function StagedTeamJoinsOnClientDelayedConnect(client)
