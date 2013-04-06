@@ -163,7 +163,7 @@ end
 local function AnnounceAbandonedResources(client, resources)
 	local debugMessage = string.format("%s abandoned %s resources.", TGNS.GetClientName(client), math.floor(resources))
 	if math.floor(resources) > 0 then
-		TGNS.SendAdminConsoles(debugMessage, "RESERVEDSLOTSDEBUG")
+		TGNS.SendAdminConsoles(debugMessage, "TEAMRESDEBUG")
 	end
 end
 
@@ -283,7 +283,7 @@ local function AnnounceReceivedResources(player, resources)
 	local message = string.format("%s got %s resources from a departed teammate.", TGNS.GetPlayerName(player), math.floor(resources))
 	if math.floor(resources) > 0 then
 		TGNS.SendChatMessage(player, message, "TEAMRES")
-		TGNS.SendAdminConsoles(message, "RESERVEDSLOTSDEBUG")
+		TGNS.SendAdminConsoles(message, "TEAMRESDEBUG")
 	end
 end
 
