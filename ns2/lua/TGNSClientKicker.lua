@@ -7,16 +7,17 @@ local messagePrefix = "KICK"
 local kickDelayInSeconds = 5
 
 local function AdviseKickedClients()
-	TGNS.DoFor(kickedClients, function(c)
-		TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatAdvisory, messagePrefix) end)
-	end)
-	if #kickedClients > 0 then
+	local connectedKickedClients = TGNS.GetClientList(TGNSClientKicker.IsClientKicked)
+	if #connectedKickedClients > 0 then
+		TGNS.DoFor(connectedKickedClients, function(c)
+			TGNS.PlayerAction(c, function(p) TGNS.SendChatMessage(p, chatAdvisory, messagePrefix) end)
+		end)
 		TGNS.ScheduleAction(2, AdviseKickedClients)
 	end
 end
 
 function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick)
-	if client ~= nil and not TGNS.Has(kickedClients, client) then
+	if client ~= nil and not TGNSClientKicker.IsClientKicked(client) then
 		local player = TGNS.GetPlayer(client)
 		if player ~= nil then
 			table.insert(kickedClients, client)
@@ -49,7 +50,7 @@ end
 
 local function onTeamJoin(self, player, newTeamNumber, force)
 	local client = TGNS.GetClient(player)
-	local cancel = TGNS.IsPlayerReadyRoom(player) and TGNS.Has(kickedClients, client)
+	local cancel = TGNS.IsPlayerReadyRoom(player) and TGNSClientKicker.IsClientKicked(client)
 	if cancel then
 		TGNS.SendChatMessage(player, chatAdvisory, messagePrefix)
 	end
@@ -58,7 +59,7 @@ end
 TGNS.RegisterEventHook("OnTeamJoin", onTeamJoin)
 
 local function onChatClient(client, networkMessage)
-	local cancel = TGNS.Has(kickedClients, client)
+	local cancel = TGNSClientKicker.IsClientKicked(client)
 	if cancel then
 		local teamOnly = networkMessage.teamOnly
 		local message = StringTrim(networkMessage.message)
@@ -84,7 +85,7 @@ Server.SendNetworkMessage = function(arg1, arg2, arg3, ...)
 	end
 	
 	if networkMessage == "Scores" and message then
-		if target and TGNS.Has(kickedClients, target) then
+		if target and TGNSClientKicker.IsClientKicked(target) then
 			Server.SendCommand(target, string.format("clientdisconnect %d", message.clientId) )
 			return
 		end
@@ -92,8 +93,3 @@ Server.SendNetworkMessage = function(arg1, arg2, arg3, ...)
 	
 	originalSendNetworkMessage(arg1, arg2, arg3, ...)
 end
-
-local function RemoveFromKickedClients(client)
-	TGNS.RemoveAllMatching(kickedClients, client)
-end
-TGNS.RegisterEventHook("OnClientDisconnect", RemoveFromKickedClients)
