@@ -3,11 +3,24 @@
 TGNS = {}
 local scheduledActions = {}
 
-TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 1
-TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 3
+TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 9
+TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 7
 TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
-TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 7
-TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 9
+TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
+TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
+
+function TGNS.GetClientList(predicate)
+	local result = TGNS.GetClients(TGNS.GetPlayerList())
+	if predicate ~= nil then
+		result = TGNS.Where(result, predicate)
+	end
+	return result
+end
+
+function TGNS.GetPlayerTotalCost(player)
+	local result = TGNS.GetPlayerClassPurchaseCost(player) + TGNS.GetMarineWeaponsTotalPurchaseCost(player) + TGNS.GetPlayerResources(player)
+	return result
+end
 
 function TGNS.SecondsToClock(sSeconds)
 	local result = "00:00:00"
