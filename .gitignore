@@ -155,6 +155,9 @@
 !ns2/lua/configs/taglines.lua
 !ns2/lua/plugins/taglines.lua
 
+!ns2/lua/configs/teamres.lua
+!ns2/lua/plugins/teamres.lua
+
 !ns2/lua/configs/tempadmin.lua
 !ns2/lua/plugins/tempadmin.lua
 
