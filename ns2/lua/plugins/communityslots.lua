@@ -73,7 +73,7 @@ local function FindVictimClient(joiningClient, playerList)
 	local oldestConnectionTime = Shared.GetSystemTime()
 	local predicate = function(targetClient, targetPlayer)
 		if IsTargetBumpable(targetClient, playerList, joiningClient) then
-			local targetClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnected(targetClient)
+			local targetClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(targetClient)
 			if targetClientConnectedTime ~= nil then
 				if (targetClientConnectedTime < oldestConnectionTime) then
 					oldestConnectionTime = targetClientConnectedTime
@@ -150,7 +150,7 @@ local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
 	local strangersCount = #TGNS.GetStrangersClients(playerList)
 	local clientName = TGNS.GetClientName(bumpedClient)
 	local communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
-	local bumpedClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnected(bumpedClient)
+	local bumpedClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(bumpedClient)
 	local bumpedClientConnectedDurationClock = "UNKNOWNTIME"
 	if type(bumpedClientConnectedTime) == "number" then
 		bumpedClientConnectedDuration = Shared.GetSystemTime() - bumpedClientConnectedTime
@@ -206,7 +206,7 @@ end
 local function CommunitySlotsOnClientDelayedConnect(joiningClient)
 	local cancel = IsClientBumped(joiningClient)
 	if not cancel then
-		TGNSConnectedTimesTracker.SetClientConnected(joiningClient)
+		TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
 	end
 	return cancel
 end
@@ -322,9 +322,11 @@ end
 local function CommunitySlotsOnTeamJoin(self, player, newTeamNumber, force)
 	local cancel = false
 	local joiningClient = TGNS.GetClient(player)
-	if TGNS.IsGameplayTeam(TGNS.GetPlayerTeamNumber(player)) and newTeamNumber == kTeamReadyRoom then
+	local playerIsDroppingToReadyRoom = TGNS.IsGameplayTeam(TGNS.GetPlayerTeamNumber(player)) and newTeamNumber == kTeamReadyRoom
+	local playerIsJoiningTeam = TGNS.IsGameplayTeam(newTeamNumber)
+	if playerIsDroppingToReadyRoom then
 		AbandonResources(joiningClient)
-	elseif TGNS.IsGameplayTeam(newTeamNumber) then
+	elseif playerIsJoiningTeam then
 		cancel = IsClientBumped(joiningClient)
 		if not cancel then
 			TGNS.ScheduleAction(2, function() DistributeAbandonedResources(joiningClient, newTeamNumber) end)
@@ -333,20 +335,6 @@ local function CommunitySlotsOnTeamJoin(self, player, newTeamNumber, force)
 	return cancel
 end
 TGNS.RegisterEventHook("OnTeamJoin", CommunitySlotsOnTeamJoin, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
-
-local function WriteLastSeenTimes()
-	TGNS.DoFor(GetFullyConnectedPlayers(), function(p)
-		TGNS.ClientAction(p, TGNSConnectedTimesTracker.SetClientLastSeen)
-	end)
-	TGNS.ScheduleAction(30, WriteLastSeenTimes)
-end
-TGNS.ScheduleAction(30, WriteLastSeenTimes)
-
-local function PrintConnectedTimes(client)
-	local clientList = TGNS.GetClients(GetFullyConnectedPlayers())
-	TGNSConnectedTimesTracker.PrintConnectedTimes(client, clientList)
-end
-TGNS.RegisterCommandHook("Console_sv_showtimes", PrintConnectedTimes, "Print connected time of each client.")
 
 local function ShowPlayerCosts(client)
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
