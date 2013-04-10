@@ -540,6 +540,28 @@ function TGNS.DisconnectClient(client, reason)
 	Server.DisconnectClient(client)
 end
 
+function TGNS.SortAscending(elements, sortFunction)
+	table.sort(elements, function(e1, e2)
+		return sortFunction(e1) < sortFunction(e2)
+	end)
+end
+
+function TGNS.GetFirst(elements)
+	local result = elements[1]
+	return result
+end
+
+function TGNS.ElementIsFoundBeforeIndex(elements, element, index)
+	local result = false
+	for i = 0, #elements do 
+		if i <= index and elements[i] == element then
+			result = true
+			break
+		end
+	end
+	return result
+end
+
 function TGNS.GetPlayerList()
 
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
