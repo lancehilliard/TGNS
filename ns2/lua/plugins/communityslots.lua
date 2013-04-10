@@ -10,13 +10,25 @@ table.insert(actionslog, "COMMUNITY SLOTS DEBUG: ")
 local victimBumpCounts = {}
 local rejectBumpCounts = {}
 
+local function IsClientAmongLongestConnected(clients, client, limit)
+	TGNS.SortAscending(clients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
+	local result = TGNS.ElementIsFoundBeforeIndex(clients, client, limit - 1)
+	return result
+end
+
 local function IsTargetProtectedStranger(targetClient, playerList)
-	local result = TGNS.IsClientStranger(targetClient) and #TGNS.GetStrangersClients(playerList) <= DAK.config.communityslots.kMinimumStrangers
+	local result = IsClientAmongLongestConnected(TGNS.GetStrangersClients(playerList), targetClient, DAK.config.communityslots.kMinimumStrangers)
+	if result then
+		TGNS.SendAdminConsoles(string.format("%s is protected Stranger.", TGNS.GetClientName(targetClient)), "SLOTSDEBUG")
+	end
 	return result
 end
 
 local function IsTargetProtectedPrimerOnly(targetClient, playerList)
-	local result = TGNS.IsPrimerOnlyClient(targetClient) and #TGNS.GetPrimerOnlyClients(playerList) <= DAK.config.communityslots.kMinimumPrimerOnlys
+	local result = IsClientAmongLongestConnected(TGNS.GetPrimerOnlyClients(playerList), targetClient, DAK.config.communityslots.kMinimumPrimerOnlys)
+	if result then
+		TGNS.SendAdminConsoles(string.format("%s is protected PrimerOnly.", TGNS.GetClientName(targetClient)), "SLOTSDEBUG")
+	end
 	return result
 end
 
@@ -59,20 +71,12 @@ local function IsTargetBumpable(targetClient, playerList, joiningClient)
 end
 
 local function FindVictimClient(joiningClient, playerList)
-	local oldestConnectionTime = Shared.GetSystemTime()
-	local predicate = function(targetClient, targetPlayer)
-		if IsTargetBumpable(targetClient, playerList, joiningClient) then
-			local targetClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(targetClient)
-			if targetClientConnectedTime ~= nil then
-				if (targetClientConnectedTime < oldestConnectionTime) then
-					oldestConnectionTime = targetClientConnectedTime
-					return true
-				end
-			end
-		end
-		return false
+	local result = nil
+	local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return IsTargetBumpable(c, playerList, joiningClient) end)
+	if #bumpableClients > 0 then
+		TGNS.SortAscending(bumpableClients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
+		result = TGNS.GetFirst(bumpableClients)
 	end
-	local result = TGNS.GetLastMatchingClient(playerList, predicate)
 	return result
 end
 
