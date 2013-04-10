@@ -50,7 +50,7 @@ local function PrintConnectedDurations(client)
 	end)
 	TGNS.DoFor(trackedClients, function(c)
 		local connectedTimeInSeconds = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c)
-		TGNS.ConsolePrint(client, string.format("%s: %s", TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds)), "CONNECTEDTIMES")
+		TGNS.ConsolePrint(client, string.format("%s> %s: %s", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds)), "CONNECTEDTIMES")
 	end)
 end
 TGNS.RegisterCommandHook("Console_sv_showtimes", PrintConnectedDurations, "Print connected time of each client.")
