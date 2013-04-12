@@ -33,66 +33,59 @@ local function OnPluginInitialized()
 	-- DLC badges
 	kBadgeData[kBadges.PAX2012] = { Id = kPAX2012ProductId, Texture = "ui/badge_pax2012.dds" }
 
-	local function DelayedBadgeOverride()
-
-		local function isBadgeAuthorized(client, badgeId)
-			local dlcAuthorized = false
-			local groupBadgeAuthorized = false
-			if type(badgeId) == "number" then
-				dlcAuthorized = Server.GetIsDlcAuthorized(client, badgeId)
-			else
-				groupBadgeAuthorized = DAK:GetClientIsInGroup(client, badgeId)
-			end
-			return dlcAuthorized or groupBadgeAuthorized
+	local function isBadgeAuthorized(client, badgeId)
+		local dlcAuthorized = false
+		local groupBadgeAuthorized = false
+		if type(badgeId) == "number" then
+			dlcAuthorized = Server.GetIsDlcAuthorized(client, badgeId)
+		else
+			groupBadgeAuthorized = DAK:GetClientIsInGroup(client, badgeId)
 		end
+		return dlcAuthorized or groupBadgeAuthorized
+	end
 
-		local badgeCache = {}
-		local function cacheGet(client)
-			local steamId = client:GetUserId()
-			local badge = badgeCache[steamId]
-			if badge then
-				return badge
-			end
-			-- cache miss
-			Shared.SendHTTPRequest("http://ns2comp.herokuapp.com/t/badge/"..tostring(steamId), "GET", function(response)
-				local info = json.decode(response)
-				-- user override, no badge specified by the server, or pax badges will cause global badge to show
-				if info.override or badgeCache[steamId] == nil or badgeCache[steamId] == kBadges.None or badgeCache[steamId] == kBadges.PAX2012 then
-					badgeCache[steamId] = kBadges[info.badge]
-				end
-			end)
-			badge = kBadges.None
-			for badgeEnum, badgeData in pairs(kBadgeData) do
-
-				if badgeData.Id and isBadgeAuthorized(client, badgeData.Id) then
-					badge = badgeEnum
-					break
-				end
-				
-			end
-			badgeCache[steamId] = badge
+	local badgeCache = {}
+	local function cacheGet(client)
+		local steamId = client:GetUserId()
+		local badge = badgeCache[steamId]
+		if badge then
 			return badge
+		end
+		-- cache miss
+		Shared.SendHTTPRequest("http://ns2comp.herokuapp.com/t/badge/"..tostring(steamId), "GET", function(response)
+			local info = json.decode(response)
+			-- user override, no badge specified by the server, or pax badges will cause global badge to show
+			if info.override or badgeCache[steamId] == nil or badgeCache[steamId] == kBadges.None or badgeCache[steamId] == kBadges.PAX2012 then
+				badgeCache[steamId] = kBadges[info.badge]
+			end
+		end)
+		badge = kBadges.None
+		for badgeEnum, badgeData in pairs(kBadgeData) do
+
+			if badgeData.Id and isBadgeAuthorized(client, badgeData.Id) then
+				badge = badgeEnum
+				break
+			end
 			
 		end
+		badgeCache[steamId] = badge
+		return badge
 		
-		local originalNS2BadgeMixinInit
-		
-		originalNS2BadgeMixinInit = Class_ReplaceMethod("BadgeMixin", "InitializeBadges", 
-			function(self)
-				local client = Server.GetOwner(self)
-				if client then
-					self:SetBadge(cacheGet(client))
-				end
-			end
-		)
-
-		DAK:DeregisterEventHook("OnServerUpdate", DelayedBadgeOverride)
 	end
 	
-	DAK:RegisterEventHook("OnServerUpdate", DelayedBadgeOverride, 5)
+	local originalNS2BadgeMixinInit
+	
+	originalNS2BadgeMixinInit = DAK:Class_ReplaceMethod("BadgeMixin", "InitializeBadges", 
+		function(self)
+			local client = Server.GetOwner(self)
+			if client then
+				self:SetBadge(cacheGet(client))
+			end
+		end
+	)
 	
 end
 
 if kBadges ~= nil and kBadges.Huze ~= nil then
-	DAK:RegisterEventHook("OnPluginInitialized", OnPluginInitialized, 5)
+	DAK:RegisterEventHook("OnPluginInitialized", OnPluginInitialized, 5, "badges")
 end

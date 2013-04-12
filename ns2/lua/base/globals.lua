@@ -1,5 +1,8 @@
 //DAK loader/Base Config
 
+local ShuffleDebug = { }
+local ConfirmationMenus
+
 local function GetMonthDaysString(year, days)
 	local MDays = { }
 	table.insert(MDays, 31) //Jan
@@ -100,7 +103,9 @@ function DAK:GetTimeStamp()
 	return string.format("L " .. string.format(self:GetDateTimeString(false)) .. " - ")
 end
 
-function DAK:RegisterEventHook(functionarray, eventfunction, p)
+/// Event hooks
+
+function DAK:RegisterEventHook(functionarray, eventfunction, p, pluginname)
 	//Register Event in Array
 	p = tonumber(p)
 	if p == nil then p = 5 end
@@ -108,7 +113,7 @@ function DAK:RegisterEventHook(functionarray, eventfunction, p)
 		self.events[functionarray] = { }
 	end
 	if functionarray ~= nil and self.events[functionarray] ~= nil then
-		table.insert(self.events[functionarray], {func = eventfunction, priority = p})
+		table.insert(self.events[functionarray], {func = eventfunction, priority = p, name = pluginname})
 		table.sort(self.events[functionarray], function(f1, f2) return f1.priority < f2.priority end)
 	end
 end
@@ -127,12 +132,22 @@ function DAK:DeregisterEventHook(functionarray, eventfunction)
 end
 
 function DAK:ExecuteEventHooks(event, ...)
-	if event ~= nil and self.events[event] ~= nil then
+	if event ~= nil and self.events[event] ~= nil and DAK.enabled then
 		if #self.events[event] > 0 then
 			local funcarray = self.events[event]
 			for i = #funcarray, 1, -1 do
 				if type(funcarray[i].func) == "function" then
-					if funcarray[i].func(...) then return true end
+					local address = funcarray[i].func
+					local success, result = pcall(funcarray[i].func, ...)
+					if not success then
+						Shared.Message(string.format("Eventhook ERROR in %s Plugin: %s", funcarray[i].name or "NotProvided", result))
+						//Want to prevent wierd error
+						if address == funcarray[i].func then
+							funcarray[i] = nil
+						end
+					else
+						if result then return true end
+					end
 				end
 			end
 		end
@@ -154,6 +169,198 @@ function DAK:ClearEventHooks(event)
 		self.events[event] = nil
 	end
 end
+
+/// End event hooks
+
+/// Timed callbacks with arg support
+
+function DAK:SetupTimedCallBack(callfunc, calltime, ...)
+	if callfunc ~= nil and tonumber(calltime) ~= nil then
+		local callback = {func = callfunc, when = (Shared.GetTime() + tonumber(calltime)), args = arg, lastinterval = tonumber(calltime)}
+		table.insert(self.timedcalledbacks, callback)
+		return true
+	end
+	return false
+end
+
+function DAK:UpdateTimedCallBackArgs(callfunc, ...)
+	for i = #self.timedcalledbacks, 1, -1 do
+		if self.timedcalledbacks[i] ~= nil then
+			if self.timedcalledbacks[i].func == callfunc then
+				self.timedcalledbacks[i].args = arg
+			end
+		end
+	end
+end
+
+function DAK:ProcessTimedCallBacks()
+	for i = #self.timedcalledbacks, 1, -1 do
+		if self.timedcalledbacks[i] ~= nil then
+			if type(self.timedcalledbacks[i].func) == "function" and self.timedcalledbacks[i].when < Shared.GetTime() then
+				local success, result = pcall(self.timedcalledbacks[i].func, unpack(self.timedcalledbacks[i].args or { }))
+				if not success then
+					Shared.Message(string.format("Callback ERROR: %s", result))
+					self.timedcalledbacks[i] = nil
+				else
+					if result == nil or result == false then
+						self.timedcalledbacks[i] = nil
+					elseif result == true then
+						self.timedcalledbacks[i].when = Shared.GetTime() + self.timedcalledbacks[i].lastinterval
+					elseif tonumber(result) ~= nil then
+						self.timedcalledbacks[i].when = Shared.GetTime() + tonumber(result)
+						self.timedcalledbacks[i].lastinterval = tonumber(result)
+					end
+				end
+			end
+		end
+	end
+end
+
+/// End timed callbacks
+
+/// Main menu functions
+//These define what is displayed in the main DAK menu.  Other plugins can still create and manage their own menus outside this.
+//This menu is more for basic configuration, issuing of basic commands and functions.
+//.name = 
+//.validforclient
+//.selectionfunction
+
+function DAK:GetMainMenuItemByName(friendlyname, list)
+	for i, menuitem in pairs(list or DAK.activemenuitems) do
+		if menuitem.fname == friendlyname then
+			return menuitem
+		end
+	end
+	return nil
+end
+
+function DAK:GetMainMenuItemByNumber(index, list)
+	if list ~= nil and #list <= index then
+		return list[index]
+	elseif #DAK.activemenuitems <= index then
+		return DAK.activemenuitems[index]
+	end
+	return nil
+end
+
+function DAK:RegisterMainMenuItem(friendlyname, clientvalidation, selectfunction)
+	if friendlyname ~= nil and DAK:GetMainMenuItemByName(friendlyname) == nil then
+		local menuitem = {fname = friendlyname, validate = clientvalidation, selectfunc = selectfunction}
+		table.insert(DAK.activemenuitems, menuitem)
+		return true
+	else
+		return false
+	end
+end
+
+function DAK:ValidateMenuOptionForClient(menuitem, client)
+	if type(menuitem.validate) == "function" then
+		return menuitem.validate(client)
+	else
+		return menuitem.validate == true
+	end
+end
+
+function DAK:GetMenuItemsList(client)
+	local relevantitems = { }
+	for i, menuitem in pairs(DAK.activemenuitems) do
+		if DAK:ValidateMenuOptionForClient(menuitem, client) then
+			table.insert(relevantitems, menuitem)
+		end
+	end
+	return relevantitems
+end
+
+function DAK:UpdateClientMainMenu(steamId, LastUpdateMessage, page)
+	local MenuUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
+	if MenuUpdateMessage == nil then
+		MenuUpdateMessage = { }
+	end
+	local client = DAK:GetClientMatchingSteamId(steamId)
+	if client == nil then
+		return LastUpdateMessage
+	end
+	MenuUpdateMessage.header = string.format("DAK Mod Menu")
+	i = 1
+	for i, menuitem in pairs(DAK:GetMenuItemsList(client)) do
+		local ci = i - (page * 8)
+		if ci > 0 and ci < 9 then
+			MenuUpdateMessage.option[ci] = menuitem.fname
+		end
+		i = i + 1
+	end
+	MenuUpdateMessage.footer = "Press a number key to select that option."
+	MenuUpdateMessage.inputallowed = true
+	return MenuUpdateMessage
+end
+
+function DAK:SelectMainMenuItem(client, selecteditem, page)
+	//Validate selection to prevent BS
+	local menuitem = DAK:GetMainMenuItemByNumber(selecteditem + (page * 8), DAK:GetMenuItemsList(client))
+	if menuitem ~= nil then
+		if DAK:ValidateMenuOptionForClient(menuitem, client) then
+			menuitem.selectfunc(client)
+			return true
+		end
+	end
+end
+
+/// End Menu Functions
+
+/// Confirmation Menu Functions
+// These are really just a small extension to allow easy confirm/deny menus
+
+local function UpdateConfirmationMenuHook(steamId, LastUpdateMessage, page)
+	return DAK:UpdateConfirmationMenu(steamId, LastUpdateMessage, page)
+end
+
+local function SelectConfirmationMenuItemHook(client, selecteditem, page)
+	return DAK:SelectConfirmationMenuItem(client, selecteditem, page)
+end
+
+function DAK:DisplayConfirmationMenuItem(steamId, HeadingText, ConfirmationFunction, DenyFunction, ...)
+	if steamId ~= nil then
+		local menuitem = {heading = HeadingText, confirmfunc = ConfirmationFunction, denyfunc = DenyFunction, args = arg}
+		ConfirmationMenus[steamId] = menuitem
+		DAK:CreateGUIMenuBase(steamid, SelectConfirmationMenuItemHook, UpdateConfirmationMenuHook, true)
+	end
+end
+
+function DAK:UpdateConfirmationMenu(steamId, LastUpdateMessage, page)
+	if ConfirmationMenus[steamId] ~= nil then
+		local MenuUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
+		if MenuUpdateMessage == nil then
+			MenuUpdateMessage = { }
+		end
+		MenuUpdateMessage.header = ConfirmationMenus[steamId].heading
+		kVoteUpdateMessage.option[1] = "Confirm"
+		kVoteUpdateMessage.option[2] = "Deny"
+		MenuUpdateMessage.footer = "Press a number key to select that option."
+		MenuUpdateMessage.inputallowed = true
+		return MenuUpdateMessage
+	else
+		return LastUpdateMessage
+	end
+end
+
+function DAK:SelectConfirmationMenuItem(client, selecteditem, page)
+	if client ~= nil then
+		local steamId = client:GetUserId()
+		if ConfirmationMenus[steamId] ~= nil then
+			if selecteditem == 1 and ConfirmationMenus[steamId].confirmfunc ~= nil and type(ConfirmationMenus[steamId].confirmfunc) == "function" then
+				ConfirmationMenus[steamId].confirmfunc(client, unpack(ConfirmationMenus[steamId].args or { }))
+			elseif selecteditem == 2 and ConfirmationMenus[steamId].denyfunc ~= nil and type(ConfirmationMenus[steamId].denyfunc) == "function" then
+				ConfirmationMenus[steamId].denyfunc(client, unpack(ConfirmationMenus[steamId].args or { }))
+			end
+			ConfirmationMenus[steamId] = nil
+		end
+		return true
+	end
+end
+
+/// End Confirmation Menus
+
+/// Network Message Override
 
 function DAK:RetrieveNetworkMessageLocation(netmsg)
 	for i = #self.registerednetworkmessages, 1, -1 do
@@ -178,6 +385,10 @@ function DAK:ExecuteNetworkMessageFunction(loc, ...)
 	DAK:ExecuteEventHooks(self.registerednetworkmessages[loc], ...)
 	return self.networkmessagefunctions[loc](...)
 end
+
+/// End Network Message Override
+
+/// Chat command functions
 
 function DAK:RegisterChatCommand(commandstrings, eventfunction, arguments)
 	if commandstrings ~= nil and eventfunction ~=nil and type(eventfunction) == "function" then
@@ -217,6 +428,13 @@ function DAK:ExecuteChatCommands(client, message)
 	return false
 end
 
+/// End Chat commands
+
+function DAK:OverrideScriptLoad(scripttoreplace, newscript)
+	//Register overload.
+	self.scriptoverrides[scripttoreplace] = newscript or true
+end
+
 function DAK:IsPluginEnabled(CheckPlugin)
 	for index, plugin in pairs(self.config.loader.PluginsList) do
 		if CheckPlugin == plugin then
@@ -238,29 +456,33 @@ function DAK:UpdateConnectionTimeTracker(client)
 		DAK.settings.connectedclients = { }
 	end
 	if client ~= nil then
-		local steamId = tostring(client:GetUserId())
-		if DAK.settings.connectedclients[steamId] == nil then
+		local steamId = tonumber(client:GetUserId())
+		if DAK.settings.connectedclients[steamId] == nil or tonumber(DAK.settings.connectedclients[steamId]) == nil then
 			DAK.settings.connectedclients[steamId] = Shared.GetSystemTime()
-			DAK:SaveSettings()
 		end
 	end
 end
 
 function DAK:RemoveConnectionTimeTracker(client)
 	if client ~= nil and self.settings.connectedclients ~= nil then
-		local steamId = tostring(client:GetUserId())
+		local steamId = tonumber(client:GetUserId())
 		if steamId ~= nil then
 			DAK.settings.connectedclients[steamId] = nil
-			DAK:SaveSettings()
 		end
 	end
 end
 
 function DAK:GetClientConnectionTime(client)
 	if client ~= nil and DAK.settings.connectedclients ~= nil then
-		local steamId = tostring(client:GetUserId())
+		local steamId = tonumber(client:GetUserId())
 		if steamId ~= nil then
-			return math.floor(Shared.GetSystemTime() - DAK.settings.connectedclients[steamId])
+			if DAK.settings.connectedclients[steamId] ~= nil and tonumber(DAK.settings.connectedclients[steamId]) ~= nil then
+				return math.floor(Shared.GetSystemTime() - DAK.settings.connectedclients[steamId])
+			else
+				//This shouldnt happen, but I think somehow it is :/
+				DAK.settings.connectedclients[steamId] = Shared.GetSystemTime()
+				return 0
+			end
 		end
 	end
 	return 0
@@ -310,15 +532,20 @@ function DAK:ShuffledPlayerList()
 
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	for i = #playerList, 1, -1 do
-		if playerList[i]:GetTeamNumber() ~= 0 or self:IsPlayerAFK(playerList[i]) then
-			table.remove(playerList, i)
+		if playerList[i] ~= nil then
+			if playerList[i]:GetTeamNumber() ~= 0 or DAK:IsPlayerAFK(playerList[i]) then
+				table.insert(ShuffleDebug, string.format("Excluding player %s for reason %s", playerList[i]:GetName(), ConditionalValue(playerList[i]:GetTeamNumber() ~= 0,"not in readyroom.", "is afk.")))
+				table.remove(playerList, i)
+			end
 		end
 	end
 	for i = 1, (#playerList) do
 		r = math.random(1, #playerList)
-		local iplayer = playerList[i]
-		playerList[i] = playerList[r]
-		playerList[r] = iplayer
+		if i ~= r then
+			local iplayer = playerList[i]
+			playerList[i] = playerList[r]
+			playerList[r] = iplayer
+		end
 	end
 	return playerList
 	
@@ -387,7 +614,7 @@ function DAK:GetClientUIDString(client)
 			name = player:GetName()
 			teamnumber = player:GetTeamNumber()
 		end
-		return string.format("<%s><%s><%s><%s>", name, ToString(self:GetGameIdMatchingClient(client)), client:GetUserId(), teamnumber)
+		return string.format("<%s><%s><%s><%s>", name, ToString(self:GetGameIdMatchingClient(client)), GetReadableSteamId(client:GetUserId()), teamnumber)
 	end
 	return ""
 	
@@ -412,26 +639,18 @@ function DAK:VerifyClient(client)
 end
 
 function DAK:GetPlayerMatching(id)
-
-	local player = self:GetPlayerMatchingName(tostring(id))
-	if player then
-		return player
-	else
-		local idNum = tonumber(id)
-		if idNum then
-			return self:GetPlayerMatchingGameId(idNum) or self:GetPlayerMatchingSteamId(idNum)
-		end
-	end
-	
+	return self:GetPlayerMatchingName(id) or self:GetPlayerMatchingGameId(id) or self:GetPlayerMatchingSteamId(id)	
 end
 
 function DAK:GetPlayerMatchingGameId(id)
 
-	assert(type(id) == "number")
-	if id > 0 and id <= #self.gameid then
-		local client = self.gameid[id]
-		if client ~= nil and self:VerifyClient(client) ~= nil then
-			return client:GetControllingPlayer()
+	id = tonumber(id)
+	if id ~= nil then
+		if id > 0 and id <= #self.gameid then
+			local client = self.gameid[id]
+			if client ~= nil and self:VerifyClient(client) ~= nil then
+				return client:GetControllingPlayer()
+			end
 		end
 	end
 	
@@ -441,11 +660,13 @@ end
 
 function DAK:GetClientMatchingGameId(id)
 
-	assert(type(id) == "number")
-	if id > 0 and id <= #self.gameid then
-		local client = self.gameid[id]
-		if client ~= nil and self:VerifyClient(client) ~= nil then
-			return client
+	id = tonumber(id)
+	if id ~= nil then
+		if id > 0 and id <= #self.gameid then
+			local client = self.gameid[id]
+			if client ~= nil and self:VerifyClient(client) ~= nil then
+				return client
+			end
 		end
 	end
 	
@@ -460,7 +681,30 @@ function DAK:GetGameIdMatchingClient(client)
 			if client == self.gameid[p] then
 				return p
 			end
-			
+		end
+	end
+	
+	return 0
+end
+
+function DAK:GetNS2IdMatchingClient(client)
+
+	if client ~= nil and self:VerifyClient(client) ~= nil then
+		local steamId = client:GetUserId()
+		if steamId ~= nil and tonumber(steamId) ~= nil then
+			return steamId
+		end
+	end
+	
+	return 0
+end
+
+function DAK:GetSteamIdMatchingClient(client)
+
+	if client ~= nil and self:VerifyClient(client) ~= nil then
+		local steamId = client:GetUserId()
+		if steamId ~= nil and tonumber(steamId) ~= nil then
+			return GetReadableSteamId(steamId)
 		end
 	end
 	
@@ -472,17 +716,25 @@ function DAK:GetGameIdMatchingPlayer(player)
 	return self:GetGameIdMatchingClient(client)
 end
 
+function DAK:GetNS2IdMatchingPlayer(player)
+	local client = Server.GetOwner(player)
+	return self:GetNS2IdMatchingClient(client)
+end
+
+function DAK:GetSteamIdMatchingPlayer(player)
+	local client = Server.GetOwner(player)
+	return self:GetSteamIdMatchingClient(client)
+end
+
 function DAK:GetClientMatchingSteamId(steamId)
 
-	assert(type(steamId) == "number")
-	
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	for r = #playerList, 1, -1 do
 		if playerList[r] ~= nil then
 			local plyr = playerList[r]
 			local clnt = playerList[r]:GetClient()
 			if plyr ~= nil and clnt ~= nil then
-				if clnt:GetUserId() == steamId then
+				if clnt:GetUserId() == tonumber(steamId) or GetReadableSteamId(clnt:GetUserId()) == steamId then
 					return clnt
 				end
 			end
@@ -495,15 +747,13 @@ end
 
 function DAK:GetPlayerMatchingSteamId(steamId)
 
-	assert(type(steamId) == "number")
-	
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	for r = #playerList, 1, -1 do
 		if playerList[r] ~= nil then
 			local plyr = playerList[r]
 			local clnt = playerList[r]:GetClient()
 			if plyr ~= nil and clnt ~= nil then
-				if clnt:GetUserId() == steamId then
+				if clnt:GetUserId() == tonumber(steamId) or GetReadableSteamId(clnt:GetUserId()) == steamId then
 					return plyr
 				end
 			end
@@ -516,8 +766,6 @@ end
 
 function DAK:GetPlayerMatchingName(name)
 
-	assert(type(name) == "string")
-	
 	local playerList = EntityListToTable(Shared.GetEntitiesWithClassname("Player"))
 	for r = #playerList, 1, -1 do
 		if playerList[r] ~= nil then
@@ -532,18 +780,131 @@ function DAK:GetPlayerMatchingName(name)
 	
 end
 
-function DAK:ConvertOldBansFormat(bandata)
+function DAK:ConvertFromOldBansFormat(bandata)
 	local newdata = { }
 	if bandata ~= nil then
 		for id, entry in pairs(bandata) do
 			if entry ~= nil then
 				if entry.id ~= nil then
-					newdata[entry.id] = { name = entry.name or "Unavailable", reason = entry.reason or "NotProvided", time = entry.time or 0 }
+					newdata[tonumber(entry.id)] = { name = entry.name or "Unknown", reason = entry.reason or "NotProvided", time = entry.time or 0 }
 				elseif id ~= nil then
-					newdata[id] = { name = entry.name or "Unavailable", reason = entry.reason or "NotProvided", time = entry.time or 0 }
+					newdata[tonumber(id)] = { name = entry.name or "Unknown", reason = entry.reason or "NotProvided", time = entry.time or 0 }
 				end			
 			end
 		end
 	end
 	return newdata
+end
+
+function DAK:ConvertToOldBansFormat(bandata)
+	local newdata = { }
+	if bandata ~= nil then
+		for id, entry in pairs(bandata) do
+			if entry ~= nil then
+				if entry.id ~= nil then
+					entry.id = tonumber(entry.id)
+					table.insert(newdata, entry)
+				elseif id ~= nil then
+					local bentry = { id = tonumber(id), name = entry.name or "Unknown", reason = entry.reason or "NotProvided", time = entry.time or 0 }
+					table.insert(newdata, bentry)
+				end			
+			end
+		end
+	end
+	return newdata
+end
+
+function DAK:DisplayLegacyChatMessageToClientWithoutMenus(client, messageId, ...)
+	if client ~= nil and not client:GetIsVirtual() and not DAK:DoesClientHaveClientSideMenus(client) then
+		DAK:DisplayMessageToClient(client, messageId, ...)
+	end
+end
+
+function DAK:DisplayLegacyChatMessageToAllClientWithoutMenus(messageId, ...)
+	local playerRecords = Shared.GetEntitiesWithClassname("Player")
+	for _, player in ientitylist(playerRecords) do
+		local client = Server.GetOwner(player)
+		if client ~= nil and not client:GetIsVirtual() and not DAK:DoesClientHaveClientSideMenus(client) then
+			DAK:DisplayMessageToClient(client, messageId, ...)
+		end
+	end
+end
+
+function DAK:DisplayLegacyChatMessageToTeamClientsWithoutMenus(teamnum, messageId, ...)
+	if tonumber(teamnum) ~= nil then
+		local playerRecords = GetEntitiesForTeam("Player", teamnum)
+		for _, player in ipairs(playerRecords) do
+			local client = Server.GetOwner(player)
+			if client ~= nil and not client:GetIsVirtual() and not DAK:DoesClientHaveClientSideMenus(client) then
+				DAK:DisplayMessageToClient(client, messageId, ...)
+			end
+		end
+	end
+end
+
+function DAK:DoesSteamIDHaveClientSideMenus(steamId)
+	if steamId ~= nil and tonumber(steamId) ~= nil then
+		return DAK.activemoddedclients[tonumber(steamId)]
+	end
+	return false
+end
+
+function DAK:DoesClientHaveClientSideMenus(client)
+	if client ~= nil then
+		return DAK:DoesSteamIDHaveClientSideMenus(client:GetUserId())
+	end
+	return false
+end
+
+function DAK:DoesPlayerHaveClientSideMenus(client)
+	if player ~= nil then
+		return DAK:DoesClientHaveClientSideMenus(Server.GetOwner(player))
+	end
+end
+
+function DAK:CreateGUIMenuBase(id, OnMenuFunction, OnMenuUpdateFunction, override)
+
+	if id == nil or id == 0 or tonumber(id) == nil or not DAK:DoesSteamIDHaveClientSideMenus(id) or not DAK.config.loader.AllowClientMenus then return false end
+	for i = #DAK.runningmenus, 1, -1 do
+		if DAK.runningmenus[i] ~= nil and DAK.runningmenus[i].clientSteamId == id then
+			if override then
+				DAK.runningmenus[i] = nil
+			else
+				return false
+			end
+		end
+	end
+	
+	local GameMenu = {UpdateTime = math.max(Shared.GetTime() - 2, 0), MenuFunction = OnMenuFunction, MenuUpdateFunction = OnMenuUpdateFunction,
+						MenuBaseUpdateMessage = nil, clientSteamId = id, activepage = 0}
+	table.insert(DAK.runningmenus, GameMenu)
+	return true
+	
+end
+
+function DAK:CreateMenuBaseNetworkMessage()
+	local kVoteUpdateMessage = { }
+	kVoteUpdateMessage.header = ""
+	kVoteUpdateMessage.option = { }
+	kVoteUpdateMessage.option[1] = ""
+	kVoteUpdateMessage.option[2] = ""
+	kVoteUpdateMessage.option[3] = ""
+	kVoteUpdateMessage.option[4] = ""
+	kVoteUpdateMessage.option[5] = ""
+	kVoteUpdateMessage.option[6] = ""
+	kVoteUpdateMessage.option[7] = ""
+	kVoteUpdateMessage.option[8] = ""
+	kVoteUpdateMessage.option[9] = ""
+	kVoteUpdateMessage.option[10] = ""
+	kVoteUpdateMessage.footer = ""
+	kVoteUpdateMessage.inputallowed = false
+	kVoteUpdateMessage.menutime = Shared.GetTime()
+	return kVoteUpdateMessage
+end
+
+function DAK:PrintShuffledPlayerDebugData(client)
+	for i = 1, #ShuffleDebug do
+		ServerAdminPrint(client, ShuffleDebug[i])
+	end
+	ShuffleDebug = { }
 end

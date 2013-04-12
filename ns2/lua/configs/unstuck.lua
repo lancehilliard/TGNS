@@ -1,7 +1,5 @@
 //unstuck config
 
-DAK.revisions["unstuck"] = "0.1.302a"
-
 local function SetupDefaultConfig()
 	local DefaultConfig = { }
 	DefaultConfig.kMinimumWaitTime = 5

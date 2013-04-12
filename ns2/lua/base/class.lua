@@ -16,10 +16,14 @@ local function ReplaceMethodInDerivedClasses(className, methodName, method, orig
 	
 end
 
-function Class_ReplaceMethod(className, methodName, method)
+function DAK:Class_ReplaceMethod(className, methodName, method)
 
 	local original = _G[className][methodName]
-	assert(original ~= nil)
+	
+	if original == nil then
+		Shared.Message(string.format("Attempted to replace a method that does not exist - %s:%s.", className, methodName))
+		return original
+	end
 
 	ReplaceMethodInDerivedClasses(className, methodName, method, original)
 	return original

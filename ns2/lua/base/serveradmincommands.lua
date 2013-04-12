@@ -34,6 +34,22 @@ end
 
 DAK:CreateServerAdminCommand("Console_sv_alltalk", OnCommandAllTalk, "Will toggle the alltalk setting on server.")
 
+local function OnCommandFriendlyFire(client)
+
+	if DAK.settings then
+		DAK.settings.FriendlyFire = not DAK.settings.FriendlyFire
+	else
+		DAK.settings = { }
+		DAK.settings.FriendlyFire = true
+	end
+	
+	ServerAdminPrint(client, string.format("FriendlyFire has been %s.", ConditionalValue(DAK.settings.FriendlyFire,"enabled", "disabled")))
+	DAK:PrintToAllAdmins("sv_friendlyfire", client)
+
+end
+
+DAK:CreateServerAdminCommand("Console_sv_friendlyfire", OnCommandFriendlyFire, "Will toggle friendlyfire setting on server.")
+
 local function OnCommandListMap(client)
 	local matchingFiles = { }
 	Shared.GetMatchingFileNames("maps/*.level", false, matchingFiles)
@@ -59,3 +75,9 @@ local function OnCommandKillServer(client)
 end
 
 DAK:CreateServerAdminCommand("Console_sv_killserver", OnCommandKillServer, "Will crash the server (lol).")
+
+local function OnCommandDebugPlayerShuffle(client)
+	DAK:PrintShuffledPlayerDebugData(client)
+end
+
+DAK:CreateServerAdminCommand("Console_sv_debugplayershuffle", OnCommandDebugPlayerShuffle, "Prints debug information about player shuffling.")

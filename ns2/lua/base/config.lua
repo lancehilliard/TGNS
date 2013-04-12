@@ -20,11 +20,26 @@ local function tablemerge(tab1, tab2)
 	return tab1
 end
 
+function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 local function LoadDAKConfig()
 	if DAK.config ~= nil then
-		DAK.config = tablemerge(DAK.config, DAK:LoadConfigFile(ConfigFileName) or { })
+		DAK.config = tablemerge(DAK.config, DAK:LoadConfigFile(ConfigFileName))
 	else
-		DAK.config = DAK:LoadConfigFile(ConfigFileName) or { }
+		DAK.config = DAK:LoadConfigFile(ConfigFileName)
 	end
 end
 
@@ -49,6 +64,7 @@ local function GenerateDefaultDAKConfig(Plugin, Save)
 		DefaultConfig.GamerulesClassName = "NS2Gamerules"
 		DefaultConfig.TeamOneName = "Marines"
 		DefaultConfig.TeamTwoName = "Aliens"
+		DefaultConfig.AllowClientMenus = false
 		
 		DAK.config["loader"] = tablemerge(DAK.config["loader"], DefaultConfig)
 		
@@ -107,8 +123,9 @@ end
 local function LoadDAKPluginConfigs()
 
 	LoadDAKConfig()
+	local configcache = deepcopy(DAK.config)
 	//Load current config - if its invalid or non-existant, create default so that default plugins are loaded
-	if DAK.config == nil or DAK.config == { } then
+	if DAK.config == nil or DAK.config == { } or DAK.config.loader == nil or DAK.config.loader == { } then
 		GenerateDefaultDAKConfig("loader", false)
 	end
 	
@@ -128,7 +145,10 @@ local function LoadDAKPluginConfigs()
 	//This also insures that any new plugins get their config options created.
 	GenerateDefaultDAKConfig("ALL", false)
 	LoadDAKConfig()
-	SaveDAKConfig()
+	if configcache ~= DAK.config then
+		SaveDAKConfig()
+	end
+	configcache = nil
 	
 end
 

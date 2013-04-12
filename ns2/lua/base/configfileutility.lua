@@ -27,7 +27,7 @@ end
 
 function DAK:LoadConfigFile(fileName)
 
-    Shared.Message("Loading " .. fileName)
+    //Shared.Message("Loading " .. fileName)
     
     local openedFile = io.open(fileName, "r")
     if openedFile then
@@ -47,7 +47,7 @@ end
 
 function DAK:SaveConfigFile(fileName, data, lvl)
 
-    Shared.Message("Saving " .. fileName)
+    //Shared.Message("Saving " .. fileName)
     
     local openedFile = io.open(fileName, "w+")
     

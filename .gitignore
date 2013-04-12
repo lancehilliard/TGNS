@@ -34,6 +34,7 @@
 !ns2/lua/base/serveradmin.lua
 !ns2/lua/base/serveradmincommands.lua
 !ns2/lua/base/settings.lua
+# delete this
 !ns2/lua/base/shared.lua
 
 # And then whitelist DAK GUI files
@@ -63,6 +64,7 @@
 !ns2/lua/configs/enhancedlogging.lua
 !ns2/lua/plugins/enhancedlogging.lua
 
+# delete these
 !ns2/lua/configs/guimenubase.lua
 !ns2/lua/plugins/guimenubase.lua
 
@@ -80,6 +82,9 @@
 
 !ns2/lua/configs/reservedslots.lua
 !ns2/lua/plugins/reservedslots.lua
+
+!ns2/lua/configs/serverredirect.lua
+!ns2/lua/plugins/serverredirect.lua
 
 !ns2/lua/configs/tournamentmode.lua
 !ns2/lua/plugins/tournamentmode.lua

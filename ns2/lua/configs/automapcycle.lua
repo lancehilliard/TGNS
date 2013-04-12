@@ -1,7 +1,5 @@
 //automapcycle default config
 
-DAK.revisions["automapcycle"] = "0.1.302a"
-
 local function SetupDefaultConfig()
 	local DefaultConfig = { }
 	DefaultConfig.kAutoMapCycleDuration = 30

@@ -156,6 +156,7 @@ function MapCycle_ChangeToMap(mapName)
 	local found = MapCycle_VerifyMapName(mapName)
 
 	if found then
+		DAK:SaveSettings()
 		Server.StartWorld(mods, mapName)
 	end
 end

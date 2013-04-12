@@ -1,7 +1,5 @@
 //afkkick default config
 
-DAK.revisions["afkkick"] = "0.1.302a"
-
 local function SetupDefaultConfig()
 	local DefaultConfig = { }
 	DefaultConfig.kAFKKickDelay = 150

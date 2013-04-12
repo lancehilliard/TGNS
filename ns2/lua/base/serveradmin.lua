@@ -40,13 +40,13 @@ end
 LoadServerAdminSettings()
 
 local function LoadBannedPlayers()
-	DAK.bannedplayers = DAK:ConvertOldBansFormat(DAK:LoadConfigFile(BannedPlayersFileName)) or { }
+	DAK.bannedplayers = DAK:ConvertFromOldBansFormat(DAK:LoadConfigFile(BannedPlayersFileName)) or { }
 end
 
 LoadBannedPlayers()
 
 local function SaveBannedPlayers()
-	DAK:SaveConfigFile(BannedPlayersFileName, DAK.bannedplayers)
+	DAK:SaveConfigFile(BannedPlayersFileName, DAK:ConvertToOldBansFormat(DAK.bannedplayers))
 end
 
 local function LoadServerAdminWebSettings()
@@ -71,7 +71,8 @@ function DAK:GetGroupCanRunCommand(groupName, commandName)
 
 	local group = DAK.adminsettings.groups[groupName]
 	if not group then
-		error("There is no group defined with name: " .. groupName)
+		Shared.Message("Invalid groupname defined : " .. groupName)
+		return false
 	end
 	
 	local existsInList = false
@@ -91,7 +92,8 @@ function DAK:GetGroupCanRunCommand(groupName, commandName)
 	elseif group.type == "disallowed" then
 		return not existsInList
 	else
-		error("Only \"allowed\" and \"disallowed\" are valid terms for the type of the admin group")
+		Shared.Message(string.format("Invalid grouptype - %s defined on group - %s.", tostring(group.type), groupName))
+		return false
 	end
 	
 end
@@ -369,7 +371,7 @@ local function OnServerAdminClientConnect(client)
 	end
 end
 
-DAK:RegisterEventHook("OnClientConnect", OnServerAdminClientConnect, 6)
+DAK:RegisterEventHook("OnClientConnect", OnServerAdminClientConnect, 6, "serveradmin")
 
 local function DelayedServerCommandRegistration()
 	if initialwebupdate == 0 then
@@ -402,42 +404,41 @@ local function DelayedServerCommandRegistration()
 	end
 end
 
-DAK:RegisterEventHook("OnServerUpdate", DelayedServerCommandRegistration, 5)
+DAK:RegisterEventHook("OnServerUpdate", DelayedServerCommandRegistration, 5, "serveradmin")
 
-local function DelayedEventHooks()
+local kMaxPrintLength = 128
+local kServerAdminMessage =
+{
+	message = string.format("string (%d)", kMaxPrintLength),
+}
+Shared.RegisterNetworkMessage("ServerAdminPrint", kServerAdminMessage)
 
-	local kMaxPrintLength = 128
+function ServerAdminPrint(client, message)
 
-    function ServerAdminPrint(client, message)
-    
-        if client then
-        
-            // First we must split up the message into a list of messages no bigger than kMaxPrintLength each.
-            local messageList = { }
-            while string.len(message) > kMaxPrintLength do
-            
-                local messagePart = string.sub(message, 0, kMaxPrintLength)
-                table.insert(messageList, messagePart)
-                message = string.sub(message, kMaxPrintLength + 1)
-                
-            end
-            table.insert(messageList, message)
-            
-            for m = 1, #messageList do
-                Server.SendNetworkMessage(client:GetControllingPlayer(), "ServerAdminPrint", { message = messageList[m] }, true)
-            end
-			
-		else
+	if client then
+	
+		// First we must split up the message into a list of messages no bigger than kMaxPrintLength each.
+		local messageList = { }
+		while string.len(message) > kMaxPrintLength do
 		
-			Shared.Message(message)
-            
-        end
-        
-    end
-
+			local messagePart = string.sub(message, 0, kMaxPrintLength)
+			table.insert(messageList, messagePart)
+			message = string.sub(message, kMaxPrintLength + 1)
+			
+		end
+		table.insert(messageList, message)
+		
+		for m = 1, #messageList do
+			Server.SendNetworkMessage(client:GetControllingPlayer(), "ServerAdminPrint", { message = messageList[m] }, true)
+		end
+		
+	else
+	
+		Shared.Message(message)
+		
+	end
+	
 end
-
-DAK:RegisterEventHook("OnPluginInitialized", DelayedEventHooks, 5)
 
 function DAK:IsClientBanned(client)
 	if client ~= nil then
@@ -447,7 +448,7 @@ function DAK:IsClientBanned(client)
 end
 
 function DAK:IsSteamIDBanned(playerId)
-	playerId = tostring(playerId)
+	playerId = tonumber(playerId)
 	if playerId ~= nil then
 		local bentry = DAK.bannedplayers[playerId]
 		if bentry ~= nil then
@@ -475,7 +476,7 @@ function DAK:IsSteamIDBanned(playerId)
 end
 
 function DAK:UnBanSteamID(playerId)
-	playerId = tostring(playerId)
+	playerId = tonumber(playerId)
 	if playerId ~= nil then
 		LoadBannedPlayers()
 		if DAK.bannedplayers[playerId] ~= nil then
@@ -496,7 +497,7 @@ function DAK:UnBanSteamID(playerId)
 end
 
 function DAK:AddSteamIDBan(playerId, pname, duration, breason)
-	playerId = tostring(playerId)
+	playerId = tonumber(playerId)
 	if playerId ~= nil then
 		local bannedUntilTime = Shared.GetSystemTime()
 		duration = tonumber(duration)
@@ -616,33 +617,5 @@ end
 
 DAK:CreateServerAdminCommand("Console_sv_help", PrintHelpForCommand, "Prints help for all commands or the specified command.", true)
 
-//This is so derp, but re-registering function to override builtin admin system without having to modify core NS2 files
-//Using registration of ServerAdminPrint network message for the correct timing
-local originalNS2CreateServerAdminCommand
-
-originalNS2CreateServerAdminCommand = Class_ReplaceMethod("Shared", "RegisterNetworkMessage", 
-	function(parm1, parm2)
-	
-		if parm1 == "ServerAdminPrint" then
-			if DAK:IsPluginEnabled("baseadmincommands") then
-				function CreateServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
-					//Should catch other plugins commands, filters against blacklist to prevent defaults from being registered twice.
-					for c = 1, #DAK.config.baseadmincommands.kBlacklistedCommands do
-						local command = DAK.config.baseadmincommands.kBlacklistedCommands[c]
-						if commandName == command then
-							return
-						end
-					end
-					//Assume its not blacklisted and proceed.
-					CreateBaseServerAdminCommand(commandName, commandFunction, helpText, optionalAlwaysAllowed)
-				end
-			end
-		end
-		if parm2 == nil then
-			originalNS2CreateServerAdminCommand(parm1)
-		else
-			originalNS2CreateServerAdminCommand(parm1, parm2)
-		end
-
-	end
-)
+//Block Default ServerAdmin load
+DAK:OverrideScriptLoad("lua/ServerAdmin.lua")

@@ -34,19 +34,21 @@ local function PrintStatus(player, client, index)
 	if not playerClient then
 		Shared.Message("playerClient is nil in PrintStatus, alert Brian")
 	else
-		
+		local playerId = playerClient:GetUserId()
 		if DAK:GetClientCanRunCommand(client, "sv_status") then
 			local playerAddressString = IPAddressToString(Server.GetClientAddress(playerClient))
 			ServerAdminPrint(client, player:GetName() .. " : Game Id = " 
 			.. ToString(DAK:GetGameIdMatchingClient(playerClient))
-			.. " : Steam Id = " .. playerClient:GetUserId()
+			.. " : NS2 Id = " .. playerId
+			.. " : Steam Id = " .. GetReadableSteamId(playerId)
 			.. " : Team = " .. player:GetTeamNumber()
 			.. " : Address = " .. playerAddressString
 			.. " : Connection Time = " .. DAK:GetClientConnectionTime(playerClient))
 		else
 			ServerAdminPrint(client, player:GetName() .. " : Game Id = " 
 			.. ToString(DAK:GetGameIdMatchingClient(playerClient))
-			.. " : Steam Id = " .. playerClient:GetUserId()
+			.. " : NS2 Id = " .. playerId
+			.. " : Steam Id = " .. GetReadableSteamId(playerId)
 			.. " : Team = " .. player:GetTeamNumber())
 		end
 
@@ -320,11 +322,16 @@ DAK:CreateServerAdminCommand("Console_sv_password", SetPassword, "<string> Chang
 local function Ban(client, playerId, name, duration, ...)
 
 	local player = DAK:GetPlayerMatching(playerId)
-	local reason =  "No Reason"
-	duration = tonumber(duration) or 0
-	if args ~= nil then
-		reason = StringConcatArgs(...)
+	local reason =  StringConcatArgs(...) or "No Reason"
+	if tonumber(name) ~= nil and tonumber(duration) == nil then
+		duration = tonumber(name)
+		if player then
+			name = player:GetName()
+		else
+			name = "Not Provided"
+		end
 	end
+	duration = tonumber(duration) or 0
 	if player then
 		if not DAK:GetLevelSufficient(client, player) then
 			return
@@ -344,7 +351,7 @@ local function Ban(client, playerId, name, duration, ...)
 		if not DAK:GetLevelSufficient(client, playerId) then
 			return
 		end
-		if DAK:AddSteamIDBan(tonumber(playerId), name or "Unavailable", duration, reason) then
+		if DAK:AddSteamIDBan(tonumber(playerId), name or "Unknown", duration, reason) then
 			ServerAdminPrint(client, "Player with SteamId " .. playerId .. " has been banned.")
 			DAK:PrintToAllAdmins("sv_ban", client, string.format("on SteamID:%s for %s for %s.", playerId, duration, reason))
 		end
@@ -465,7 +472,7 @@ local function DelayedEventHooks()
 	DAK:ReplaceNetworkMessageFunction("ChatClient", OnChatReceived)
 end
 
-DAK:RegisterEventHook("OnPluginInitialized", DelayedEventHooks, 5)
+DAK:RegisterEventHook("OnPluginInitialized", DelayedEventHooks, 5, "baseadmincommands")
 
 local function OnCommandGagPlayer(client, playerId, duration)
 
@@ -512,3 +519,50 @@ local function OnCommandUnGagPlayer(client, playerId)
 end
 
 DAK:CreateServerAdminCommand("Console_sv_ungag", OnCommandUnGagPlayer, "<player id> Ungags the provided player.")
+
+local function OnCommandUpdateBans(steamId, LastUpdateMessage, page)
+	local kVoteUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
+	if kVoteUpdateMessage == nil then
+		kVoteUpdateMessage = { }
+	end
+	local client =  DAK:GetClientMatchingSteamId(steamId)
+	kVoteUpdateMessage.header = string.format("Player to ban.")
+	for p = 1, #DAK.gameid do
+		local ci = p - (page * 8)
+		if ci > 0 and ci < 9 then
+			kVoteUpdateMessage.option[ci] = string.format(DAK:GetClientUIDString(DAK.gameid[p]))
+		end
+	end
+	kVoteUpdateMessage.inputallowed = true
+	kVoteUpdateMessage.footer = "BANT"
+	return kVoteUpdateMessage
+end
+
+local function OnCommandBanSelection(client, selectionnumber, page)
+	local targetclient = DAK.gameid[selectionnumber + (page * 8)]
+	if targetclient ~= nil then
+		local HeadingText = string.format("Please confirm you wish to ban %s?", DAK:GetClientUIDString(targetclient))
+		DAK:DisplayConfirmationMenuItem(DAK:GetNS2IdMatchingClient(client), HeadingText, Ban, nil, DAK:GetNS2IdMatchingClient(targetclient))
+	end
+end
+
+local function GetBansMenu(client)
+	DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandBanSelection, OnCommandUpdateBans, true)
+end
+
+local function GetKickMenu(client)
+	//DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandMenuVote, OnCommandUpdateVote, true)
+end
+
+local function GetSlayMenu(client)
+	//DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandMenuVote, OnCommandUpdateVote, true)
+end
+
+local function GetGagMenu(client)
+	//DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandMenuVote, OnCommandUpdateVote, true)
+end
+
+DAK:RegisterMainMenuItem("Kick Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_kick") end, GetKickMenu)
+DAK:RegisterMainMenuItem("Ban Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_ban") end, GetBansMenu)
+DAK:RegisterMainMenuItem("Slay Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_slay") end, GetSlayMenu)
+DAK:RegisterMainMenuItem("Gag Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_gag") end, GetGagMenu)

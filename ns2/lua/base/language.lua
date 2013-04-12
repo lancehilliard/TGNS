@@ -72,7 +72,6 @@ local function SaveDefaultLanguageDefinition()
 			end
 		end
 		DAKDefaultLangFile:write("}\n")
-		Shared.Message("Saving DAK Default Language.")
 		DAKDefaultLangFile:close()
 	end
 end
@@ -129,7 +128,7 @@ end
 
 local function ClientLanguageOverride(client)
 	if client ~= nil then
-		local clientID = tostring(client:GetUserId())
+		local clientID = tonumber(client:GetUserId())
 		if clientID ~= nil then
 			if DAK.settings.clientlanguages[clientID] == nil or not GetIsLanguageValid(DAK.settings.clientlanguages[clientID]) then
 				DAK.settings.clientlanguages[clientID] = DAK.config.language.DefaultLanguage
@@ -206,7 +205,7 @@ end
 
 local function UpdateClientLanguageSetting(clientID, language)
 	if clientID ~= nil then
-		DAK.settings.clientlanguages[tostring(clientID)] = language
+		DAK.settings.clientlanguages[tonumber(clientID)] = language
 	end
 	DAK:SaveSettings()
 end

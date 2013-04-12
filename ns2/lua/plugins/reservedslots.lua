@@ -1,10 +1,9 @@
 //NS2 Reserved Slot
 
 local ReservedPlayers = { }
-local lastconnect = 0
-local lastdisconnect = 0
 local disconnectclients = { }
 local lastpasswordupdate = 0
+local lastdisconnect = 0
 local reserveslotactionslog = { }
 local serverlockstatus = false
 
@@ -21,10 +20,7 @@ local function SaveReservedPlayers()
 end
 
 local function DisconnectClientForReserveSlot(client)
-
-	Server.DisconnectClient(client)
-	lastdisconnect = Shared.GetTime() + DAK.config.reservedslots.kDelayedSyncTime
-	
+	Server.DisconnectClient(client)	
 end
 
 local function GetPlayerList()
@@ -42,7 +38,10 @@ local function CheckReserveStatus(client, silent)
 	end
 	
 	if DAK:GetClientCanRunCommand(client, "sv_hasreserve") then
-		if not silent then ServerAdminPrint(client, "Reserved Slot Entry For - id: " .. tostring(client:GetUserId()) .. " - Is Valid") end
+		if not silent then 
+			table.insert(reserveslotactionslog, "Reserved Slot Entry For - id: " .. tostring(client:GetUserId()) .. " - Is Valid") 
+			ServerAdminPrint(client, "Reserved Slot Entry For - id: " .. tostring(client:GetUserId()) .. " - Is Valid")
+		end
 		return true
 	end
 	
@@ -87,15 +86,20 @@ local function CheckOccupiedReserveSlots()
 	return reserveCount
 end
 
-local function UpdateServerLockStatus(CurPlayers)
+local function UpdateServerLockStatus()
 	if DAK.config.reservedslots.kReservePassword ~= "" then
-		local MaxPlayers = ConditionalValue(DAK.config.reservedslots.kMaximumSlots ~= 0, DAK.config.reservedslots.kMaximumSlots, Server.GetMaxPlayers())
-		if MaxPlayers - (CurPlayers - CheckOccupiedReserveSlots()) <= (DAK.config.reservedslots.kReservedSlots + DAK.config.reservedslots.kMinimumSlots) and not serverlockstatus then
-			table.insert(reserveslotactionslog, string.format("Locking Server at %s of %s players.", CurPlayers, MaxPlayers))
+		local MaxPlayers = Server.GetMaxPlayers()
+		local CurPlayers = Server.GetNumPlayers()
+		if MaxPlayers - (CurPlayers - CheckOccupiedReserveSlots()) <= (DAK.config.reservedslots.kReservedSlots + DAK.config.reservedslots.kMinimumSlots) then
+			if not serverlockstatus then
+				table.insert(reserveslotactionslog, string.format("Locking Server at %s of %s players at %s.", CurPlayers, MaxPlayers, DAK:GetDateTimeString(false)))
+			end
 			Server.SetPassword(DAK.config.reservedslots.kReservePassword)
 			serverlockstatus = true
-		elseif MaxPlayers - (CurPlayers - CheckOccupiedReserveSlots()) > (DAK.config.reservedslots.kReservedSlots + DAK.config.reservedslots.kMinimumSlots) and serverlockstatus then
-			table.insert(reserveslotactionslog, string.format("Unlocking Server at %s of %s players.", CurPlayers, MaxPlayers))
+		elseif MaxPlayers - (CurPlayers - CheckOccupiedReserveSlots()) > (DAK.config.reservedslots.kReservedSlots + DAK.config.reservedslots.kMinimumSlots) then
+			if serverlockstatus then
+				table.insert(reserveslotactionslog, string.format("Unlocking Server at %s of %s players at %s.", CurPlayers, MaxPlayers, DAK:GetDateTimeString(false)))
+			end
 			Server.SetPassword("")
 			serverlockstatus = false
 		end
@@ -112,33 +116,31 @@ local function CheckReserveSlotSync()
 			end
 		end
 	end
-
-	if lastconnect ~= 0 or lastdisconnect ~= 0 then
-		if (lastconnect >= lastdisconnect and lastconnect < Shared.GetTime()) or (lastdisconnect >= lastconnect and lastdisconnect < Shared.GetTime()) then
-			lastconnect = 0
-			lastdisconnect = 0
-			UpdateServerLockStatus(#GetPlayerList())
-		end
+	
+	if lastdisconnect ~= 0 and Shared.GetTime() > lastdisconnect then
+		UpdateServerLockStatus()
+		lastdisconnect = 0
 	end
 	
-	if (Shared.GetTime() - lastpasswordupdate) >= 60 then
-		UpdateServerLockStatus(#GetPlayerList())
+	if (Shared.GetTime() - lastpasswordupdate) >= 10 then
+		UpdateServerLockStatus()
 		lastpasswordupdate = Shared.GetTime()
 	end
 	
 end
 
-DAK:RegisterEventHook("OnServerUpdate", CheckReserveSlotSync, 5)
+DAK:RegisterEventHook("OnServerUpdate", CheckReserveSlotSync, 5, "reserveslots")
 
 local function OnReserveSlotClientConnected(client)
 
-	local MaxPlayers = ConditionalValue(DAK.config.reservedslots.kMaximumSlots ~= 0, DAK.config.reservedslots.kMaximumSlots, Server.GetMaxPlayers())
-	local CurPlayers = #GetPlayerList() + 1
+	local MaxPlayers = Server.GetMaxPlayers()
+	local CurPlayers = Server.GetNumPlayers()
+	
 	local serverFull = MaxPlayers - (CurPlayers - CheckOccupiedReserveSlots()) < (DAK.config.reservedslots.kReservedSlots + DAK.config.reservedslots.kMinimumSlots)
 	local serverReallyFull = MaxPlayers - CurPlayers < DAK.config.reservedslots.kMinimumSlots
 	local reserved = CheckReserveStatus(client, false)
 
-	UpdateServerLockStatus(CurPlayers)
+	UpdateServerLockStatus()
 	
 	if serverFull and not reserved then
 	
@@ -183,19 +185,16 @@ local function OnReserveSlotClientConnected(client)
 		end
 
 	end
-	lastconnect = Shared.GetTime() + DAK.config.reservedslots.kDelayedSyncTime
 	
 end
 
-DAK:RegisterEventHook("OnClientConnect", OnReserveSlotClientConnected, 6)
+DAK:RegisterEventHook("OnClientConnect", OnReserveSlotClientConnected, 6, "reserveslots")
 
 local function ReserveSlotClientDisconnect(client)    
-
 	lastdisconnect = Shared.GetTime() + DAK.config.reservedslots.kDelayedSyncTime
-	
 end
 
-DAK:RegisterEventHook("OnClientDisconnect", ReserveSlotClientDisconnect, 5)
+DAK:RegisterEventHook("OnClientDisconnect", ReserveSlotClientDisconnect, 5, "reserveslots")
 
 local function AddReservePlayer(client, parm1, parm2, parm3, parm4)
 

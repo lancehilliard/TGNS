@@ -161,7 +161,6 @@ end
 function TGNS.RegisterPluginConfig(pluginName, pluginVersion, defaultConfig, defaultLanguageStrings)
 	defaultConfig = defaultConfig ~= nil and defaultConfig or {}
 	defaultLanguageStrings = defaultLanguageStrings ~= nil and defaultLanguageStrings or {}
-	DAK.revisions[pluginName] = pluginVersion
 	DAK:RegisterEventHook("PluginDefaultConfigs", {PluginName = pluginName, DefaultConfig = function() return defaultConfig end })
 	DAK:RegisterEventHook("PluginDefaultLanguageDefinitions", function() return defaultLanguageStrings end)
 end

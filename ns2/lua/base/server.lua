@@ -2,36 +2,41 @@
 
 if Server then
 
-	//Going to finally move to a single global variable DAK, with functions being nested under that.  Should have done this originally TBH.
 	DAK = { }
-
-	DAK.revisions = { }							//List used to track revisions of plugins
+	DAK.__index = DAK
 	DAK.events = { }							//List used to track events, used by event hook system.
+	DAK.scriptoverrides = { }					//List used to track script replacements/blocks.
+	DAK.timedcalledbacks = { }					//List used to track timed calledbacks.
+	DAK.activemoddedclients = { }				//Tracks what clients have ack'd that they have the client side workshop mod.
+	DAK.runningmenus = { }						//List of currently open client menus.
+	DAK.activemenuitems = { }					//List of active menu items.
 	DAK.networkmessagefunctions = { }			//List used to track network message functions, can be used to replace functions raised on network message recieving.
 	DAK.registerednetworkmessages = { }			//List used to track network messages to their corresponding functions.
 	DAK.chatcommands = { }						//List of chat commands.
 	DAK.gameid = { }							//Used to track client joins for game IDs
 	DAK.gaggedplayers = { }						//Used to track gagged clients
-
-	DAK.revisions["loader"] = "0.1.302a"
+	DAK.enabled = true							//Can be used to block most DAK events, or indicate errors.
+	DAK.version = "0.1.408a"
 	
-	Script.Load("lua/dkjson.lua")
-	Script.Load("lua/base/class.lua")
-	Script.Load("lua/base/globals.lua")
-	Script.Load("lua/base/configfileutility.lua")
-	Script.Load("lua/base/serveradmin.lua")
-	Script.Load("lua/base/config.lua")
-	Script.Load("lua/base/settings.lua")
+	local Scripts = { }
+	table.insert(Scripts, "lua/dkjson.lua")
+	table.insert(Scripts, "lua/base/class.lua")
+	table.insert(Scripts, "lua/base/globals.lua")
+	table.insert(Scripts, "lua/base/configfileutility.lua")
+	table.insert(Scripts, "lua/base/serveradmin.lua")
+	table.insert(Scripts, "lua/base/config.lua")
+	table.insert(Scripts, "lua/base/settings.lua")
+	table.insert(Scripts, "lua/base/eventhooks.lua")
+	table.insert(Scripts, "lua/base/serveradmincommands.lua")
+	table.insert(Scripts, "lua/base/language.lua")
+	table.insert(Scripts, "lua/base/pluginloader.lua")
 	
-	if decoda_name == "Server" then
-		//When this global exists, assume workshop (meh)
-		//Script.Load("lua/base/shared.lua")
-		//Shared file just offers net msg definitions required for menus.
+	for i, script in pairs(Scripts) do
+		Script.Load(script)
 	end
-
-	Script.Load("lua/base/eventhooks.lua")
-	Script.Load("lua/base/serveradmincommands.lua")
-	Script.Load("lua/base/language.lua")
-	Script.Load("lua/base/pluginloader.lua")
+	
+	if DAK.enabled then
+		Shared.Message("DAK successfully loaded!")
+	end
 	
 end

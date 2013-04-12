@@ -17,7 +17,7 @@ function GetIsPlayerAFK(player)
 		for i = #AFKClientTracker, 1, -1 do
 			local PEntry = AFKClientTracker[i]
 			if PEntry ~= nil and PEntry.ID == client:GetUserId() then
-				if player:GetViewAngles() == PEntry.MVec and player:GetOrigin() == PEntry.POrig then
+				if player:GetViewAngles() == PEntry.MVec and player:GetOrigin() == PEntry.POrig and PEntry.Time - Shared.GetTime() < (DAK.config.afkkick.kAFKKickDelay - 30) then
 					return true
 				end
 			end
@@ -43,7 +43,7 @@ local function AFKOnClientConnect(client)
 	
 end
 
-DAK:RegisterEventHook("OnClientDelayedConnect", AFKOnClientConnect, 5)
+DAK:RegisterEventHook("OnClientDelayedConnect", AFKOnClientConnect, 5, "afkkick")
 
 local function UpdateAFKClient(client, PEntry, player)
 	if player ~= nil then
@@ -109,7 +109,7 @@ local function AFKOnClientDisconnect(client)
 	
 end
 
-DAK:RegisterEventHook("OnClientDisconnect", AFKOnClientDisconnect, 5)
+DAK:RegisterEventHook("OnClientDisconnect", AFKOnClientDisconnect, 5, "afkkick")
 
 local function ProcessPlayingUsers(deltatime)
 
@@ -145,4 +145,4 @@ local function ProcessPlayingUsers(deltatime)
 	end
 end
 
-DAK:RegisterEventHook("OnServerUpdate", ProcessPlayingUsers, 5)
+DAK:RegisterEventHook("OnServerUpdate", ProcessPlayingUsers, 5, "afkkick")

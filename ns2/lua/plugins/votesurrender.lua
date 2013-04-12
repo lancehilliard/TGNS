@@ -89,7 +89,7 @@ local function UpdateSurrenderVotes()
 	end
 end
 
-DAK:RegisterEventHook("OnServerUpdate", UpdateSurrenderVotes, 5)
+DAK:RegisterEventHook("OnServerUpdate", UpdateSurrenderVotes, 5, "votesurrender")
 
 local function ClearSurrenderVotes()
 	for i = 1, kSurrenderTeamCount do
@@ -99,7 +99,7 @@ local function ClearSurrenderVotes()
 	end
 end
 
-DAK:RegisterEventHook("OnGameEnd", ClearSurrenderVotes, 5)
+DAK:RegisterEventHook("OnGameEnd", ClearSurrenderVotes, 5, "votesurrender")
 
 local function OnCommandVoteSurrender(client)
 
@@ -130,7 +130,7 @@ local function OnCommandVoteSurrender(client)
 					DAK:DisplayMessageToClient(client, "SurrenderVoteToSurrender")
 				end
 				//Going to just start this, at worst it causes a single event
-				DAK:RegisterEventHook("OnServerUpdate", UpdateSurrenderVotes, 5)
+				DAK:RegisterEventHook("OnServerUpdate", UpdateSurrenderVotes, 5, "votesurrender")
 			end
 		end
 	end
@@ -163,7 +163,7 @@ local function VoteSurrenderOn(client, teamnum)
 		kSurrenderVoteArray[tmNum].VoteSurrenderRunning = Shared.GetTime()
 		ServerAdminPrint(client, string.format("Surrender vote started for team %s.", ToString(tmNum)))
 		DAK:PrintToAllAdmins("sv_surrendervote", client, teamnum)
-		DAK:RegisterEventHook("OnServerUpdate", UpdateSurrenderVotes, 5)
+		DAK:RegisterEventHook("OnServerUpdate", UpdateSurrenderVotes, 5, "votesurrender")
 	end
 
 end

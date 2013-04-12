@@ -1,13 +1,13 @@
 //NS2 Automatic MapCycle
 
-local lastcheck = 0
+local lastcheck = DAK.config.automapcycle.kAutoMapCycleDuration * 60
 local checkint = 60
 
 local function UpdateMapCycle(deltatime)
 
 	local t = Shared.GetTime()
-	if lastcheck + checkint < t then
-		lastcheck = t
+	if lastcheck < t then
+		lastcheck = t + checkint
 		local CurPlayers = Server.GetNumPlayers()
 		if CurPlayers <= DAK.config.automapcycle.kMaximumPlayers and t > (DAK.config.automapcycle.kAutoMapCycleDuration * 60) then
 			if DAK.config.automapcycle.kUseStandardMapCycle then
@@ -26,17 +26,9 @@ local function UpdateMapCycle(deltatime)
 					MapCycle_ChangeToMap(nextmap)
 				end
 			end
-		elseif CurPlayers > DAK.config.automapcycle.kMaximumPlayers then
-			DAK:DeregisterEventHook("OnServerUpdate", UpdateMapCycle)
 		end
 	end
 	
 end
 
-DAK:RegisterEventHook("OnServerUpdate", UpdateMapCycle, 5)
-
-local function AutoConcedeOnClientDisconnect(client)
-	DAK:RegisterEventHook("OnServerUpdate", UpdateMapCycle, 5)
-end
-
-DAK:RegisterEventHook("OnClientDisconnect", AutoConcedeOnClientDisconnect, 5)
+DAK:RegisterEventHook("OnServerUpdate", UpdateMapCycle, 5, "automapcycle")

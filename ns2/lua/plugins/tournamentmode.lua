@@ -1,16 +1,16 @@
 //NS2 Tournament Mod Server side script
 
-local TournamentModeSettings = { countdownstarted = false, countdownstarttime = 0, countdownstartcount = 0, lastmessage = 0, official = false}
+local TournamentModeSettings = { countdownstarted = false, countdownstarttime = 0, countdownstartcount = 0, lastmessage = 0, official = false, roundstarted = 0}
 
 local function LoadTournamentMode()
 	if DAK.settings.TournamentMode then
-		Shared.Message("TournamentMode Enabled")
+		//Shared.Message("TournamentMode Enabled")
 		DAK:ExecutePluginGlobalFunction("enhancedlogging", EnhancedLogMessage, "TournamentMode Enabled")
 	else
 		DAK.settings.TournamentMode = false
 	end
 	if DAK.settings.FriendlyFire then
-		Shared.Message("FriendlyFire Enabled")
+		//Shared.Message("FriendlyFire Enabled")
 		DAK:ExecutePluginGlobalFunction("enhancedlogging", EnhancedLogMessage, "FriendlyFire Enabled")
 	else
 		DAK.settings.FriendlyFire = false
@@ -23,7 +23,15 @@ local function BlockMapChange()
 	return DAK.settings.TournamentMode and not DAK.config.tournamentmode.kTournamentModePubMode
 end
 
-DAK:RegisterEventHook("CheckMapChange", BlockMapChange, 5)
+DAK:RegisterEventHook("CheckMapChange", BlockMapChange, 5, "tournamentmode")
+
+local function ResetPlayerScores()
+	for _, player in ientitylist(Shared.GetEntitiesWithClassname("Player")) do            
+		if player.ResetScores then
+			player:ResetScores()
+		end            
+	end
+end
 
 local function StartCountdown(gamerules)
 	if gamerules then
@@ -31,8 +39,11 @@ local function StartCountdown(gamerules)
 		//gamerules:ResetGame() - Dont think this is necessary anymore, and probably could potentially cause issues.  
 		//Used this back when you could hear where the other team spawned to make it more difficult
 		gamerules:SetGameState(kGameState.Countdown)      
-		gamerules.countdownTime = kCountDownLength     
+		ResetPlayerScores()
+		gamerules.countdownTime = kCountDownLength 
 		gamerules.lastCountdownPlayed = nil 
+		TournamentModeSettings.roundstarted = Shared.GetTime()
+		//kTournamentModeRestartDuration
 	end
 end
 
@@ -43,6 +54,7 @@ local function ClearTournamentModeState()
 	TournamentModeSettings.countdownstarttime = 0
 	TournamentModeSettings.countdownstartcount = 0
 	TournamentModeSettings.lastmessage = 0
+	TournamentModeSettings.roundstarted = 0
 end
 
 ClearTournamentModeState()
@@ -126,7 +138,7 @@ local function TournamentModeOnDisconnect(client)
 	end
 end
 
-DAK:RegisterEventHook("OnClientDisconnect", TournamentModeOnDisconnect, 5)
+DAK:RegisterEventHook("OnClientDisconnect", TournamentModeOnDisconnect, 5, "tournamentmode")
 
 local function UpdatePregame(self, timePassed)
 
@@ -144,7 +156,7 @@ local function UpdatePregame(self, timePassed)
 	
 end
 
-DAK:RegisterEventHook("OnUpdatePregame", UpdatePregame, 6)
+DAK:RegisterEventHook("OnUpdatePregame", UpdatePregame, 6, "tournamentmode")
 	
 local function OnPluginInitialized()
 
@@ -153,7 +165,7 @@ local function OnPluginInitialized()
 	if DAK.config.tournamentmode.kTournamentModeOverrideCanJoinTeam then
 		local originalNS2GRGetCanJoinTeamNumber
 		
-		originalNS2GRGetCanJoinTeamNumber = Class_ReplaceMethod(DAK.config.loader.GamerulesClassName, "GetCanJoinTeamNumber", 
+		originalNS2GRGetCanJoinTeamNumber = DAK:Class_ReplaceMethod(DAK.config.loader.GamerulesClassName, "GetCanJoinTeamNumber", 
 			function(self, teamNumber)
 	
 				if DAK.settings.TournamentMode and not DAK.config.tournamentmode.kTournamentModePubMode and (teamNumber == 1 or teamNumber == 2) then
@@ -168,7 +180,7 @@ local function OnPluginInitialized()
 end
 
 if DAK.config and DAK.config.loader and DAK.config.loader.GamerulesExtensions then
-	DAK:RegisterEventHook("OnPluginInitialized", OnPluginInitialized, 5)
+	DAK:RegisterEventHook("OnPluginInitialized", OnPluginInitialized, 5, "tournamentmode")
 end
 
 local function EnablePCWMode(client)
@@ -327,7 +339,8 @@ end
 local function OnCommandReady(client)
 	local gamerules = GetGamerules()
 	if gamerules ~= nil and client ~= nil then
-		if DAK.settings.TournamentMode and (gamerules:GetGameState() == kGameState.NotStarted or gamerules:GetGameState() == kGameState.PreGame) and not DAK.config.tournamentmode.kTournamentModePubMode then
+		if DAK.settings.TournamentMode and (gamerules:GetGameState() == kGameState.NotStarted or gamerules:GetGameState() == kGameState.PreGame or (TournamentModeSettings.roundstarted ~= 0 and TournamentModeSettings.roundstarted + DAK.config.tournamentmode.kTournamentModeRestartDuration < Shared.GetTime())) and not DAK.config.tournamentmode.kTournamentModePubMode then
+			gamerules:SetGameState(kGameState.PreGame)
 			ClientReady(client)
 		end
 	end

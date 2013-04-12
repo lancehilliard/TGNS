@@ -1,7 +1,5 @@
 //motd config
 
-DAK.revisions["motd"] = "0.1.302a"
-
 local function SetupDefaultConfig()
 	local DefaultConfig = { }
 	DefaultConfig.kMOTDMessageDelay = 6

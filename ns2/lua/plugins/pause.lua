@@ -16,7 +16,7 @@ local function OnPluginInitialized()
 
 	local originalNS2PlayingTeamUpdateResourceTowers
 
-	originalNS2PlayingTeamUpdateResourceTowers = Class_ReplaceMethod("PlayingTeam", "UpdateResourceTowers", 
+	originalNS2PlayingTeamUpdateResourceTowers = DAK:Class_ReplaceMethod("PlayingTeam", "UpdateResourceTowers", 
 		function(self)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -29,7 +29,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ResearchMixinUpdateResearch
 
-	originalNS2ResearchMixinUpdateResearch = Class_ReplaceMethod("ResearchMixin", "UpdateResearch", 
+	originalNS2ResearchMixinUpdateResearch = DAK:Class_ReplaceMethod("ResearchMixin", "UpdateResearch", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -42,7 +42,7 @@ local function OnPluginInitialized()
 
 	local originalNS2CommanderProcessTechTreeAction
 
-	originalNS2CommanderProcessTechTreeAction = Class_ReplaceMethod("Commander", "ProcessTechTreeAction", 
+	originalNS2CommanderProcessTechTreeAction = DAK:Class_ReplaceMethod("Commander", "ProcessTechTreeAction", 
 		function(self, techId, pickVec, orientation, worldCoordsSpecified)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -55,7 +55,7 @@ local function OnPluginInitialized()
 
 	local originalNS2AlienTeamUpdate
 
-	originalNS2AlienTeamUpdate = Class_ReplaceMethod("AlienTeam", "Update", 
+	originalNS2AlienTeamUpdate = DAK:Class_ReplaceMethod("AlienTeam", "Update", 
 		function(self, timePassed)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -74,7 +74,7 @@ local function OnPluginInitialized()
 
 	local originalNS2HiveOnUpdate
 
-	originalNS2HiveOnUpdate = Class_ReplaceMethod("Hive", "OnUpdate", 
+	originalNS2HiveOnUpdate = DAK:Class_ReplaceMethod("Hive", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -88,7 +88,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ConstructMixinConstruct
 
-	originalNS2ConstructMixinConstruct = Class_ReplaceMethod("ConstructMixin", "Construct", 
+	originalNS2ConstructMixinConstruct = DAK:Class_ReplaceMethod("ConstructMixin", "Construct", 
 		function(self, elapsedTime, builder)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -101,7 +101,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ShiftEnergizeInRange
 
-	originalNS2ShiftEnergizeInRange = Class_ReplaceMethod("Shift", "EnergizeInRange", 
+	originalNS2ShiftEnergizeInRange = DAK:Class_ReplaceMethod("Shift", "EnergizeInRange", 
 		function(self)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -114,7 +114,7 @@ local function OnPluginInitialized()
 
 	local originalNS2CommanderAbilityOnThink
 
-	originalNS2CommanderAbilityOnThink = Class_ReplaceMethod("CommanderAbility", "OnThink", 
+	originalNS2CommanderAbilityOnThink = DAK:Class_ReplaceMethod("CommanderAbility", "OnThink", 
 		function(self)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -129,7 +129,7 @@ local function OnPluginInitialized()
 
 	local originalNS2FireMixinComputeDamageOverrideMixin
 
-	originalNS2FireMixinComputeDamageOverrideMixin = Class_ReplaceMethod("FireMixin", "ComputeDamageOverrideMixin", 
+	originalNS2FireMixinComputeDamageOverrideMixin = DAK:Class_ReplaceMethod("FireMixin", "ComputeDamageOverrideMixin", 
 		function(self, attacker, damage, damageType, time)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -142,7 +142,7 @@ local function OnPluginInitialized()
 
 	local originalNS2DotMarkerOnUpdate
 
-	originalNS2DotMarkerOnUpdate = Class_ReplaceMethod("DotMarker", "OnUpdate", 
+	originalNS2DotMarkerOnUpdate = DAK:Class_ReplaceMethod("DotMarker", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -155,7 +155,7 @@ local function OnPluginInitialized()
 
 	local originalNS2DotMarkerOnCreate
 
-	originalNS2DotMarkerOnCreate = Class_ReplaceMethod("DotMarker", "OnCreate", 
+	originalNS2DotMarkerOnCreate = DAK:Class_ReplaceMethod("DotMarker", "OnCreate", 
 		function(self)
 
 			self.adjustedcreationtime = Shared.GetTime()
@@ -166,7 +166,7 @@ local function OnPluginInitialized()
 
 	local originalNS2DotMarkerTimeUp
 
-	originalNS2DotMarkerTimeUp = Class_ReplaceMethod("DotMarker", "TimeUp", 
+	originalNS2DotMarkerTimeUp = DAK:Class_ReplaceMethod("DotMarker", "TimeUp", 
 		function(self)
 
 			if self.adjustedcreationtime + self.dotlifetime <= Shared.GetTime() then
@@ -180,7 +180,7 @@ local function OnPluginInitialized()
 
 	local originalNS2DotMarkerSetLifeTime
 
-	originalNS2DotMarkerSetLifeTime = Class_ReplaceMethod("DotMarker", "SetLifeTime", 
+	originalNS2DotMarkerSetLifeTime = DAK:Class_ReplaceMethod("DotMarker", "SetLifeTime", 
 		function(self, lifeTime)
 
 			self.dotlifetime = lifeTime
@@ -191,7 +191,7 @@ local function OnPluginInitialized()
 
 	local originalNS2PickupableMixin__initmixin
 
-	originalNS2PickupableMixin__initmixin = Class_ReplaceMethod("PickupableMixin", "__initmixin", 
+	originalNS2PickupableMixin__initmixin = DAK:Class_ReplaceMethod("PickupableMixin", "__initmixin", 
 		function(self)
 
 			self.adjustedcreationtime = Shared.GetTime()
@@ -202,7 +202,7 @@ local function OnPluginInitialized()
 
 	local originalNS2PickupableMixin_DestroySelf
 
-	originalNS2PickupableMixin_DestroySelf = Class_ReplaceMethod("PickupableMixin", "_DestroySelf", 
+	originalNS2PickupableMixin_DestroySelf = DAK:Class_ReplaceMethod("PickupableMixin", "_DestroySelf", 
 		function(self)
 
 			if self.adjustedcreationtime + kItemStayTime <= Shared.GetTime() then
@@ -216,7 +216,7 @@ local function OnPluginInitialized()
 
 	local originalNS2PathingMixinMoveToTarget
 
-	originalNS2PathingMixinMoveToTarget = Class_ReplaceMethod("PathingMixin", "MoveToTarget", 
+	originalNS2PathingMixinMoveToTarget = DAK:Class_ReplaceMethod("PathingMixin", "MoveToTarget", 
 		function(self, physicsGroupMask, endPoint, movespeed, time)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -230,7 +230,7 @@ local function OnPluginInitialized()
 	//No escaping the command structures pesky comms
 	local originalNS2CommandStructureLogout
 
-	originalNS2CommandStructureLogout = Class_ReplaceMethod("CommandStructure", "Logout", 
+	originalNS2CommandStructureLogout = DAK:Class_ReplaceMethod("CommandStructure", "Logout", 
 		function(self)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -243,7 +243,7 @@ local function OnPluginInitialized()
 
 	local originalNS2CommanderHandleButtons
 
-	originalNS2CommanderHandleButtons = Class_ReplaceMethod("Commander", "HandleButtons", 
+	originalNS2CommanderHandleButtons = DAK:Class_ReplaceMethod("Commander", "HandleButtons", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -256,7 +256,7 @@ local function OnPluginInitialized()
 
 	local originalNS2MaturityMixinOnUpdate
 
-	originalNS2MaturityMixinOnUpdate = Class_ReplaceMethod("MaturityMixin", "OnUpdate", 
+	originalNS2MaturityMixinOnUpdate = DAK:Class_ReplaceMethod("MaturityMixin", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -269,7 +269,7 @@ local function OnPluginInitialized()
 
 	local originalNS2MaturityMixinOnProcessMove
 
-	originalNS2MaturityMixinOnProcessMove = Class_ReplaceMethod("MaturityMixin", "OnProcessMove", 
+	originalNS2MaturityMixinOnProcessMove = DAK:Class_ReplaceMethod("MaturityMixin", "OnProcessMove", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -282,7 +282,7 @@ local function OnPluginInitialized()
 
 	local originalNS2FireMixinOnUpdate
 
-	originalNS2FireMixinOnUpdate = Class_ReplaceMethod("FireMixin", "OnUpdate", 
+	originalNS2FireMixinOnUpdate = DAK:Class_ReplaceMethod("FireMixin", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -295,7 +295,7 @@ local function OnPluginInitialized()
 
 	local originalNS2FireMixinOnProcessMove
 
-	originalNS2FireMixinOnProcessMove = Class_ReplaceMethod("FireMixin", "OnProcessMove", 
+	originalNS2FireMixinOnProcessMove = DAK:Class_ReplaceMethod("FireMixin", "OnProcessMove", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -308,7 +308,7 @@ local function OnPluginInitialized()
 
 	local originalNS2AlienUpdateAutoHeal
 
-	originalNS2AlienUpdateAutoHeal = Class_ReplaceMethod("Alien", "UpdateAutoHeal", 
+	originalNS2AlienUpdateAutoHeal = DAK:Class_ReplaceMethod("Alien", "UpdateAutoHeal", 
 		function(self)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -321,7 +321,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ClipWeaponOnTag
 
-	originalNS2ClipWeaponOnTag = Class_ReplaceMethod("ClipWeapon", "OnTag", 
+	originalNS2ClipWeaponOnTag = DAK:Class_ReplaceMethod("ClipWeapon", "OnTag", 
 		function(self, tagName)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -334,7 +334,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ClipWeaponOnUpdateAnimationInput
 
-	originalNS2ClipWeaponOnUpdateAnimationInput = Class_ReplaceMethod("ClipWeapon", "OnUpdateAnimationInput", 
+	originalNS2ClipWeaponOnUpdateAnimationInput = DAK:Class_ReplaceMethod("ClipWeapon", "OnUpdateAnimationInput", 
 		function(self, modelMixin)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -347,7 +347,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ARCAcquireTarget
 
-	originalNS2ARCAcquireTarget = Class_ReplaceMethod("ARC", "AcquireTarget", 
+	originalNS2ARCAcquireTarget = DAK:Class_ReplaceMethod("ARC", "AcquireTarget", 
 		function(self)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -361,7 +361,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ARCOnTag
 
-	originalNS2ARCOnTag = Class_ReplaceMethod("ARC", "OnTag", 
+	originalNS2ARCOnTag = DAK:Class_ReplaceMethod("ARC", "OnTag", 
 		function(self, tagName)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -376,7 +376,7 @@ local function OnPluginInitialized()
 
 	local originalNS2ArmoryGetShouldResupplyPlayer
 
-	originalNS2ArmoryGetShouldResupplyPlayer = Class_ReplaceMethod("Armory", "GetShouldResupplyPlayer", 
+	originalNS2ArmoryGetShouldResupplyPlayer = DAK:Class_ReplaceMethod("Armory", "GetShouldResupplyPlayer", 
 		function(self, player)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -389,7 +389,7 @@ local function OnPluginInitialized()
 
 	local originalNS2MACOnUpdate
 
-	originalNS2MACOnUpdate = Class_ReplaceMethod("MAC", "OnUpdate", 
+	originalNS2MACOnUpdate = DAK:Class_ReplaceMethod("MAC", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -400,35 +400,48 @@ local function OnPluginInitialized()
 		end
 	)
 
-	local originalNS2MACProcessBuildConstruct
+	local originalNS2MACProcessConstruct
 
-	originalNS2MACProcessBuildConstruct = Class_ReplaceMethod("MAC", "ProcessBuildConstruct", 
-		function(self, deltaTime)
+	originalNS2MACProcessConstruct = DAK:Class_ReplaceMethod("MAC", "ProcessConstruct", 
+		function(self, deltaTime, orderTarget, orderLocation)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
 				return
 			end
-			originalNS2MACProcessBuildConstruct(self, deltaTime)
+			originalNS2MACProcessConstruct(self, deltaTime, orderTarget, orderLocation)
 			
 		end
 	)
 
 	local originalNS2MACProcessWeldOrder
 
-	originalNS2MACProcessWeldOrder = Class_ReplaceMethod("MAC", "ProcessWeldOrder", 
-		function(self, deltaTime)
+	originalNS2MACProcessWeldOrder = DAK:Class_ReplaceMethod("MAC", "ProcessWeldOrder", 
+		function(self, deltaTime, orderTarget, orderLocation)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
 				return
 			end
-			originalNS2MACProcessWeldOrder(self, deltaTime)
+			originalNS2MACProcessWeldOrder(self, deltaTime, orderTarget, orderLocation)
+			
+		end
+	)
+	
+	local originalNS2MACProcessFollowAndWeldOrder
+
+	originalNS2MACProcessFollowAndWeldOrder = DAK:Class_ReplaceMethod("MAC", "ProcessFollowAndWeldOrder", 
+		function(self, deltaTime, orderTarget, orderLocation)
+
+			if DAK:GetTournamentMode() and GetIsGamePaused() then
+				return
+			end
+			originalNS2MACProcessFollowAndWeldOrder(self, deltaTime, orderTarget, orderLocation)
 			
 		end
 	)
 
 	local originalNS2AiAttacksMixinOnTag
 
-	originalNS2AiAttacksMixinOnTag = Class_ReplaceMethod("AiAttacksMixin", "OnTag", 
+	originalNS2AiAttacksMixinOnTag = DAK:Class_ReplaceMethod("AiAttacksMixin", "OnTag", 
 		function(self, tagName)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -441,7 +454,7 @@ local function OnPluginInitialized()
 
 	local originalNS2MinimapMoveMixinUpdateMove
 
-	originalNS2MinimapMoveMixinUpdateMove = Class_ReplaceMethod("MinimapMoveMixin", "UpdateMove", 
+	originalNS2MinimapMoveMixinUpdateMove = DAK:Class_ReplaceMethod("MinimapMoveMixin", "UpdateMove", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -454,7 +467,7 @@ local function OnPluginInitialized()
 	
 	local originalNS2PlayerOnProcessMove
 
-	originalNS2PlayerOnProcessMove = Class_ReplaceMethod("Player", "OnProcessMove", 
+	originalNS2PlayerOnProcessMove = DAK:Class_ReplaceMethod("Player", "OnProcessMove", 
 		function(self, input)
 
 			//if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -467,7 +480,7 @@ local function OnPluginInitialized()
 	
 	local originalNS2PlayerOnUpdatePlayer
 
-	originalNS2PlayerOnUpdatePlayer = Class_ReplaceMethod("Player", "OnUpdatePlayer", 
+	originalNS2PlayerOnUpdatePlayer = DAK:Class_ReplaceMethod("Player", "OnUpdatePlayer", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -480,7 +493,7 @@ local function OnPluginInitialized()
 	
 	local originalNS2TeamSpectatorOnProcessMove
 
-	originalNS2TeamSpectatorOnProcessMove = Class_ReplaceMethod("TeamSpectator", "OnProcessMove", 
+	originalNS2TeamSpectatorOnProcessMove = DAK:Class_ReplaceMethod("TeamSpectator", "OnProcessMove", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -491,22 +504,9 @@ local function OnPluginInitialized()
 		end
 	)
 	
-	local originalNS2EmbryoUpdateGestation
-
-	originalNS2EmbryoUpdateGestation = Class_ReplaceMethod("Embryo", "UpdateGestation", 
-		function(self, deltaTime)
-
-			if DAK:GetTournamentMode() and GetIsGamePaused() then
-				return true
-			end
-			return originalNS2EmbryoUpdateGestation(self, deltaTime)
-			
-		end
-	)
-	
 	local originalNS2TunnelUserMixinOnProcessMove
 
-	originalNS2TunnelUserMixinOnProcessMove = Class_ReplaceMethod("TunnelUserMixin", "OnProcessMove", 
+	originalNS2TunnelUserMixinOnProcessMove = DAK:Class_ReplaceMethod("TunnelUserMixin", "OnProcessMove", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -519,7 +519,7 @@ local function OnPluginInitialized()
 	
 	local originalNS2TunnelUserMixinOnUpdate
 
-	originalNS2TunnelUserMixinOnUpdate = Class_ReplaceMethod("TunnelUserMixin", "OnUpdate", 
+	originalNS2TunnelUserMixinOnUpdate = DAK:Class_ReplaceMethod("TunnelUserMixin", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -529,10 +529,10 @@ local function OnPluginInitialized()
 			
 		end
 	)
-	
+
 	local originalNS2BabblerOnProcessMove
 
-	originalNS2BabblerOnProcessMove = Class_ReplaceMethod("Babbler", "OnProcessMove", 
+	originalNS2BabblerOnProcessMove = DAK:Class_ReplaceMethod("Babbler", "OnProcessMove", 
 		function(self, input)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -545,7 +545,7 @@ local function OnPluginInitialized()
 	
 	local originalNS2BabblerOnUpdate
 
-	originalNS2BabblerOnUpdate = Class_ReplaceMethod("Babbler", "OnUpdate", 
+	originalNS2BabblerOnUpdate = DAK:Class_ReplaceMethod("Babbler", "OnUpdate", 
 		function(self, deltaTime)
 
 			if DAK:GetTournamentMode() and GetIsGamePaused() then
@@ -558,7 +558,7 @@ local function OnPluginInitialized()
 	
 	local originalNS2BabblerOnInitialized
 
-	originalNS2BabblerOnInitialized = Class_ReplaceMethod("Babbler", "OnInitialized", 
+	originalNS2BabblerOnInitialized = DAK:Class_ReplaceMethod("Babbler", "OnInitialized", 
 		function(self)
 
 			self.adjustedcreationtime = Shared.GetTime()
@@ -567,11 +567,11 @@ local function OnPluginInitialized()
 		end
 	)
 	
-	local kBabblerLifeTime = 120
+	local kBabblerLifeTime = 60 * 5
 
 	local originalNS2BabblerTimeUp
 
-	originalNS2BabblerTimeUp = Class_ReplaceMethod("Babbler", "TimeUp", 
+	originalNS2BabblerTimeUp = DAK:Class_ReplaceMethod("Babbler", "TimeUp", 
 		function(self)
 
 			if self.adjustedcreationtime + kBabblerLifeTime <= Shared.GetTime() then
@@ -583,10 +583,24 @@ local function OnPluginInitialized()
 		end
 	)
 	
+	local originalNS2GameRulesGetCountingDown
+
+	originalNS2GameRulesGetCountingDown = DAK:Class_ReplaceMethod("NS2Gamerules", "GetCountingDown", 
+		function(self)
+
+			if DAK:GetTournamentMode() and GetIsGamePaused() then
+				return true
+			else
+				return originalNS2GameRulesGetCountingDown(self)
+			end
+			
+		end
+	)
+	
 end
 
 if DAK.config and DAK.config.loader and DAK.config.loader.GamerulesExtensions then
-	DAK:RegisterEventHook("OnPluginInitialized", OnPluginInitialized, 5)
+	DAK:RegisterEventHook("OnPluginInitialized", OnPluginInitialized, 5, "pause")
 end
 
 local function PausedJoinTeam(self, player, newTeamNumber, force)
@@ -603,7 +617,7 @@ local function PauseEndGame(self, winningTeam)
 	gamestate.team2resume = false
 end
 
-DAK:RegisterEventHook("OnGameEnd", PauseEndGame, 5)
+DAK:RegisterEventHook("OnGameEnd", PauseEndGame, 5, "pause")
 
 function GetIsGamePaused()
 	return gamestate.gamepaused
@@ -628,9 +642,11 @@ local function UpdateEntStates(deltatime)
 				player:SetOrigin(player.cachedorigin)
 			end
 			if player.cachedvelocity ~= nil then
-				player:SetVelocity(player.cachedvelocity)
+				player:SetVelocity(Vector(0, 0, 0))
 			end
-			if player:isa("Alien") then
+			if player:isa("Embryo") and player.cachedevolveTime ~= nil then
+				player.evolveTime = player.cachedevolveTime
+			elseif player:isa("Alien") then
 				player.timeAbilityEnergyChanged = Shared.GetTime()
 			elseif player:isa("JetpackMarine") then
 				player.timeJetpackingChanged = Shared.GetTime()
@@ -666,16 +682,19 @@ local function UpdateEntStates(deltatime)
 	//Umbra,Spores,Ink,HealingWave,Bonewall,Scan
 	local CommanderAbilities = Shared.GetEntitiesWithClassname("CommanderAbility")
 	for _, CommanderAbility in ientitylist(CommanderAbilities) do
+		if CommanderAbility.timeCreated == nil then CommanderAbility.timeCreated = Shared.GetTime() end
 		CommanderAbility.timeCreated = CommanderAbility.timeCreated + deltatime
 	end
 	//Meds/Ammo
 	local DropPacks = Shared.GetEntitiesWithClassname("DropPack")
 	for _, DropPack in ientitylist(DropPacks) do
+		if DropPack.adjustedcreationtime == nil then DropPack.adjustedcreationtime = Shared.GetTime() end
 		DropPack.adjustedcreationtime = DropPack.adjustedcreationtime + deltatime
 	end
 	//Babblers
 	local Babblers = Shared.GetEntitiesWithClassname("Babbler")
 	for _, Babbler in ientitylist(Babblers) do
+		if Babbler.adjustedcreationtime == nil then Babbler.adjustedcreationtime = Shared.GetTime() end
 		Babbler.adjustedcreationtime = Babbler.adjustedcreationtime + deltatime
 	end
 	//Grenades
@@ -743,6 +762,7 @@ local function UpdateEntStates(deltatime)
 	//Update DOTS (only BB???) lifetime  - MOAR DOTS
 	local Dots = Shared.GetEntitiesWithClassname("DotMarker")
 	for _, dot in ientitylist(Dots) do
+		if dot.adjustedcreationtime == nil then dot.adjustedcreationtime = Shared.GetTime() end
 		dot.adjustedcreationtime = dot.adjustedcreationtime + deltatime
 	end
 	//Infestation
@@ -798,7 +818,9 @@ local function ResumeEntStates()
 			if player.cachedvelocity ~= nil then
 				player:SetVelocity(player.cachedvelocity)
 			end
-			if player:isa("JetpackMarine") then
+			if player:isa("Embryo") and player.cachedevolveTime ~= nil then
+				player.evolveTime = player.cachedevolveTime
+			elseif player:isa("JetpackMarine") then
 				player.timeJetpackingChanged = Shared.GetTime()
 			elseif player:isa("Alien") then
 				player.timeAbilityEnergyChanged = Shared.GetTime()
@@ -899,7 +921,9 @@ local function SaveEntStates()
 			if(player.secondaryAttackLastFrame ~= nil and player.secondaryAttackLastFrame) then
 				player:SecondaryAttackEnd()
 			end
-			if player:isa("JetpackMarine") then
+			if player:isa("Embryo") then
+				player.cachedevolveTime = player.evolveTime
+			elseif player:isa("JetpackMarine") then
 				player.timeJetpackingChanged = Shared.GetTime()
 			elseif player:isa("Alien") then
 				player.timeAbilityEnergyChanged = Shared.GetTime()
@@ -951,8 +975,8 @@ local function UpdateServerPauseState()
 	else
 		if not GetIsGamePaused() then
 			SaveEntStates()
-			DAK:RegisterEventHook("OnServerUpdateEveryFrame", UpdateMoveState, 5)
-			DAK:RegisterEventHook("OnTeamJoin", PausedJoinTeam, 5)
+			DAK:RegisterEventHook("OnServerUpdateEveryFrame", UpdateMoveState, 5, "pause")
+			DAK:RegisterEventHook("OnTeamJoin", PausedJoinTeam, 5, "pause")
 			DAK:DisplayMessageToAllClients("PausePausedMessage")
 			gamestate.gamepausedtime = Shared.GetTime()
 		else
@@ -966,7 +990,7 @@ local function UpdateServerPauseState()
 end
 
 function RegisterUpdateServerPauseState()
-	DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5)
+	DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5, "pause")
 end
 
 local function ValidateTeamNumber(teamnum)
@@ -977,7 +1001,7 @@ local function OnCommandPause(client)
 	
 	if DAK:GetTournamentMode() and client ~= nil and GetGamerules():GetGameStarted() then
 		local player = client:GetControllingPlayer()
-		if player ~= nil and not GetIsGamePaused() then
+		if player ~= nil and not GetIsGamePaused() and gamestate.gamepausedcountdown == 0 then
 			local teamnumber = player:GetTeamNumber()
 			if teamnumber and ValidateTeamNumber(teamnumber) then
 				local validpause = false
@@ -997,7 +1021,7 @@ local function OnCommandPause(client)
 					gamestate.team2resume = false
 					gamestate.gamepausedcountdown = Shared.GetTime() + DAK.config.pause.kPauseChangeDelay
 					gamestate.gamepausingteam = teamnumber
-					DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5)
+					DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5, "pause")
 					DAK:DisplayMessageToAllClients("PausePlayerMessage", player:GetName())
 				else
 					DAK:DisplayMessageToClient(client, "PauseTooManyPausesMessage")
@@ -1029,9 +1053,9 @@ local function OnCommandUnPause(client)
 					DAK:DisplayMessageToAllClients("PauseTeamReadyMessage", player:GetName(), DAK.config.loader.TeamOneName, DAK.config.loader.TeamTwoName)
 				elseif not gamestate.team1resume and not gamestate.team2resume then
 					DAK:DisplayMessageToAllClients("PauseNoTeamReadyMessage")
-				else
+				elseif gamestate.gamepausedcountdown == 0 then
 					DAK:DisplayMessageToAllClients("PauseTeamReadiedMessage", player:GetName(), ConditionalValue(teamnumber == 1,DAK.config.loader.TeamOneName ,DAK.config.loader.TeamTwoName))
-					DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5)
+					DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5, "pause")
 					gamestate.gamepausedcountdown = Shared.GetTime() + DAK.config.pause.kPauseChangeDelay
 				end
 			end
@@ -1047,7 +1071,7 @@ local function OnCommandAdminPause(client)
 	
 	if DAK:GetTournamentMode() and GetGamerules():GetGameStarted() then
 		if gamestate.gamepausedcountdown == 0 then
-			DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5)
+			DAK:RegisterEventHook("OnServerUpdate", UpdateServerPauseState, 5, "pause")
 			gamestate.team1resume = false
 			gamestate.team2resume = false
 			gamestate.gamepausedcountdown = Shared.GetTime() + DAK.config.pause.kPauseChangeDelay

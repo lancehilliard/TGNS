@@ -6,6 +6,26 @@ local SettingsFileName = "config://DAKSettings.json"
 
 local function LoadDAKSettings()
 	DAK.settings = DAK:LoadConfigFile(SettingsFileName) or { }
+	local tmpsettings = { }
+	//Convert some old crapp
+	if DAK.settings.connectedclients ~= nil then
+		tmpsettings.connectedclients = { }
+		for id, t in pairs(DAK.settings.connectedclients) do
+			if tmpsettings.connectedclients[tonumber(id)] == nil then
+				tmpsettings.connectedclients[tonumber(id)] = t
+			end
+		end
+	end
+	if DAK.settings.clientlanguages ~= nil then
+		tmpsettings.clientlanguages = { }
+		for id, t in pairs(DAK.settings.clientlanguages) do
+			if tmpsettings.clientlanguages[tonumber(id)] == nil then
+				tmpsettings.clientlanguages[tonumber(id)] = t
+			end
+		end
+	end
+	DAK.settings.connectedclients = tmpsettings.connectedclients
+	DAK.settings.clientlanguages = tmpsettings.clientlanguages
 end
 
 LoadDAKSettings()

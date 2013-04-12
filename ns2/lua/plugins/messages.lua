@@ -55,4 +55,4 @@ local function ProcessMessageQueue(deltatime)
 	
 end
 
-DAK:RegisterEventHook("OnServerUpdate", ProcessMessageQueue, 5)
+DAK:RegisterEventHook("OnServerUpdate", ProcessMessageQueue, 5, "messages")

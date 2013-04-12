@@ -4,17 +4,12 @@
 local function LoadPlugins()
 	
 	if DAK.config ~= nil and DAK.config.loader ~= nil then
-		local DR = DAK.revisions["loader"]
 		for i = 1, #DAK.config.loader.PluginsList do
 			local Plugin = DAK.config.loader.PluginsList[i]
 			if Plugin ~= nil and Plugin ~= "" then
 				local filename = string.format("lua/plugins/%s.lua", Plugin)
 				Script.Load(filename)
-				if DR == DAK.revisions[Plugin] then
-					//Shared.Message(string.format("Plugin %s loaded.", Plugin))
-				else
-					Shared.Message(string.format("Plugin %s loaded, v%s loader - v%s Plugin version mismatch.", Plugin, DR, DAK.revisions[Plugin]))
-				end
+				//Shared.Message(string.format("Plugin %s loaded.", Plugin))
 			end
 		end
 	else
@@ -34,15 +29,16 @@ DAK:CreateServerAdminCommand("Console_sv_reloadplugins", ResetandLoadPlugins, "R
 
 local function OnCommandListPlugins(client)
 
-	ServerAdminPrint(client, string.format("loader v%s is installed.", DAK.revisions["loader"]))	
+	ServerAdminPrint(client, string.format("Loader v%s is installed.", DAK.version))
+	ServerAdminPrint(client, string.format("Loader is %s.", ConditionalValue(DAK.enabled, "enabled", "disabled")))
 	for i = 1, #DAK.config.loader.PluginsList do
 		local Plugin = DAK.config.loader.PluginsList[i]
 		if Plugin ~= nil then
-			local message = string.format("Plugin %s v%s is loaded.", Plugin, DAK.revisions[Plugin])
-			ServerAdminPrint(client, message)	
+			local message = string.format("Plugin %s is loaded.", Plugin)
+			ServerAdminPrint(client, message)
 		end
-	end
-
+	end	
+	
 end
 
 DAK:CreateServerAdminCommand("Console_sv_listplugins", OnCommandListPlugins, "Will list the state of all plugins.")

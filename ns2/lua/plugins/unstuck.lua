@@ -70,7 +70,7 @@ local function ProcessStuckUsers(deltatime)
 	
 end
 
-DAK:RegisterEventHook("OnServerUpdate", ProcessStuckUsers, 5)
+DAK:RegisterEventHook("OnServerUpdate", ProcessStuckUsers, 5, "unstuck")
 
 local function RegisterClientStuck(client)
 	if client ~= nil then
@@ -80,7 +80,7 @@ local function RegisterClientStuck(client)
 			local PEntry = { ID = client:GetUserId(), Orig = player:GetOrigin(), Time = Shared.GetTime() + DAK.config.unstuck.kMinimumWaitTime }
 			DAK:DisplayMessageToClient(client, "UnstuckIn", DAK.config.unstuck.kMinimumWaitTime)
 			if #UnstuckClientTracker == 0 then
-				DAK:RegisterEventHook("OnServerUpdate", ProcessStuckUsers, 5)
+				DAK:RegisterEventHook("OnServerUpdate", ProcessStuckUsers, 5, "unstuck")
 			end
 			table.insert(UnstuckClientTracker, PEntry)
 		else

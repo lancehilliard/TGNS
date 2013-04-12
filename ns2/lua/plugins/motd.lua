@@ -65,7 +65,7 @@ local function MOTDOnClientDisconnect(client)
 
 end
 
-DAK:RegisterEventHook("OnClientDisconnect", MOTDOnClientDisconnect, 5)
+DAK:RegisterEventHook("OnClientDisconnect", MOTDOnClientDisconnect, 5, "motd")
 
 local function ProcessRemainingMOTDMessages(deltatime)
 
@@ -112,20 +112,21 @@ local function MOTDOnClientConnect(client)
 	
 	//local player = client:GetControllingPlayer()
 	//if player ~= nil and DAK.config.motd.kMOTDOnConnectURL ~= "" then
-		//Server.SendCommand(player, string.format("! SetMenuWebView(%s, function return Vector(Client.GetScreenWidth() * 0.8, Client.GetScreenHeight() * 0.8, 0) end )", DAK.config.motd.kMOTDOnConnectURL))
+		//Print("Command sent to client")
+		//Server.SendCommand(player, string.format("oneffectdebug SetMenuWebView(%s, function return Vector(Client.GetScreenWidth() * 0.8, Client.GetScreenHeight() * 0.8, 0) end )", DAK.config.motd.kMOTDOnConnectURL))
 	//end	
 	
 	local PEntry = { ID = client:GetUserId(), Client = client, Message = 1, Time = 0 }
 	PEntry = ProcessMessagesforUser(PEntry)
 	if PEntry ~= nil then
 		if #MOTDClientTracker == 0 then
-			DAK:RegisterEventHook("OnServerUpdate", ProcessRemainingMOTDMessages, 5)
+			DAK:RegisterEventHook("OnServerUpdate", ProcessRemainingMOTDMessages, 5, "motd")
 		end
 		table.insert(MOTDClientTracker, PEntry)
 	end
 end
 
-DAK:RegisterEventHook("OnClientDelayedConnect", MOTDOnClientConnect, 5)
+DAK:RegisterEventHook("OnClientDelayedConnect", MOTDOnClientConnect, 5, "motd")
 
 local function OnCommandAcceptMOTD(client)
 
@@ -163,7 +164,7 @@ local function OnCommandPrintMOTD(client)
 	PEntry = ProcessMessagesforUser(PEntry)
 	if PEntry ~= nil then
 		if #MOTDClientTracker == 0 then
-			DAK:RegisterEventHook("OnServerUpdate", ProcessRemainingMOTDMessages, 5)
+			DAK:RegisterEventHook("OnServerUpdate", ProcessRemainingMOTDMessages, 5, "motd")
 		end
 		table.insert(MOTDClientTracker, PEntry)
 	end

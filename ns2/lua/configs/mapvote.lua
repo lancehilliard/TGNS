@@ -1,7 +1,5 @@
 //mapvote config
 
-DAK.revisions["mapvote"] = "0.1.302a"
-
 local function SetupDefaultConfig()
 	local DefaultConfig = { }
 	DefaultConfig.kRoundEndDelay = 2
