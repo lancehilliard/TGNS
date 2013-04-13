@@ -1,5 +1,5 @@
 if DAK.config.loader and DAK.config.loader.GamerulesClassName then
-	Class_ReplaceMethod(DAK.config.loader.GamerulesClassName, "GetCanPlayerHearPlayer", 
+	TGNS.ReplaceClassMethod(DAK.config.loader.GamerulesClassName, "GetCanPlayerHearPlayer", 
 		function(self, listenerPlayer, speakerPlayer)
 
 			local canHear = false

@@ -1,6 +1,6 @@
 local originalGetCanAttack
 
-originalGetCanAttack = Class_ReplaceMethod("Player", "GetCanAttack",
+originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack",
 	function(self)
 		local preGame = GetGamerules():GetGameState() == kGameState.PreGame or GetGamerules():GetGameState() == kGameState.NotStarted
 		local canAttack = originalGetCanAttack(self) and not preGame

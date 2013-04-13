@@ -9,7 +9,7 @@ local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory"
 
 local originalGetCanAttack
 
-originalGetCanAttack = Class_ReplaceMethod("Player", "GetCanAttack",
+originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack",
 	function(self)
 		local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
 		local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam

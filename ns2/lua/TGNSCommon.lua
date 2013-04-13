@@ -9,6 +9,10 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
+function TGNS.ReplaceClassMethod(className, methodName, method)
+	DAK:Class_ReplaceMethod(className, methodName, method)
+end
+
 function TGNS.GetClientList(predicate)
 	local result = TGNS.GetClients(TGNS.GetPlayerList())
 	if predicate ~= nil then
