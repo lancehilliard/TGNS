@@ -10,7 +10,7 @@ local NEXTMAPCOMMAND = "nextmap"
 
 local timeleftThrottle = 0
 local function OnCommandTimeleft(client)
-	if client ~= nil and Shared.GetTime() - timeleftThrottle > DAK.config.publiccommands.Commands[TIMELEFTCOMMAND].throttle then
+	if Shared.GetTime() - timeleftThrottle > DAK.config.publiccommands.Commands[TIMELEFTCOMMAND].throttle then
 		timeleftThrottle = Shared.GetTime()
 		for _, player in pairs(TGNS.GetPlayerList()) do
 			if player ~= nil then
@@ -41,7 +41,7 @@ end
 
 local function OnCommandNextMap(client)
 
-	if client ~= nil and Shared.GetTime() - nextmapThrottle > DAK.config.publiccommands.Commands[NEXTMAPCOMMAND].throttle then
+	if Shared.GetTime() - nextmapThrottle > DAK.config.publiccommands.Commands[NEXTMAPCOMMAND].throttle then
 		nextmapThrottle = Shared.GetTime()
 		for _, player in pairs(TGNS.GetPlayerList()) do
 			if player ~= nil then
@@ -82,3 +82,9 @@ local function OnChatMessage(message, playerName, steamId, teamNumber, teamOnly,
 end
 
 TGNS.RegisterEventHook("OnClientChatMessage", OnChatMessage)
+
+local function OnGameEnd()
+	OnCommandNextMap()
+	OnCommandTimeleft()
+end
+TGNS.RegisterEventHook("OnGameEnd", function() TGNS.ScheduleAction(8, OnGameEnd) end)
