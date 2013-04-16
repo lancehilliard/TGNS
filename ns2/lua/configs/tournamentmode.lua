@@ -21,11 +21,11 @@ DAK:RegisterEventHook("PluginDefaultConfigs", {PluginName = "tournamentmode", De
 
 local function SetupDefaultLanguageStrings()
 	local DefaultLangStrings = { }
-	DefaultLangStrings["TournamentModeTeamReadyAlert"] 				= "Team %s is ready, waiting on team %s to start game."
+	DefaultLangStrings["TournamentModeTeamReadyAlert"] 				= "%s are ready, waiting on %s to start game."
 	DefaultLangStrings["TournamentModeCountdown"] 					= "Game will start in %s seconds!"
 	DefaultLangStrings["TournamentModePubPlayerWarning"] 			= "Game will start once each team has %s players."
 	DefaultLangStrings["TournamentModeReadyAlert"] 					= "Both teams need to ready for game to start."
-	DefaultLangStrings["TournamentModeTeamReady"] 					= "%s has %s for Team %s."
+	DefaultLangStrings["TournamentModeTeamReady"] 					= "%s has %s for %s."
 	DefaultLangStrings["TournamentModeGameCancelled"]				= "Game start cancelled."
 	DefaultLangStrings["TournamentModeOfficialsMode"] 				= "Official Mode set, team captains ARE required."
 	DefaultLangStrings["TournamentModePCWMode"] 					= "PCW Mode set, team captains not required."

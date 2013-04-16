@@ -25,10 +25,13 @@
 !ns2/lua/base/client.lua
 !ns2/lua/base/config.lua
 !ns2/lua/base/configfileutility.lua
+!ns2/lua/base/eventfunctions.lua
 !ns2/lua/base/eventhooks.lua
 !ns2/lua/base/globals.lua
 !ns2/lua/base/language.lua
 !ns2/lua/base/mapcycle.lua
+!ns2/lua/base/menufunctions.lua
+!ns2/lua/base/playerfunctions.lua
 !ns2/lua/base/pluginloader.lua
 !ns2/lua/base/server.lua
 !ns2/lua/base/serveradmin.lua

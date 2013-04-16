@@ -94,9 +94,9 @@ local function MonitorCountDown(gamerules)
 		if TournamentModeSettings.lastmessage + DAK.config.tournamentmode.kTournamentModeAlertDelay < Shared.GetTime() then
 			if TournamentModeSettings[1].ready or TournamentModeSettings[2].ready then
 				if TournamentModeSettings[1].ready then
-					DAK:DisplayMessageToAllClients("TournamentModeTeamReadyAlert", 1, 2)
+					DAK:DisplayMessageToAllClients("TournamentModeTeamReadyAlert", DAK.config.loader.TeamOneName, DAK.config.loader.TeamTwoName)
 				else
-					DAK:DisplayMessageToAllClients("TournamentModeTeamReadyAlert", 2, 1)
+					DAK:DisplayMessageToAllClients("TournamentModeTeamReadyAlert", DAK.config.loader.TeamTwoName, DAK.config.loader.TeamOneName)
 				end
 			else
 				DAK:DisplayMessageToAllClients("TournamentModeReadyAlert")
@@ -318,14 +318,14 @@ local function ClientReady(client)
 			if TournamentModeSettings[teamnum].lastready + DAK.config.tournamentmode.kTournamentModeReadyDelay < Shared.GetTime() and TournamentModeSettings[teamnum].captain == clientid then
 				TournamentModeSettings[teamnum].ready = not TournamentModeSettings[teamnum].ready
 				TournamentModeSettings[teamnum].lastready = Shared.GetTime()
-				DAK:DisplayMessageToAllClients("TournamentModeTeamReady", playername, ConditionalValue(TournamentModeSettings[teamnum].ready, "readied", "unreadied"), teamnum)
+				DAK:DisplayMessageToAllClients("TournamentModeTeamReady", playername, ConditionalValue(TournamentModeSettings[teamnum].ready, "readied", "unreadied"), ConditionalValue(teamnum == 1, DAK.config.loader.TeamOneName, DAK.config.loader.TeamTwoName))
 				CheckGameCountdownStart()
 			end
 		elseif not TournamentModeSettings.official then
 			if TournamentModeSettings[teamnum].lastready + DAK.config.tournamentmode.kTournamentModeReadyDelay < Shared.GetTime() then
 				TournamentModeSettings[teamnum].ready = not TournamentModeSettings[teamnum].ready
 				TournamentModeSettings[teamnum].lastready = Shared.GetTime()
-				DAK:DisplayMessageToAllClients("TournamentModeTeamReady", playername, ConditionalValue(TournamentModeSettings[teamnum].ready, "readied", "unreadied"), teamnum)
+				DAK:DisplayMessageToAllClients("TournamentModeTeamReady", playername, ConditionalValue(TournamentModeSettings[teamnum].ready, "readied", "unreadied"), ConditionalValue(teamnum == 1, DAK.config.loader.TeamOneName, DAK.config.loader.TeamTwoName))
 				CheckGameCountdownStart()
 			end
 		end

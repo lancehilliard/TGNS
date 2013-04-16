@@ -12,7 +12,6 @@ local BannedPlayersFileName = "config://BannedPlayers.json"
 local BannedPlayersWebFileName = "config://BannedPlayersWeb.json"
 local BannedPlayersWeb = { }
 local ServerAdminWebCache = { }
-local initialwebupdate = 0
 local lastwebupdate = 0
 	
 local function LoadServerAdminSettings()
@@ -373,38 +372,39 @@ end
 
 DAK:RegisterEventHook("OnClientConnect", OnServerAdminClientConnect, 6, "serveradmin")
 
-local function DelayedServerCommandRegistration()
-	if initialwebupdate == 0 then
-		DAK:QueryForAdminList()
-		DAK:QueryForBansList()
-		initialwebupdate = Shared.GetTime() + DAK.config.serveradmin.QueryTimeout
+local function CheckServerAdminQueries()
+	if DAK.config.serveradmin.QueryURL ~= "" and ServerAdminWebCache == nil then
+		Shared.Message("ServerAdmin WebQuery failed, falling back on cached list.")
+		DAK.adminsettings.users = tablemerge(DAK.adminsettings.users, LoadServerAdminWebSettings())
 	end
-	if initialwebupdate < Shared.GetTime() then
-		if DAK.config.serveradmin.QueryURL ~= "" and ServerAdminWebCache == nil then
-			Shared.Message("ServerAdmin WebQuery failed, falling back on cached list.")
-			DAK.adminsettings.users = tablemerge(DAK.adminsettings.users, LoadServerAdminWebSettings())
-		end
-		if DAK.config.serveradmin.BansQueryURL ~= "" and BannedPlayersWeb == nil then
-			Shared.Message("Bans WebQuery failed, falling back on cached list.")
-			LoadBannedPlayersWeb()
-		end
-		initialwebupdate = initialwebupdate + DAK.config.serveradmin.ReconnectTime
+	if DAK.config.serveradmin.BansQueryURL ~= "" and BannedPlayersWeb == nil then
+		Shared.Message("Bans WebQuery failed, falling back on cached list.")
+		LoadBannedPlayersWeb()
 	end
-	if DAK.config.serveradmin.ReconnectTime < Shared.GetTime() then
-		if DAK.settings.connectedclients == nil then
-			DAK.settings.connectedclients = { }
-		end
-		for id, conntime in pairs(DAK.settings.connectedclients) do
-			if DAK:GetClientMatchingSteamId(tonumber(id)) == nil then
-				DAK.settings.connectedclients[id] = nil
-			end
-		end
-		DAK:SaveSettings()
-		DAK:DeregisterEventHook("OnServerUpdate", DelayedServerCommandRegistration)
-	end
+	return false
 end
 
-DAK:RegisterEventHook("OnServerUpdate", DelayedServerCommandRegistration, 5, "serveradmin")
+local function UpdateClientConnectionTime()
+	if DAK.settings.connectedclients == nil then
+		DAK.settings.connectedclients = { }
+	end
+	for id, conntime in pairs(DAK.settings.connectedclients) do
+		if DAK:GetClientMatchingSteamId(tonumber(id)) == nil then
+			DAK.settings.connectedclients[id] = nil
+		end
+	end
+	DAK:SaveSettings()
+	return false
+end
+
+local function DelayedServerCommandRegistration()
+	DAK:QueryForAdminList()
+	DAK:QueryForBansList()
+	DAK:SetupTimedCallBack(CheckServerAdminQueries, DAK.config.serveradmin.QueryTimeout)
+	DAK:SetupTimedCallBack(UpdateClientConnectionTime, DAK.config.serveradmin.ReconnectTime)
+end
+
+DAK:RegisterEventHook("OnPluginInitialized", DelayedServerCommandRegistration, 5, "serveradmin")
 
 local kMaxPrintLength = 128
 local kServerAdminMessage =

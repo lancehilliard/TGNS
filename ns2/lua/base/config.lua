@@ -70,7 +70,7 @@ local function GenerateDefaultDAKConfig(Plugin, Save)
 		
 		DefaultConfig = { }
 		DefaultConfig.MapChangeDelay = 5
-		DefaultConfig.ReconnectTime = 120
+		DefaultConfig.ReconnectTime = 30
 		DefaultConfig.ServerTimeZoneAdjustment = 0
 		DefaultConfig.UpdateDelay = 60
 		DefaultConfig.QueryTimeout = 10

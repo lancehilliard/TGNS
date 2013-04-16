@@ -110,10 +110,8 @@ local function MOTDOnClientConnect(client)
 		return false
 	end
 	
-	//local player = client:GetControllingPlayer()
-	//if player ~= nil and DAK.config.motd.kMOTDOnConnectURL ~= "" then
-		//Print("Command sent to client")
-		//Server.SendCommand(player, string.format("oneffectdebug SetMenuWebView(%s, function return Vector(Client.GetScreenWidth() * 0.8, Client.GetScreenHeight() * 0.8, 0) end )", DAK.config.motd.kMOTDOnConnectURL))
+	//if DAK.config.motd.kMOTDOnConnectURL ~= "" then
+		//DAK:ExecuteFunctionOnClient(client, string.format("oneffectdebug SetMenuWebView(%s, function return Vector(Client.GetScreenWidth() * 0.8, Client.GetScreenHeight() * 0.8, 0) end )", DAK.config.motd.kMOTDOnConnectURL))
 	//end	
 	
 	local PEntry = { ID = client:GetUserId(), Client = client, Message = 1, Time = 0 }

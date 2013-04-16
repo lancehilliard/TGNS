@@ -7,7 +7,7 @@ local RandomDuration = 0
 local RandomRoundRecentlyEnded = 0
 
 local function UpdateRandomStatus()
-	kVoteRandomTeamsEnabled = DAK.settings.RandomEnabledTill > Shared.GetSystemTime() or DAK.config.voterandom.kVoteRandomAlwaysEnabled
+	kVoteRandomTeamsEnabled = (DAK.settings.RandomEnabledTill ~= 0 and DAK.settings.RandomEnabledTill > Shared.GetSystemTime()) or DAK.config.voterandom.kVoteRandomAlwaysEnabled
 end
 
 local function LoadVoteRandom()
@@ -201,8 +201,9 @@ local function VoteRandomOff(client)
 		DAK:DisplayMessageToAllClients("VoteRandomDisabled")
 		DAK:PrintToAllAdmins("sv_randomoff", client)
 		ServerAdminPrint(client, "Random teams have been disabled.")
+	else
+		ServerAdminPrint(client, "Random teams were not enabled.")
 	end
-	ServerAdminPrint(client, "Random teams were not enabled.")
 	
 end
 
@@ -214,8 +215,9 @@ local function VoteRandomOn(client)
 		ExecuteRandomTeams()
 		DAK:PrintToAllAdmins("sv_randomon", client)
 		ServerAdminPrint(client, "Random teams have been enabled.")
+	else
+		ServerAdminPrint(client, "Random teams are already enabled.")
 	end
-	ServerAdminPrint(client, "Random teams are already enabled.")
 	
 end
 

@@ -11,7 +11,6 @@ DAK.__index = DAK
 Script.Load("lua/base/class.lua")
 
 local MenuMessageTag = "#^DAK"
-local MenusRegistered = false
 
 local function OnClientLoaded()
 	if guimenubase == nil then
@@ -41,18 +40,10 @@ local function OnClientLoaded()
 			
 		end
 	)
+	Shared.ConsoleCommand("registerclientmenus")
 end
 
 Event.Hook("LoadComplete", OnClientLoaded)
-
-local function OnUpdateClient()
-	if not MenusRegistered then
-		Shared.ConsoleCommand("registerclientmenus")
-		MenusRegistered = true
-	end
-end
-
-Event.Hook("UpdateClient", OnUpdateClient)
 
 local function OnClientDisconnected()
 	if guimenubase ~= nil then
@@ -92,5 +83,3 @@ originalNS2ClientHookNetworkMessage = DAK:Class_ReplaceMethod("Client", "HookNet
 		
 	end
 )
-
-//Hook to fix the old, perfectly fine pause method :<

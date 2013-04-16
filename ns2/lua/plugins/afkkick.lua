@@ -137,12 +137,8 @@ local function ProcessPlayingUsers(deltatime)
 			end
 		end
 		lastAFKUpdate = Shared.GetTime()
-		for _, player in ientitylist(playerRecords) do
-			if player ~= nil then
-				player:SetScoreboardChanged(true)
-			end
-		end
 	end
+	
 end
 
 DAK:RegisterEventHook("OnServerUpdate", ProcessPlayingUsers, 5, "afkkick")

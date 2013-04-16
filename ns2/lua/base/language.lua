@@ -203,6 +203,34 @@ function DAK:DisplayMessageToTeam(teamnum, messageId, ...)
 	end
 end
 
+function DAK:DisplayLegacyChatMessageToClientWithoutMenus(client, messageId, ...)
+	if client ~= nil and not client:GetIsVirtual() and not DAK:DoesClientHaveClientSideMenus(client) then
+		DAK:DisplayMessageToClient(client, messageId, ...)
+	end
+end
+
+function DAK:DisplayLegacyChatMessageToAllClientWithoutMenus(messageId, ...)
+	local playerRecords = Shared.GetEntitiesWithClassname("Player")
+	for _, player in ientitylist(playerRecords) do
+		local client = Server.GetOwner(player)
+		if client ~= nil and not client:GetIsVirtual() and not DAK:DoesClientHaveClientSideMenus(client) then
+			DAK:DisplayMessageToClient(client, messageId, ...)
+		end
+	end
+end
+
+function DAK:DisplayLegacyChatMessageToTeamClientsWithoutMenus(teamnum, messageId, ...)
+	if tonumber(teamnum) ~= nil then
+		local playerRecords = GetEntitiesForTeam("Player", teamnum)
+		for _, player in ipairs(playerRecords) do
+			local client = Server.GetOwner(player)
+			if client ~= nil and not client:GetIsVirtual() and not DAK:DoesClientHaveClientSideMenus(client) then
+				DAK:DisplayMessageToClient(client, messageId, ...)
+			end
+		end
+	end
+end
+
 local function UpdateClientLanguageSetting(clientID, language)
 	if clientID ~= nil then
 		DAK.settings.clientlanguages[tonumber(clientID)] = language

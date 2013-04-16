@@ -520,19 +520,19 @@ end
 
 DAK:CreateServerAdminCommand("Console_sv_ungag", OnCommandUnGagPlayer, "<player id> Ungags the provided player.")
 
-local function OnCommandUpdateBans(steamId, LastUpdateMessage, page)
-	local kVoteUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
-	if kVoteUpdateMessage == nil then
-		kVoteUpdateMessage = { }
-	end
-	local client =  DAK:GetClientMatchingSteamId(steamId)
-	kVoteUpdateMessage.header = string.format("Player to ban.")
+local function PopulateMenuItemWithClientList(VoteUpdateMessage, page)
 	for p = 1, #DAK.gameid do
 		local ci = p - (page * 8)
 		if ci > 0 and ci < 9 then
-			kVoteUpdateMessage.option[ci] = string.format(DAK:GetClientUIDString(DAK.gameid[p]))
+			VoteUpdateMessage.option[ci] = string.format(DAK:GetClientUIDString(DAK.gameid[p]))
 		end
 	end
+end
+
+local function OnCommandUpdateBanMenu(steamId, LastUpdateMessage, page)
+	local kVoteUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
+	kVoteUpdateMessage.header = string.format("Player to ban.")
+	PopulateMenuItemWithClientList(kVoteUpdateMessage, page)
 	kVoteUpdateMessage.inputallowed = true
 	kVoteUpdateMessage.footer = "BANT"
 	return kVoteUpdateMessage
@@ -546,23 +546,52 @@ local function OnCommandBanSelection(client, selectionnumber, page)
 	end
 end
 
+local function OnCommandUpdateKickMenu(steamId, LastUpdateMessage, page)
+	local kVoteUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
+	kVoteUpdateMessage.header = string.format("Player to kick.")
+	PopulateMenuItemWithClientList(kVoteUpdateMessage, page)
+	kVoteUpdateMessage.inputallowed = true
+	kVoteUpdateMessage.footer = "KICK'D"
+	return kVoteUpdateMessage
+end
+
+local function OnCommandKickSelection(client, selectionnumber, page)
+	local targetclient = DAK.gameid[selectionnumber + (page * 8)]
+	if targetclient ~= nil then
+		local HeadingText = string.format("Please confirm you wish to kick %s?", DAK:GetClientUIDString(targetclient))
+		DAK:DisplayConfirmationMenuItem(DAK:GetNS2IdMatchingClient(client), HeadingText, Kick, nil, DAK:GetNS2IdMatchingClient(targetclient))
+	end
+end
+
+local function OnCommandUpdateSlayMenu(steamId, LastUpdateMessage, page)
+	local kVoteUpdateMessage = DAK:CreateMenuBaseNetworkMessage()
+	kVoteUpdateMessage.header = string.format("Player to slay.")
+	PopulateMenuItemWithClientList(kVoteUpdateMessage, page)
+	kVoteUpdateMessage.inputallowed = true
+	kVoteUpdateMessage.footer = "Slay'D"
+	return kVoteUpdateMessage
+end
+
+local function OnCommandSlaySelection(client, selectionnumber, page)
+	local targetclient = DAK.gameid[selectionnumber + (page * 8)]
+	if targetclient ~= nil then
+		local HeadingText = string.format("Please confirm you wish to slay %s?", DAK:GetClientUIDString(targetclient))
+		DAK:DisplayConfirmationMenuItem(DAK:GetNS2IdMatchingClient(client), HeadingText, Slay, nil, DAK:GetNS2IdMatchingClient(targetclient))
+	end
+end
+
 local function GetBansMenu(client)
-	DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandBanSelection, OnCommandUpdateBans, true)
+	DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandBanSelection, OnCommandUpdateBanMenu, true)
 end
 
 local function GetKickMenu(client)
-	//DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandMenuVote, OnCommandUpdateVote, true)
+	DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandKickSelection, OnCommandUpdateKickMenu, true)
 end
 
 local function GetSlayMenu(client)
-	//DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandMenuVote, OnCommandUpdateVote, true)
-end
-
-local function GetGagMenu(client)
-	//DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandMenuVote, OnCommandUpdateVote, true)
+	DAK:CreateGUIMenuBase(DAK:GetNS2IdMatchingClient(client), OnCommandSlaySelection, OnCommandUpdateSlayMenu, true)
 end
 
 DAK:RegisterMainMenuItem("Kick Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_kick") end, GetKickMenu)
 DAK:RegisterMainMenuItem("Ban Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_ban") end, GetBansMenu)
 DAK:RegisterMainMenuItem("Slay Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_slay") end, GetSlayMenu)
-DAK:RegisterMainMenuItem("Gag Menu", function(client) return DAK:GetClientCanRunCommand(client, "sv_gag") end, GetGagMenu)

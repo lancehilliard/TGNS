@@ -13,7 +13,7 @@ local function OnPluginInitialized()
 	kBadgeData[kBadges.Constellation] = { Texture = "ui/badge_constellation.dds" }
 	kBadgeData[kBadges.UWE] = { Texture = "ui/badge_uwegold.dds" }
 	kBadgeData[kBadges.Developer] = { Texture = "ui/badge_dev.dds" }
-
+	 
 	-- Server badges
 	kBadgeData[kBadges.Unicorn] = { Id = "unicorn", Texture = "ui/badge_unicorn.dds" }
 	kBadgeData[kBadges.NyanCat] = { Id = "nyancat", Texture = "ui/badge_nyancat.dds" }
@@ -25,11 +25,11 @@ local function OnPluginInitialized()
 	kBadgeData[kBadges.Pumpkin] = { Id = "pumpkin", Texture = "ui/badge_pumpkin.dds" }
 	kBadgeData[kBadges.Skull] = { Id = "skull", Texture = "ui/badge_skull.dds" }
 	kBadgeData[kBadges.Crown] = { Id = "crown", Texture = "ui/badge_crown.dds" }
+	kBadgeData[kBadges.ENSLBlue] = { Id = "ensl_blue", Texture = "ui/ensl_blue.dds" }
+	kBadgeData[kBadges.ENSLRed] = { Id = "ensl_red", Texture = "ui/ensl_red.dds" }
 	kBadgeData[kBadges.Admin] = { Id = "admin_group", Texture = "ui/badge_admin.dds" }
 	kBadgeData[kBadges.Mod] = { Id = "mod_group", Texture = "ui/badge_mod.dds" }
-	kBadgeData[kBadges.Team] = { Id = "team_group", Texture = "ui/badge_mod.dds" }
-	kBadgeData[kBadges.Others] = { Id = "others_group", Texture = "ui/badge_mod.dds" }
-
+	 
 	-- DLC badges
 	kBadgeData[kBadges.PAX2012] = { Id = kPAX2012ProductId, Texture = "ui/badge_pax2012.dds" }
 
