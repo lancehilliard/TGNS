@@ -190,10 +190,10 @@ local function CommunitySlotsOnClientDelayedConnectGreeter(client)
 	elseif TGNS.HasClientSignedPrimer(client) then
 		chatMessage = string.format("TGNS Primer signer! Join the full server when %s+ strangers are playing!", DAK.config.communityslots.kMinimumStrangers)
 	else
-		chatMessage = "Welcome! Visit tacticalgamer.com/natural-selection to say hello!"
+		chatMessage = "Visit tacticalgamer.com/natural-selection to say hello!"
 	end
 	TGNS.ConsolePrint(client, chatMessage)
-	TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, chatMessage) end)
+	TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, chatMessage, "TacticalGamer.com") end)
 end
 TGNS.RegisterEventHook("OnClientDelayedConnect", CommunitySlotsOnClientDelayedConnect, TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY)
 TGNS.RegisterEventHook("OnClientDelayedConnect", CommunitySlotsOnClientDelayedConnectGreeter)
