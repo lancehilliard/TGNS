@@ -133,17 +133,21 @@ local function SendNextPlayer()
 	end
 end
 
+local function BeginBalance()
+	balanceLog = {}
+	balanceInProgress = true
+	SendNextPlayer()
+end
+
 local function svBalance(client)
 	local gameState = GetGamerules():GetGameState()
 	local whenDescriptor
 	if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
-		TGNS.SendAllChat("Teams are being balanced using TG Win/Loss histories. - tacticalgamer.com", "BALANCE")
-		balanceLog = {}
-		balanceInProgress = true
-		SendNextPlayer()
+		TGNS.SendAllChat(string.format("%s is balancing teams using TG Win/Loss histories.", TGNS.GetClientName(client)), "TacticalGamer.com")
+		TGNS.ScheduleAction(5, BeginBalance)
 	end
 end
-TGNS.RegisterCommandHook("Console_sv_balance", svBalance, "Balances all players based on win/loss (percentage) record.")
+TGNS.RegisterCommandHook("Console_sv_balance", svBalance, "Balances all players based on TG win/loss (percentage) record.")
 
 local function BalanceOnSetGameState(self, state, currentstate)
 	if state ~= currentstate then
@@ -155,7 +159,7 @@ local function BalanceOnSetGameState(self, state, currentstate)
 end
 TGNS.RegisterEventHook("SetGameState", BalanceOnSetGameState)
 
-function BalanceOnGameEnd(self, winningTeam)
+local function BalanceOnGameEnd(self, winningTeam)
 	TGNS.DoForClientsWithId(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c, steamId)
 			if TGNS.Has(steamIdsWhichStartedGame, steamId) then
 				local changeBalanceFunction = TGNS.PlayerIsOnTeam(TGNS.GetPlayer(c), winningTeam) and addWinToBalance or addLossToBalance
