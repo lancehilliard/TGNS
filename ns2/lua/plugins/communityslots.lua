@@ -220,10 +220,9 @@ local function OnGameEnd()
 	local bumpCounts = GetBumpCounts()
 	TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			PrintBumpCountsReport(c)
-			TGNS.PlayerAction(c, function(p)
-					TGNS.SendChatMessage(p, string.format("Bump totals this map: %s Victims; %s Rejects", bumpCounts.totalVictims, bumpCounts.totalRejects))
-				end
-			)
+			//TGNS.PlayerAction(c, function(p)
+			//		TGNS.SendChatMessage(p, string.format("Bump totals this map: %s Victims; %s Rejects", bumpCounts.totalVictims, bumpCounts.totalRejects))
+			//end)
 		end
 	)
 end
