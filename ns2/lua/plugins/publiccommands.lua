@@ -87,4 +87,4 @@ local function OnGameEnd()
 	OnCommandNextMap()
 	OnCommandTimeleft()
 end
-TGNS.RegisterEventHook("OnGameEnd", function() TGNS.ScheduleAction(8, OnGameEnd) end)
+TGNS.RegisterEventHook("OnGameEnd", function() TGNS.ScheduleAction(11, OnGameEnd) end)
