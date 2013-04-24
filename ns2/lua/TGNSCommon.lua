@@ -539,8 +539,10 @@ function TGNS.SendAdminConsoles(message, prefix)
 end
 
 function TGNS.DisconnectClient(client, reason)
-	client.disconnectreason = reason
-	Server.DisconnectClient(client)
+	pcall(function()
+		client.disconnectreason = reason
+		Server.DisconnectClient(client)
+	end)
 end
 
 function TGNS.SortAscending(elements, sortFunction)
