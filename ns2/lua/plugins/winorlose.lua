@@ -163,7 +163,7 @@ local function OnCommandWinOrLose(client)
 	local gamerules = GetGamerules()
 	if gamerules ~= nil and client ~= nil and gamerules:GetGameState() == kGameState.Started then
 		local player = client:GetControllingPlayer()
-		if player:GetTeam():GetNumCommandStructures() == 1 then
+		if player:GetTeam():GetNumAliveCommandStructures() == 1 then
 			local clientID = client:GetUserId()
 			if player ~= nil and clientID ~= nil then
 				local teamnumber = player:GetTeamNumber()
