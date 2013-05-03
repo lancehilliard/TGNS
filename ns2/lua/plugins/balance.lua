@@ -121,6 +121,7 @@ local function SendNextPlayer()
 		TGNS.SendToTeam(player, teamNumber)
 		TGNS.ScheduleAction(0.25, SendNextPlayer)
 	else
+		TGNS.SendAdminChat("Balance finished.", "ADMINDEBUG")
 		balanceInProgress = false
 		playerList = TGNS.GetPlayerList()
 		marineClients = TGNS.GetMarineClients(playerList)
@@ -157,7 +158,7 @@ local function BalanceOnSetGameState(self, state, currentstate)
 		end
 	end
 end
-TGNS.RegisterEventHook("SetGameState", BalanceOnSetGameState)
+TGNS.RegisterEventHook("OnSetGameState", BalanceOnSetGameState)
 
 local function BalanceOnGameEnd(self, winningTeam)
 	TGNS.DoForClientsWithId(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c, steamId)
