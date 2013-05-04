@@ -122,6 +122,8 @@ local function SendNextPlayer()
 		TGNS.ScheduleAction(0.25, SendNextPlayer)
 	else
 		TGNS.SendAdminChat("Balance finished.", "ADMINDEBUG")
+		TGNS.SendAdminConsoles("Balance finished.", "ADMINDEBUG")/
+		Shared.Message("Balance finished.")
 		balanceInProgress = false
 		playerList = TGNS.GetPlayerList()
 		marineClients = TGNS.GetMarineClients(playerList)
