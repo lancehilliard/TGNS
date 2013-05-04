@@ -97,7 +97,7 @@ end
 local function SendNextPlayer()
 	local playerList = TGNS.GetPlayerList()
 	table.sort(playerList, function(p1, p2) return GetPlayerWinLossRatio(p1) > GetPlayerWinLossRatio(p2) end )
-	local readyRoomClient = TGNS.GetLastMatchingClient(playerList, function(c,p) return TGNS.IsPlayerReadyRoom(p) end)
+	local readyRoomClient = TGNS.GetLastMatchingClient(playerList, function(c,p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
 	if readyRoomClient then
 		local player = TGNS.GetPlayer(readyRoomClient)
 		local teamNumber = nil
