@@ -2,6 +2,7 @@
 
 TGNS = {}
 local scheduledActions = {}
+local scheduledActionsErrorCount = 0
 
 TGNS.HIGHEST_EVENT_HANDLER_PRIORITY = 9
 TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 7
@@ -285,8 +286,19 @@ local function ProcessScheduledActions()
 	for r = #scheduledActions, 1, -1 do
 		local scheduledAction = scheduledActions[r]
 		if scheduledAction.when < Shared.GetTime() then
-			table.remove(scheduledActions, r)
-			scheduledAction.what()
+			local success, result = pcall(scheduledAction.what)
+			if success then
+				table.remove(scheduledActions, r)
+			else
+				scheduledActionsErrorCount = scheduledActionsErrorCount + 1
+				if scheduledActionsErrorCount < 100 then
+					local errorMessage = string.format("ScheduledAction Error: %s", result)
+					Shared.Message(errorMessage)
+					TGNS.EnhancedLog(errorMessage)
+				else
+					table.remove(scheduledActions, r)
+				end
+			end
 		end
 	end
 end
