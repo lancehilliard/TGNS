@@ -374,6 +374,18 @@ function TGNS.DoFor(elements, elementAction)
 	end
 end
 
+function TGNS.DoForReverse(elements, elementAction)
+	if elements ~= nil then
+		for r = #elements, 1, -1 do
+			if elements[r] ~= nil then
+				if elementAction(elements[r], r) then
+					break
+				end
+			end
+		end
+	end
+end
+
 function TGNS.DoForPairs(t, pairAction)
 	if t ~= nil then
 		for key, value in pairs(t) do
