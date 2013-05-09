@@ -14,7 +14,7 @@ local function OnCommandTimeleft(client)
 		timeleftThrottle = Shared.GetTime()
 		for _, player in pairs(TGNS.GetPlayerList()) do
 			if player ~= nil then
-				chatMessage = string.sub(string.format("%.1f Minutes Remaining.", math.max(0,((MapCycle_GetMapCycleTime() * 60) - Shared.GetTime())/60)), 1, kMaxChatLength)
+				chatMessage = string.sub(string.format("%.1f Minutes Remaining.", math.max(0,((PopulationMapCycle.GetMinimumMapDurationInMinutes() * 60) - Shared.GetTime())/60)), 1, kMaxChatLength)
 				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 			end
 		end
@@ -32,12 +32,12 @@ end
 /////////////
 
 local nextmapThrottle = 0
-local function GetMapName(map)
-	if type(map) == "table" and map.map ~= nil then
-		return map.map
-	end
-	return map
-end
+//local function GetMapName(map)
+//	if type(map) == "table" and map.map ~= nil then
+//		return map.map
+//	end
+//	return map
+//end
 
 local function OnCommandNextMap(client)
 
@@ -45,7 +45,7 @@ local function OnCommandNextMap(client)
 		nextmapThrottle = Shared.GetTime()
 		for _, player in pairs(TGNS.GetPlayerList()) do
 			if player ~= nil then
-				local mapname = GetMapName(MapCycle_GetNextMapInCycle())
+				local mapname = PopulationMapCycle.GetNextMapName()
 				if mapname ~= nil then
 					chatMessage = string.sub(string.format("Next map: %s", mapname), 1, kMaxChatLength)
 					Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)

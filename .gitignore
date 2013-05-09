@@ -133,6 +133,9 @@
 !ns2/lua/configs/printablenames.lua
 !ns2/lua/plugins/printablenames.lua
 
+!ns2/lua/configs/populationmapcycle.lua
+!ns2/lua/plugins/populationmapcycle.lua
+
 !ns2/lua/configs/prohibitednames.lua
 !ns2/lua/plugins/prohibitednames.lua
 
