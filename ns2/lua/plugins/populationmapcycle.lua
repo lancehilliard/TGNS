@@ -4,18 +4,18 @@ local autoMapChangeDelayInSeconds = 30
 local minimumMapDurationInMinutes = 30
 local minimumMapDurationInSeconds = minimumMapDurationInMinutes * 60
 local mapDatas = {}
-table.insert(mapDatas, { name = "ns2_turtle", min = 16 })
 table.insert(mapDatas, { name = "ns2_eclipse_beta", min = 16 })
-table.insert(mapDatas, { name = "ns2_tanith_beta", min = 16 })
+//table.insert(mapDatas, { name = "ns2_tanith_beta", min = 16 })
+table.insert(mapDatas, { name = "ns2_turtle", min = 16 })
+table.insert(mapDatas, { name = "ns2_descent", min = 14 })
 table.insert(mapDatas, { name = "ns2_jambi", min = 14 })
 table.insert(mapDatas, { name = "ns2_mineshaft", min = 14 })
-table.insert(mapDatas, { name = "ns2_summit", min = 0 })
 table.insert(mapDatas, { name = "ns2_docking", min = 12 })
-table.insert(mapDatas, { name = "ns2_descent", min = 12 })
 table.insert(mapDatas, { name = "ns2_refinery", min = 12 })
+table.insert(mapDatas, { name = "ns2_summit", min = 0 })
 table.insert(mapDatas, { name = "ns2_tram", min = 0 })
 table.insert(mapDatas, { name = "ns2_veil", min = 0 })
-//table.insert(mapDatas, { name = "ns2_last_stand", max = 12 })									
+//table.insert(mapDatas, { name = "ns2_last_stand", max = 12 })
 
 PopulationMapCycle = {}
 
