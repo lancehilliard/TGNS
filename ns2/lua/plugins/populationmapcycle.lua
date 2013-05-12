@@ -4,7 +4,7 @@ local autoMapChangeDelayInSeconds = 30
 local minimumMapDurationInMinutes = 30
 local minimumMapDurationInSeconds = minimumMapDurationInMinutes * 60
 local mapDatas = {}
-table.insert(mapDatas, { name = "ns2_eclipse_beta", min = 16 })
+//table.insert(mapDatas, { name = "ns2_eclipse_beta", min = 16 })
 //table.insert(mapDatas, { name = "ns2_tanith_beta", min = 16 })
 table.insert(mapDatas, { name = "ns2_turtle", min = 16 })
 table.insert(mapDatas, { name = "ns2_descent", min = 14 })
