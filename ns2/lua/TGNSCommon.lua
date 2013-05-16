@@ -116,9 +116,36 @@ function TGNS.RemoveAllMatching(elements, element)
 	end
 end
 
+function TGNS.DestroyEntity(entity)
+	DestroyEntity(entity)
+end
+
+function TGNS.KillTeamEntitiesExcept(className, teamNumber, entityToKeep)
+	local entities = TGNS.GetEntitiesForTeam(className, teamNumber)
+	TGNS.DoFor(entities, function (e)
+		if e ~= entityToKeep then
+			TGNS.DestroyEntity(e)
+		end
+	end)
+end
+
+function TGNS.GetEntitiesForTeam(className, teamNumber)
+	local result = GetEntitiesForTeam(className, teamNumber)
+	return result
+end
+
+function TGNS.EntityIsCommandStructure(entity)
+	local result = false
+	if entity ~= nil then
+		local entityClassName = entity:GetClassName()
+		result = entityClassName == "CommandStation" or entityClassName == "Hive"
+	end
+	return result
+end
+
 function TGNS.DestroyAllEntities(className, teamNumber)
-	local entities = GetEntitiesForTeam(className, teamNumber)
-	TGNS.DoFor(entities, function(s) DestroyEntity(s) end)
+	local entities = TGNS.GetEntitiesForTeam(className, teamNumber)
+	TGNS.DoFor(entities, function(e) TGNS.DestroyEntity(e) end)
 end
 
 function TGNS.IsTournamentMode()
@@ -582,7 +609,7 @@ end
 
 function TGNS.ElementIsFoundBeforeIndex(elements, element, index)
 	local result = false
-	for i = 0, #elements do 
+	for i = 1, #elements do 
 		if i <= index and elements[i] == element then
 			result = true
 			break
