@@ -12,7 +12,7 @@ local rejectBumpCounts = {}
 
 local function IsClientAmongLongestConnected(clients, client, limit)
 	TGNS.SortAscending(clients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
-	local result = TGNS.ElementIsFoundBeforeIndex(clients, client, limit - 1)
+	local result = TGNS.ElementIsFoundBeforeIndex(clients, client, limit)
 	return result
 end
 
