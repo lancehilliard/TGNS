@@ -13,21 +13,6 @@ originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack",
 	function(self)
 		local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
 		local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam
-		
-		/*
-		if winOrLoseChallengeIsInProgress then
-			Shared.Message("winOrLoseChallengeIsInProgress")
-		else
-			Shared.Message("NOT winOrLoseChallengeIsInProgress")
-		end
-
-		if canAttack then
-			Shared.Message("Can Attack")
-		else
-			Shared.Message("Can NOT Attack")
-		end
-		*/
-		
 		return canAttack
 	end
 )
@@ -104,6 +89,10 @@ local function UpdateWinOrLoseVotes()
 							break
 						end
 					end
+					TGNS.DoFor(playerRecords, function(p)
+						p:SelectNextWeapon()
+						p:SelectPrevWeapon()
+					end)
 					
 					kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 					kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
@@ -228,3 +217,13 @@ local function onChatClient(client, networkMessage)
 	end
 end
 TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient, 5)
+
+local function OnEntityKilled(self, targetEntity, attacker, doer, point, direction)
+	if TGNS.EntityIsCommandStructure(targetEntity) then
+		TGNS.SendAdminChat("CommandStructure killed.", "WINORLOSEDEBUG")
+		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+			TGNS.DestroyAllEntities("CommandStructure", targetEntity:GetTeamNumber())
+		end
+	end
+end
+DAK:RegisterEventHook("OnEntityKilled", OnEntityKilled, 5, "winorlose")
