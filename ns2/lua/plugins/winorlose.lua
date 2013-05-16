@@ -219,9 +219,8 @@ end
 TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient, 5)
 
 local function OnEntityKilled(self, targetEntity, attacker, doer, point, direction)
-	if TGNS.EntityIsCommandStructure(targetEntity) then
-		TGNS.SendAdminChat("CommandStructure killed.", "WINORLOSEDEBUG")
-		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+		if TGNS.EntityIsCommandStructure(targetEntity) then
 			TGNS.DestroyAllEntities("CommandStructure", targetEntity:GetTeamNumber())
 		end
 	end
