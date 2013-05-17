@@ -29,6 +29,10 @@ local function AbandonResources(client)
 				abandonedResources[playerTeamNumber][client] = resources
 				TGNS.SetPlayerResources(player, 0)
 				AnnounceAbandonedResources(client, resources)
+				if resources > 100 then
+					abandonedResources[playerTeamNumber][TGNS.GetClientSteamId(client) .. Shared.GetTime()] = resources - 100
+					abandonedResources[playerTeamNumber][client] = 100
+				end
 			end
 		end
 	end
