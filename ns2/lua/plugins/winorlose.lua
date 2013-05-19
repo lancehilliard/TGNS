@@ -202,21 +202,22 @@ local function WinOrLoseOnCastVoteByPlayer(self, voteTechId, player)
 end
 TGNS.RegisterEventHook("OnCastVoteByPlayer", WinOrLoseOnCastVoteByPlayer)
 
-local function onChatClient(client, networkMessage)
-	local teamOnly = networkMessage.teamOnly
-	local message = StringTrim(networkMessage.message)
-	for c = 1, #DAK.config.winorlose.kWinOrLoseChatCommands do
-		local chatcommand = DAK.config.winorlose.kWinOrLoseChatCommands[c]
-		if message == chatcommand and not teamOnly then
-			TGNS.PlayerAction(client, function(p)
+local function OnChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
+	TGNS.DoFor(DAK.config.winorlose.kWinOrLoseChatCommands, function(chatcommand)
+		if message == chatcommand then
+			if teamOnly then
+				OnCommandWinOrLose(client)
+			else
+				TGNS.PlayerAction(client, function(p)
 					TGNS.SendChatMessage(p, "Use the Vote Concede menu (or team chat) to concede. No vote has been cast.")
-				end
-			)
-			return true
+				end)
+				return true
+			end
 		end
-	end
+	end)
 end
-TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient, 5)
+
+TGNS.RegisterEventHook("OnClientChatMessage", OnChatMessage)
 
 local function OnEntityKilled(self, targetEntity, attacker, doer, point, direction)
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
