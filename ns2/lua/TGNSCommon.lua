@@ -197,6 +197,15 @@ function TGNS.RegisterPluginConfig(pluginName, pluginVersion, defaultConfig, def
 	DAK:RegisterEventHook("PluginDefaultLanguageDefinitions", function() return defaultLanguageStrings end)
 end
 
+function TGNS.GetConcatenatedStringOrEmpty(...)
+	local result = ""
+	local concatenation = StringConcatArgs(...)
+	if concatenation then
+		result = concatenation
+	end
+	return result
+end
+
 function TGNS.RegisterCommandHook(command, handler, helpText, availableToAllPlayers)
 	DAK:CreateServerAdminCommand(command, handler, helpText, availableToAllPlayers)
 end
