@@ -89,6 +89,7 @@ local function ToggleOptIn(client, role)
 			message = string.format("You are opted into %s. Only %s are considered.", role.displayName, role.candidatesDescription)
 		else
 			message = string.format("You will no longer be considered for %s.", role.displayName)
+			RemoveFromClient(client, role)
 		end
 	end
 	TGNS.ConsolePrint(client, message, role.chatPrefix)
