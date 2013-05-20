@@ -44,6 +44,9 @@ function BuildScoresMessage(scorePlayer, sendToPlayer)
 		if TGNS.IsPlayerAFK(scorePlayer) and PlayerCanSeeAfkStatus(scorePlayer, sendToPlayer) then
 			icon = icon .. DAK.config.scoreboardicons.AFK
 		end
+		if TGNS.IsClientSM(client) then
+			icon = string.upper(icon)
+		end
 		t.playerName = prependPlayerName(t.playerName, icon)
 	end
 	
