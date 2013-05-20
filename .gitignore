@@ -166,8 +166,8 @@
 !ns2/lua/configs/teamres.lua
 !ns2/lua/plugins/teamres.lua
 
-!ns2/lua/configs/tempadmin.lua
-!ns2/lua/plugins/tempadmin.lua
+!ns2/lua/configs/teamroles.lua
+!ns2/lua/plugins/teamroles.lua
 
 !ns2/lua/configs/winorlose.lua
 !ns2/lua/plugins/winorlose.lua
