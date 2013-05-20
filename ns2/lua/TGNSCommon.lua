@@ -476,6 +476,14 @@ function TGNS.IsClientAdmin(client)
 	return result
 end
 
+function TGNS.IsClientGuardian(client)
+	local result = false
+	if client ~= nil then
+		result = not TGNS.IsClientAdmin(client) and TGNS.ClientCanRunCommand(client, "sv_isguardian")
+	end
+	return result
+end
+
 function TGNS.IsClientTempAdmin(client)
 	local result = false
 	if client ~= nil then
