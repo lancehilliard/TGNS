@@ -3,86 +3,101 @@ Script.Load("lua/TGNSPlayerDataRepository.lua")
 Script.Load("lua/TGNSPlayerBlacklistRepository.lua")
 
 local RosterCheckInterval = 10
-local pdr = TGNSPlayerDataRepository.Create("tempadmin", function(tempAdminData)
-			tempAdminData.optin = tempAdminData.optin ~= nil and tempAdminData.optin or false
-			return tempAdminData
-		end
-	)
 
-local pbr = TGNSPlayerBlacklistRepository.Create("tempadmin")
-	
-local function IsClientOptedIn(client)
-	local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
-	local result = tempAdminData.optin
+local function CreateRole(displayName, candidatesDescription, groupName, chatPrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery)
+	local result = {}
+	local pdr = TGNSPlayerDataRepository.Create(persistedDataName, function(data)
+			data.optin = data.optin ~= nil and data.optin or false
+			return data
+		end)
+	local pbr = TGNSPlayerBlacklistRepository.Create(persistedDataName)
+	result.displayName = displayName
+	result.candidatesDescription = candidatesDescription
+	result.groupName = groupName
+	result.chatPrefix = chatPrefix
+	result.optInConsoleCommandName = optInConsoleCommandName
+	result.IsClientOneOf = isClientOneOfQuery
+	result.IsClientBlockerOf = isClientBlockerQuery
+	function result:IsTeamEligible(teamPlayers) return TGNS.GetLastMatchingClient(teamPlayers, self.IsClientBlockerOf) == nil end
+	function result:IsClientBlacklisted(client) return pbr:IsClientBlacklisted(client) end
+	function result:LoadOptInData(client) return pdr:Load(TGNS.GetClientSteamId(client)) end
+	function result:SaveOptInData(pdrData) pdr:Save(pdrData) end
+	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(TGNS.GetClientSteamId(client)).optin and not self:IsClientBlacklisted(client) end
 	return result
 end
 
-local function IsTempAdminEligible(client)
-	local result = TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) and IsClientOptedIn(client) and not pbr:IsClientBlacklisted(client)
-	return result
-end
+local roles = {
+	CreateRole("Temp Admin"
+		, "Supporting Members who have signed the TGNS Primer"
+		, "tempadmin_group"
+		, "TEMPADMIN"
+		, "sv_tempadmin"
+		, "tempadmin"
+		, TGNS.IsClientTempAdmin
+		, TGNS.IsClientAdmin
+		, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) end)
+	, CreateRole("Guardian"
+		, "players who have signed the TGNS Primer"
+		, "guardian_group"
+		, "GUARDIAN"
+		, "sv_guardian"
+		, "guardian"
+		, TGNS.IsClientGuardian
+		, function(client) return TGNS.IsClientTempAdmin(client) or TGNS.IsClientAdmin(client) end
+		, TGNS.HasClientSignedPrimer)
+}
 
-local function GetExistingTempAdminsCount(teamPlayers)
-	local existingTempAdmins = TGNS.GetMatchingClients(teamPlayers, function(c,p) return TGNS.IsClientTempAdmin(c) end)
-	local result = #existingTempAdmins
-	return result
-end
-
-local function GetExistingAdminsCount(teamPlayers)
-	local existingAdmins = TGNS.GetMatchingClients(teamPlayers, function(c,p) return TGNS.IsClientAdmin(c) end)
-	local result = #existingAdmins
-	return result
-end
-
-local function GetTempAdminCandidateClient(teamPlayers)
+local function GetCandidateClient(teamPlayers, role)
 	local result = nil
-	local teamNeedsAdmin = TGNS.GetLastMatchingClient(teamPlayers, TGNS.IsClientAdmin) == nil
-	if teamNeedsAdmin then
-		if GetExistingTempAdminsCount(teamPlayers) == 0 then
-			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p) return IsTempAdminEligible(c) end)
+	if role:IsTeamEligible(teamPlayers) then
+		if #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end) == 0 then
+			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p) return role:IsClientEligible(c) end)
 		end
 	end
 	return result
 end
 
-local function svTempAdmin(client)
+local function AddToClient(client, role)
+	TGNS.AddSteamIDToGroup(TGNS.GetClientSteamId(client), role.groupName)
+	TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, string.format("You are %s. Apply exemplarily. Console: sv_help", role.displayName)) end)
+	TGNS.UpdateAllScoreboards()
+end
+
+local function RemoveFromClient(client, role)
+	local steamId = TGNS.GetClientSteamId(client)
+	TGNS.RemoveSteamIDFromGroup(steamId, role.groupName)
+	TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, string.format("You are no longer %s.", role.displayName)) end)
+	TGNS.UpdateAllScoreboards()
+end
+
+local function EnsureAmongPlayers(players, role)
+	local candidateClient = GetCandidateClient(players, role)
+	if candidateClient ~= nil then
+		AddToClient(candidateClient, role)
+	end
+end
+
+local function ToggleOptIn(client, role)
 	local message
-	if pbr:IsClientBlacklisted(client) then
+	if role:IsClientBlacklisted(client) then
 		message = "Contact an Admin to get access to Temp Admin: tacticalgamer.com/natural-selection-contact-admin"
 	else
-		local tempAdminData = pdr:Load(TGNS.GetClientSteamId(client))
-		tempAdminData.optin = not tempAdminData.optin
-		pdr:Save(tempAdminData)
-		if tempAdminData.optin then
-			message = "You are opted into Temp Admin. Only Supporting Members who have signed the TGNS Primer are considered."
+		local pdrData = role:LoadOptInData(client)
+		pdrData.optin = not pdrData.optin
+		role:SaveOptInData(pdrData)
+		if pdrData.optin then
+			message = string.format("You are opted into %s. Only %s are considered.", role.displayName, role.candidatesDescription)
 		else
-			message = "You will no longer be considered for Temp Admin."
+			message = string.format("You will no longer be considered for %s.", role.displayName)
 		end
 	end
-	TGNS.ConsolePrint(client, message, "TEMPADMIN")
-end
-TGNS.RegisterCommandHook("Console_sv_tempadmin", svTempAdmin, "Toggle opt in/out of Temp Admin responsibilities.", true)
-
-local function AddTempAdminToClient(client)
-	TGNS.AddSteamIDToGroup(TGNS.GetClientSteamId(client), "tempadmin_group")
-	TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "You are Temp Admin. Apply exemplarily. Console: sv_help") end)
-	TGNS.UpdateAllScoreboards()
+	TGNS.ConsolePrint(client, message, role.chatPrefix)
 end
 
-local function RemoveTempAdminFromClient(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	TGNS.RemoveSteamIDFromGroup(steamId, "tempadmin_group")
-	TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, "You are no longer Temp Admin.") end)
-	TGNS.UpdateAllScoreboards()
+local function RegisterCommandHook(role)
+	TGNS.RegisterCommandHook("Console_" .. role.optInConsoleCommandName, function(client) ToggleOptIn(client, role) end, string.format("Toggle opt in/out of %s responsibilities.", role.displayName), true)
 end
-
-local function EnsureTempAdminAmongPlayers(players)
-	local tempAdminCandidateClient = GetTempAdminCandidateClient(players)
-	
-	if tempAdminCandidateClient ~= nil then
-		AddTempAdminToClient(tempAdminCandidateClient)
-	end
-end
+TGNS.DoFor(roles, RegisterCommandHook)
 
 local function CheckRoster()
 	TGNS.ScheduleAction(RosterCheckInterval, CheckRoster)
@@ -92,36 +107,29 @@ local function CheckRoster()
 	local alienPlayers = TGNS.GetAlienPlayers(playerList)
 	local readyRoomPlayers = TGNS.GetReadyRoomPlayers(playerList)
 
-	EnsureTempAdminAmongPlayers(readyRoomPlayers)
-	EnsureTempAdminAmongPlayers(marinePlayers)
-	EnsureTempAdminAmongPlayers(alienPlayers)
+	TGNS.DoFor(roles, function(role)
+		EnsureAmongPlayers(readyRoomPlayers, role)
+		EnsureAmongPlayers(marinePlayers, role)
+		EnsureAmongPlayers(alienPlayers, role)
+	end)
 end
+TGNS.ScheduleAction(RosterCheckInterval, CheckRoster)
 
-local function RemoveTempAdmins(clients)
-	TGNS.DoFor(clients, function(c)
-			if TGNS.IsClientTempAdmin(c) then
-				RemoveTempAdminFromClient(c)
+TGNS.RegisterEventHook("OnTeamJoin", function(self, player, newTeamNumber, force)
+	TGNS.DoFor(roles, function(role)
+		local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
+		local playerIsClientBlockerOf = TGNS.ClientAction(player, role.IsClientBlockerOf)
+		if playerIsClientBlockerOf then
+			TGNS.DoFor(TGNS.Where(clients, role.IsClientOneOf), function(c) RemoveFromClient(c, role) end)
+		end
+		local playerIs = TGNS.ClientAction(player, role.IsClientOneOf)
+		if playerIs then
+			local teamPlayers = TGNS.GetPlayers(teamClients)
+			local numberOnNewTeam = #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
+			local numberOfBlockersOnNewTeam = #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientBlockerOf(c) end)
+			if (numberOnNewTeam > 0 or numberOfBlockersOnNewTeam > 0) then
+				TGNS.ClientAction(player, function(c) RemoveFromClient(c, role) end)
 			end
 		end
-	)
-end
-
-local function TempAdminOnTeamJoin(self, player, newTeamNumber, force)
-	local playerIsAdmin = TGNS.ClientAction(player, TGNS.IsClientAdmin)
-	local playerIsTempAdmin = TGNS.ClientAction(player, function(c) return TGNS.IsClientTempAdmin(c) end)
-	local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
-	if playerIsAdmin then
-		RemoveTempAdmins(teamClients)
-	end
-	if playerIsTempAdmin then
-		local teamPlayers = TGNS.GetPlayers(teamClients)
-		local numberOfTempAdminsOnNewTeam = GetExistingTempAdminsCount(teamPlayers)
-		local numberOfAdminsOnNewTeam = GetExistingAdminsCount(teamPlayers)
-		if (numberOfTempAdminsOnNewTeam > 0 or numberOfAdminsOnNewTeam > 0) then
-			TGNS.ClientAction(player, RemoveTempAdminFromClient)
-		end
-	end
-end
-TGNS.RegisterEventHook("OnTeamJoin", TempAdminOnTeamJoin)
-
-TGNS.ScheduleAction(RosterCheckInterval, CheckRoster)
+	end)
+end)
