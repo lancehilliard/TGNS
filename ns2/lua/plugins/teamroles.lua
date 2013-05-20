@@ -120,7 +120,7 @@ TGNS.RegisterEventHook("OnTeamJoin", function(self, player, newTeamNumber, force
 		local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 		local playerIsClientBlockerOf = TGNS.ClientAction(player, role.IsClientBlockerOf)
 		if playerIsClientBlockerOf then
-			TGNS.DoFor(TGNS.Where(clients, role.IsClientOneOf), function(c) RemoveFromClient(c, role) end)
+			TGNS.DoFor(TGNS.Where(teamClients, role.IsClientOneOf), function(c) RemoveFromClient(c, role) end)
 		end
 		local playerIs = TGNS.ClientAction(player, role.IsClientOneOf)
 		if playerIs then
