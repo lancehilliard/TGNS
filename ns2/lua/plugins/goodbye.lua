@@ -52,4 +52,3 @@ local function OnCommandGoodbye(client, playerName, ...)
 	end
 end
 TGNS.RegisterCommandHook("Console_gb", OnCommandGoodbye, "Remove a rule-violating Stranger from the server.")
-TGNS.RegisterCommandHook("Console_goodbye", OnCommandGoodbye, "Remove a rule-violating Stranger from the server.")
