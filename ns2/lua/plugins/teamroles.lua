@@ -22,7 +22,7 @@ local function CreateRole(displayName, candidatesDescription, groupName, chatPre
 	function result:IsClientBlacklisted(client) return pbr:IsClientBlacklisted(client) end
 	function result:LoadOptInData(client) return pdr:Load(TGNS.GetClientSteamId(client)) end
 	function result:SaveOptInData(pdrData) pdr:Save(pdrData) end
-	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(TGNS.GetClientSteamId(client)).optin and not self:IsClientBlacklisted(client) end
+	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(client).optin and not self:IsClientBlacklisted(client) end
 	return result
 end
 
