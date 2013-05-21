@@ -22,6 +22,7 @@ local function OnCommandGoodbye(client, playerName, ...)
 				local reason = TGNS.GetConcatenatedStringOrEmpty(...)
 				if reason == "" then
 					ShowUsage(client)
+					TGNS.ConsolePrint(client, "============== ERROR: ==============", "GOODBYE")
 					TGNS.ConsolePrint(client, string.format("Specify a documented server rule that %s violated.", TGNS.GetPlayerName(targetPlayer)), "GOODBYE")
 					TGNS.ConsolePrint(client, string.format("NOTE: Make sure %s has been warned (politely if you can manage it)!", TGNS.GetPlayerName(targetPlayer)), "GOODBYE")
 					TGNS.ConsolePrint(client, "See usage notes above.", "GOODBYE")
@@ -32,22 +33,25 @@ local function OnCommandGoodbye(client, playerName, ...)
 						TGNS.ConsolePrint(client, string.format("%s will be shown the following and removed: %s", TGNS.GetPlayerName(targetPlayer), reason), "GOODBYE")
 					else
 						ShowUsage(client)
+						TGNS.ConsolePrint(client, "============== ERROR: ==============", "GOODBYE")
 						TGNS.ConsolePrint(client, string.format("%s is not a Stranger. See usage notes above.", TGNS.GetPlayerName(targetPlayer)), "GOODBYE")
 					end
 				end
-			
 			else
-				TGNS.ConsolePrint(client, string.format("'%s' uniquely matches a player, but no client found.", playerName), "GOODBYE")
+				TGNS.ConsolePrint(client, "============== ERROR: ==============", "GOODBYE")
+				TGNS.ConsolePrint(client, string.format("'%s' uniquely matches a player, but no client found. Try again.", playerName), "GOODBYE")
 			end
 		else
 			if playerName == nil then
 				ShowUsage(client, nil)
 			else
+				TGNS.ConsolePrint(client, "============== ERROR: ==============", "GOODBYE")
 				TGNS.ConsolePrint(client, string.format("'%s' does not uniquely match a player.", playerName), "GOODBYE")
 			end
 			
 		end
 	else
+		TGNS.ConsolePrint(client, "============== ERROR: ==============", "GOODBYE")
 		TGNS.ConsolePrint(client, "You must sign the TGNS Primer to use this command.", "GOODBYE")
 	end
 end
