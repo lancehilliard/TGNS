@@ -23,8 +23,7 @@ local function StagedTeamJoinsOnTeamJoin(self, player, newTeamNumber, force)
 	local balanceIsInProgress = Balance and Balance.IsInProgress()
 	if not balanceIsInProgress and not TGNS.ClientAction(player, TGNS.GetIsClientVirtual) then
 		if TGNS.IsGameplayTeam(newTeamNumber) then
-			local atLeastOneSmIsOnTheServer = TGNS.Any(TGNS.GetPlayerList(), function(p) return TGNS.ClientAction(p, TGNS.IsClientSM) end)
-			if atLeastOneSmIsOnTheServer then
+			if TGNS.Any(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), TGNS.IsClientSM) then
 				local secondsRemainingBeforeAllMayJoin = math.floor(allMayJoinAt - Shared.GetTime())
 				if secondsRemainingBeforeAllMayJoin > 0 then
 					if not TGNS.ClientAction(player, TGNS.IsClientSM) then
