@@ -161,6 +161,7 @@ local function IsClientBumped(client)
 		local victimClient = FindVictimClient(client, nonSpecPlayers)
 		if victimClient ~= nil then
 			TGNS.SendAdminConsoles(GetBumpSummary(playerList, victimClient, "VICTIM"), "SLOTSDEBUG")
+			TGNSConnectedTimesTracker.PrintConnectedDurations(victimClient)
 			TGNSClientKicker.Kick(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
 		else
 			TGNS.SendAdminConsoles(GetBumpSummary(playerList, client, "JOINER"), "SLOTSDEBUG")
