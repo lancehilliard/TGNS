@@ -43,7 +43,7 @@ local function GetTrackedClients()
 	return result
 end
 
-local function PrintConnectedDurations(client)
+function TGNSConnectedTimesTracker.PrintConnectedDurations(client)
 	local trackedClients = GetTrackedClients()
 	table.sort(trackedClients, function(c1, c2)
 		return TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c1) < TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c2)
@@ -53,7 +53,7 @@ local function PrintConnectedDurations(client)
 		TGNS.ConsolePrint(client, string.format("%s> %s: %s", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds)), "CONNECTEDTIMES")
 	end)
 end
-TGNS.RegisterCommandHook("Console_sv_showtimes", PrintConnectedDurations, "Print connected time of each client.")
+TGNS.RegisterCommandHook("Console_sv_showtimes", TGNSConnectedTimesTracker.PrintConnectedDurations, "Print connected time of each client.")
 
 local function SetClientLastSeenNow(client)
 	local steamId = TGNS.GetClientSteamId(client)
