@@ -88,6 +88,11 @@ function TGNS.GetPlayerClassPurchaseCost(player)
 	return result
 end
 
+function TGNS.IsGameInCountdown()
+	local result = GetGamerules():GetGameState() == kGameState.Countdown
+	return result
+end
+
 function TGNS.IsGameInProgress()
 	local result = GetGamerules():GetGameState() == kGameState.Started
 	return result
@@ -351,6 +356,11 @@ end
 
 function TGNS.IsGameStartingState(gameState)
 	local result = gameState == kGameState.Started
+	return result
+end
+
+function TGNS.IsGameInPreGame()
+	local result = GetGamerules():GetGameState() == kGameState.PreGame
 	return result
 end
 
