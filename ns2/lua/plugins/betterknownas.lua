@@ -1,21 +1,14 @@
 Script.Load("lua/TGNSCommon.lua")
 Script.Load("lua/TGNSPlayerDataRepository.lua")
 
+local bkas = {}
+
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 			bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
 			bkaData.BKA = bkaData.BKA ~= nil and bkaData.BKA or ""
 			return bkaData
 		end
 	)
-
-local function GetBkaName(...)
-	local result = ""
-	local concatenation = StringConcatArgs(...)
-	if concatenation then
-		result = concatenation
-	end
-	return result
-end
 
 local function ShowCurrentBka(client, targetSteamId)
 	local steamId = TGNS.GetClientSteamId(client)
@@ -73,7 +66,7 @@ local function svAka(client, playerName, ...)
 		local targetClient = Server.GetOwner(targetPlayer)
 		if targetClient ~= nil then
 			local targetSteamId = targetClient:GetUserId()
-			local newBkaName = GetBkaName(...)
+			local newBkaName = TGNS.GetConcatenatedStringOrEmpty(...)
 			if newBkaName ~= "" then
 				AddAka(targetSteamId, newBkaName, true)
 				ShowCurrentBka(client, targetSteamId)
@@ -100,7 +93,7 @@ local function svBka(client, playerName, ...)
 		local targetClient = Server.GetOwner(targetPlayer)
 		if targetClient ~= nil then
 			local targetSteamId = targetClient:GetUserId()
-			local newBkaName = GetBkaName(...)
+			local newBkaName = TGNS.GetConcatenatedStringOrEmpty(...)
 			if newBkaName ~= "" then
 				local existingBkaData = pdr:Load(targetSteamId)
 				local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
@@ -116,6 +109,8 @@ local function svBka(client, playerName, ...)
 					newBkaData.BKA = newBkaName
 				end
 				pdr:Save(newBkaData)
+				bkas[targetClient] = newBkaName
+				TGNS.UpdateAllScoreboards()
 				ShowCurrentBka(client, targetSteamId)
 			else
 				ShowUsage(client, targetSteamId)
@@ -134,47 +129,31 @@ local function svBka(client, playerName, ...)
 end
 TGNS.RegisterCommandHook("Console_sv_bka", svBka, "<target> <bka> Adds a BKA name to the target.")
 
-local function EvaluatePlayerName(player, name)
-	local client = Server.GetOwner(player)
-	if client ~= nil then
-		local steamId = client:GetUserId()
-		local bkaData = pdr:Load(steamId)
-		if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
-			local bkaName = "[" .. bkaData.BKA .. "]"
-			local playerNameStartsWithBkaName = string.sub(name,1,string.len(bkaName))==bkaName
-			if not playerNameStartsWithBkaName then
-				local chatMessage = string.format("Your name must start with '%s' before you play.", bkaName)
-				Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-				TGNS.PMAllPlayersWithAccess(nil, name .. " needs to add '" .. bkaName .. "' BKA value to playername.", "sv_bka", false)
-				return false
+local function OnClientDelayedConnect(client)
+	local bkaData = pdr:Load(TGNS.GetClientSteamId(client))
+	if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
+		bkas[client] = bkaData.BKA
+		TGNS.UpdateAllScoreboards()
+	end
+end
+TGNS.RegisterEventHook("OnClientDelayedConnect", OnClientDelayedConnect)
+
+local originalBuildScoresMessage = BuildScoresMessage
+
+function BuildScoresMessage(scorePlayer, sendToPlayer)
+	local t = originalBuildScoresMessage(scorePlayer, sendToPlayer)
+
+	local client = Server.GetOwner(scorePlayer)
+	if client and t and t.playerName then
+		local bkaName = bkas[client]
+		if bkaName ~= nil then
+			local bkaFormattedName = string.format("[%s]", bkaName)
+			local nameStartsWithFormattedBka = TGNS.StartsWith(TGNS.GetPlayerName(scorePlayer), bkaFormattedName)
+			if not nameStartsWithFormattedBka then
+				t.playerName = string.format("%s %s", bkaFormattedName, t.playerName)
 			end
 		end
 	end
-	return true
+	
+	return t
 end
-
-local function BkaOnTeamJoin(self, player, newTeamNumber, force)
-	local result = not (newTeamNumber == kTeamReadyRoom or EvaluatePlayerName(player, player:GetName()))
-	return result
-end
-TGNS.RegisterEventHook("OnTeamJoin", BkaOnTeamJoin)
-
-function BkaOnCommandSetName(client, message)
-	local name = message.name
-	local player = client:GetControllingPlayer()
-	name=TrimName(name)
-	if name ~= kDefaultPlayerName and string.len(name) > 0 then
-		local playerTeamNumber = player:GetTeamNumber()
-		if playerTeamNumber == kMarineTeamType or playerTeamNumber == kAlienTeamType then
-			local gamerules = GetGamerules()
-			if gamerules then
-				if EvaluatePlayerName(player, name) == false then
-					gamerules:JoinTeam(player, kTeamReadyRoom)
-				end
-			end
-		end
-		local steamId = client:GetUserId()
-		AddAka(steamId, name, false)
-	end
-end
-TGNS.RegisterNetworkMessageHook("SetName", BkaOnCommandSetName)
