@@ -144,7 +144,6 @@ end
 
 local function BeginBalance()
 	balanceLog = {}
-	balanceInProgress = true
 	SendNextPlayer()
 end
 
@@ -153,6 +152,7 @@ local function svBalance(client)
 	local whenDescriptor
 	if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
 		TGNS.SendAllChat(string.format("%s is balancing teams using TG Win/Loss histories.", TGNS.GetClientName(client)), "TacticalGamer.com")
+		balanceInProgress = true
 		TGNS.ScheduleAction(5, BeginBalance)
 	end
 end
