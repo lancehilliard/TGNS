@@ -21,7 +21,7 @@ TGNS.RegisterEventHook("OnGameEnd", StagedTeamJoinsGameEnd)
 local function StagedTeamJoinsOnTeamJoin(self, player, newTeamNumber, force)
 	local cancel = false
 	local balanceIsInProgress = Balance and Balance.IsInProgress()
-	if not balanceIsInProgress and not TGNS.ClientAction(player, TGNS.GetIsClientVirtual) then
+	if not balanceIsInProgress and not TGNS.ClientAction(player, TGNS.GetIsClientVirtual) and not TGNS.IsGameInCountdown() and not TGNS.IsGameInProgress() then
 		if TGNS.IsGameplayTeam(newTeamNumber) then
 			if TGNS.Any(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), TGNS.IsClientSM) then
 				local secondsRemainingBeforeAllMayJoin = math.floor(allMayJoinAt - Shared.GetTime())
