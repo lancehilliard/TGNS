@@ -62,7 +62,7 @@ local function SaveDefaultLanguageDefinition()
 	You can delete this line in your custom files]] .. ".\",\n")
 		for k, v in pairsKeySorted(LanguageStrings[defaultlang]) do
 			if (type(v) == "table") then
-				DAKDefaultLangFile:write(string.format("\"%s\":\t\t\t\t\t\t\t\[\n", k))
+				DAKDefaultLangFile:write(string.format("\"%s\":\t\t\t\t\t\t\t[\n", k))
 				for i, m in ipairs(v) do
 					DAKDefaultLangFile:write(string.format("\"%s\",\n", m))
 				end
