@@ -13,8 +13,10 @@
 !config/ConsistencyConfig.json
 
 # And then whitelist TGNS common/shared files
+!ns2/lua/TGNSMessageDisplayer.lua
 !ns2/lua/TGNSClientKicker.lua
 !ns2/lua/TGNSConnectedTimesTracker.lua
+!ns2/lua/TGNSDataRepository.lua
 !ns2/lua/TGNSPlayerDataRepository.lua
 !ns2/lua/TGNSPlayerBlacklistRepository.lua
 !ns2/lua/TGNSCommon.lua
@@ -132,6 +134,9 @@
 
 !ns2/lua/configs/notifyAdminOnMutePlayer.lua
 !ns2/lua/plugins/notifyAdminOnMutePlayer.lua
+
+!ns2/lua/configs/nsmapchanger.lua
+!ns2/lua/plugins/nsmapchanger.lua
 
 !ns2/lua/configs/printablenames.lua
 !ns2/lua/plugins/printablenames.lua
