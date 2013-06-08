@@ -14,6 +14,40 @@ function TGNS.ReplaceClassMethod(className, methodName, method)
 	return DAK:Class_ReplaceMethod(className, methodName, method)
 end
 
+function TGNS.GetNextMapName()
+	local result = MapCycle_GetNextMapInCycle().map
+	return result
+end
+
+function TGNS.Substring(s, startIndex, length)
+	local result = string.sub(s, startIndex, length)
+	return result
+end
+
+function TGNS.Truncate(s, length)
+	local result = TGNS.Substring(s, 1, length)
+	return result
+end
+
+function TGNS.ToLower(s)
+	local result = string.lower(s)
+	return result
+end
+
+function TGNS.GetCurrentMapName()
+	local result = Shared.GetMapName()
+	return result
+end
+
+function TGNS.ConvertMinutesToSeconds(minutes)
+	local result = minutes * 60
+	return result
+end
+
+function TGNS.SwitchToMap(mapName)
+	MapCycle_ChangeMap(mapName)
+end
+
 function TGNS.GetClientList(predicate)
 	local result = TGNS.GetClients(TGNS.GetPlayerList())
 	if predicate ~= nil then
@@ -239,6 +273,10 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 		result = "?"
 	end
 	return result
+end
+
+function TGNS.Contains(s, part)
+	return s:find(part)
 end
 
 function TGNS.StartsWith(s,part)
