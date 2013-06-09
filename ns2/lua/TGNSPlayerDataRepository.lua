@@ -3,14 +3,16 @@ Script.Load("lua/TGNSDataRepository.lua")
 TGNSPlayerDataRepository = {}
 
 TGNSPlayerDataRepository.Create = function(dataTypeName, onDataLoaded)
-	local result = TGNSDataRepository.Create(dataTypeName, onDataLoaded, function(steamId) return steamId end)
+	local dr = TGNSDataRepository.Create(dataTypeName, onDataLoaded, function(steamId) return steamId end)
 	
-	result.Save = function(data)
-		result.Save(data, data.steamId)
+	local result = {}
+	
+	result.Save = function(self, data)
+		dr.Save(data, data.steamId)
 	end
 
 	result.Load = function(self, steamId)
-		local data = result.Load(steamId)
+		local data = dr.Load(steamId)
 		data.steamId = data.steamId or steamId
 		return data
 	end
