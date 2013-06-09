@@ -365,13 +365,13 @@ local function ProcessScheduledActions()
 	for r = #scheduledActions, 1, -1 do
 		local scheduledAction = scheduledActions[r]
 		if scheduledAction.when < Shared.GetTime() then
-			local success, result = pcall(scheduledAction.what)
+			local success, result = xpcall(scheduledAction.what, debug.traceback)
 			if success then
 				table.remove(scheduledActions, r)
 			else
 				scheduledActionsErrorCount = scheduledActionsErrorCount + 1
 				if scheduledActionsErrorCount < 100 then
-					local errorMessage = string.format("ScheduledAction Error: %s", result)
+					local errorMessage = string.format("ScheduledAction Error (%s, %s): %s", scheduledActionsErrorCount, Shared.GetTime(), result)
 					Shared.Message(errorMessage)
 					TGNS.EnhancedLog(errorMessage)
 				else
