@@ -58,6 +58,7 @@ TGNS.RegisterCommandHook("Console_sv_showtimes", TGNSConnectedTimesTracker.Print
 local function SetClientLastSeenNow(client)
 	local steamId = TGNS.GetClientSteamId(client)
 	local data = pdr:Load(steamId)
+	//Shared.Message(string.format("DEBUG: %s - %s", Shared.GetSystemTime(), Shared.GetSystemTimeReal()))
 	data.lastSeen = Shared.GetSystemTime()
 	pdr:Save(data)
 end
