@@ -13,13 +13,14 @@
 !config/ConsistencyConfig.json
 
 # And then whitelist TGNS common/shared files
-!ns2/lua/TGNSMessageDisplayer.lua
+!ns2/lua/TGNSAverageCalculator.lua
 !ns2/lua/TGNSClientKicker.lua
+!ns2/lua/TGNSCommon.lua
 !ns2/lua/TGNSConnectedTimesTracker.lua
 !ns2/lua/TGNSDataRepository.lua
-!ns2/lua/TGNSPlayerDataRepository.lua
+!ns2/lua/TGNSMessageDisplayer.lua
 !ns2/lua/TGNSPlayerBlacklistRepository.lua
-!ns2/lua/TGNSCommon.lua
+!ns2/lua/TGNSPlayerDataRepository.lua
 
 # And then whitelist DAK base files
 
@@ -117,11 +118,14 @@
 !ns2/lua/configs/communityslots.lua
 !ns2/lua/plugins/communityslots.lua
 
-!ns2/lua/configs/greetings.lua
-!ns2/lua/plugins/greetings.lua
+!ns2/lua/configs/gamestracker.lua
+!ns2/lua/plugins/gamestracker.lua
 
 !ns2/lua/configs/goodbye.lua
 !ns2/lua/plugins/goodbye.lua
+
+!ns2/lua/configs/greetings.lua
+!ns2/lua/plugins/greetings.lua
 
 !ns2/lua/configs/groundedrookies.lua
 !ns2/lua/plugins/groundedrookies.lua
