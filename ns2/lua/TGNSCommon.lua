@@ -1,5 +1,3 @@
-// TGNS Common
-
 TGNS = {}
 local scheduledActions = {}
 local scheduledActionsErrorCount = 0
@@ -12,6 +10,11 @@ TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
 function TGNS.ReplaceClassMethod(className, methodName, method)
 	return DAK:Class_ReplaceMethod(className, methodName, method)
+end
+
+function TGNS.Replace(original, pattern, replace)
+	local result = string.gsub(original, pattern, replace)
+	return result
 end
 
 function TGNS.GetNextMapName()
@@ -662,6 +665,7 @@ function TGNS.DisconnectClient(client, reason)
 end
 
 function TGNS.SortAscending(elements, sortFunction)
+	sortFunction = sortFunction or function(x) return x end
 	table.sort(elements, function(e1, e2)
 		return sortFunction(e1) < sortFunction(e2)
 	end)
