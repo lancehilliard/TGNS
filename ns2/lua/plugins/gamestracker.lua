@@ -48,7 +48,7 @@ local dr = TGNSDataRepository.Create("gamestracker", function(data)
 	data.strangersAverage = data.strangersAverage ~= nil and data.strangersAverage or 0
 	return data
 end, function(recordId)
-	local result = string.format("%s-%s", TGNSMonthlyNumberGetter.Get(), Server.GetIpAddress())
+	local result = string.format("%s-%s", TGNSMonthlyNumberGetter.Get(), TGNS.GetSimpleServerName())
 	return result
 end)
 
