@@ -8,6 +8,15 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
+function TGNS.GetSimpleServerName()
+	local tacticalGamerServerNamePrefix = "TacticalGamer.com - "
+	local result = Server.GetName()
+	if TGNS.Contains(result, tacticalGamerServerNamePrefix) then
+		result = TGNS.Substring(result, string.len(tacticalGamerServerNamePrefix) + 1)
+	end
+	return result
+end
+
 function TGNS.ReplaceClassMethod(className, methodName, method)
 	return DAK:Class_ReplaceMethod(className, methodName, method)
 end
@@ -23,7 +32,9 @@ function TGNS.GetNextMapName()
 end
 
 function TGNS.Substring(s, startIndex, length)
-	local result = string.sub(s, startIndex, length)
+	local endIndex = length ~= nil and startIndex + length - 1 or nil
+	local result = string.sub(s, startIndex, endIndex)
+	Shared.Message("Substring result = " .. tostring(result))
 	return result
 end
 
