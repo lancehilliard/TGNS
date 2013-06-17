@@ -26,7 +26,7 @@ GameCountIncrementerFactory.Create = function(c, data)
 	local result = {}
 	if TGNS.IsClientSM(c) then
 		result = GameCountIncrementer.Create(data.supportingMembers, function(x) data.supportingMembersTotal = x end, function(x) data.supportingMembersAverage = x end)
-	elseif TGNS.IsClientPrimerOnly(c) then
+	elseif TGNS.IsPrimerOnlyClient(c) then
 		result = GameCountIncrementer.Create(data.primerOnlys, function(x) data.primerOnlysTotal = x end, function(x) data.primerOnlysAverage = x end)
 	else
 		result = GameCountIncrementer.Create(data.strangers, function(x) data.strangersTotal = x end, function(x) data.strangersAverage = x end)
