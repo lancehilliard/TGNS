@@ -25,11 +25,11 @@ local GameCountIncrementerFactory = {}
 GameCountIncrementerFactory.Create = function(c, data)
 	local result = {}
 	if TGNS.IsClientSM(c) then
-		result = GameCountIncrementer.Create(data.supportingMembers, function(x) data.supportingMembersTotal = x end, function(x) data.supportingMembersAverage = x end)
+		result = GameCountIncrementer.Create(data.supportingMembers, function(x) data.supportingMembersGamesCountTotal = x end, function(x) data.supportingMembersGamesCountAverage = x end)
 	elseif TGNS.IsPrimerOnlyClient(c) then
-		result = GameCountIncrementer.Create(data.primerOnlys, function(x) data.primerOnlysTotal = x end, function(x) data.primerOnlysAverage = x end)
+		result = GameCountIncrementer.Create(data.primerOnlys, function(x) data.primerOnlysGamesCountTotal = x end, function(x) data.primerOnlysGamesCountAverage = x end)
 	else
-		result = GameCountIncrementer.Create(data.strangers, function(x) data.strangersTotal = x end, function(x) data.strangersAverage = x end)
+		result = GameCountIncrementer.Create(data.strangers, function(x) data.strangersGamesCountTotal = x end, function(x) data.strangersGamesCountAverage = x end)
 	end
 	return result
 end
@@ -38,19 +38,16 @@ local steamIdsWhichStartedGame = {}
 
 local dr = TGNSDataRepository.Create("gamestracker", function(data)
 	data.supportingMembers = data.supportingMembers ~= nil and data.supportingMembers or {}
-	data.supportingMembersTotal = data.supportingMembersTotal ~= nil and data.supportingMembersTotal or 0
-	data.supportingMembersAverage = data.supportingMembersAverage ~= nil and data.supportingMembersAverage or 0
+	data.supportingMembersGamesCountTotal = data.supportingMembersGamesCountTotal ~= nil and data.supportingMembersGamesCountTotal or 0
+	data.supportingMembersGamesCountAverage = data.supportingMembersGamesCountAverage ~= nil and data.supportingMembersGamesCountAverage or 0
 	data.primerOnlys = data.primerOnlys ~= nil and data.primerOnlys or {}
-	data.primerOnlysTotal = data.primerOnlysTotal ~= nil and data.primerOnlysTotal or 0
-	data.primerOnlysAverage = data.primerOnlysAverage ~= nil and data.primerOnlysAverage or 0
+	data.primerOnlysGamesCountTotal = data.primerOnlysGamesCountTotal ~= nil and data.primerOnlysGamesCountTotal or 0
+	data.primerOnlysGamesCountAverage = data.primerOnlysGamesCountAverage ~= nil and data.primerOnlysGamesCountAverage or 0
 	data.strangers = data.strangers ~= nil and data.strangers or {}
-	data.strangersTotal = data.strangersTotal ~= nil and data.strangersTotal or 0
-	data.strangersAverage = data.strangersAverage ~= nil and data.strangersAverage or 0
+	data.strangersGamesCountTotal = data.strangersGamesCountTotal ~= nil and data.strangersGamesCountTotal or 0
+	data.strangersGamesCountAverage = data.strangersGamesCountAverage ~= nil and data.strangersGamesCountAverage or 0
 	return data
-end, function(recordId)
-	local result = string.format("%s-%s", TGNSMonthlyNumberGetter.Get(), TGNS.GetSimpleServerName())
-	return result
-end)
+end, TGNSMonthlyNumberGetter.Get)
 
 local function OnSetGameState(self, state, currentstate)
 	if state ~= currentstate and TGNS.IsGameStartingState(state) then
