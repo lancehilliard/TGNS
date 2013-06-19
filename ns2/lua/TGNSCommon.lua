@@ -1,3 +1,5 @@
+Script.Load("lua/TGNSAverageCalculator.lua")
+
 TGNS = {}
 local scheduledActions = {}
 local scheduledActionsErrorCount = 0
@@ -7,6 +9,47 @@ TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY = 7
 TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
+
+function TGNS.TableReverse(elements)
+	local result = {}
+	TGNS.DoForReverse(elements, function(e)
+		table.insert(result, e)
+	end)
+	return result
+end
+
+function TGNS.Select(elements, projector)
+	local result = {}
+	TGNS.DoFor(elements, function(e)
+		table.insert(result, projector(e))
+	end)
+	return result
+end
+
+function TGNS.GetPlayerScorePerMinute(player)
+	local result
+	local gameDurationInSeconds = TGNS.GetCurrentGameDurationInSeconds()
+	if gameDurationInSeconds ~= nil then
+		local playerScore = TGNS.GetPlayerScore(player)
+		local gameDurationInMinutes = TGNS.ConvertSecondsToMinutes(gameDurationInSeconds)
+		result = TGNSAverageCalculator.Calculate(playerScore, gameDurationInMinutes)
+	end
+	return result
+end
+
+function TGNS.GetCurrentGameDurationInSeconds()
+	local result
+	local gameStartTime = GetGamerules():GetGameStartTime()
+	if gameStartTime > 0 then
+		result = Shared.GetTime() - gameStartTime
+	end
+	return result
+end
+
+function TGNS.GetPlayerScore(player)
+	local result = player:GetScore()
+	return result
+end
 
 function TGNS.GetSimpleServerName()
 	local tacticalGamerServerNamePrefix = "TacticalGamer.com - "
@@ -34,7 +77,6 @@ end
 function TGNS.Substring(s, startIndex, length)
 	local endIndex = length ~= nil and startIndex + length - 1 or nil
 	local result = string.sub(s, startIndex, endIndex)
-	Shared.Message("Substring result = " .. tostring(result))
 	return result
 end
 
@@ -50,6 +92,11 @@ end
 
 function TGNS.GetCurrentMapName()
 	local result = Shared.GetMapName()
+	return result
+end
+
+function TGNS.ConvertSecondsToMinutes(seconds)
+	local result = seconds / 60
 	return result
 end
 
@@ -675,6 +722,11 @@ function TGNS.DisconnectClient(client, reason)
 	end)
 end
 
+function TGNS.SortDescending(elements, sortFunction)
+	local result = TGNS.TableReverse(TGNS.SortAscending(elements, sortFunction))
+	return result
+end
+
 function TGNS.SortAscending(elements, sortFunction)
 	sortFunction = sortFunction or function(x) return x end
 	table.sort(elements, function(e1, e2)
@@ -781,8 +833,13 @@ function TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
 
+function TGNS.PlayerIsOnPlayingTeam(player)
+	local result = TGNS.IsGameplayTeam(TGNS.GetPlayerTeamNumber(player))
+	return result
+end
+
 function TGNS.GetPlayingClients(playerList)
-	local result = TGNS.GetMatchingClients(playerList, function(c,p) return TGNS.IsGameplayTeam(p:GetTeamNumber()) end)
+	local result = TGNS.GetMatchingClients(playerList, function(c,p) return TGNS.PlayerIsOnPlayingTeam(p) end)
 	return result
 end
 
@@ -802,10 +859,12 @@ function TGNS.GetLastMatchingClient(playerList, predicate)
 	return result
 end
 
+function TGNS.UpdateScoreboard(player)
+	player:SetScoreboardChanged(true)
+end
+
 function TGNS.UpdateAllScoreboards()
-	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-		p:SetScoreboardChanged(true)
-	end)
+	TGNS.DoFor(TGNS.GetPlayerList(), TGNS.UpdateScoreboard)
 end
 
 function TGNS.GetTeamClients(teamNumber, playerList)
