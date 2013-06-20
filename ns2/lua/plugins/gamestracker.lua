@@ -4,7 +4,7 @@ Script.Load("lua/TGNSDataRepository.lua")
 Script.Load("lua/TGNSMonthlyNumberGetter.lua")
 
 local GameCountIncrementer = {}
-GameCountIncrementer.Create = function(tableToUpdate, totalSetter, averageSetter)
+GameCountIncrementer.Create = function(tableToUpdate, totalSetter, averageSetter, countSetter)
 	local result = {}
 	result.Increment = function(steamId)
 		steamId = tostring(steamId)
@@ -16,6 +16,7 @@ GameCountIncrementer.Create = function(tableToUpdate, totalSetter, averageSetter
 			playersCount = playersCount + 1
 		end)
 		totalSetter(totalGames)
+		countSetter(playersCount)
 		averageSetter(TGNSAverageCalculator.Calculate(totalGames, playersCount))
 	end
 	return result
@@ -25,11 +26,11 @@ local GameCountIncrementerFactory = {}
 GameCountIncrementerFactory.Create = function(c, data)
 	local result = {}
 	if TGNS.IsClientSM(c) then
-		result = GameCountIncrementer.Create(data.supportingMembers, function(x) data.supportingMembersGamesCountTotal = x end, function(x) data.supportingMembersGamesCountAverage = x end)
+		result = GameCountIncrementer.Create(data.supportingMembers, function(x) data.supportingMembersGamesCountTotal = x end, function(x) data.supportingMembersGamesCountAverage = x end, function(x) data.supportingMembersCount = x end)
 	elseif TGNS.IsPrimerOnlyClient(c) then
-		result = GameCountIncrementer.Create(data.primerOnlys, function(x) data.primerOnlysGamesCountTotal = x end, function(x) data.primerOnlysGamesCountAverage = x end)
+		result = GameCountIncrementer.Create(data.primerOnlys, function(x) data.primerOnlysGamesCountTotal = x end, function(x) data.primerOnlysGamesCountAverage = x end, function(x) data.primerOnlysCount = x end)
 	else
-		result = GameCountIncrementer.Create(data.strangers, function(x) data.strangersGamesCountTotal = x end, function(x) data.strangersGamesCountAverage = x end)
+		result = GameCountIncrementer.Create(data.strangers, function(x) data.strangersGamesCountTotal = x end, function(x) data.strangersGamesCountAverage = x end, function(x) data.strangersCount = x end)
 	end
 	return result
 end
@@ -38,14 +39,17 @@ local steamIdsWhichStartedGame = {}
 
 local dr = TGNSDataRepository.Create("gamestracker", function(data)
 	data.supportingMembers = data.supportingMembers ~= nil and data.supportingMembers or {}
-	data.supportingMembersGamesCountTotal = data.supportingMembersGamesCountTotal ~= nil and data.supportingMembersGamesCountTotal or 0
+	data.supportingMembersCount = data.supportingMembersCount ~= nil and data.supportingMembersCount or 0
 	data.supportingMembersGamesCountAverage = data.supportingMembersGamesCountAverage ~= nil and data.supportingMembersGamesCountAverage or 0
+	data.supportingMembersGamesCountTotal = data.supportingMembersGamesCountTotal ~= nil and data.supportingMembersGamesCountTotal or 0
 	data.primerOnlys = data.primerOnlys ~= nil and data.primerOnlys or {}
-	data.primerOnlysGamesCountTotal = data.primerOnlysGamesCountTotal ~= nil and data.primerOnlysGamesCountTotal or 0
+	data.primerOnlysCount = data.primerOnlysCount ~= nil and data.primerOnlysCount or 0
 	data.primerOnlysGamesCountAverage = data.primerOnlysGamesCountAverage ~= nil and data.primerOnlysGamesCountAverage or 0
+	data.primerOnlysGamesCountTotal = data.primerOnlysGamesCountTotal ~= nil and data.primerOnlysGamesCountTotal or 0
 	data.strangers = data.strangers ~= nil and data.strangers or {}
-	data.strangersGamesCountTotal = data.strangersGamesCountTotal ~= nil and data.strangersGamesCountTotal or 0
+	data.strangersCount = data.strangersCount ~= nil and data.strangersCount or 0
 	data.strangersGamesCountAverage = data.strangersGamesCountAverage ~= nil and data.strangersGamesCountAverage or 0
+	data.strangersGamesCountTotal = data.strangersGamesCountTotal ~= nil and data.strangersGamesCountTotal or 0
 	return data
 end, TGNSMonthlyNumberGetter.Get)
 
