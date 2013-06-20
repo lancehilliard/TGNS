@@ -212,6 +212,7 @@ local function svBalance(client)
 	local gameState = GetGamerules():GetGameState()
 	if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
 		TGNS.SendAllChat(string.format("%s is balancing teams using TG and ns2stats score-per-minute data.", TGNS.GetClientName(client)), "TacticalGamer.com")
+		TGNS.SendAllChat(string.format("The scoreboard will be hidden until teams are balanced.", TGNS.GetClientName(client)), "TacticalGamer.com")
 		balanceInProgress = true
 		lastBalanceStartTimeInSeconds = Shared.GetTime()
 		TGNS.ScheduleAction(1, UpdateNs2StatsProxyWithRecordsOfPlayersWhoHaveTooFewLocalScoresPerMinute)
