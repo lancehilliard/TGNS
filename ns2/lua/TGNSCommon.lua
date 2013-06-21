@@ -10,6 +10,33 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
+function TGNS.PlayerTeamIsOverbalanced(player, playerList)
+	local result
+	TGNS.DoTeamSizeComparisonAction(player, playerList, function(playerTeamCount, otherTeamCount)
+		result = playerTeamCount >= otherTeamCount + 2
+	end)
+	return result
+end
+
+function TGNS.DoTeamSizeComparisonAction(player, playerList, action)
+	local playerTeamCount = #TGNS.GetTeamClients(TGNS.GetPlayerTeamNumber(player), playerList)
+	local otherTeamCount = #TGNS.GetPlayersOnOtherPlayingTeam(player, playerList)
+	action(playerTeamCount, otherTeamCount)
+end
+
+function TGNS.GetOtherPlayingTeamNumber(playingTeamNumber)
+	assert(TGNS.IsGameplayTeam(playingTeamNumber), "Input team number is not a playing team number.")
+	local result = playingTeamNumber == kMarineTeamType and kAlienTeamType or kMarineTeamType
+	return result
+end
+
+function TGNS.GetPlayersOnOtherPlayingTeam(player, playerList)
+	local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
+	local otherTeamNumber = TGNS.GetOtherPlayingTeamNumber(playerTeamNumber)
+	local result = TGNS.GetPlayers(TGNS.GetTeamClients(otherTeamNumber, playerList))
+	return result
+end
+
 function TGNS.TableReverse(elements)
 	local result = {}
 	TGNS.DoForReverse(elements, function(e)
@@ -209,11 +236,11 @@ function TGNS.SetPlayerResources(player, value)
 end
 
 function TGNS.RemoveAllMatching(elements, element)
-	for r = #elements, 1, -1 do
-		if elements[r] == element then
-			table.remove(elements, r)
+	TGNS.DoForReverse(elements, function(e, index)
+		if element == e then
+			table.remove(elements, index)
 		end
-	end
+	end)
 end
 
 function TGNS.DestroyEntity(entity)
@@ -311,7 +338,9 @@ function TGNS.RegisterCommandHook(command, handler, helpText, availableToAllPlay
 end
 
 function TGNS.RegisterEventHook(eventName, handler, priority)
-	DAK:RegisterEventHook(eventName, handler, priority ~= nil and priority or TGNS.NORMAL_EVENT_HANDLER_PRIORITY)
+	local stackInfo = debug.getinfo(2)
+	local whereDidTheRegistrationOriginate = string.format("%s:%s", stackInfo.short_src, stackInfo.linedefined)
+	DAK:RegisterEventHook(eventName, handler, priority ~= nil and priority or TGNS.NORMAL_EVENT_HANDLER_PRIORITY, whereDidTheRegistrationOriginate)
 end
 
 function TGNS.HasNonEmptyValue(stringValue)
@@ -370,14 +399,11 @@ function TGNS.SendToTeam(player, teamNumber)
 end
 
 function TGNS.Join(list, delimiter)
-  if #list == 0 then 
-    return "" 
-  end
-  local string = list[1]
-  for i = 2, #list do 
-    string = string .. delimiter .. list[i] 
-  end
-  return string
+	local result = ""
+	TGNS.DoFor(list, function(item, index)
+		result = string.format("%s%s%s", result, index > 1 and delimiter or "", item)
+	end)
+	return result
 end
 
 function TGNS.GetPlayerTeamName(player)
@@ -396,23 +422,23 @@ function TGNS.PlayersAreTeammates(player1, player2)
 end
 
 function TGNS.TableValueCount(tt, item)
-  local count
-  count = 0
-  for ii,xx in pairs(tt) do
-    if item == xx then count = count + 1 end
-  end
-  return count
+	local result = 0
+	TGNS.DoForPairs(tt, function(key, value)
+		if item == value then
+			result = result + 1
+		end
+	end)
+	return result
 end
 
 function TGNS.TableUnique(tt)
-  local newtable
-  newtable = {}
-  for ii,xx in ipairs(tt) do
-    if(TGNS.TableValueCount(newtable, xx) == 0) then
-      newtable[#newtable+1] = xx
-    end
-  end
-  return newtable
+	local result = {}
+	TGNS.DoForPairs(tt, function(key, value)
+		if TGNS.TableValueCount(result, value) == 0 then
+			result[#result+1] = value
+		end
+	end)
+	return result
 end
 
 function TGNS.ScheduleAction(delayInSeconds, action)
@@ -423,24 +449,23 @@ function TGNS.ScheduleAction(delayInSeconds, action)
 end
 
 local function ProcessScheduledActions()
-	for r = #scheduledActions, 1, -1 do
-		local scheduledAction = scheduledActions[r]
+	TGNS.DoForReverse(scheduledActions, function(scheduledAction, index)
 		if scheduledAction.when < Shared.GetTime() then
 			local success, result = xpcall(scheduledAction.what, debug.traceback)
 			if success then
-				table.remove(scheduledActions, r)
+				table.remove(scheduledActions, index)
 			else
 				scheduledActionsErrorCount = scheduledActionsErrorCount + 1
-				if scheduledActionsErrorCount < 100 then
+				if scheduledActionsErrorCount < 10 then
 					local errorMessage = string.format("ScheduledAction Error (%s, %s): %s", scheduledActionsErrorCount, Shared.GetTime(), result)
 					Shared.Message(errorMessage)
 					TGNS.EnhancedLog(errorMessage)
 				else
-					table.remove(scheduledActions, r)
+					table.remove(scheduledActions, index)
 				end
 			end
 		end
-	end
+	end)
 end
 
 local function CommonOnServerUpdate(deltatime)
@@ -492,8 +517,13 @@ function TGNS.IsPlayerReadyRoom(player)
 	return result
 end
 
+function TGNS.IsTeamNumberSpectator(teamNumber)
+	local result = teamNumber == kSpectatorIndex
+	return result
+end
+
 function TGNS.IsPlayerSpectator(player)
-	local result = player:isa("Spectator") and player:GetTeamNumber() == kSpectatorIndex
+	local result = player:isa("Spectator") and TGNS.IsTeamNumberSpectator(player:GetTeamNumber())
 	return result
 end
 
@@ -507,39 +537,34 @@ function TGNS.GetClientName(client)
 	return result
 end
 
-function TGNS.DoFor(elements, elementAction)
-	if elements ~= nil then
-		for i = 1, #elements, 1 do
-			if elements[i] ~= nil then
-				if elementAction(elements[i]) then
-					break
-				end
+function TGNS.DoForPairs(t, pairAction)
+	if t ~= nil then
+		for key, value in pairs(t) do
+			if value ~= nil and pairAction(key, value) then break end
+		end
+	end
+end
+
+local function DoFor(elements, elementAction, start, stop, step)
+	for index = start, stop, step do
+		local element = elements[index]
+		if element ~= nil then
+			if elementAction(element, index) then
+				break
 			end
 		end
+	end
+end
+
+function TGNS.DoFor(elements, elementAction)
+	if elements ~= nil then
+		DoFor(elements, elementAction, 1, #elements, 1)
 	end
 end
 
 function TGNS.DoForReverse(elements, elementAction)
 	if elements ~= nil then
-		for r = #elements, 1, -1 do
-			if elements[r] ~= nil then
-				if elementAction(elements[r], r) then
-					break
-				end
-			end
-		end
-	end
-end
-
-function TGNS.DoForPairs(t, pairAction)
-	if t ~= nil then
-		for key, value in pairs(t) do
-			if value ~= nil then
-				if pairAction(key, value) then
-					break
-				end
-			end
-		end
+		DoFor(elements, elementAction, #elements, 1, -1)
 	end
 end
 
@@ -655,15 +680,12 @@ function TGNS.GetClientSteamId(client)
 end
 
 function TGNS.DoForClientsWithId(clients, clientAction)
-	for i = 1, #clients, 1 do
-		local client = clients[i]
-		local steamId = TGNS.GetClientSteamId(client)
-		if steamId == nil then
-			// todo mlh report to admins so they can make sure there aren't rampant problems??
-		else
-			clientAction(client, steamId)
+	TGNS.DoFor(clients, function(c)
+		local steamId = TGNS.GetClientSteamId(c)
+		if steamId ~= nil then
+			clientAction(c, steamId)
 		end
-	end
+	end)
 end
 
 function TGNS.GetClientNameSteamIdCombo(client)
@@ -741,12 +763,12 @@ end
 
 function TGNS.ElementIsFoundBeforeIndex(elements, element, index)
 	local result = false
-	for i = 1, #elements do 
-		if i <= index and elements[i] == element then
+	TGNS.DoFor(elements, function(e, i)
+		if i <= index and e == element then
 			result = true
-			break
+			return true
 		end
-	end
+	end)
 	return result
 end
 
@@ -766,29 +788,17 @@ function TGNS.GetPlayerCount()
 end
 
 function TGNS.AllPlayers(doThis)
-
 	return function(client)
-	
 		local playerList = TGNS.GetPlayerList()
-		for p = 1, #playerList do
-		
-			local player = playerList[p]
-			doThis(player, client, p)
-			
-		end
-		
+		TGNS.DoFor(playerList, function(p, index)
+			doThis(p, client, index)
+		end)
 	end
-	
 end
 
 function TGNS.Has(elements, element)
-	local found = false
-	for i = 1, #elements, 1 do
-		if not found and elements[i] == element then
-			found = true
-		end
-	end
-	return found
+	local result = TGNS.Any(elements, function(e) return element == e end)
+	return result
 end
 
 function TGNS.GetClient(player)
@@ -803,33 +813,27 @@ end
 
 function TGNS.GetPlayers(clients)
 	local result = {}
-	for i = 1, #clients, 1 do
-		table.insert(result, TGNS.GetPlayer(clients[i]))
-	end
+	TGNS.DoFor(clients, function(c) table.insert(result, TGNS.GetPlayer(c)) end)
 	return result
 end
 
 function TGNS.GetClients(players)
 	local result = {}
-	for i = 1, #players, 1 do
-		table.insert(result, TGNS.GetClient(players[i]))
-	end
+	TGNS.DoFor(players, function(p) table.insert(result, TGNS.GetClient(p)) end)
 	return result
 end
 
 function TGNS.GetMatchingClients(playerList, predicate)
 	local result = {}
 	playerList = playerList == nil and TGNS.GetPlayerList() or playerList
-	for r = #playerList, 1, -1 do
-		if playerList[r] ~= nil then
-			local client = playerList[r]:GetClient()
-			if client ~= nil then
-				if predicate(client, playerList[r]) then
-					table.insert(result, client)
-				end
+	TGNS.DoForReverse(playerList, function(p)
+		local c = TGNS.GetClient(p)
+		if c ~= nil then
+			if predicate(c,p) then
+				table.insert(result, c)
 			end
 		end
-	end
+	end)
 	return result
 end
 
@@ -846,16 +850,14 @@ end
 function TGNS.GetLastMatchingClient(playerList, predicate)
 	local result = nil
 	local playerList = playerList == nil and TGNS.GetPlayerList() or playerList
-	for r = #playerList, 1, -1 do
-		if playerList[r] ~= nil then
-			local client = playerList[r]:GetClient()
-			if client ~= nil then
-				if predicate(client, playerList[r]) then
-					result = client
-				end
+	TGNS.DoFor(playerList, function(p)
+		local c = TGNS.GetClient(p)
+		if c ~= nil then
+			if predicate(c, p) then
+				result = c
 			end
 		end
-	end
+	end)
 	return result
 end
 
@@ -939,7 +941,6 @@ function TGNS.GetSumUpTo(operand1, operand2, sumLimit)
 end
 
 function TGNS.KickClient(client, disconnectReason, onPreKick)
-	// notes to improve as standalone object: send player to readyroom, spam chat with "look to console" message every second for 5 seconds, hide all other players from scoreboard
 	if client ~= nil then
 		local player = client:GetControllingPlayer()
 		if player ~= nil then
@@ -947,7 +948,7 @@ function TGNS.KickClient(client, disconnectReason, onPreKick)
 				onPreKick(client, player)
 			end
 		end
-		TGNS.SendChatMessage(player, "Kicked. See console for details.", "KICK")
+		TGNS.SendChatMessage(player, "Kicked. See details in console.", "KICK")
 		TGNS.ConsolePrint(client, disconnectReason)
 		TGNS.ScheduleAction(5, function() TGNS.DisconnectClient(client, disconnectReason) end)
 	end
@@ -1031,9 +1032,6 @@ function TGNS.GetPlayerMatching(id, team)
 end
 
 if DAK.config and DAK.config.loader then
-
-	// Returns:	builtChatMessage - a ChatMessage object
-	//			consoleChatMessage - a similarly formed string for printing to the console
 	function TGNS.BuildPMChatMessage(srcClient, message, command, showCommand)
 		if srcClient then
 			local srcPlayer = srcClient:GetControllingPlayer()
@@ -1059,15 +1057,15 @@ if DAK.config and DAK.config.loader then
 	
 	function TGNS.PMAllPlayersWithAccess(srcClient, message, command, showCommand, selfIfNoAccess)
 		builtChatMessage, consoleChatMessage = TGNS.BuildPMChatMessage(srcClient, message, command, showCommand)
-		for _, player in pairs(TGNS.GetPlayerList()) do
-			local client = Server.GetOwner(player)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(player)
+			local client = TGNS.GetClient(player)
 			if client ~= nil then
 				if TGNS.ClientCanRunCommand(client, command) or (selfIfNoAccess and client == srcClient) then
 					Server.SendNetworkMessage(player, "Chat", builtChatMessage, true)
 					ServerAdminPrint(client, consoleChatMessage)
 				end
 			end
-		end
+		end)
 	end
 end
 
