@@ -4,20 +4,20 @@ Script.Load("lua/TGNSDataRepository.lua")
 Script.Load("lua/TGNSMonthlyNumberGetter.lua")
 
 local GameCountIncrementer = {}
-GameCountIncrementer.Create = function(tableToUpdate, totalSetter, averageSetter, countSetter)
+GameCountIncrementer.Create = function(tableToUpdate, gamesCountTotalSetter, gamesCountAverageSetter, playersCountSetter)
 	local result = {}
 	result.Increment = function(steamId)
 		steamId = tostring(steamId)
 		tableToUpdate[steamId] = (tableToUpdate[steamId] or 0) + 1
-		local totalGames = 0
+		local totalGamesCount = 0
 		local playersCount = 0
 		TGNS.DoForPairs(tableToUpdate, function(steamId, gamesCount)
-			totalGames = totalGames + gamesCount
+			totalGamesCount = totalGamesCount + gamesCount
 			playersCount = playersCount + 1
 		end)
-		totalSetter(totalGames)
-		countSetter(playersCount)
-		averageSetter(TGNSAverageCalculator.Calculate(totalGames, playersCount))
+		gamesCountTotalSetter(totalGamesCount)
+		playersCountSetter(playersCount)
+		gamesCountAverageSetter(TGNSAverageCalculator.Calculate(totalGamesCount, playersCount))
 	end
 	return result
 end
