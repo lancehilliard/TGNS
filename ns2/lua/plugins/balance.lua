@@ -249,14 +249,20 @@ end
 TGNS.RegisterEventHook("OnGameEnd", BalanceOnGameEnd)
 
 TGNS.RegisterEventHook("OnTeamJoin", function(self, player, newTeamNumber, force)
-	if BalanceStartedRecently() then
+	local balanceStartedRecently = BalanceStartedRecently()
+	local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
+	local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
+	if balanceStartedRecently then
 		TGNS.UpdateAllScoreboards()
 	end
-	local cancel = false
-	cancel = BalanceStartedRecently() and TGNS.PlayerIsOnPlayingTeam(player) and not TGNS.ClientAction(player, TGNS.IsClientAdmin)
-	if cancel then
-		local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
-		TGNS.SendAllChat(message, "BALANCE")
+	local cancel
+	if balanceStartedRecently and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
+		local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
+		if playerTeamIsSizedCorrectly then
+			cancel = true
+			local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
+			TGNS.SendAllChat(message, "BALANCE")
+		end
 	end
 	return cancel
 end)
