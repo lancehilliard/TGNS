@@ -6,6 +6,7 @@ local kTimeAtWhichWinOrLoseVoteSucceeded = 0
 local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 local kCountdownTimeRemaining = 0
 local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag" }
+local VOTE_HOWTO_TEXT = "Type 'concede' in console to vote."
 
 local originalGetCanAttack
 
@@ -100,8 +101,8 @@ local function UpdateWinOrLoseVotes()
 				else
 					local chatmessage
 					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
-						chatMessage = string.sub(string.format("Concede vote started. %s votes are needed.", 
-						 math.ceil((#playerRecords * (DAK.config.winorlose.kWinOrLoseMinimumPercentage / 100))) ), 1, kMaxChatLength)
+						chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", 
+						 math.ceil((#playerRecords * (DAK.config.winorlose.kWinOrLoseMinimumPercentage / 100))), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
 					elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + DAK.config.winorlose.kWinOrLoseVotingTime < Shared.GetTime() then
 						local abstainedNames = {}
@@ -116,9 +117,9 @@ local function UpdateWinOrLoseVotes()
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 					else
-						chatMessage = string.sub(string.format("%s votes to concede; %s needed; %s seconds left. Press X to Vote.", totalvotes, 
+						chatMessage = string.sub(string.format("%s/%s votes to concede; %s seconds left. %s", totalvotes, 
 						 math.ceil((#playerRecords * (DAK.config.winorlose.kWinOrLoseMinimumPercentage / 100))), 
-						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + DAK.config.winorlose.kWinOrLoseVotingTime) - Shared.GetTime()) ), 1, kMaxChatLength)
+						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + DAK.config.winorlose.kWinOrLoseVotingTime) - Shared.GetTime()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
 					end
 					for k = 1, #playerRecords do
@@ -169,13 +170,13 @@ local function OnCommandWinOrLose(client)
 							chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
 							Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 						else
-							TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s voted to concede. Press X to Vote.", TGNS.GetPlayerName(player)))
+							TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							chatMessage = string.sub(string.format("You have voted to concede."), 1, kMaxChatLength)
 							//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 							table.insert(kWinOrLoseVoteArray[teamnumber].WinOrLoseVotes, clientID)
 						end						
 					else
-						TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s started a concede vote. Press X to Vote.", TGNS.GetPlayerName(player)))
+						TGNS.SendTeamChat(TGNS.GetPlayerTeamNumber(player), string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 						chatMessage = string.sub(string.format("You have voted to concede."), 1, kMaxChatLength)
 						//Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 						kWinOrLoseVoteArray[teamnumber].WinOrLoseRunning = Shared.GetTime()
@@ -190,7 +191,10 @@ local function OnCommandWinOrLose(client)
 	end
 	
 end
-Event.Hook("Console_winorlose", OnCommandWinOrLose)
+TGNS.DoFor(DAK.config.winorlose.kWinOrLoseChatCommands, function(chatcommand)
+	local command = string.format("Console_%s", chatcommand)
+	TGNS.RegisterCommandHook(command, OnCommandWinOrLose, "Cast a WinOrLose vote.", true)
+end)
 
 local function WinOrLoseOnCastVoteByPlayer(self, voteTechId, player)
 	local cancel = false
@@ -205,14 +209,8 @@ TGNS.RegisterEventHook("OnCastVoteByPlayer", WinOrLoseOnCastVoteByPlayer)
 local function OnChatMessage(message, playerName, steamId, teamNumber, teamOnly, client)
 	TGNS.DoFor(DAK.config.winorlose.kWinOrLoseChatCommands, function(chatcommand)
 		if message == chatcommand then
-			if teamOnly then
-				OnCommandWinOrLose(client)
-			else
-				TGNS.PlayerAction(client, function(p)
-					TGNS.SendChatMessage(p, "Use the Vote Concede menu (or team chat) to concede. No vote has been cast.")
-				end)
-				return true
-			end
+			OnCommandWinOrLose(client)
+			return true
 		end
 	end)
 end
