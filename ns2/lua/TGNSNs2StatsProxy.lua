@@ -1,46 +1,42 @@
 Script.Load("lua/TGNSCommon.lua")
 
-local STEAMID_FETCH_URL_TEMPLATE = "http://ns2stats.org/api/players?players=%s"
+local playerRecords = {}
 
-TGNSNs2StatsProxy = {}
-
-local function GetPlayerRecordFromDecodedFetchData(steamId)
-	local result
-	local matchingRecords = TGNS.Where(decodedFetchData, function(d) return d.id == steamId end)
-	if #matchingRecords > 0 then
-		result = TGNS.GetFirst(matchingRecords)
-	end
-	return result
-end
-
-TGNSNs2StatsProxy.Create = function(steamIds)
-	local result = {}
-	local decodedFetchData = {}
-
-	if steamIds ~= nil and #steamIds > 0 then
-		local commaDelimitedSteamIds = TGNS.Join(steamIds, ",")
-		local fetchUrl = string.format(STEAMID_FETCH_URL_TEMPLATE, commaDelimitedSteamIds)
-		local fetchResult = Shared.GetHTTPRequest(fetchUrl)
-		if fetchResult ~= nil then
-			local decodedFetchData = json.decode(fetchResult)
+local function processResponse(response)
+	if response ~= nil then
+		Shared.Message("Response:" .. response)
+		local decodedResponse = json.decode(response)
+		if decodedResponse then
+			local steamId = decodedResponse.id
+			if steamId then
+				playerRecords[steamId] = decodedResponse
+			end
 		end
 	end
+end
+
+TGNSNs2StatsProxy = {}
+TGNSNs2StatsProxy.Create = function(steamIds)
+	TGNS.DoFor(steamIds, function(steamId)
+		local fetchUrl = string.format("http://ns2stats.org/api/player?ns2_id=%s", steamId)
+		Shared.Message("Fetch: " .. fetchUrl)
+		Shared.SendHTTPRequest(fetchUrl, "GET", processResponse)
+	end)
 	
+	local result = {}
 	result.GetPlayerRecord = function(steamId)
 		local playerRecordProxy = {}
-		local data
-		local matchingRecords = decodedFetchData == nil and {} or TGNS.Where(decodedFetchData, function(d) return d.id == steamId end)
-		playerRecordProxy.HasData = #matchingRecords > 0
+		local playerRecord = playerRecords[steamId]
+		playerRecordProxy.HasData = playerRecord ~= nil
 		if playerRecordProxy.HasData then
-			data = TGNS.GetFirst(matchingRecords)
 			playerRecordProxy = {}
 			
 			playerRecordProxy.GetCumulativeScore = function()
-				return data.score
+				return playerRecord.score
 			end
 			
 			playerRecordProxy.GetTimePlayedInSeconds = function()
-				return data.time_played
+				return playerRecord.time_played
 			end
 		end
 		
