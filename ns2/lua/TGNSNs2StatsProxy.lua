@@ -2,15 +2,12 @@ Script.Load("lua/TGNSCommon.lua")
 
 local playerRecords = {}
 
-local function processResponse(response)
+local function processResponse(steamId, response)
 	if response ~= nil then
-		Shared.Message("Response:" .. response)
 		local decodedResponse = json.decode(response)
 		if decodedResponse then
-			local steamId = decodedResponse.id
-			if steamId then
-				playerRecords[steamId] = decodedResponse
-			end
+			playerRecords[steamId] = TGNS.GetFirst(decodedResponse)
+			TGNS.SendAdminConsoles(message, "NS2STATSPROXY_DEBUG")
 		end
 	end
 end
@@ -19,8 +16,7 @@ TGNSNs2StatsProxy = {}
 TGNSNs2StatsProxy.Create = function(steamIds)
 	TGNS.DoFor(steamIds, function(steamId)
 		local fetchUrl = string.format("http://ns2stats.org/api/player?ns2_id=%s", steamId)
-		Shared.Message("Fetch: " .. fetchUrl)
-		Shared.SendHTTPRequest(fetchUrl, "GET", processResponse)
+		Shared.SendHTTPRequest(fetchUrl, "GET", function(response) processResponse(steamId, response) end)
 	end)
 	
 	local result = {}
@@ -29,8 +25,6 @@ TGNSNs2StatsProxy.Create = function(steamIds)
 		local playerRecord = playerRecords[steamId]
 		playerRecordProxy.HasData = playerRecord ~= nil
 		if playerRecordProxy.HasData then
-			playerRecordProxy = {}
-			
 			playerRecordProxy.GetCumulativeScore = function()
 				return playerRecord.score
 			end
@@ -45,4 +39,3 @@ TGNSNs2StatsProxy.Create = function(steamIds)
 	
 	return result
 end
-
