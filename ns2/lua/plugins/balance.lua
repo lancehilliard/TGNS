@@ -10,6 +10,7 @@ local lastBalanceStartTimeInSeconds = 0
 local SCORE_PER_MINUTE_DATAPOINTS_TO_KEEP = 30
 local ns2statsProxy
 local RECENT_BALANCE_DURATION_IN_SECONDS = 15
+local NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD = 30
 
 local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
 			balance.wins = balance.wins ~= nil and balance.wins or 0
@@ -94,7 +95,7 @@ end
 	
 local function GetPlayerScorePerMinuteAverage(player)
 	local balance = GetPlayerBalance(player)
-	local result = #balance.scoresPerMinute < 10 and nil or TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute)
+	local result = #balance.scoresPerMinute >= 10 and TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute) or nil
 	if result == nil and ns2statsProxy ~= nil then
 		local steamId = TGNS.ClientAction(player, TGNS.GetClientSteamId)
 		local ns2StatsPlayerRecord = ns2statsProxy.GetPlayerRecord(steamId)
@@ -102,6 +103,7 @@ local function GetPlayerScorePerMinuteAverage(player)
 			local cumulativeScore = ns2StatsPlayerRecord.GetCumulativeScore()
 			local timePlayedInMinutes = TGNS.ConvertSecondsToMinutes(ns2StatsPlayerRecord.GetTimePlayedInSeconds())
 			result = TGNSAverageCalculator.Calculate(cumulativeScore, timePlayedInMinutes)
+			result = result < NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD and result or nil
 		end
 	end
 	return result or 0
