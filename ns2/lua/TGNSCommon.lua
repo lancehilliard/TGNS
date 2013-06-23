@@ -10,6 +10,16 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
+function TGNS.InsertDistinctly(elements, element)
+	if not TGNS.Has(elements, element) then
+		table.insert(elements, element)
+	end
+end
+
+function TGNS.GetHttpAsync(url, callback)
+	Shared.SendHTTPRequest(url, "GET", callback)
+end
+
 function TGNS.PlayerTeamIsOverbalanced(player, playerList)
 	local result
 	TGNS.DoTeamSizeComparisonAction(player, playerList, function(playerTeamCount, otherTeamCount)
@@ -439,6 +449,11 @@ function TGNS.TableUnique(tt)
 		end
 	end)
 	return result
+end
+
+function TGNS.ScheduleActionInterval(intervalInSeconds, action)
+	TGNS.ScheduleAction(intervalInSeconds, action)
+	TGNS.ScheduleAction(intervalInSeconds, function() TGNS.ScheduleActionInterval(intervalInSeconds, action) end)
 end
 
 function TGNS.ScheduleAction(delayInSeconds, action)
