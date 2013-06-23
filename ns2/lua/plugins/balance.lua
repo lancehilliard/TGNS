@@ -8,9 +8,9 @@ local balanceLog = {}
 local balanceInProgress = false
 local lastBalanceStartTimeInSeconds = 0
 local SCORE_PER_MINUTE_DATAPOINTS_TO_KEEP = 30
-local ns2statsProxy
 local RECENT_BALANCE_DURATION_IN_SECONDS = 15
 local NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD = 30
+local LOCAL_DATAPOINTS_COUNT_THRESHOLD = 10
 
 local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
 			balance.wins = balance.wins ~= nil and balance.wins or 0
@@ -67,7 +67,7 @@ local function GetWinLossRatio(player, balance)
 	local result = 0.5
 	if balance ~= nil then
 		local totalGames = balance.losses + balance.wins
-		local notEnoughGamesToMatter = totalGames < 10
+		local notEnoughGamesToMatter = totalGames < LOCAL_DATAPOINTS_COUNT_THRESHOLD
 		if notEnoughGamesToMatter then
 			result = TGNS.PlayerIsRookie(player) and 0 or .5
 		else
@@ -87,15 +87,9 @@ local function GetPlayerBalance(player)
 	return result
 end
 
-local function UpdateNs2StatsProxyWithRecordsOfPlayersWhoHaveTooFewLocalScoresPerMinute()
-	local playersWithTooFewLocalScoresPerMinute = TGNS.Where(TGNS.GetPlayerList(), function(p) return #GetPlayerBalance(p).scoresPerMinute < 10 end)
-	local steamIdsWithTooFewLocalScoresPerMinute = TGNS.Select(playersWithTooFewLocalScoresPerMinute, function(p) return TGNS.ClientAction(p, TGNS.GetClientSteamId) end)
-	ns2statsProxy = TGNSNs2StatsProxy.Create(steamIdsWithTooFewLocalScoresPerMinute)
-end
-	
 local function GetPlayerScorePerMinuteAverage(player)
 	local balance = GetPlayerBalance(player)
-	local result = #balance.scoresPerMinute >= 10 and TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute) or nil
+	local result = #balance.scoresPerMinute >= LOCAL_DATAPOINTS_COUNT_THRESHOLD and TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute) or nil
 	if result == nil and ns2statsProxy ~= nil then
 		local steamId = TGNS.ClientAction(player, TGNS.GetClientSteamId)
 		local ns2StatsPlayerRecord = ns2statsProxy.GetPlayerRecord(steamId)
@@ -147,8 +141,8 @@ local function SendNextPlayer()
 	
 	if wantToUseWinLossToBalance then
 		playersBuilder = function(playerList)
-			local playersWithFewerThanTenGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total < 10 end))
-			local playersWithTenOrMoreGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total >= 10 end))
+			local playersWithFewerThanTenGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total < LOCAL_DATAPOINTS_COUNT_THRESHOLD end))
+			local playersWithTenOrMoreGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total >= LOCAL_DATAPOINTS_COUNT_THRESHOLD end))
 			TGNS.SortDescending(playersWithTenOrMoreGames, GetPlayerWinLossRatio)
 			local result = playersWithFewerThanTenGames
 			TGNS.DoFor(playersWithTenOrMoreGames, function(p)
@@ -190,8 +184,7 @@ local function SendNextPlayer()
 		TGNS.SendToTeam(player, teamNumber)
 		TGNS.ScheduleAction(0.25, SendNextPlayer)
 	else
-		TGNS.SendAdminChat("Balance finished.", "ADMINDEBUG")
-		TGNS.SendAdminConsoles("Balance finished.", "ADMINDEBUG")
+		TGNS.SendAdminConsoles("Balance finished.", "BALANCEDEBUG")
 		Shared.Message("Balance finished.")
 		balanceInProgress = false
 		local playerList = TGNS.GetPlayerList()
@@ -214,16 +207,15 @@ local function svBalance(client)
 	local gameState = GetGamerules():GetGameState()
 	if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
 		TGNS.SendAllChat(string.format("%s is balancing teams using TG and ns2stats score-per-minute data.", TGNS.GetClientName(client)), "TacticalGamer.com")
-		TGNS.SendAllChat("The scoreboard will be hidden until you're placed on a team.", "TacticalGamer.com")
+		TGNS.SendAllChat("Scoreboard is hidden until you're placed on a team.", "TacticalGamer.com")
 		balanceInProgress = true
 		lastBalanceStartTimeInSeconds = Shared.GetTime()
-		TGNS.ScheduleAction(1, UpdateNs2StatsProxyWithRecordsOfPlayersWhoHaveTooFewLocalScoresPerMinute)
 		TGNS.ScheduleAction(5, BeginBalance)
 		TGNS.ScheduleAction(RECENT_BALANCE_DURATION_IN_SECONDS + 1, TGNS.UpdateAllScoreboards)
 		TGNS.UpdateAllScoreboards()
 	end
 end
-TGNS.RegisterCommandHook("Console_sv_balance", svBalance, "Balances all players based on TG win/loss (percentage) record.")
+TGNS.RegisterCommandHook("Console_sv_balance", svBalance, "Balances all players to teams.")
 
 local function BalanceOnSetGameState(self, state, currentstate)
 	if state ~= currentstate then
@@ -272,3 +264,12 @@ end)
 TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
 	return BalanceStartedRecently() and not TGNS.PlayerIsOnPlayingTeam(targetPlayer)
 end)
+
+local function OnClientDelayedConnect(client)
+	local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #GetPlayerBalance(p).scoresPerMinute < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
+	if playerHasTooFewLocalScoresPerMinute then
+		local steamId = TGNS.GetClientSteamId(client)
+		TGNSNs2StatsProxy.AddSteamId(steamId)
+	end
+end
+TGNS.RegisterEventHook("OnClientDelayedConnect", OnClientDelayedConnect, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
