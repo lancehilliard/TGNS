@@ -267,8 +267,11 @@ end
 TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
 local function CommunitySlotsOnTeamJoin(self, player, newTeamNumber, force)
+	local cancel = false
     local joiningClient = TGNS.GetClient(player)
-    local cancel = IsClientBumped(joiningClient)
+    if TGNS.IsGameplayTeam(newTeamNumber) then
+		cancel = IsClientBumped(joiningClient)
+	end
     return cancel
 end
 TGNS.RegisterEventHook("OnTeamJoin", CommunitySlotsOnTeamJoin)
