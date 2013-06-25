@@ -67,3 +67,15 @@ local function CheckForChat(client, networkMessage)
 end
 
 TGNS.RegisterNetworkMessageHook("ChatClient", CheckForChat, 5)
+
+local function OnClientDelayedConnect(client)
+	TGNS.DoForPairs(DAK.config.chat.Channels, function(command, channel)
+		if TGNS.ClientCanRunCommand(client, command) then
+			local chatMessage = string.format("Start a chat with %s to use %s. Console for details.", channel.triggerChar, channel.label)
+			TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, chatMessage, "CHAT TIP") end)
+			local consoleMessage = string.format("Use %s: %s%s", channel.label, channel.triggerChar, channel.help)
+			TGNS.ConsolePrint(client, consoleMessage, "CHAT TIP")
+		end
+	end)
+end
+TGNS.RegisterEventHook("OnClientDelayedConnect", OnClientDelayedConnect, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
