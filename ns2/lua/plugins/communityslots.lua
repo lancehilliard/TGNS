@@ -203,15 +203,11 @@ local function CommunitySlotsOnClientDelayedConnectGreeter(client)
     local chatMessage
     if TGNS.IsClientSM(client) then
         chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
-		chatMessage = "Supporting Memberss may use '# [message]' to chat with other Supporting Members"
-   	elseif TGNS.HasClientSignedPrimer(client) then
-		chatMessage = string.format("TGNS Primer signer! Join the full server when %s+ strangers are playing!", DAK.config.communityslots.kMinimumStrangers)
-		if TGNS.IsClientGuardian(client) then
-			chatMessage = "You are a guardian, please use gb responsibly"
-		end
+    elseif TGNS.HasClientSignedPrimer(client) then
+        chatMessage = string.format("TGNS Primer signer! Join the full server when %s+ strangers are playing!", DAK.config.communityslots.kMinimumStrangers)
     else
         chatMessage = "Visit tacticalgamer.com/natural-selection to say hello!"
-	end
+    end
     TGNS.ConsolePrint(client, chatMessage)
     TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, chatMessage, "TacticalGamer.com") end)
 end
