@@ -161,26 +161,25 @@ local function SendNextPlayer()
 	end
 
 	local players = playersBuilder(TGNS.GetPlayerList())
-	local readyRoomClient = TGNS.GetLastMatchingClient(players, function(c,p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
-	if readyRoomClient then
-		local player = TGNS.GetPlayer(readyRoomClient)
-		local teamNumber = nil
-		local actionMessage
-
+	local eligiblePlayers = TGNS.Where(players, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
+	if #eligiblePlayers > 0 then
 		local playerList = TGNS.GetPlayerList()
 		local marineClients = TGNS.GetMarineClients(playerList)
 		local alienClients = TGNS.GetAlienClients(playerList)
 		local marineAvg = teamAverageGetter(marineClients)
 		local alienAvg = teamAverageGetter(alienClients)
-		local marineCount = #marineClients
-		local alienCount = #alienClients
-		if marineAvg <= alienAvg then
-			teamNumber = marineCount <= alienCount and kMarineTeamType or kAlienTeamType
+		local teamNumber
+		local teamIsWeaker
+		if #marineClients <= #alienClients then
+			teamNumber = kMarineTeamType
+			teamIsWeaker = marineAvg <= alienAvg
 		else
-			teamNumber = alienCount <= marineCount and kAlienTeamType or kMarineTeamType
+			teamNumber = kAlienTeamType
+			teamIsWeaker = alienAvg <= marineAvg
 		end
-		actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
-		table.insert(balanceLog, string.format("%s: %s with %s = %s", player:GetName(), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
+		local player = teamIsWeaker and TGNS.GetFirst(eligiblePlayers) or TGNS.GetLast(eligiblePlayers)
+		local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
+		table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
 		TGNS.SendToTeam(player, teamNumber)
 		TGNS.ScheduleAction(0.25, SendNextPlayer)
 	else
