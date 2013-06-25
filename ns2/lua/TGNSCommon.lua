@@ -547,11 +547,6 @@ function TGNS.GetNumericValueOrZero(countable)
 	return result
 end
 
-function TGNS.GetClientName(client)
-	local result = client:GetControllingPlayer():GetName()
-	return result
-end
-
 function TGNS.DoForPairs(t, pairAction)
 	if t ~= nil then
 		for key, value in pairs(t) do
@@ -769,6 +764,11 @@ function TGNS.SortAscending(elements, sortFunction)
 	table.sort(elements, function(e1, e2)
 		return sortFunction(e1) < sortFunction(e2)
 	end)
+end
+
+function TGNS.GetLast(elements)
+	local result = elements[#elements]
+	return result
 end
 
 function TGNS.GetFirst(elements)
