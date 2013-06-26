@@ -1,11 +1,14 @@
 Script.Load("lua/TGNSCommon.lua")
 Script.Load("lua/TGNSPlayerDataRepository.lua")
+Script.Load("lua/TGNSMessageDisplayer.lua")
+Script.Load("lua/TGNSConnectedTimesTracker.lua")
 
 local pdr = TGNSPlayerDataRepository.Create("taglines", function(tagline)
-			tagline.message = tagline.message ~= nil and tagline.message or ""
-			return tagline
-		end
-	)
+	tagline.message = tagline.message ~= nil and tagline.message or ""
+	return tagline
+end)
+
+local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
 	
 local function GetTaglineMessage(...)
 	local result = ""
@@ -57,15 +60,18 @@ end
 TGNS.RegisterCommandHook("Console_sv_tagline", svTagline, "<tagline> Sets your tagline.", true)
 
 local function TaglinesOnClientDelayedConnect(client)
-	if TGNS.ClientCanRunCommand(client, "sv_taglineannounce") and Shared.GetTime() > 120 then
-		local player = client:GetControllingPlayer()
+	local player = TGNS.GetPlayer(client)
+	local message = TGNS.GetPlayerName(player) .. " joined!"
+	if TGNS.ClientCanRunCommand(client, "sv_taglineannounce") and TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client) < 120 then
 		local steamId = client:GetUserId()
 		local tagline = pdr:Load(steamId)
 		if tagline ~= nil and tagline.message ~= "" then
-			local message = player:GetName() .. " joined! " .. tagline.message
-			chatMessage = string.sub(message, 1, kMaxChatLength)
-			Server.SendNetworkMessage("Chat", BuildChatMessage(false, "TGNS", -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			 message = message .. " " .. tagline.message
 		end
 	end
+	if TGNS.IsClientStranger(client) then
+		message = message .. " Please DO use 'gb' responsibly."
+	end
+	tgnsMd:ToAllChat(message)
 end
 TGNS.RegisterEventHook("OnClientDelayedConnect", TaglinesOnClientDelayedConnect)
