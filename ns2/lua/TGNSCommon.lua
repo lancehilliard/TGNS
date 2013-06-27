@@ -21,7 +21,11 @@ TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 function TGNS.ban(client, playerId, duration, ...)
 	Ban(client, playerId, duration, ...)
 end
-	
+
+function TGNS.ExecuteEventHooks(eventName, ...)
+	DAK:ExecuteEventHooks(eventName, ...)
+end
+
 function TGNS.InsertDistinctly(elements, element)
 	if not TGNS.Has(elements, element) then
 		table.insert(elements, element)
