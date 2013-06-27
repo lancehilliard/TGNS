@@ -196,10 +196,11 @@ local function CommunitySlotsOnClientDelayedConnect(joiningClient)
     local cancel = IsClientBumped(joiningClient)
     if not cancel then
         TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
+		TGNS.ExecuteEventHooks("OnSlotTaken", joiningClient)
     end
     return cancel
 end
-local function CommunitySlotsOnClientDelayedConnectGreeter(client)
+local function OnSlotTaken(client)
     local chatMessage
     if TGNS.IsClientSM(client) then
         chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
@@ -212,7 +213,7 @@ local function CommunitySlotsOnClientDelayedConnectGreeter(client)
     TGNS.PlayerAction(client, function(p) TGNS.SendChatMessage(p, chatMessage, "TacticalGamer.com") end)
 end
 TGNS.RegisterEventHook("OnClientDelayedConnect", CommunitySlotsOnClientDelayedConnect, TGNS.VERY_HIGH_EVENT_HANDLER_PRIORITY)
-TGNS.RegisterEventHook("OnClientDelayedConnect", CommunitySlotsOnClientDelayedConnectGreeter)
+TGNS.RegisterEventHook("OnSlotTaken", OnSlotTaken)
 
 local function GetBumpCounts()
     local result = {}
