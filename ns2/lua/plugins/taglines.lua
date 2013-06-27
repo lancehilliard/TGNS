@@ -59,19 +59,21 @@ local function svTagline(client, ...)
 end
 TGNS.RegisterCommandHook("Console_sv_tagline", svTagline, "<tagline> Sets your tagline.", true)
 
-local function TaglinesOnClientDelayedConnect(client)
-	local player = TGNS.GetPlayer(client)
-	local message = TGNS.GetPlayerName(player) .. " joined!"
-	if TGNS.ClientCanRunCommand(client, "sv_taglineannounce") and TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client) < 120 then
-		local steamId = client:GetUserId()
-		local tagline = pdr:Load(steamId)
-		if tagline ~= nil and tagline.message ~= "" then
-			 message = message .. " " .. tagline.message
+local function OnSlotTaken(client)
+	local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
+	Shared.Message(tostring(connectedTimeInSeconds))
+	if connectedTimeInSeconds < 120 then
+		local message = TGNS.GetClientName(client) .. " joined!"
+		if TGNS.ClientCanRunCommand(client, "sv_taglineannounce") then
+			local steamId = TGNS.GetClientSteamId(client)
+			local tagline = pdr:Load(steamId)
+			if tagline ~= nil and tagline.message ~= "" then
+				 message = message .. " " .. tagline.message
+			end
+		elseif TGNS.IsClientStranger(client) then
+			message = message .. " Please DO use 'gb' responsibly."
 		end
+		tgnsMd:ToAllChat(message)
 	end
-	if TGNS.IsClientStranger(client) then
-		message = message .. " Please DO use 'gb' responsibly."
-	end
-	tgnsMd:ToAllChat(message)
 end
-TGNS.RegisterEventHook("OnClientDelayedConnect", TaglinesOnClientDelayedConnect)
+TGNS.RegisterEventHook("OnSlotTaken", OnSlotTaken)
