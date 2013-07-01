@@ -19,6 +19,7 @@
 !ns2/lua/TGNSConnectedTimesTracker.lua
 !ns2/lua/TGNSDataRepository.lua
 !ns2/lua/TGNSMessageDisplayer.lua
+!ns2/lua/TGNSMonthlyNumberGetter.lua
 !ns2/lua/TGNSNs2StatsProxy.lua
 !ns2/lua/TGNSPlayerBlacklistRepository.lua
 !ns2/lua/TGNSPlayerDataRepository.lua
