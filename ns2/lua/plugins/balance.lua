@@ -154,7 +154,7 @@ local function SendNextPlayer()
 	else
 		playersBuilder = function(playerList)
 			local result = playerList
-			TGNS.SortDescending(result, GetPlayerScorePerMinuteAverage)
+			TGNS.SortDescending(result, function(p) return TGNS.PlayerIsRookie(p) and 0 or GetPlayerScorePerMinuteAverage(player) end)
 			return result
 		end
 		teamAverageGetter = GetScorePerMinuteAverage
@@ -177,7 +177,7 @@ local function SendNextPlayer()
 			teamNumber = kAlienTeamType
 			teamIsWeaker = alienAvg <= marineAvg
 		end
-		local player = teamIsWeaker and TGNS.GetFirst(eligiblePlayers) or TGNS.GetLast(eligiblePlayers)
+		local player = TGNS.GetFirst(eligiblePlayers) // teamIsWeaker and TGNS.GetFirst(eligiblePlayers) or TGNS.GetLast(eligiblePlayers)
 		local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
 		table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
 		TGNS.SendToTeam(player, teamNumber)
