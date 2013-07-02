@@ -10,6 +10,8 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
+//I'm a branch!
+
 // Still need to add to list of denied and allowed functions by type
 //function TGNS.TempBan(client, reason)
 //	TGNS.GetPlayerMatchingName(name, team)
