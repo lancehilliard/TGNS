@@ -181,5 +181,8 @@
 !ns2/lua/configs/teamroles.lua
 !ns2/lua/plugins/teamroles.lua
 
+!ns2/lua/configs/tempban.lua
+!ns2/lua/plugins/tempban.lua
+
 !ns2/lua/configs/winorlose.lua
 !ns2/lua/plugins/winorlose.lua
