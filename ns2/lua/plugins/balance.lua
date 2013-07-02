@@ -88,16 +88,19 @@ local function GetPlayerBalance(player)
 end
 
 local function GetPlayerScorePerMinuteAverage(player)
-	local balance = GetPlayerBalance(player)
-	local result = #balance.scoresPerMinute >= LOCAL_DATAPOINTS_COUNT_THRESHOLD and TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute) or nil
-	if result == nil and ns2statsProxy ~= nil then
-		local steamId = TGNS.ClientAction(player, TGNS.GetClientSteamId)
-		local ns2StatsPlayerRecord = ns2statsProxy.GetPlayerRecord(steamId)
-		if ns2StatsPlayerRecord.HasData then
-			local cumulativeScore = ns2StatsPlayerRecord.GetCumulativeScore()
-			local timePlayedInMinutes = TGNS.ConvertSecondsToMinutes(ns2StatsPlayerRecord.GetTimePlayedInSeconds())
-			result = TGNSAverageCalculator.Calculate(cumulativeScore, timePlayedInMinutes)
-			result = result < NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD and result or nil
+	local result
+	if not TGNS.PlayerIsRookie(player) then
+		local balance = GetPlayerBalance(player)
+		result = #balance.scoresPerMinute >= LOCAL_DATAPOINTS_COUNT_THRESHOLD and TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute) or nil
+		if result == nil and ns2statsProxy ~= nil then
+			local steamId = TGNS.ClientAction(player, TGNS.GetClientSteamId)
+			local ns2StatsPlayerRecord = ns2statsProxy.GetPlayerRecord(steamId)
+			if ns2StatsPlayerRecord.HasData then
+				local cumulativeScore = ns2StatsPlayerRecord.GetCumulativeScore()
+				local timePlayedInMinutes = TGNS.ConvertSecondsToMinutes(ns2StatsPlayerRecord.GetTimePlayedInSeconds())
+				result = TGNSAverageCalculator.Calculate(cumulativeScore, timePlayedInMinutes)
+				result = result < NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD and result or nil
+			end
 		end
 	end
 	return result or 0
@@ -154,7 +157,7 @@ local function SendNextPlayer()
 	else
 		playersBuilder = function(playerList)
 			local result = playerList
-			TGNS.SortDescending(result, function(p) return TGNS.PlayerIsRookie(p) and 0 or GetPlayerScorePerMinuteAverage(player) end)
+			TGNS.SortDescending(result, GetPlayerScorePerMinuteAverage)
 			return result
 		end
 		teamAverageGetter = GetScorePerMinuteAverage
@@ -261,7 +264,7 @@ TGNS.RegisterEventHook("OnTeamJoin", function(self, player, newTeamNumber, force
 end)
 
 TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
-	return BalanceStartedRecently() and not TGNS.PlayerIsOnPlayingTeam(targetPlayer)
+	return BalanceStartedRecently() and not TGNS.PlayerIsOnPlayingTeam(targetPlayer) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin)
 end)
 
 local function OnClientDelayedConnect(client)
