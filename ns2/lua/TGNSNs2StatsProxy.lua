@@ -9,12 +9,12 @@ local function processResponse(steamId, response)
 	if response ~= nil then
 		if response == PLAYER_NOT_FOUND_RESPONSE then
 			table.insert(steamIdsWhichWeKnowHaveNoRecord, steamId)
-			TGNS.SendAdminConsoles(string.format("NOT FOUND RESPONSE : %s", steamId), "NS2STATSPROXYDEBUG")
+			//TGNS.SendAdminConsoles(string.format("NOT FOUND RESPONSE : %s", steamId), "NS2STATSPROXYDEBUG")
 		else
 			local decodedResponse = json.decode(response)
 			if decodedResponse then
 				decodedResponses[steamId] = TGNS.GetFirst(decodedResponse)
-				TGNS.SendAdminConsoles(string.format("PLAYER RECORD FOUND: %s", steamId), "NS2STATSPROXYDEBUG")
+				//TGNS.SendAdminConsoles(string.format("PLAYER RECORD FOUND: %s", steamId), "NS2STATSPROXYDEBUG")
 			end
 		end
 	end
@@ -27,7 +27,7 @@ local function getRequestedRecords()
 		local weHaveYetToFetchPlayerRecordSuccessfully = not decodedResponses[steamId]
 		if playerIsOnTheServer and ns2statsMightReturnRecordForThePlayer and weHaveYetToFetchPlayerRecordSuccessfully then
 			local fetchUrl = string.format("http://ns2stats.org/api/player?ns2_id=%s", steamId)
-			TGNS.SendAdminConsoles(string.format("REQUESTING RECORD  : %s", steamId), "NS2STATSPROXYDEBUG")
+			//TGNS.SendAdminConsoles(string.format("REQUESTING RECORD  : %s", steamId), "NS2STATSPROXYDEBUG")
 			TGNS.GetHttpAsync(fetchUrl, function(response) processResponse(steamId, response) end)
 		end
 	end)
