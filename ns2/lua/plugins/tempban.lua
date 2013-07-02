@@ -14,7 +14,3 @@ function svTempBan(client, playerName, ...)
 //	end
 end
 TGNS.RegisterCommandHook("Console_sv_tempban", svTempBan, "<player> <reason> Bans players for 15 minutes.")
-
-function TGNS.Ban(client, playerId, duration, ...)
-	Ban(client, playerId, duration, ...)
-end
