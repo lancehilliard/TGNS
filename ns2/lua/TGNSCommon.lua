@@ -10,8 +10,11 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
-function TGNS.ban(client, playerId, duration, ...)
-	Ban(client, playerId, duration, ...)
+function TGNS.Ban(client, durationInMinutes, ...)
+	local steamId = TGNS.GetClientSteamId(client)
+	local playerName = TGNS.GetClientName(client)
+	local reason = TGNS.GetConcatenatedStringOrEmpty(...)
+	DAK:AddSteamIDBan(steamId, playerName, durationInMinutes, reason)	
 end
 
 function TGNS.ExecuteEventHooks(eventName, ...)
