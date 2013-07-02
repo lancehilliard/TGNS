@@ -90,9 +90,9 @@ end
 local function GetPlayerScorePerMinuteAverage(player)
 	local balance = GetPlayerBalance(player)
 	local result = #balance.scoresPerMinute >= LOCAL_DATAPOINTS_COUNT_THRESHOLD and TGNSAverageCalculator.CalculateFor(balance.scoresPerMinute) or nil
-	if result == nil and ns2statsProxy ~= nil then
+	if result == nil then
 		local steamId = TGNS.ClientAction(player, TGNS.GetClientSteamId)
-		local ns2StatsPlayerRecord = ns2statsProxy.GetPlayerRecord(steamId)
+		local ns2StatsPlayerRecord = TGNSNs2StatsProxy.GetPlayerRecord(steamId)
 		if ns2StatsPlayerRecord.HasData then
 			local cumulativeScore = ns2StatsPlayerRecord.GetCumulativeScore()
 			local timePlayedInMinutes = TGNS.ConvertSecondsToMinutes(ns2StatsPlayerRecord.GetTimePlayedInSeconds())
