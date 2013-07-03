@@ -1,4 +1,5 @@
 Script.Load("lua/TGNSCommon.lua")
+Script.Load("lua/plugins/captains.lua")
 
 local allowedSpectatorSteamIds = {}
 local NAME_PREFIX = "spec-"
@@ -30,7 +31,8 @@ local function SpecLimitOnClientDelayedConnect(client)
 		local clientName = TGNS.GetClientName(client)
 		if TGNS.StartsWith(clientName, NAME_PREFIX) then
 			local steamId = TGNS.GetClientSteamId(client)
-			if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < 4 or TGNS.IsClientAdmin(client) then
+			local spectatorsCountLimit = TGNSCaptains.IsCaptainsMode() and 7 or 4
+			if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < spectatorsCountLimit or TGNS.IsClientAdmin(client) then
 				table.insert(allowedSpectatorSteamIds, steamId)
 				TGNS.PlayerAction(client, function(p)
 					TGNS.SendChatMessage(p, NAME_REMINDER_MESSAGE, "SPECJOIN")
