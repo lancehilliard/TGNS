@@ -766,7 +766,8 @@ function TGNS.DisconnectClient(client, reason)
 end
 
 function TGNS.SortDescending(elements, sortFunction)
-	local result = TGNS.TableReverse(TGNS.SortAscending(elements, sortFunction))
+	TGNS.SortAscending(elements, sortFunction)
+	local result = TGNS.TableReverse(elements)
 	return result
 end
 
