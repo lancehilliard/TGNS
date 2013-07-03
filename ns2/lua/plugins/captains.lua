@@ -80,6 +80,11 @@ local function isCaptainsMode()
 	return captainsEnabled
 end
 
+TGNSCaptains = {}
+TGNSCaptains.IsCaptainsMode = function()
+	return isCaptainsMode()
+end
+
 local function isCaptain(id)
 	return captain1id == id or captain2id == id
 end
