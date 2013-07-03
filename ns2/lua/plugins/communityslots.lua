@@ -2,6 +2,7 @@ Script.Load("lua/TGNSCommon.lua")
 Script.Load("lua/TGNSPlayerDataRepository.lua")
 Script.Load("lua/TGNSClientKicker.lua")
 Script.Load("lua/TGNSConnectedTimesTracker.lua")
+Script.Load("lua/plugins/captains.lua")
 
 local actionslog = { }
 local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
@@ -77,7 +78,7 @@ local function IsTargetBumpable(targetClient, playerList, joiningClient)
     local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
     local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
 
-    if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable
+    if TGNSCaptains.IsCaptainsMode() or joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable
     then
         result = false
     end
@@ -118,6 +119,9 @@ end
 
 local function GetBumpMessage(targetClient)
     local result = string.format(DAK.config.communityslots.kBumpReason, TGNS.GetClientName(targetClient), DAK.config.communityslots.kMaximumSlots - DAK.config.communityslots.kCommunitySlots, DAK.config.communityslots.kMaximumSlots)
+	if TGNSCaptains.IsCaptainsMode() then
+		result = string.format("%s Captains game in progress!", result)
+	end
     return result
 end
 
