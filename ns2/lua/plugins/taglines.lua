@@ -61,7 +61,6 @@ TGNS.RegisterCommandHook("Console_sv_tagline", svTagline, "<tagline> Sets your t
 
 local function OnSlotTaken(client)
 	local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
-	Shared.Message(tostring(connectedTimeInSeconds))
 	if connectedTimeInSeconds < 120 then
 		local message = TGNS.GetClientName(client) .. " joined!"
 		if TGNS.ClientCanRunCommand(client, "sv_taglineannounce") then
