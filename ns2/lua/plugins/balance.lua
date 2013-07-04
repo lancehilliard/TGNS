@@ -136,11 +136,11 @@ end
 local function SendNextPlayer()
 	local wantToUseWinLossToBalance = false
 	
-	local playersBuilder
+	local sortedPlayersGetter
 	local teamAverageGetter
 	
 	if wantToUseWinLossToBalance then
-		playersBuilder = function(playerList)
+		sortedPlayersGetter = function(playerList)
 			local playersWithFewerThanTenGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total < LOCAL_DATAPOINTS_COUNT_THRESHOLD end))
 			local playersWithTenOrMoreGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total >= LOCAL_DATAPOINTS_COUNT_THRESHOLD end))
 			TGNS.SortDescending(playersWithTenOrMoreGames, GetPlayerWinLossRatio)
@@ -152,7 +152,7 @@ local function SendNextPlayer()
 		end
 		teamAverageGetter = GetWinLossAverage
 	else
-		playersBuilder = function(playerList)
+		sortedPlayersGetter = function(playerList)
 			local rookiePlayers = TGNS.Where(playerList, TGNS.PlayerIsRookie)
 			local nonRookiePlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(rookiePlayers, p) end)
 			TGNS.SortDescending(nonRookiePlayers, GetPlayerScorePerMinuteAverage)
@@ -165,10 +165,10 @@ local function SendNextPlayer()
 		teamAverageGetter = GetScorePerMinuteAverage
 	end
 
-	local players = playersBuilder(TGNS.GetPlayerList())
-	local eligiblePlayers = TGNS.Where(players, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
+	local playerList = TGNS.GetPlayerList()
+	local sortedPlayers = sortedPlayersGetter(playerList)
+	local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
 	if #eligiblePlayers > 0 then
-		local playerList = TGNS.GetPlayerList()
 		local marineClients = TGNS.GetMarineClients(playerList)
 		local alienClients = TGNS.GetAlienClients(playerList)
 		local marineAvg = teamAverageGetter(marineClients)
