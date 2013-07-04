@@ -41,4 +41,4 @@ local function svTempBan(client, playerName, ...)
 		tempbanMessageDisplayer:ToClientConsole(client, "You must be a Temp Admin or Admin to use this command.")
 	end
 end
-TGNS.RegisterCommandHook("Console_sv_tempban", svTempBan, "<player> <reason> Bans players for 15 minutes.")
+TGNS.RegisterCommandHook("Console_sv_tempban", svTempBan, string.format("<player> <reason> Bans players for %s minutes.", TEMPBAN_DURATION_IN_MINUTES))
