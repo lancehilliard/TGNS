@@ -303,6 +303,7 @@ end
 
 function TGNS.EnhancedLog(message)
 	DAK:ExecutePluginGlobalFunction("enhancedlogging", EnhancedLogMessage, message)
+	Shared.Message(message)
 end
 
 function TGNS.VerifyClient(client)
