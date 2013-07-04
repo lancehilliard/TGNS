@@ -58,14 +58,6 @@ function TGNS.GetPlayersOnOtherPlayingTeam(player, playerList)
 	return result
 end
 
-function TGNS.TableReverse(elements)
-	local result = {}
-	TGNS.DoForReverse(elements, function(e)
-		table.insert(result, e)
-	end)
-	return result
-end
-
 function TGNS.Select(elements, projector)
 	local result = {}
 	TGNS.DoFor(elements, function(e)
@@ -765,10 +757,22 @@ function TGNS.DisconnectClient(client, reason)
 	end)
 end
 
+function TGNS.RemoveAll(elements)
+	TGNS.DoForReverse(elements, function(e, index)
+		table.remove(elements, index)
+	end)
+end
+
+function TGNS.TableReverse(elements)
+	local temp = {}
+	TGNS.DoFor(elements, function(e) table.insert(temp, e) end)
+	TGNS.RemoveAll(elements)
+	TGNS.DoForReverse(temp, function(e) table.insert(elements, e) end)
+end
+
 function TGNS.SortDescending(elements, sortFunction)
 	TGNS.SortAscending(elements, sortFunction)
-	local result = TGNS.TableReverse(elements)
-	return result
+	TGNS.TableReverse(elements)
 end
 
 function TGNS.SortAscending(elements, sortFunction)
