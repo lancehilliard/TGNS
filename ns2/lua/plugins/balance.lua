@@ -153,13 +153,17 @@ local function SendNextPlayer()
 		teamAverageGetter = GetWinLossAverage
 	else
 		sortedPlayersGetter = function(playerList)
+			local result = {}
 			local rookiePlayers = TGNS.Where(playerList, TGNS.PlayerIsRookie)
-			local nonRookiePlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(rookiePlayers, p) end)
-			TGNS.SortDescending(nonRookiePlayers, GetPlayerScorePerMinuteAverage)
-			local result = rookiePlayers
-			TGNS.DoFor(nonRookiePlayers, function(p)
-				table.insert(result, p)
-			end)
+			local nonRookieStrangers = TGNS.Where(playerList, function(p) return not TGNS.Has(rookiePlayers, p) and TGNS.ClientAction(p, TGNS.IsClientStranger) end)
+			local nonRookieRegulars = TGNS.Where(playerList, function(p) return not TGNS.Has(rookiePlayers, p) and not TGNS.Has(nonRookieStrangers, p) end)
+			TGNS.SortDescending(rookiePlayers, GetPlayerScorePerMinuteAverage)
+			TGNS.SortDescending(nonRookieStrangers, GetPlayerScorePerMinuteAverage)
+			TGNS.SortDescending(nonRookieRegulars, GetPlayerScorePerMinuteAverage)
+			local addPlayerToResult = function(p) table.insert(result, p) end
+			TGNS.DoFor(rookiePlayers, addPlayerToResult)
+			TGNS.DoFor(nonRookieStrangers, addPlayerToResult)
+			TGNS.DoFor(nonRookieRegulars, addPlayerToResult)
 			return result
 		end
 		teamAverageGetter = GetScorePerMinuteAverage
