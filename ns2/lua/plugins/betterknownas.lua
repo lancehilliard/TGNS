@@ -105,7 +105,9 @@ local function svBka(client, playerName, ...)
 						end
 					end
 				end
-				if newBkaName ~= "clear" then
+				if newBkaName == "clear" then
+					newBkaName = nil
+				else
 					newBkaData.BKA = newBkaName
 				end
 				pdr:Save(newBkaData)
