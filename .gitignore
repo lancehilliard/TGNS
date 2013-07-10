@@ -163,6 +163,9 @@
 !ns2/lua/configs/rookiethrottle.lua
 !ns2/lua/plugins/rookiethrottle.lua
 
+!ns2/lua/configs/affirm.lua
+!ns2/lua/plugins/affirm.lua
+
 !ns2/lua/configs/scoreboardicons.lua
 !ns2/lua/plugins/scoreboardicons.lua
 
