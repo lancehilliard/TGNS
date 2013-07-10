@@ -11,13 +11,13 @@ local pdr = TGNSPlayerDataRepository.Create("connectedtimes", function(data)
 	return data
 end)
 
-function TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(client)
+function TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(client, connectedTimeInSeconds)
 	local steamId = TGNS.GetClientSteamId(client)
 	local data = pdr:Load(steamId)
 	local tooLongHasPassedSinceLastSeen = data.lastSeen == nil or (Shared.GetSystemTime() - data.lastSeen > DISCONNECTED_TIME_ALLOWED_IN_SECONDS)
 	local noExistingConnectionTimeIsOnRecord = data.when == nil
-	if tooLongHasPassedSinceLastSeen or noExistingConnectionTimeIsOnRecord then
-		data.when = Shared.GetSystemTime()
+	if connectedTimeInSeconds or tooLongHasPassedSinceLastSeen or noExistingConnectionTimeIsOnRecord then
+		data.when = connectedTimeInSeconds or Shared.GetSystemTime()
 		pdr:Save(data)
 	end
 	connectedTimes[steamId] = data.when
@@ -45,13 +45,17 @@ end
 
 function TGNSConnectedTimesTracker.PrintConnectedDurations(client)
 	local trackedClients = GetTrackedClients()
-	table.sort(trackedClients, function(c1, c2)
-		return TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c1) < TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c2)
-	end)
-	TGNS.DoFor(trackedClients, function(c)
+	TGNS.SortAscending(trackedClients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
+	local trackedStrangers = TGNS.Where(trackedClients, TGNS.IsClientStranger)
+	local trackedPrimerOnlys = TGNS.Where(trackedClients, TGNS.IsPrimerOnlyClient)
+	local trackedSupportingMembers = TGNS.Where(trackedClients, TGNS.IsClientSM)
+	local printConnectedTime = function(c)
 		local connectedTimeInSeconds = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c)
 		TGNS.ConsolePrint(client, string.format("%s> %s: %s", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds)), "CONNECTEDTIMES")
-	end)
+	end
+	TGNS.DoFor(trackedStrangers, printConnectedTime)
+	TGNS.DoFor(trackedPrimerOnlys, printConnectedTime)
+	TGNS.DoFor(trackedSupportingMembers, printConnectedTime)
 end
 TGNS.RegisterCommandHook("Console_sv_showtimes", TGNSConnectedTimesTracker.PrintConnectedDurations, "Print connected time of each client.")
 
