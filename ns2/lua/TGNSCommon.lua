@@ -17,6 +17,16 @@ function TGNS.Ban(client, durationInMinutes, ...)
 	DAK:AddSteamIDBan(steamId, playerName, durationInMinutes, reason)	
 end
 
+function TGNS.IsPlayerAlive(player)
+	local result = player:GetIsAlive()
+	return result
+end
+
+function TGNS.IsNumberWithNonZeroPositiveValue(candidate)
+	local result = type(candidate) == "number" and candidate > 0
+	return result
+end
+
 function TGNS.ExecuteEventHooks(eventName, ...)
 	DAK:ExecuteEventHooks(eventName, ...)
 end
@@ -427,6 +437,11 @@ end
 
 function TGNS.GetPlayerTeamNumber(player)
 	local result = player:GetTeamNumber()
+	return result
+end
+
+function TGNS.GetPlayersOnSameTeam(player)
+	local result = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.GetPlayerTeamNumber(player) == TGNS.GetPlayerTeamNumber(p) end)
 	return result
 end
 
@@ -990,6 +1005,11 @@ function TGNS.KickPlayer(player, disconnectReason, onPreKick)
 	if player ~= nil then
 		TGNS.KickClient(player:GetClient(), disconnectReason, onPreKick)
 	end
+end
+
+function TGNS.StringEqualsCaseInsensitive(s1, s2)
+	local result = string.lower(s1) == string.lower(s2)
+	return result
 end
 
 function TGNS.GetPlayerMatchingName(name, team)
