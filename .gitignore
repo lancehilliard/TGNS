@@ -23,6 +23,7 @@
 !ns2/lua/TGNSNs2StatsProxy.lua
 !ns2/lua/TGNSPlayerBlacklistRepository.lua
 !ns2/lua/TGNSPlayerDataRepository.lua
+!ns2/lua/TGNSScoreboardMessageChanger.lua
 !ns2/lua/TGNSScoreboardPlayerHider.lua
 !ns2/lua/TGNSSessionDataRepository.lua
 
