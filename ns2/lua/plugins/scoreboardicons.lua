@@ -1,4 +1,5 @@
 Script.Load("lua/TGNSCommon.lua")
+Script.Load("lua/TGNSScoreboardMessageChanger.lua")
 
 local function PlayerCanSeeAfkStatus(scorePlayer, sendToPlayer)
 	local result = false
@@ -22,13 +23,9 @@ local function prependPlayerName(playerName, icon)
 	return playerName
 end
 
-local originalBuildScoresMessage = BuildScoresMessage
-
-function BuildScoresMessage(scorePlayer, sendToPlayer)
-	local t = originalBuildScoresMessage(scorePlayer, sendToPlayer)
-
-	local client = Server.GetOwner(scorePlayer)
-	if client and t and t.playerName then
+TGNSScoreboardMessageChanger.Add(TGNSScoreboardMessageChanger.Priority.HIGHEST, function(scorePlayer, sendToPlayer, scoresMessage)
+	local client = TGNS.GetClient(scorePlayer)
+	if client and scoresMessage and scoresMessage.playerName then
 		local groupIcons = DAK.config.scoreboardicons.GroupIcons
 		table.sort(groupIcons, function(t1, t2) return t1.sort < t2.sort end)
 		local icon
@@ -47,8 +44,6 @@ function BuildScoresMessage(scorePlayer, sendToPlayer)
 		if TGNS.IsClientSM(client) then
 			icon = string.upper(icon)
 		end
-		t.playerName = prependPlayerName(t.playerName, icon)
+		scoresMessage.playerName = prependPlayerName(scoresMessage.playerName, icon)
 	end
-	
-	return t
-end
+end)
