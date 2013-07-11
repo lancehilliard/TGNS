@@ -172,3 +172,12 @@ local function svWhois(client, playerName)
 	end
 end
 TGNS.RegisterCommandHook("Console_sv_whois", svWhois, "<player> View player's aliases.", true)
+
+function BkaOnCommandSetName(client, message)
+	local name = TrimName(message.name)
+	if name ~= kDefaultPlayerName and string.len(name) > 0 then
+		local steamId = TGNS.GetClientSteamId(client)
+		AddAka(steamId, name, false)
+	end
+end
+TGNS.RegisterNetworkMessageHook("SetName", BkaOnCommandSetName)
