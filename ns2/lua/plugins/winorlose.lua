@@ -6,7 +6,7 @@ local kTimeAtWhichWinOrLoseVoteSucceeded = 0
 local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 local kCountdownTimeRemaining = 0
 local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag" }
-local VOTE_HOWTO_TEXT = "Type 'concede' in console to vote."
+local VOTE_HOWTO_TEXT = "Type 'concede' in console (`) to vote."
 
 local originalGetCanAttack
 
