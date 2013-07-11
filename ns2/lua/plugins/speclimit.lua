@@ -81,6 +81,9 @@ local function SpecLimitOnTeamJoin(self, player, newTeamNumber, force)
 			cancel = true
 		end
 	end
+	if cancel then
+		TGNS.RespawnPlayer(player)
+	end
 	return cancel
 end
 TGNS.RegisterEventHook("OnTeamJoin", SpecLimitOnTeamJoin)
