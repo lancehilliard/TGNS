@@ -1,5 +1,6 @@
 Script.Load("lua/TGNSCommon.lua")
 Script.Load("lua/TGNSPlayerDataRepository.lua")
+Script.Load("lua/TGNSScoreboardMessageChanger.lua")
 
 local bkas = {}
 
@@ -10,26 +11,26 @@ local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 		end
 	)
 
-local function ShowCurrentBka(client, targetSteamId)
+local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, prefix)
 	local steamId = TGNS.GetClientSteamId(client)
 	local bkaData = pdr:Load(targetSteamId)
 	local player = TGNS.GetPlayerMatchingSteamId(targetSteamId)
-	TGNS.ConsolePrint(client, " ", "BKA")
+	TGNS.ConsolePrint(client, " ", prefix)
 	if player ~= nil then
-		TGNS.ConsolePrint(client, string.format(" For: %s", player:GetName()), "BKA")
-		TGNS.ConsolePrint(client, " ", "BKA")
+		TGNS.ConsolePrint(client, string.format(" For: %s", player:GetName()), prefix)
+		TGNS.ConsolePrint(client, " ", prefix)
 	end
-	TGNS.ConsolePrint(client, " BKA:", "BKA")
+	TGNS.ConsolePrint(client, string.format(" %s:", bkaHeader), prefix)
 	if bkaData == nil or bkaData.BKA == nil or string.len(bkaData.BKA) == 0 then
-		TGNS.ConsolePrint(client, "     (none)", "BKA")
+		TGNS.ConsolePrint(client, "     (none)", prefix)
 	else
-		TGNS.ConsolePrint(client, string.format("     %s", bkaData.BKA), "BKA")
+		TGNS.ConsolePrint(client, string.format("     %s", bkaData.BKA), prefix)
 	end
-	TGNS.ConsolePrint(client, " AKAs:", "BKA")
+	TGNS.ConsolePrint(client, string.format(" %s:", akasHeader), prefix)
 	if bkaData == nil or bkaData.AKAs == nil or #bkaData.AKAs == 0 then
-		TGNS.ConsolePrint(client, "     (none)", "BKA")
+		TGNS.ConsolePrint(client, "     (none)", prefix)
 	else
-		TGNS.DoFor(bkaData.AKAs, function(a) TGNS.ConsolePrint(client, string.format("     %s", a), "BKA") end)
+		TGNS.DoFor(bkaData.AKAs, function(a) TGNS.ConsolePrint(client, string.format("     %s", a), prefix) end)
 	end
 end
 
@@ -44,7 +45,7 @@ local function ShowUsage(client, targetSteamId)
 	ServerAdminPrint(client, "[BKA] * <bka> of 'clear' removes enforced BKA name")
 	ServerAdminPrint(client, "[BKA] * <aka> of 'clear' removes all AKA names")
 	if targetSteamId ~= nil then
-		ShowCurrentBka(client, targetSteamId)
+		ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 	end
 	ServerAdminPrint(client, "[BKA]")
 end
@@ -69,7 +70,7 @@ local function svAka(client, playerName, ...)
 			local newBkaName = TGNS.GetConcatenatedStringOrEmpty(...)
 			if newBkaName ~= "" then
 				AddAka(targetSteamId, newBkaName, true)
-				ShowCurrentBka(client, targetSteamId)
+				ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 			else
 				ShowUsage(client, targetSteamId)
 			end
@@ -113,7 +114,7 @@ local function svBka(client, playerName, ...)
 				pdr:Save(newBkaData)
 				bkas[targetClient] = newBkaName
 				TGNS.UpdateAllScoreboards()
-				ShowCurrentBka(client, targetSteamId)
+				ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 			else
 				ShowUsage(client, targetSteamId)
 			end
@@ -140,22 +141,34 @@ local function OnClientDelayedConnect(client)
 end
 TGNS.RegisterEventHook("OnClientDelayedConnect", OnClientDelayedConnect)
 
-local originalBuildScoresMessage = BuildScoresMessage
+TGNSScoreboardMessageChanger.Add(TGNSScoreboardMessageChanger.Priority.LOWEST, function(scorePlayer, sendToPlayer, scoresMessage)
+	local client = TGNS.GetClient(scorePlayer)
+	local bkaName = bkas[client]
+	if bkaName ~= nil and not TGNS.StringEqualsCaseInsensitive(TGNS.GetPlayerName(scorePlayer), bkaName) then
+		scoresMessage.playerName = string.format("*%s", scoresMessage.playerName)
+	end
+end)
 
-function BuildScoresMessage(scorePlayer, sendToPlayer)
-	local t = originalBuildScoresMessage(scorePlayer, sendToPlayer)
+local function ShowWhoisUsage(client)
+	TGNS.ConsolePrint(client, "Usage: sv_whois <player>", "WHOIS")
+end
 
-	local client = Server.GetOwner(scorePlayer)
-	if client and t and t.playerName then
-		local bkaName = bkas[client]
-		if bkaName ~= nil then
-			local bkaFormattedName = string.format("[%s]", bkaName)
-			local nameStartsWithFormattedBka = TGNS.StartsWith(TGNS.GetPlayerName(scorePlayer), bkaFormattedName)
-			if not nameStartsWithFormattedBka then
-				t.playerName = string.format("%s %s", bkaFormattedName, t.playerName)
-			end
+local function svWhois(client, playerName)
+	if playerName == nil or playerName == "" then
+		TGNS.ConsolePrint(client, "You must specify a player.", "WHOIS")
+		ShowWhoisUsage(client)
+	else
+		local targetPlayer = TGNS.GetPlayerMatching(playerName, nil)
+		if targetPlayer ~= nil then
+			local targetClient = TGNS.GetClient(targetPlayer)
+			local targetSteamId = TGNS.GetClientSteamId(targetClient)
+			ShowCurrentBka(targetClient, targetSteamId, "Better Known As", "Aliases", "WHOIS")
+			local logMessage = string.format("%s executed whois against %s.", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetClientNameSteamIdCombo(targetClient))
+			TGNS.EnhancedLog(logMessage)
+		else
+			TGNS.ConsolePrint(client, string.format("'%s' does not uniquely match a player.", playerName), "WHOIS")
+			ShowWhoisUsage(client)
 		end
 	end
-	
-	return t
 end
+TGNS.RegisterCommandHook("Console_sv_whois", svWhois, "<player> View player's aliases.", true)
