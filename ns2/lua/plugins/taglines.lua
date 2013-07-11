@@ -70,7 +70,7 @@ local function OnSlotTaken(client)
 				 message = message .. " " .. tagline.message
 			end
 		elseif TGNS.IsClientStranger(client) then
-			message = message .. " Please DO use 'gb' responsibly."
+			message = message .. " Please DO use 'gb' and 'sv_affirm' responsibly."
 		end
 		tgnsMd:ToAllChat(message)
 	end
