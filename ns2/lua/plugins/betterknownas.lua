@@ -2,11 +2,17 @@ Script.Load("lua/TGNSCommon.lua")
 Script.Load("lua/TGNSPlayerDataRepository.lua")
 Script.Load("lua/TGNSScoreboardMessageChanger.lua")
 
+local PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS = 1814400
+local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
+
+local warned = {}
 local bkas = {}
 
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 			bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
 			bkaData.BKA = bkaData.BKA ~= nil and bkaData.BKA or ""
+			bkaData.BKAPlayerModifiedAtInSeconds = bkaData.BKAPlayerModifiedAtInSeconds ~= nil and bkaData.BKAPlayerModifiedAtInSeconds or 0
+			bkaData.BKAPlayerModifiedAtGmtString = bkaData.BKAPlayerModifiedAtGmtString ~= nil and bkaData.BKAPlayerModifiedAtGmtString or nil
 			return bkaData
 		end
 	)
@@ -88,35 +94,64 @@ local function svAka(client, playerName, ...)
 end
 TGNS.RegisterCommandHook("Console_sv_aka", svAka, "<target> <aka> Adds an AKA name to the target.")
 
+local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bkaHeader, akaHeader, messagePrefix)
+	bkaData.BKA = newBkaName
+	pdr:Save(bkaData)
+	bkas[targetClient] = newBkaName
+	TGNS.UpdateAllScoreboards()
+	ShowCurrentBka(actingClient, TGNS.GetClientSteamId(targetClient), bkaHeader, akaHeader, messagePrefix)
+end
+
+local function svOwnBka(client, ...)
+	local newBkaName = TGNS.GetConcatenatedStringOrEmpty(...)
+	local steamId = TGNS.GetClientSteamId(client)
+	local bkaData = pdr:Load(steamId)
+	local bkaChangeError
+	local timeRemainingBeforePlayerMayChangeOwnBkaInSeconds = bkaData.BKAPlayerModifiedAtInSeconds + PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS - TGNS.GetSecondsSinceEpoch()
+	if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 then
+		bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
+	else
+		if newBkaName == "" then
+			bkaChangeError = "No Better Known As name specified."
+		elseif newBkaName == "clear" then
+			bkaChangeError = "This Better Known As name may not be used."
+		end
+	end
+	if bkaChangeError then
+		TGNS.ConsolePrint(client, string.format("ERROR: %s", bkaChangeError), "BKA")
+		TGNS.ConsolePrint(client, "Usage: sv_name <name>", "BKA")
+	else
+		if warned[client] == newBkaName then
+			TGNS.ExecuteClientCommand(client, string.format("name %s", newBkaName))
+			bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
+			bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
+			OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA")
+		else
+			TGNS.ConsolePrint(client, string.format("WHOA! You're setting your Better Known As name, with a %s cooldown before you can edit it again!", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE), "BKA")
+			TGNS.ConsolePrint(client, "Your Better Known As name stays with you if you later choose a different player name.", "BKA")
+			TGNS.ConsolePrint(client, "Any player may view your Better Known As at any time with the sv_whois command.", "BKA")
+			TGNS.ConsolePrint(client, string.format("If you're sure '%s' is what you want, execute this same command again.", newBkaName), "BKA")
+			warned[client] = newBkaName
+		end
+	end
+end
+TGNS.RegisterCommandHook("Console_sv_name", svOwnBka, string.format("<name> Edit your own Better Known As (%s cooldown between edits).", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE), true)
+
 local function svBka(client, playerName, ...)
 	local targetPlayer = TGNS.GetPlayerMatching(playerName, nil)
 	if targetPlayer ~= nil then
-		local targetClient = Server.GetOwner(targetPlayer)
+		local targetClient = TGNS.GetClient(targetPlayer)
 		if targetClient ~= nil then
-			local targetSteamId = targetClient:GetUserId()
 			local newBkaName = TGNS.GetConcatenatedStringOrEmpty(...)
-			if newBkaName ~= "" then
-				local existingBkaData = pdr:Load(targetSteamId)
-				local newBkaData = { steamId = targetSteamId, AKAs = {}, BKA = "" }
-				if existingBkaData ~= nil then
-					if existingBkaData.AKAs ~= nil then
-						for i = 1, #existingBkaData.AKAs, 1 do
-							local existingName = existingBkaData.AKAs[i]
-							table.insert(newBkaData.AKAs, existingName)
-						end
-					end
-				end
+			if newBkaName == "" then
+				TGNS.ConsolePrint(client, "ERROR: No BKA name specified.", "BKA")
+			else
 				if newBkaName == "clear" then
 					newBkaName = nil
-				else
-					newBkaData.BKA = newBkaName
 				end
-				pdr:Save(newBkaData)
-				bkas[targetClient] = newBkaName
-				TGNS.UpdateAllScoreboards()
-				ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
-			else
-				ShowUsage(client, targetSteamId)
+				local targetSteamId = TGNS.GetClientSteamId(targetClient)
+				local bkaData = pdr:Load(targetSteamId)
+				OnBkaChanged(client, targetClient, bkaData, newBkaName, "BKA", "AKAs", "BKA")
 			end
 		else
 			ServerAdminPrint(client, string.format("'%s' uniquely matches a player, but no client found.", playerName))
@@ -127,7 +162,6 @@ local function svBka(client, playerName, ...)
 		else
 			ServerAdminPrint(client, string.format("'%s' does not uniquely match a player.", playerName))
 		end
-		
 	end
 end
 TGNS.RegisterCommandHook("Console_sv_bka", svBka, "<target> <bka> Adds a BKA name to the target.")
