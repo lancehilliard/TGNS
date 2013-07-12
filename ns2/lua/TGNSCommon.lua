@@ -10,6 +10,20 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 5
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 3
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 1
 
+function TGNS.ExecuteClientCommand(client, command)
+	Server.ClientCommand(TGNS.GetPlayer(client), command)
+end
+
+function TGNS.GetCurrentDateTimeAsGmtString()
+	local result = Shared.GetGMTString(false)
+	return result
+end
+
+function TGNS.GetSecondsSinceEpoch()
+	local result = Shared.GetSystemTime()
+	return result
+end
+
 function TGNS.Ban(client, durationInMinutes, ...)
 	local steamId = TGNS.GetClientSteamId(client)
 	local playerName = TGNS.GetClientName(client)
