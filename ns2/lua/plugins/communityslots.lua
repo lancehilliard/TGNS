@@ -179,9 +179,14 @@ local function IsClientBumped(client)
     if ServerIsFull(nonSpecPlayers) then
         local victimClient = FindVictimClient(client, nonSpecPlayers)
         if victimClient ~= nil then
+            TGNSClientKicker.Kick(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
             TGNS.SendAdminConsoles(GetBumpSummary(playerList, victimClient, "VICTIM"), "SLOTSDEBUG")
             TGNSConnectedTimesTracker.PrintConnectedDurations(victimClient)
-            TGNSClientKicker.Kick(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
+			TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
+				if IsTargetProtectedCommander(c) then
+					TGNS.ConsolePrint(victimClient, string.format("%s has Commander protection.", TGNS.GetClientName(c)), "SLOTS")
+				end
+			end)
         else
             TGNS.SendAdminConsoles(GetBumpSummary(playerList, client, "JOINER"), "SLOTSDEBUG")
             TGNSClientKicker.Kick(client, GetBumpMessage(client), function(c,p) onPreJoinerKick(c,p,playerList) end)
