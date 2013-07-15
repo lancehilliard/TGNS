@@ -14,6 +14,33 @@ function TGNS.ExecuteClientCommand(client, command)
 	Server.ClientCommand(TGNS.GetPlayer(client), command)
 end
 
+function TGNS.StructureIsBuilt(structure)
+	local result = structure:GetIsBuilt()
+	return result
+end
+
+function TGNS.StructureIsAlive(structure)
+	local result = structure:GetIsAlive()
+	return result
+end
+
+function TGNS.CommandStructureIsBuiltAndAlive(commandStructure)
+	local result = TGNS.StructureIsBuilt(commandStructure) and TGNS.StructureIsAlive(commandStructure)
+	return result
+end
+
+function TGNS.GetNumberOfWorkingInfantryPortals(commandStation)
+	local infantryPortalsWithinRangeOfTheCommandStation = GetEntitiesForTeamWithinRange("InfantryPortal", kMarineTeamType, commandStation:GetOrigin(), 15)
+	local builtAndPoweredInfantryPortalsWithinRangeOfTheCommandStation = TGNS.Where(infantryPortalsWithinRangeOfTheCommandStation, function(p) return p:GetIsBuilt() and p:GetIsPowered() end)
+	local result = #builtAndPoweredInfantryPortalsWithinRangeOfTheCommandStation
+	return result
+end
+
+function TGNS.CommandStructureHasCommander(commandStructure)
+	local result = commandStructure:GetCommander() ~= nil
+	return result
+end
+
 function TGNS.GetCurrentDateTimeAsGmtString()
 	local result = Shared.GetGMTString(false)
 	return result
@@ -284,13 +311,17 @@ function TGNS.DestroyEntity(entity)
 	DestroyEntity(entity)
 end
 
-function TGNS.KillTeamEntitiesExcept(className, teamNumber, entityToKeep)
-	local entities = TGNS.GetEntitiesForTeam(className, teamNumber)
+function TGNS.DestroyEntitiesExcept(entities, entityToKeep)
 	TGNS.DoFor(entities, function (e)
 		if e ~= entityToKeep then
 			TGNS.DestroyEntity(e)
 		end
 	end)
+end
+
+function TGNS.KillTeamEntitiesExcept(className, teamNumber, entityToKeep)
+	local entities = TGNS.GetEntitiesForTeam(className, teamNumber)
+	TGNS.DestroyEntitiesExcept(entities, entityToKeep)
 end
 
 function TGNS.GetEntitiesForTeam(className, teamNumber)
