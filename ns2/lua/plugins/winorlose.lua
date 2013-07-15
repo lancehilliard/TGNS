@@ -6,7 +6,7 @@ local kTimeAtWhichWinOrLoseVoteSucceeded = 0
 local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 local kCountdownTimeRemaining = 0
 local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag" }
-local VOTE_HOWTO_TEXT = "Type 'concede' in console (`) to vote."
+local VOTE_HOWTO_TEXT = "Type 'concede' in console (` key) to vote."
 
 local originalGetCanAttack
 
@@ -31,20 +31,37 @@ local function ValidateTeamNumber(teamnum)
 	return teamnum == 1 or teamnum == 2
 end
 
+local function GetCommandStructureToKeep(commandStructures)
+	local builtAndAliveCommandStructures = TGNS.Where(commandStructures, TGNS.CommandStructureIsBuiltAndAlive)
+	TGNS.SortDescending(builtAndAliveCommandStructures, TGNS.GetNumberOfWorkingInfantryPortals)
+	local commandStructuresWithCommanders = TGNS.Where(builtAndAliveCommandStructures, TGNS.CommandStructureHasCommander)
+	local builtAndAliveCommandStationsWithWorkingInfantryPortal = TGNS.Where(builtAndAliveCommandStructures, function(s) return TGNS.GetNumberOfWorkingInfantryPortals(s) > 0 end)
+	local firstCommandStructureWithCommander = #commandStructuresWithCommanders > 0 and TGNS.GetFirst(commandStructuresWithCommanders) or nil
+	local firstCommandStationWithWorkingInfantryPortal = #builtAndAliveCommandStationsWithWorkingInfantryPortal > 0 and TGNS.GetFirst(builtAndAliveCommandStationsWithWorkingInfantryPortal) or nil
+	local firstBuiltAndAliveCommandStructure = #builtAndAliveCommandStructures > 0 and TGNS.GetFirst(builtAndAliveCommandStructures) or nil
+	local result = firstCommandStructureWithCommander or firstCommandStationWithWorkingInfantryPortal or firstBuiltAndAliveCommandStructure or TGNS.GetFirst(commandStructures)
+	return result
+end
+
 local function UpdateWinOrLoseVotes()
 	local gamerules = GetGamerules()
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 		if Shared.GetTime() - kTimeAtWhichWinOrLoseVoteSucceeded > DAK.config.winorlose.kWinOrLoseNoAttackDuration then
 			Server.SendNetworkMessage("Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, "WinOrLose! On to the next game!"), true)
-			TGNS.DestroyAllEntities("CommandStructure", kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and kAlienTeamType or kMarineTeamType)
+			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
 			kTimeAtWhichWinOrLoseVoteSucceeded = 0
 		else
 			if (math.fmod(kCountdownTimeRemaining, DAK.config.winorlose.kWinOrLoseWarningInterval) == 0 or kCountdownTimeRemaining <= 5) then
-				local teamDescription = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() == kMarineTeamType and "Marine" or "Alien"
-				chatMessage = string.sub(string.format("WinOrLose! %s units cannot attack. Game ends in %s seconds. Hurry!", teamDescription, kCountdownTimeRemaining), 1, kMaxChatLength)
-				Server.SendNetworkMessage("Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
+				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
+				TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
+				local teamDescription = teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and "Marine" or "Alien"
+				local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
+				local chatMessage = string.format("%s can't attack. Game ends in %s seconds. Hurry to %s!", teamDescription, kCountdownTimeRemaining, locationNameOfCommandStructureToKeep)
+				TGNS.SendAllChat(chatMessage, "WinOrLose!")
 				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
-					TGNS.DestroyAllEntities(className, kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber())
+					TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				end)
 			end
 			kCountdownTimeRemaining = kCountdownTimeRemaining - 1
@@ -53,7 +70,7 @@ local function UpdateWinOrLoseVotes()
 		for i = 1, kWinOrLoseTeamCount do
 
 			if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and gamerules ~= nil and gamerules:GetGameState() == kGameState.Started and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + DAK.config.winorlose.kWinOrLoseAlertDelay < Shared.GetTime() then
-				local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return p:GetTeamNumber() == i end)) // GetEntitiesForTeam("Player", i)
+				local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return p:GetTeamNumber() == i end))
 				local totalvotes = 0
 				for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
 					local clientid = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]
@@ -153,7 +170,7 @@ local function OnCommandWinOrLose(client)
 	local gamerules = GetGamerules()
 	if gamerules ~= nil and client ~= nil and gamerules:GetGameState() == kGameState.Started then
 		local player = client:GetControllingPlayer()
-		if player:GetTeam():GetNumAliveCommandStructures() == 1 then
+		if player:GetTeam():GetNumAliveCommandStructures() <= 2 then
 			local clientID = client:GetUserId()
 			if player ~= nil and clientID ~= nil then
 				local teamnumber = player:GetTeamNumber()
@@ -185,7 +202,7 @@ local function OnCommandWinOrLose(client)
 				end
 			end
 		else
-			chatMessage = string.sub(string.format("You may concede only when you have a single command structure."), 1, kMaxChatLength)
+			chatMessage = string.sub(string.format("You may concede only when you have one or two command structures."), 1, kMaxChatLength)
 			Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 		end
 	end
