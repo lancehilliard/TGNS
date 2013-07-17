@@ -71,4 +71,8 @@ local function onChatClient(client, networkMessage)
 end
 TGNS.RegisterNetworkMessageHook("ChatClient", onChatClient, 5)
 
-TGNSScoreboardPlayerHider.RegisterHidingPredicate(TGNSClientKicker.IsClientKicked)
+TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer)
+	local targetClient = TGNS.GetClient(targetPlayer)
+	local result = targetClient and TGNSClientKicker.IsClientKicked(targetClient)
+	return result
+end)
