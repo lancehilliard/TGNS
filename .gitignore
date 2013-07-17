@@ -25,6 +25,7 @@
 !ns2/lua/TGNSPlayerDataRepository.lua
 !ns2/lua/TGNSScoreboardMessageChanger.lua
 !ns2/lua/TGNSScoreboardPlayerHider.lua
+!ns2/lua/TGNSServerInfoGetter.lua
 !ns2/lua/TGNSSessionDataRepository.lua
 
 # And then whitelist DAK base files
