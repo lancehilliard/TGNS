@@ -148,6 +148,10 @@ function TGNS.GetSimpleServerName()
 	if TGNS.Contains(result, tacticalGamerServerNamePrefix) then
 		result = TGNS.Substring(result, string.len(tacticalGamerServerNamePrefix) + 1)
 	end
+	local indexOfFirstSpaceCharacter = string.find(result, "%s")
+	if indexOfFirstSpaceCharacter then
+		result = TGNS.Substring(result, 1, indexOfFirstSpaceCharacter - 1)
+	end
 	return result
 end
 
