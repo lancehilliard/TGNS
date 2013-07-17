@@ -3,6 +3,8 @@ Script.Load("lua/TGNSPlayerDataRepository.lua")
 Script.Load("lua/TGNSClientKicker.lua")
 Script.Load("lua/TGNSConnectedTimesTracker.lua")
 Script.Load("lua/plugins/captains.lua")
+Script.Load("lua/TGNSMessageDisplayer.lua")
+Script.Load("lua/TGNSServerInfoGetter.lua")
 
 local actionslog = { }
 local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
@@ -13,6 +15,12 @@ local rejectBumpCounts = {}
 local commandStructureLastOccupancies = {}
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
+
+local otherServerStaticInfo = {}
+otherServerStaticInfo["Taunt"] = { address = "tgns2.tacticalgamer.com", simpleName = "Chuckle" }
+otherServerStaticInfo["Chuckle"] = { address = "tgns.tacticalgamer.com", simpleName = "Taunt" }
+
+local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
 
 local function IsClientAmongLongestConnected(clients, client, limit)
     TGNS.SortAscending(clients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
@@ -46,8 +54,15 @@ local function TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
     return result
 end
 
+local function GetRemainingPublicSlots(fullyConnectedNonSpectatorPlayerList)
+	local totalPublicSlots = DAK.config.communityslots.kMaximumSlots - DAK.config.communityslots.kCommunitySlots
+	local result = totalPublicSlots - #fullyConnectedNonSpectatorPlayerList
+	result = result > 0 and result or 0
+	return result
+end
+
 local function ServerIsFull(playerList)
-    local result = #playerList >= DAK.config.communityslots.kMaximumSlots - DAK.config.communityslots.kCommunitySlots
+    local result = GetRemainingPublicSlots(playerList) == 0
     return result
 end
 
@@ -132,22 +147,41 @@ local function AnnounceClientBumpToStrangers(targetClient)
     TGNS.DoFor(strangerPlayers, function(p) TGNS.SendChatMessage(p, GetBumpMessage(targetClient)) end)
 end
 
+local function AnnounceOtherServerOptionsToBumpedClient(client)
+	local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+	if otherServerStaticInfo then
+		local otherServerDynamicInfo = TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName)
+		if otherServerDynamicInfo.HasRecentData then
+			local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
+			if otherServerRemainingPublicSlots >= 4 then
+				local message = string.format("~%s public slots are open on our other server! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.address)
+				tgnsMd:ToClientConsole(client, message)
+				tgnsMd:ToClientConsole(client, message)
+				tgnsMd:ToClientConsole(client, message)
+				tgnsMd:ToAdminConsole(message)
+			end
+		end
+	end
+end
+
 local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
     Log(string.format("%s: Victim: %s Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS.GetClientNameSteamIdCombo(targetClient), TGNS.GetClientNameSteamIdCombo(joiningClient)))
     IncrementBumpCount(targetClient, victimBumpCounts)
     AnnounceClientBumpToStrangers(targetClient)
+	AnnounceOtherServerOptionsToBumpedClient(targetClient)
 end
 
 local function onPreJoinerKick(targetClient, targetPlayer, playerList)
     Log(string.format("%s: Reject: %s", GetKickDetails(targetClient, targetClient, playerList).shortReport, TGNS.GetClientNameSteamIdCombo(targetClient)))
     IncrementBumpCount(targetClient, rejectBumpCounts)
     AnnounceClientBumpToStrangers(targetClient)
+	AnnounceOtherServerOptionsToBumpedClient(targetClient)
 end
 
-local function GetFullyConnectedPlayers(clientToExclude)
-    local allPlayers = TGNS.GetPlayerList()
+local function GetFullyConnectedNonSpectatorPlayers(clientToExclude)
+    local allNonSpectatorPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end)
     local result = {}
-    TGNS.DoFor(allPlayers, function(p)
+    TGNS.DoFor(allNonSpectatorPlayers, function(p)
         local client = TGNS.ClientAction(p, function(c) return c end)
         if client ~= clientToExclude and TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
             table.insert(result, p)
@@ -155,6 +189,13 @@ local function GetFullyConnectedPlayers(clientToExclude)
     end)
     return result
 end
+
+local function AnnounceRemainingPublicSlots()
+	local fullyConnectedNonSpectatorPlayers = GetFullyConnectedNonSpectatorPlayers()
+	local remainingPublicSlots = GetRemainingPublicSlots(fullyConnectedNonSpectatorPlayers)
+	TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots)
+end
+TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
 
 local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
     local supportingMembersCount = #TGNS.GetSmClients(playerList)
@@ -174,10 +215,9 @@ end
 
 local function IsClientBumped(client)
     local result = false
-    local playerList = GetFullyConnectedPlayers(client)
-    local nonSpecPlayers = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return not TGNS.IsPlayerSpectator(p) end))
-    if ServerIsFull(nonSpecPlayers) then
-        local victimClient = FindVictimClient(client, nonSpecPlayers)
+    local playerList = GetFullyConnectedNonSpectatorPlayers(client)
+    if ServerIsFull(playerList) then
+        local victimClient = FindVictimClient(client, playerList)
         if victimClient ~= nil then
             TGNSClientKicker.Kick(victimClient, GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
             TGNS.SendAdminConsoles(GetBumpSummary(playerList, victimClient, "VICTIM"), "SLOTSDEBUG")
