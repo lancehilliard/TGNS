@@ -40,4 +40,4 @@ local function svAffirm(client, playerName)
 		end
 	end
 end
-TGNS.RegisterCommandHook("Console_sv_affirm", svAffirm, "<player> Sets any stranger's connection time to a long, long time ago...")
+TGNS.RegisterCommandHook("Console_sv_affirm", svAffirm, "<player> Sets any stranger's connection time to a long, long time ago...", true)
