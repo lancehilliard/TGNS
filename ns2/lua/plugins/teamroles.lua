@@ -1,6 +1,7 @@
 Script.Load("lua/TGNSCommon.lua")
 Script.Load("lua/TGNSPlayerDataRepository.lua")
 Script.Load("lua/TGNSPlayerBlacklistRepository.lua")
+Script.Load("lua/TGNSPlayerPreferredRepository.lua")
 
 local RosterCheckInterval = 10
 
@@ -11,6 +12,7 @@ local function CreateRole(displayName, candidatesDescription, groupName, chatPre
 			return data
 		end)
 	local pbr = TGNSPlayerBlacklistRepository.Create(persistedDataName)
+	local ppr = TGNSPlayerPreferredRepository.Create(persistedDataName)
 	result.displayName = displayName
 	result.candidatesDescription = candidatesDescription
 	result.groupName = groupName
@@ -20,6 +22,7 @@ local function CreateRole(displayName, candidatesDescription, groupName, chatPre
 	result.IsClientBlockerOf = isClientBlockerQuery
 	function result:IsTeamEligible(teamPlayers) return TGNS.GetLastMatchingClient(teamPlayers, self.IsClientBlockerOf) == nil end
 	function result:IsClientBlacklisted(client) return pbr:IsClientBlacklisted(client) end
+	function result:IsClientPreferred(client) return ppr:IsClientPreferred(client) end
 	function result:LoadOptInData(client) return pdr:Load(TGNS.GetClientSteamId(client)) end
 	function result:SaveOptInData(pdrData) pdr:Save(pdrData) end
 	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(client).optin and not self:IsClientBlacklisted(client) end
@@ -51,6 +54,7 @@ local function GetCandidateClient(teamPlayers, role)
 	local result = nil
 	if role:IsTeamEligible(teamPlayers) then
 		if #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end) == 0 then
+			TGNS.SortAscending(teamPlayers, function(p) return TGNS.ClientAction(p, function(c) return role:IsClientPreferred(c) end) and 1 or 0 end)
 			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p) return role:IsClientEligible(c) end)
 		end
 	end
