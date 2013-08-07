@@ -58,7 +58,7 @@ local function UpdateWinOrLoseVotes()
 				TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
 				local teamDescription = teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and "Marine" or "Alien"
 				local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
-				local chatMessage = string.format("%s can't attack. Game ends in %s seconds. Hurry to %s!", teamDescription, kCountdownTimeRemaining, locationNameOfCommandStructureToKeep)
+				local chatMessage = string.format("%s can't attack. Game ends in %s secs. Hurry to %s!", teamDescription, kCountdownTimeRemaining, locationNameOfCommandStructureToKeep)
 				TGNS.SendAllChat(chatMessage, "WinOrLose!")
 				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
 					TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
@@ -97,7 +97,7 @@ local function UpdateWinOrLoseVotes()
 				end
 				if totalvotes >= math.ceil((#playerRecords * (DAK.config.winorlose.kWinOrLoseMinimumPercentage / 100))) then
 					local teamDescription = i == kMarineTeamType and "Marine" or "Alien"
-					chatMessage = string.sub(string.format("WinOrLose! %s player units can't attack! End it in %s seconds, or THEY WIN!", teamDescription, DAK.config.winorlose.kWinOrLoseNoAttackDuration), 1, kMaxChatLength)
+					chatMessage = string.sub(string.format("WinOrLose! %s player units can't attack! End it in %s secs, or THEY WIN!", teamDescription, DAK.config.winorlose.kWinOrLoseNoAttackDuration), 1, kMaxChatLength)
 					Server.SendNetworkMessage("Chat", BuildChatMessage(false, DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
 					for i = 1, #playerRecords do
 						if playerRecords[i] ~= nil then
@@ -134,7 +134,7 @@ local function UpdateWinOrLoseVotes()
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 					else
-						chatMessage = string.sub(string.format("%s/%s votes to concede; %s seconds left. %s", totalvotes, 
+						chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes, 
 						 math.ceil((#playerRecords * (DAK.config.winorlose.kWinOrLoseMinimumPercentage / 100))), 
 						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + DAK.config.winorlose.kWinOrLoseVotingTime) - Shared.GetTime()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = Shared.GetTime()
