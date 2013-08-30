@@ -1,0 +1,11 @@
+name        = "TGNS"
+source_dir  = "source"
+output_dir  = "output"
+description = [=[Administrative and (very few) gameplay modifications used on Tactical Gamer's NS2 servers.
+
+If you're able, please direct questions/comments regarding this mod to our forums:
+http://tacticalgamer.com/natural-selection
+
+Questions/comments left in the comments here may be overlooked by this mod's maintainers.]=]
+image       = "preview.jpg"
+publish_id = "a36125d"
