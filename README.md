@@ -1,7 +1,7 @@
 TGNS
 ====
 
-Welcome to the [TGNS open-source mods repository][repoannouncethread]. TGNS is [TacticalGamer.com][tg]'s well-known Natural Selection community. This repository houses most of the mods they use on their NS2 server, many of which are built atop xToken's [DAK Admin Kit][dak].
+Welcome to the [TGNS open-source mods repository][repoannouncethread]. TGNS is [TacticalGamer.com][tg]'s well-known Natural Selection community. This repository houses most of the mods they use on their NS2 server, many of which are built atop Person8880's [Shine Admin Mod][shine].
 
 Some of the more unique customizations on [the TGNS game server][tgns] include:
   
@@ -22,4 +22,4 @@ Other offerings include: Admin Chat, distributing rookies to both teams during t
 [connect]: steam://run/4920//connect%2C+tgns.tacticalgamer.com:27015
 [tg]: http://tacticalgamer.com
 [repoannouncethread]: http://www.tacticalgamer.com/natural-selection-tactics-mod-discussions/190657-tgns-open-source-mods-repository.html
-[dak]: https://github.com/xToken/DAK
+[shine]: https://github.com/Person8880/Shine
