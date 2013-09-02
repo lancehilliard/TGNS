@@ -21,10 +21,7 @@ function Plugin:Initialise()
 			if not result then
 				local Command = self.Commands[ conCommand ]
 				if Command then
-					if not Command.NoPerm then
-						result = Command.NoPerm or self:HasAccess(client, conCommand)
-					end
-				else
+					result = Command.NoPerm or self:HasAccess(client, conCommand)
 				end
 			end
 		end
@@ -68,7 +65,7 @@ function Plugin:Initialise()
 				end)
 			end
 		end
-		return result
+		return result or false
 	end)
     return true
 end
