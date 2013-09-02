@@ -101,8 +101,10 @@ end
 
 function TGNS.DoForPairs(t, pairAction)
 	if t ~= nil then
+		local index = 1
 		for key, value in pairs(t) do
-			if value ~= nil and pairAction(key, value) then break end
+			if value ~= nil and pairAction(key, value, index) then break end
+			index = index + 1
 		end
 	end
 end
