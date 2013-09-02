@@ -5,6 +5,7 @@ table.insert(actionslog, "COMMUNITY SLOTS DEBUG: ")
 local victimBumpCounts = {}
 local rejectBumpCounts = {}
 local commandStructureLastOccupancies = {}
+local lastSetReservedSlotAmount
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 
@@ -155,10 +156,19 @@ local function GetFullyConnectedNonSpectatorPlayers(clientToExclude)
     return result
 end
 
+local function UpdateReservedSlotAmount()
+	local reservedSlotCount = Shine.Plugins.communityslots.Config.CommunitySlots - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
+	if lastSetReservedSlotAmount ~= reservedSlotCount then
+		SetReservedSlotAmount(reservedSlotCount)
+		lastSetReservedSlotAmount = reservedSlotCount
+	end
+end
+
 local function AnnounceRemainingPublicSlots()
 	local fullyConnectedNonSpectatorPlayers = GetFullyConnectedNonSpectatorPlayers()
 	local remainingPublicSlots = GetRemainingPublicSlots(fullyConnectedNonSpectatorPlayers)
 	TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots)
+	UpdateReservedSlotAmount()
 end
 TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
 
@@ -271,6 +281,7 @@ function Plugin:ClientConfirmConnect(joiningClient)
 	end
 end
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
+	UpdateReservedSlotAmount()
     local chatMessage
     if TGNS.IsClientSM(client) then
         chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
@@ -325,9 +336,14 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
     if TGNS.IsGameplayTeam(newTeamNumber) then
 		cancel = IsClientBumped(joiningClient)
 	end
+	TGNS.ScheduleAction(2, UpdateReservedSlotAmount)
     if cancel then
 		return false
 	end
+end
+
+function Plugin:ClientDisconnect(client)
+	UpdateReservedSlotAmount()
 end
 
 function Plugin:Think()
