@@ -16,6 +16,7 @@ function TGNS.GetVoteableMapNames()
 	else
 		result = mapCycleMapNames
 	end
+	TGNS.SortAscending(result)
 	return result
 end
 
@@ -26,6 +27,7 @@ function TGNS.GetMapCycleMapNames()
 		local mapName = type(m) == "table" and m.map or m
 		table.insert(result, mapName)
 	end)
+	TGNS.SortAscending(result)
 	return result
 end
 
@@ -399,7 +401,7 @@ function TGNS.IsPluginEnabled(pluginName)
 end
 
 function TGNS.ClientCanRunCommand(client, command)
-	local result = Shine:HasAccess(client, command)
+	local result = Shine:GetPermission(client, command)
 	return result
 end
 
