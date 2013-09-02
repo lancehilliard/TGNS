@@ -7,7 +7,7 @@ function Plugin:Initialise()
 	tgnsMenuDisplayer = TGNSMenuDisplayer.Create(function(menu)
 		menu:EditPage("Main", function(x)
 			x:AddSideButton("Admin", function()
-				TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandName="", argName="", argValue=""})
+				TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandIndex=0, argName="", argValue=""})
 			end)
 			x:AddPage("Info", "Info", {"Choose an option to learn more about this server, called \"TGNS\"."}, "Main")
 			x:EditPage("Info", function(y)
@@ -33,7 +33,8 @@ function Plugin:Initialise()
 		local pageId = message.pageId
 		local pageName = message.pageName
 		local backPageId = message.backPageId
-		local helpText = message.helpText
+		local chatCmd = message.chatCmd
+		local helpText = pageName == "Admin" and "Manage the server according to our rules and tenets. Help in console: sh_help" or string.format("%s%s -- Help in console: sh_help %s", pageName, (TGNS.HasNonEmptyValue(chatCmd) and string.format(" (chat: !%s)", chatCmd) or ""), pageName)
 		local buttons = json.decode(message.buttonsJson)
 		tgnsMenuDisplayer = TGNSMenuDisplayer.Create(function(menu)
 			if backPageId == "" then
@@ -43,7 +44,7 @@ function Plugin:Initialise()
 				menu:EditPage(pageId, function(x)
 					TGNS.DoFor(buttons, function(b)
 						x:AddSideButton(b.n, function()
-							TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandName=b.c, argName=argName, argValue=b.v or ""})
+							TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandIndex=b.c, argName=argName, argValue=TGNS.HasNonEmptyValue(b.v) and b.v or b.n})
 						end)
 					end)
 				end)
