@@ -630,22 +630,6 @@ function TGNS.IsClientCommander(client)
 	return result	
 end
 
-function TGNS.HasClientSignedPrimer(client)
-	local result = false
-	if client ~= nil then
-		result = TGNS.IsInGroup(client, "primer_group")
-	end
-	return result
-end
-
-function TGNS.IsClientAdmin(client)
-	local result = false
-	if client ~= nil then
-		result = TGNS.IsInGroup(client, "admin_group")
-	end
-	return result
-end
-
 function TGNS.IsClientGuardian(client)
 	local result = false
 	if client ~= nil then
@@ -664,16 +648,73 @@ function TGNS.IsClientTempAdmin(client)
 	return result
 end
 
-function TGNS.IsClientSM(client)
+function TGNS.HasSteamIdSignedPrimer(steamId)
+	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "primer_group")
+	return result
+end
+
+function TGNS.HasClientSignedPrimer(client)
 	local result = false
 	if client ~= nil then
-		result = TGNS.IsInGroup(client, "sm_group")
+		local steamId = TGNS.GetClientSteamId(client)
+		result = TGNS.HasSteamIdSignedPrimer(steamId)
 	end
 	return result
 end
 
+function TGNS.IsSteamIdAdmin(steamId)
+	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "admin_group")
+	return result
+end
+
+function TGNS.IsClientAdmin(client)
+	local result = false
+	if client ~= nil then
+		local steamId = TGNS.GetClientSteamId(client)
+		result = TGNS.IsSteamIdAdmin(steamId)
+	end
+	return result
+end
+
+function TGNS.IsSteamIdSM(steamId)
+	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "sm_group")
+	return result
+end
+
+function TGNS.IsClientSM(client)
+	local result = false
+	if client ~= nil then
+		local steamId = TGNS.GetClientSteamId(client)
+		result = TGNS.IsSteamIdSM(steamId)
+	end
+	return result
+end
+
+function TGNS.IsSteamIdStranger(steamId)
+	local result = not TGNS.IsSteamIdSM(steamId) and not TGNS.HasSteamIdSignedPrimer(steamId)
+	return result
+end
+
 function TGNS.IsClientStranger(client)
-	local result = not TGNS.IsClientSM(client) and not TGNS.HasClientSignedPrimer(client)
+	local result = false
+	if client ~= nil then
+		local steamId = TGNS.GetClientSteamId(client)
+		result = TGNS.IsSteamIdStranger(steamId)
+	end
+	return result
+end
+
+function TGNS.IsSteamIdPrimerOnly(steamId)
+	local result = TGNS.HasSteamIdSignedPrimer(steamId) and not TGNS.IsSteamIdSM(steamId)
+	return result
+end
+
+function TGNS.IsPrimerOnlyClient(client)
+	local result = false
+	if client ~= nil then
+		local steamId = TGNS.GetClientSteamId(client)
+		result = TGNS.IsSteamIdPrimerOnly(steamId)
+	end
 	return result
 end
 
@@ -915,11 +956,6 @@ end
 function TGNS.GetStrangersClients(playerList)
 	local predicate = function(client, player) return TGNS.IsClientStranger(client) end
 	local result = TGNS.GetMatchingClients(playerList, predicate)
-	return result
-end
-
-function TGNS.IsPrimerOnlyClient(client)
-	local result = TGNS.HasClientSignedPrimer(client) and not TGNS.IsClientSM(client)
 	return result
 end
 
