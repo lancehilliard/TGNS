@@ -1,17 +1,17 @@
-local FIRSTCLIENT_TIME_BEFORE_ALLJOIN = 45
+//local FIRSTCLIENT_TIME_BEFORE_ALLJOIN = 45
 local GAMEEND_TIME_BEFORE_ALLJOIN = 33
-local allMayJoinAt = Shared.GetSystemTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
-local firstClientProcessed = false
+local allMayJoinAt = 0 // Shared.GetSystemTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
+//local firstClientProcessed = false
 local md = TGNSMessageDisplayer.Create()
 
 local Plugin = {}
 
-function Plugin:ClientConnect(client)
-	if not firstClientProcessed then
-		allMayJoinAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
-		firstClientProcessed = true
-	end
-end
+//function Plugin:ClientConnect(client)
+//	if not firstClientProcessed then
+//		allMayJoinAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_ALLJOIN
+//		firstClientProcessed = true
+//	end
+//end
 
 function Plugin:EndGame(gamerules, winningTeam)
 	allMayJoinAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_ALLJOIN
