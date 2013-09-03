@@ -289,7 +289,7 @@ TGNS.RegisterEventHook("OnSlotTaken", function(client)
    	elseif TGNS.HasClientSignedPrimer(client) then
 		chatMessage = string.format("TGNS Primer signer! Join the full server when >%s strangers are playing!", Shine.Plugins.communityslots.Config.MinimumStrangers)
     else
-        chatMessage = "Visit tacticalgamer.com/natural-selection to say hello!"
+        chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
 	end
     TGNS.PlayerAction(client, function(p) tgnsMd:ToPlayerNotifyInfo(p, chatMessage) end)
 end)
@@ -348,9 +348,12 @@ function Plugin:ClientDisconnect(client)
 end
 
 TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
+	local result = true
     local playerList = GetFullyConnectedNonSpectatorPlayers()
-    local bumpableClient = FindVictimClient(joiningSteamId, playerList)
-	local result = bumpableClient ~= nil
+	if ServerIsFull(playerList) then
+		local bumpableClient = FindVictimClient(joiningSteamId, playerList)
+		result = bumpableClient ~= nil
+	end
 	return result
 end)
 
