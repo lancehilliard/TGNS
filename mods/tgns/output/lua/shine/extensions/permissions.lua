@@ -56,18 +56,24 @@ function Plugin:Initialise()
 		if client then
 			result = originalIsInGroup(self, client, groupName)
 			if not result then
-				local clientId = TGNS.GetClientSteamId(client)
-				forEachDakUserData(function(dakUserData)
-					if dakUserData.id == clientId and TGNS.Any(dakUserData.groups, function(x) return x == groupName end) then
-						result = true
-					end
-					return result
-				end)
+				local steamId = TGNS.GetClientSteamId(client)
+				result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, groupName)
 			end
 		end
 		return result or false
 	end)
     return true
+end
+
+function Plugin:IsSteamIdInGroup(steamId, groupName)
+	local result = false
+	TGNS.DoForPairs(dakData.users, function(userKey, userData)
+		if userData.id == steamId and TGNS.Any(userData.groups, function(x) return x == groupName end) then
+			result = true
+		end
+		return result
+	end)
+	return result
 end
 
 function Plugin:Cleanup()
