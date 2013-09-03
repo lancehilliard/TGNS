@@ -42,8 +42,8 @@ local function IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, pla
     return result
 end
 
-local function TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
-    local result = TGNS.IsPrimerOnlyClient(targetClient) and TGNS.IsPrimerOnlyClient(joiningClient)
+local function TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
+    local result = TGNS.IsPrimerOnlyClient(targetClient) and TGNS.IsSteamIdPrimerOnly(joiningSteamId)
     return result
 end
 
@@ -75,9 +75,9 @@ local function IsTargetProtectedCommander(targetClient)
     return result
 end
 
-local function FindVictimClient(joiningClient, playerList)
+local function FindVictimClient(joiningSteamId, playerList)
     local result = nil
-    local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningClient) end)
+    local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningSteamId) end)
     if #bumpableClients > 0 then
         TGNS.SortAscending(bumpableClients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
         result = TGNS.GetFirst(bumpableClients)
@@ -188,13 +188,14 @@ local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
     return result
 end
 
-local function IsClientBumped(client)
+local function IsClientBumped(joiningClient)
     local result = false
-    local playerList = GetFullyConnectedNonSpectatorPlayers(client)
+    local playerList = GetFullyConnectedNonSpectatorPlayers(joiningClient)
     if ServerIsFull(playerList) then
-        local victimClient = FindVictimClient(client, playerList)
+		local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
+        local victimClient = FindVictimClient(joiningSteamId, playerList)
         if victimClient ~= nil then
-            TGNSClientKicker.Kick(victimClient, Shine.Plugins.communityslots:GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,client,playerList) end)
+            TGNSClientKicker.Kick(victimClient, Shine.Plugins.communityslots:GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
             tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
             //TGNSConnectedTimesTracker.PrintConnectedDurations(victimClient)
 			TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
@@ -203,15 +204,15 @@ local function IsClientBumped(client)
 				end
 			end)
         else
-            tgnsMd:ToAdminConsole(GetBumpSummary(playerList, client, "JOINER"))
-            TGNSClientKicker.Kick(client, Shine.Plugins.communityslots:GetBumpMessage(client), function(c,p) onPreJoinerKick(c,p,playerList) end)
+            tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
+            TGNSClientKicker.Kick(joiningClient, Shine.Plugins.communityslots:GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
             result = true
         end
     end
     if result then
-        TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
+        TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
     else
-        table.insertunique(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
+        table.insertunique(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
     end
     return result
 end
@@ -243,14 +244,14 @@ function Plugin:GetBumpMessage(targetClient)
     return result
 end
 
-function Plugin:IsTargetBumpable(targetClient, playerList, joiningClient)
+function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     local result = true
-    local joinerIsStranger = TGNS.IsClientStranger(joiningClient)
+    local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
     local targetIsSM = TGNS.IsClientSM(targetClient)
     local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
     local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
     local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
-    local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningClient)
+    local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
     local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
     local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
 
@@ -345,6 +346,13 @@ end
 function Plugin:ClientDisconnect(client)
 	UpdateReservedSlotAmount()
 end
+
+TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
+    local playerList = GetFullyConnectedNonSpectatorPlayers()
+    local bumpableClient = FindVictimClient(joiningSteamId, playerList)
+	local result = bumpableClient ~= nil
+	return result
+end)
 
 function Plugin:Think()
     TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientCommander), function(client)
