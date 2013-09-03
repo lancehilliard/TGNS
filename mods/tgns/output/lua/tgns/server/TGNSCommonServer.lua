@@ -818,9 +818,7 @@ end
 
 function TGNS.GetPlayerList()
 	local result = Shine.GetAllPlayers()
-	table.sort(result, function(p1, p2) 
-		return (p1 == nil and "" or p1:GetName()) < (p2 == nil and "" or p2:GetName())
-	end)
+	TGNS.SortAscending(result, function(p) return p == nil and "" or string.lower(TGNS.GetPlayerName(p)) end)
 	return result
 end
 
