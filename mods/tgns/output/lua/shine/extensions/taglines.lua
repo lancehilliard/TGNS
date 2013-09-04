@@ -64,19 +64,21 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("OnSlotTaken", function(client)
-		local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
-		if connectedTimeInSeconds < 120 then
-			local message = TGNS.GetClientName(client) .. " joined!"
-			if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") then
-				local steamId = TGNS.GetClientSteamId(client)
-				local tagline = pdr:Load(steamId)
-				if tagline ~= nil and tagline.message ~= "" then
-					 message = message .. " " .. tagline.message
+		if not TGNS.GetIsClientVirtual(client) then
+			local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
+			if connectedTimeInSeconds < 120 then
+				local message = TGNS.GetClientName(client) .. " joined!"
+				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") then
+					local steamId = TGNS.GetClientSteamId(client)
+					local tagline = pdr:Load(steamId)
+					if tagline ~= nil and tagline.message ~= "" then
+						 message = message .. " " .. tagline.message
+					end
+				elseif TGNS.IsClientStranger(client) then
+					message = message .. " Use 'Goodbye' & 'Affirm Stranger' responsibly."
 				end
-			elseif TGNS.IsClientStranger(client) then
-				message = message .. " Use 'Goodbye' & 'Affirm Stranger' responsibly."
+				tgnsMd:ToAllNotifyInfo(message)
 			end
-			tgnsMd:ToAllNotifyInfo(message)
 		end
 	end)
 	self:CreateCommands()
