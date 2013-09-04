@@ -56,6 +56,10 @@ function TGNS.ExecuteClientCommand(client, command)
 	Server.ClientCommand(TGNS.GetPlayer(client), command)
 end
 
+function TGNS.ExecuteServerCommand(command)
+	Shared.ConsoleCommand(command)
+end
+
 function TGNS.StructureIsBuilt(structure)
 	local result = structure:GetIsBuilt()
 	return result
@@ -465,6 +469,10 @@ function TGNS.SendToRandomTeam(player)
 	TGNS.SendToTeam(player, teamNumber)
 end
 
+function TGNS.ForcePlayersToReadyRoom(players)
+	TGNS.DoFor(players, function(p) TGNS.SendToTeam(p, kTeamReadyRoom, true) end)
+end
+
 function TGNS.SendToTeam(player, teamNumber, force)
 	GetGamerules():JoinTeam(player, teamNumber, force)
 end
@@ -479,6 +487,11 @@ end
 
 function TGNS.GetPlayerTeamName(player)
 	local result = TGNS.GetTeamName(TGNS.GetPlayerTeamNumber(player))
+	return result
+end
+
+function TGNS.GetTeam(player)
+	local result = player:GetTeam()
 	return result
 end
 
