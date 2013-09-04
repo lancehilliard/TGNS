@@ -190,25 +190,27 @@ end
 
 local function IsClientBumped(joiningClient)
     local result = false
-    local playerList = GetFullyConnectedNonSpectatorPlayers(joiningClient)
-    if ServerIsFull(playerList) then
-		local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
-        local victimClient = FindVictimClient(joiningSteamId, playerList)
-        if victimClient ~= nil then
-            TGNSClientKicker.Kick(victimClient, Shine.Plugins.communityslots:GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
-            tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
-            //TGNSConnectedTimesTracker.PrintConnectedDurations(victimClient)
-			TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
-				if IsTargetProtectedCommander(c) then
-					tgnsMd:ToClientConsole(victimClient, string.format("%s has Commander protection.", TGNS.GetClientName(c)))
-				end
-			end)
-        else
-            tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
-            TGNSClientKicker.Kick(joiningClient, Shine.Plugins.communityslots:GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
-            result = true
-        end
-    end
+	if not TGNS.GetIsClientVirtual(joiningClient) then
+		local playerList = GetFullyConnectedNonSpectatorPlayers(joiningClient)
+		if ServerIsFull(playerList) then
+			local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
+			local victimClient = FindVictimClient(joiningSteamId, playerList)
+			if victimClient ~= nil then
+				TGNSClientKicker.Kick(victimClient, Shine.Plugins.communityslots:GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
+				tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
+				//TGNSConnectedTimesTracker.PrintConnectedDurations(victimClient)
+				TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
+					if IsTargetProtectedCommander(c) then
+						tgnsMd:ToClientConsole(victimClient, string.format("%s has Commander protection.", TGNS.GetClientName(c)))
+					end
+				end)
+			else
+				tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
+				TGNSClientKicker.Kick(joiningClient, Shine.Plugins.communityslots:GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
+				result = true
+			end
+		end
+	end
     if result then
         TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
     else
@@ -246,20 +248,21 @@ end
 
 function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     local result = true
-    local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
-    local targetIsSM = TGNS.IsClientSM(targetClient)
-    local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
-    local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
-    local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
-    local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
-    local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
-    local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
+	if not TGNS.GetIsClientVirtual(targetClient) then
+		local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
+		local targetIsSM = TGNS.IsClientSM(targetClient)
+		local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
+		local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
+		local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
+		local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
+		local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
+		local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
 
-    if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable
-    then
-        result = false
-    end
-
+		if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable
+		then
+			result = false
+		end
+	end
     return result
 end
 
@@ -291,7 +294,9 @@ TGNS.RegisterEventHook("OnSlotTaken", function(client)
     else
         chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
 	end
-    TGNS.PlayerAction(client, function(p) tgnsMd:ToPlayerNotifyInfo(p, chatMessage) end)
+	if not TGNS.GetIsClientVirtual(client) then
+		TGNS.PlayerAction(client, function(p) tgnsMd:ToPlayerNotifyInfo(p, chatMessage) end)
+	end
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
