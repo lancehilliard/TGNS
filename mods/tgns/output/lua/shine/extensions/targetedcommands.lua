@@ -38,7 +38,7 @@ local commands = { CreateCommand(
 		, function(client) return TGNS.IsClientStranger(client) end
 		, "'%s' is not a stranger."
 		, function(self, client, targetClient, reason, md)
-			TGNSClientKicker.Kick(targetClient, reason)
+			TGNSClientKicker.Kick(targetClient, reason, nil, nil, true)
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s removed for '%s'.", TGNS.GetClientName(targetClient), reason))
 			log(client, targetClient, self.consoleCommandName, reason)
 		end
@@ -52,7 +52,7 @@ local commands = { CreateCommand(
 		, nil
 		, function(self, client, targetClient, reason, md)
 			TGNS.Ban(client, targetClient, TEMPBAN_DURATION_IN_MINUTES, reason)
-			TGNSClientKicker.Kick(targetClient, reason)
+			TGNSClientKicker.Kick(targetClient, reason, nil, nil, false)
 			local message = string.format("%s tempbanned %s for %s.", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), reason)
 			md:ToAdminNotifyInfo(message)
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
@@ -68,7 +68,7 @@ local commands = { CreateCommand(
 		, nil
 		, nil
 		, function(self, client, targetClient, reason, md)
-			TGNSClientKicker.Kick(targetClient, reason)
+			TGNSClientKicker.Kick(targetClient, reason, nil, nil, true)
 			local message = string.format("%s kicked %s for %s.", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), reason)
 			md:ToAdminNotifyInfo(message)
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
@@ -85,7 +85,7 @@ local commands = { CreateCommand(
 		, nil
 		, function(self, client, targetClient, reason, md)
 			TGNS.Ban(client, targetClient, 0, reason)
-			TGNSClientKicker.Kick(targetClient, reason)
+			TGNSClientKicker.Kick(targetClient, reason, nil, nil, false)
 			local message = string.format("%s ban %s for %s.", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), reason)
 			md:ToAdminNotifyInfo(message)
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)

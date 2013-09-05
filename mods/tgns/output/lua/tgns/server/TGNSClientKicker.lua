@@ -3,6 +3,9 @@ local kickedClients = {}
 local chatAdvisory = "Kicked. See console for details."
 local kickDelayInSeconds = 5
 local md = TGNSMessageDisplayer.Create("KICK")
+local kickReasons = {}
+local REPEAT_KICK_THRESHOLD = 3
+local REPEAT_KICK_BAN_DURATION_IN_MINUTES = 120
 
 local function AdviseKickedClients()
 	local connectedKickedClients = TGNS.GetClientList(TGNSClientKicker.IsClientKicked)
@@ -14,7 +17,7 @@ local function AdviseKickedClients()
 	end
 end
 
-function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick)
+function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffensesIsCauseForBan)
 	if client ~= nil and not TGNSClientKicker.IsClientKicked(client) then
 		local player = TGNS.GetPlayer(client)
 		if player ~= nil then
@@ -27,11 +30,23 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick)
 			if onPostKick ~= nil then
 				TGNS.ScheduleAction(kickDelayInSeconds + 0.5, function() onPostKick(client, player) end)
 			end
-			local adminMessage = string.format("Kicking %s: %s", TGNS.GetClientName(client), reason)
+			local targetName = TGNS.GetClientName(client)
+			local adminMessage = string.format("Kicking %s: %s", targetName, reason)
 			md:ToAdminConsole(adminMessage)
 			md:ToClientConsole(client, reason)
+			if repeatOffensesIsCauseForBan then
+				md:ToClientConsole(client, "Note: Too many kicks may create a temporary ban.") 
+			end
 			md:ToClientConsole(client, "Contact TGNS administration: http://www.tacticalgamer.com/natural-selection-contact-admin/") 
 			TGNS.ScheduleAction(kickDelayInSeconds, function()
+				if repeatOffensesIsCauseForBan then
+					local targetSteamId = TGNS.GetClientSteamId(client)
+					kickReasons[targetSteamId] = kickReasons[targetSteamId] or {}
+					table.insert(kickReasons[targetSteamId], reason)
+					if #kickReasons[targetSteamId] >= REPEAT_KICK_THRESHOLD then
+						Shine.Plugins.ban:AddBan(targetSteamId, targetName, REPEAT_KICK_BAN_DURATION_IN_MINUTES * 60, "TGNSClientKicker", TGNS.Join(kickReasons[targetSteamId], "+"))
+					end
+				end
 				TGNS.DisconnectClient(client, reason)
 				TGNS.UpdateAllScoreboards()
 			end)

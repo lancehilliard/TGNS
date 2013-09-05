@@ -19,7 +19,7 @@ function Plugin:Initialise()
 		local rookieShouldBeKicked = TGNS.GetPlayerCount() > 10 and GetRookieCount() > 4 and playerIsRookie
 		if rookieShouldBeKicked then
 			md:ToPlayerNotifyInfo(player, "To teach, we limit concurrent rookies. Please return later!")
-			TGNSClientKicker.Kick(client, "To teach, we limit concurrent rookies. Please return later!")
+			TGNSClientKicker.Kick(client, "To teach, we limit concurrent rookies. Please return later!", nil, nil, false)
 			return false
 		end
 	end, TGNS.HIGHEST_EVENT_HANDLER_PRIORITY)

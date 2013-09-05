@@ -196,7 +196,7 @@ local function IsClientBumped(joiningClient)
 			local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
 			local victimClient = FindVictimClient(joiningSteamId, playerList)
 			if victimClient ~= nil then
-				TGNSClientKicker.Kick(victimClient, Shine.Plugins.communityslots:GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end)
+				TGNSClientKicker.Kick(victimClient, Shine.Plugins.communityslots:GetBumpMessage(victimClient), function(c,p) onPreVictimKick(c,p,joiningClient,playerList) end, nil, false)
 				tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
 				//TGNSConnectedTimesTracker.PrintConnectedDurations(victimClient)
 				TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
@@ -206,7 +206,7 @@ local function IsClientBumped(joiningClient)
 				end)
 			else
 				tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
-				TGNSClientKicker.Kick(joiningClient, Shine.Plugins.communityslots:GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end)
+				TGNSClientKicker.Kick(joiningClient, Shine.Plugins.communityslots:GetBumpMessage(joiningClient), function(c,p) onPreJoinerKick(c,p,playerList) end, nil, false)
 				result = true
 			end
 		end

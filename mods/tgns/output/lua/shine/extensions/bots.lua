@@ -42,7 +42,7 @@ local function removeBots(players, count)
 	local botClients = TGNS.GetMatchingClients(players, TGNS.GetIsClientVirtual)
 	TGNS.DoFor(botClients, function(c, index)
 		if count == nil or index <= count then
-			TGNSClientKicker.Kick(c, "Managed bot removal.")
+			TGNSClientKicker.Kick(c, "Managed bot removal.", nil, nil, false)
 		end
 	end)
 end

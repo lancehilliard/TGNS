@@ -8,7 +8,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
 	if nonPrintableCharactersCount>0 and newTeamNumber ~= kTeamReadyRoom then
 		local client = TGNS.GetClient(player)
-		TGNSClientKicker.Kick(client, Shine.Plugins.printablenames.Config.KickMessage)
+		TGNSClientKicker.Kick(client, Shine.Plugins.printablenames.Config.KickMessage, nil, nil, true)
 	end
 end
 
