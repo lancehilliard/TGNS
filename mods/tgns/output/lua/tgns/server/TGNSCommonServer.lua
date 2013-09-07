@@ -376,11 +376,11 @@ function TGNS.IsTournamentMode()
 end
 
 function TGNS.AddTempGroup(client, groupName)
-	Shine:AddTempGroup(client, groupName)
+	Shine.Plugins.tempgroups:AddTempGroup(client, groupName)
 end
 
 function TGNS.RemoveTempGroup(client, groupName)
-	Shine:RemoveTempGroup(client, groupName)
+	Shine.Plugins.tempgroups:RemoveTempGroup(client, groupName)
 end
 
 function TGNS.ClientIsInGroup(client, groupName)
@@ -474,7 +474,7 @@ function TGNS.ForcePlayersToReadyRoom(players)
 end
 
 function TGNS.SendToTeam(player, teamNumber, force)
-	GetGamerules():JoinTeam(player, teamNumber, force)
+	return GetGamerules():JoinTeam(player, teamNumber, force)
 end
 
 function TGNS.Join(list, delimiter)
@@ -581,6 +581,21 @@ end
 function TGNS.IsGameStartingState(gameState)
 	local result = gameState == kGameState.Started
 	return result
+end
+
+function TGNS.ForceGameStart()
+	local gamerules = GetGamerules()
+    gamerules:ResetGame()
+    gamerules:SetGameState(kGameState.Countdown)
+	TGNS.DoFor(TGNS.GetPlayerList(), TGNS.ResetPlayerScores)
+    gamerules.countdownTime = kCountDownLength
+    gamerules.lastCountdownPlayed = nil
+end
+
+function TGNS.ResetPlayerScores(player)
+	if player.ResetScores then
+		player:ResetScores()
+	end
 end
 
 function TGNS.IsGameInPreGame()
