@@ -6,7 +6,7 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 0
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 10
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 20
 
-function TGNS.GetRandomElements(elements)
+function TGNS.GetRandomizedElements(elements)
 	local result = {}
 	TGNS.DoFor(elements, function(e) table.insert(result, e) end)
 	TGNS.Shuffle(result)
@@ -144,5 +144,10 @@ end
 
 function TGNS.Any(elements, predicate)
 	local result = #TGNS.Where(elements, predicate) > 0
+	return result
+end
+
+function TGNS.All(elements, predicate)
+	local result = #TGNS.Where(elements, predicate) == #elements
 	return result
 end
