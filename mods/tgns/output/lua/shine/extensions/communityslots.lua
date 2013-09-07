@@ -210,12 +210,12 @@ local function IsClientBumped(joiningClient)
 				result = true
 			end
 		end
+		if result then
+			TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+		else
+			table.insertunique(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+		end
 	end
-    if result then
-        TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
-    else
-        table.insertunique(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
-    end
     return result
 end
 
@@ -242,13 +242,16 @@ Plugin.HasConfig = true
 Plugin.ConfigName = "communityslots.json"
 
 function Plugin:GetBumpMessage(targetClient)
-    local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, TGNS.GetClientName(targetClient), Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots, Shine.Plugins.communityslots.Config.MaximumSlots)
+    local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, TGNS.GetClientName(targetClient), Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots, Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots)
+	if Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
+		result = result .. " Captains Game in play!"
+	end
     return result
 end
 
 function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
-    local result = true
-	if not TGNS.GetIsClientVirtual(targetClient) then
+    local result = not TGNS.GetIsClientVirtual(targetClient)
+	if result then
 		local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
 		local targetIsSM = TGNS.IsClientSM(targetClient)
 		local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
@@ -257,8 +260,9 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
 		local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
 		local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
 		local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
+		local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
 
-		if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable
+		if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
 		then
 			result = false
 		end
@@ -273,8 +277,9 @@ function Plugin:ClientConnect(joiningClient)
 end
 
 function Plugin:ClientConfirmConnect(joiningClient)
+	local cancel = false
 	if not Shine.Plugins.speclimit:ClientConfirmConnectHandled(joiningClient) then
-		local cancel = IsClientBumped(joiningClient)
+		cancel = IsClientBumped(joiningClient)
 		if not cancel then
 			TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
 			TGNS.ExecuteEventHooks("OnSlotTaken", joiningClient)
