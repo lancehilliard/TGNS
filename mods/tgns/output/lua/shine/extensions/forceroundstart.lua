@@ -1,12 +1,7 @@
 local Plugin = {}
 
 function Plugin:ForceRoundStart()
-	local gamerules = GetGamerules()
-	gamerules:ResetGame()
-	gamerules:SetGameState(kGameState.Countdown)      
-	TGNS.DoFor(TGNS.GetPlayerList(), function(p) p:ResetScores() end)
-	gamerules.countdownTime = kCountDownLength 
-	gamerules.lastCountdownPlayed = nil 
+	TGNS.ForceGameStart()
 end
 
 function Plugin:Initialise()
