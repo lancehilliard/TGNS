@@ -55,21 +55,21 @@ end
 //end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-	if getTotalNumberOfBots() > 0 then
+	local client = TGNS.GetClient(player)
+	if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeam(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
 		local md = TGNSMessageDisplayer.Create("BOTS")
 		local players = TGNS.GetPlayerList()
-		local client = TGNS.GetClient(player)
 		if #TGNS.GetMarineClients(players) >= PLAYER_COUNT_THRESHOLD - 1 then
 			md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Removing all bots.", PLAYER_COUNT_THRESHOLD))
-			gamerules:EndGame(MarineTeam())
-			removeBots(players)
-			setOriginalConfig()
-		elseif TGNS.IsGameplayTeam(newTeamNumber) and not force then
-			if not TGNS.GetIsClientVirtual(client) then
-				md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
-				if newTeamNumber ~= kMarineTeamType then
-					return false
-				end
+			TGNS.ScheduleAction(4, function()
+				//gamerules:EndGame(MarineTeam())
+				setOriginalConfig()
+				removeBots(players)
+			end)
+		elseif not force then
+			md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
+			if newTeamNumber ~= kMarineTeamType then
+				return false
 			end
 		end
 	end
@@ -95,6 +95,10 @@ function Plugin:CreateCommands()
 					errorMessage = string.format("Bots are used only for seeding the server to %s players.", PLAYER_COUNT_THRESHOLD)
 				elseif atLeastOnePlayerIsOnGameplayTeam then
 					errorMessage = "All players must be in the ReadyRoom before adding initial bots."
+				elseif Shine.Plugins.mapvote:VoteStarted() then
+					errorMessage = "Bots cannot be managed during a map vote."
+				elseif Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
+					errorMessage = "Bots cannot be managed during a Captains Game."
 				end
 			end
 		else
