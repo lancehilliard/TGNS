@@ -1,17 +1,17 @@
 local originalIsInGroup
 local tempGroups = {}
 
-function Shine:AddTempGroup(client, groupName)
+local Plugin = {}
+
+function Plugin:AddTempGroup(client, groupName)
 	tempGroups[groupName] = tempGroups[groupName] or {}
 	tempGroups[groupName][client] = TGNS.GetSecondsSinceEpoch()
 end
 
-function Shine:RemoveTempGroup(client, groupName)
+function Plugin:RemoveTempGroup(client, groupName)
 	tempGroups[groupName] = tempGroups[groupName] or {}
 	tempGroups[groupName][client] = nil
 end
-
-local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
