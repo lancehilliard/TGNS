@@ -62,6 +62,12 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 		end)
 	end
 	
+	function result:ToAllConsole(message)
+		TGNS.DoFor(TGNS.GetClientList(), function(c)
+			SendConsoleMessage(c, message, self.messagesChannel)
+		end)
+	end
+
 	function result:ToTeamChat(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) SendChatMessage(p, message, self.messagesChannel, true) end)
