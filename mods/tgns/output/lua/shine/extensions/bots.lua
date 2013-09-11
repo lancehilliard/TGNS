@@ -3,6 +3,7 @@ local BOT_COUNT_THRESHOLD = 25
 local originalEndRoundOnTeamUnbalanceSetting
 local originalForceEvenTeamsOnJoinSetting
 local originalAutoTeamBalanceSetting
+local md
 
 local Plugin = {}
 
@@ -47,30 +48,24 @@ local function removeBots(players, count)
 	end)
 end
 
-//function Plugin:ClientConnect(client)
-//	if TGNS.GetIsClientVirtual(client) then
-//		local player = TGNS.GetPlayer(client)
-//		TGNS.SendToTeam(player, kAlienTeamType, true)
-//	end
-//end
+function Plugin:ClientConnect(client)
+	if getTotalNumberOfBots() > 0 and not TGNS.GetClientIsVirtual(client) then
+		if #TGNS.GetPlayerList() >= PLAYER_COUNT_THRESHOLD then
+			md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Removing all bots.", PLAYER_COUNT_THRESHOLD))
+			TGNS.ScheduleAction(4, function()
+				setOriginalConfig()
+				removeBots(TGNS.GetPlayerList())
+			end)
+		end
+	end
+end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeam(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
-		local md = TGNSMessageDisplayer.Create("BOTS")
-		local players = TGNS.GetPlayerList()
-		if #TGNS.GetMarineClients(players) >= PLAYER_COUNT_THRESHOLD - 1 then
-			md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Removing all bots.", PLAYER_COUNT_THRESHOLD))
-			TGNS.ScheduleAction(4, function()
-				//gamerules:EndGame(MarineTeam())
-				setOriginalConfig()
-				removeBots(players)
-			end)
-		elseif not force then
-			md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
-			if newTeamNumber ~= kMarineTeamType then
-				return false
-			end
+	if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeam(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
+		md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
+		if newTeamNumber ~= kMarineTeamType then
+			return false
 		end
 	end
 end
@@ -87,7 +82,6 @@ function Plugin:CreateCommands()
 		countModifier = tonumber(countModifier)
 		local errorMessage
 		local players = TGNS.GetPlayerList()
-		local md = TGNSMessageDisplayer.Create("BOTS")
 		if countModifier then
 			if getTotalNumberOfBots() == 0 then
 				local atLeastOnePlayerIsOnGameplayTeam = #TGNS.GetAlienClients(players) + #TGNS.GetMarineClients(players) > 0
@@ -135,6 +129,7 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
+	md = TGNSMessageDisplayer.Create("BOTS")
 	self:CreateCommands()
     return true
 end
