@@ -440,8 +440,12 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 	return result
 end
 
+function TGNS.IndexOf(s, part)
+	return s:find(part) or -1
+end
+
 function TGNS.Contains(s, part)
-	return s:find(part)
+	return TGNS.IndexOf(s, part) >= 1
 end
 
 function TGNS.StartsWith(s,part)
@@ -1075,13 +1079,11 @@ function TGNS.GetPlayerMatchingSteamId(steamId, team)
 end
 
 function TGNS.GetPlayerByGameId(id, teamNumber)
-	Shared.Message("TGNS.GetPlayerByGameId id: " .. id)
 	local result
 	local client = Shine.GetClientByID(id)
 	if client then
 		local player = TGNS.GetPlayer(client)
 		if teamNumber == nil or TGNS.GetPlayerTeamNumber(player) == teamNumber then
-			Shared.Message("TGNS.GetPlayerByGameId returning " .. TGNS.GetPlayerName(player))
 			result = player
 		end
 	end
