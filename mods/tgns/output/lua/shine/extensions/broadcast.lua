@@ -28,9 +28,7 @@ local Plugin = {}
 
 function Plugin:Broadcast(senderName, message)
 	local data = dr.Load()
-	Shared.Message("load: " .. json.encode(data))
 	TGNS.DoFor(supportedSimpleServerNames, function(simpleServerName)
-		Shared.Message("simpleServerName: " .. simpleServerName .. "; thisServerSimpleName: " .. thisServerSimpleName)
 		if simpleServerName ~= thisServerSimpleName then
 			data[simpleServerName] = data[simpleServerName] or {}
 			table.insert(data[simpleServerName], {senderName=senderName, when=TGNS.GetSecondsSinceEpoch(), fromServer=thisServerSimpleName, message=message})
