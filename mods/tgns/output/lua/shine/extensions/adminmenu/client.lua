@@ -1,14 +1,25 @@
 local Plugin = Plugin
 
 local tgnsMenuDisplayer
+local helpTexts = {}
+
+local function getPageNameHelpText(pageName)
+	local result = helpTexts[pageName]
+	return result
+end
 
 function Plugin:Initialise()
 	self.Enabled = true
 	tgnsMenuDisplayer = TGNSMenuDisplayer.Create(function(menu)
 		menu:EditPage("Main", function(x)
 			x:AddSideButton("Admin", function()
-				TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandIndex=0, argName="", argValue=""})
+				TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandIndex=0, argName="Admin", argValue=""})
 			end)
+
+			x:AddSideButton("Captains", function()
+				TGNS.SendNetworkMessage(self.ADMIN_MENU_REQUESTED, {commandIndex=0, argName="Captains", argValue=""})
+			end)
+
 			x:AddPage("Info", "Info", {"Choose an option to learn more about this server, called \"TGNS\"."}, "Main")
 			x:EditPage("Info", function(y)
 				y:AddSideButton("TGNS Primer", function()
@@ -20,13 +31,14 @@ function Plugin:Initialise()
 				y:AddSideButton("Scoreboard Letters", function()
 					TGNS.ShowUrl("http://www.tacticalgamer.com/natural-selection-general-discussion/194304-scoreboard-letters-print.html", "Scoreboard Letters")
 				end)
-				
 			end)
-			
 			x:AddSideButton("Info", function()
 				x:SetPage("Info")
 			end)
 		end)
+	end)
+	TGNS.HookNetworkMessage(self.HELP_TEXT, function(message)
+		helpTexts[message.pageName] = message.helpText
 	end)
 	TGNS.HookNetworkMessage(self.MENU_DATA, function(message)
 		local argName = message.argName
@@ -34,12 +46,11 @@ function Plugin:Initialise()
 		local pageName = message.pageName
 		local backPageId = message.backPageId
 		local chatCmd = message.chatCmd
-		local helpText = pageName == "Admin" and "Manage the server according to our rules and tenets. Help in console: sh_help" or string.format("%s%s -- Help in console: sh_help %s", pageName, (TGNS.HasNonEmptyValue(chatCmd) and string.format(" (chat: !%s)", chatCmd) or ""), pageName)
+		local pageNameHelpText = getPageNameHelpText(pageName)
+		local helpText = TGNS.HasNonEmptyValue(pageNameHelpText) and pageNameHelpText or string.format("%s%s -- Help in console: sh_help %s", pageName, (TGNS.HasNonEmptyValue(chatCmd) and string.format(" (chat: !%s)", chatCmd) or ""), pageName)
 		local buttons = json.decode(message.buttonsJson)
 		tgnsMenuDisplayer = TGNSMenuDisplayer.Create(function(menu)
-			if backPageId == "" then
-				menu:Finish()
-			else
+			if TGNS.HasNonEmptyValue(backPageId) then
 				menu:AddPage(pageId, pageName, {helpText}, backPageId)
 				menu:EditPage(pageId, function(x)
 					TGNS.DoFor(buttons, function(b)
@@ -49,6 +60,8 @@ function Plugin:Initialise()
 					end)
 				end)
 				menu:SetPage(pageId)
+			else
+				menu:Finish()
 			end
 		end)
 	end)

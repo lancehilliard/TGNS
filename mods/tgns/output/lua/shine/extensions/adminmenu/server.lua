@@ -1,4 +1,5 @@
 local commandInProgress = {}
+local currentPage = {}
 
 local rememberArgs = function(client, commandName, argName, argValue)
 	commandInProgress[client] = commandInProgress[client] or {}
@@ -17,8 +18,8 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.HookNetworkMessage(self.ADMIN_MENU_REQUESTED, function(client, message)
-		local responsePageId = "Admin"
-		local responsePageName = "Admin"
+		local responsePageId = "Main"
+		local responsePageName = "Main"
 		local responseButtons = {}
 		local responseArg = {}
 		local chatCmd = ""
@@ -26,7 +27,7 @@ function Plugin:Initialise()
 		if requestCommandName == 0 then
 			requestCommandName = ""
 		else
-			TGNS.DoForPairs(self.Config.Commands, function(commandName, commandData, index)
+			TGNS.DoForPairs(self.Config[currentPage[client]].Commands, function(commandName, commandData, index)
 				if requestCommandName == index then
 					requestCommandName = commandName
 					return true
@@ -36,21 +37,27 @@ function Plugin:Initialise()
 		local requestArgName = message.argName
 		local requestArgValue = message.argValue
 		rememberArgs(client, requestCommandName, requestArgName, requestArgValue)
-		local requestCommand = self.Config.Commands[requestCommandName]
+		local requestCommand
+		TGNS.DoForPairs(self.Config, function(pageName, pageData)
+			local command = pageData.Commands[requestCommandName]
+			if command then
+				requestCommand = command
+			end
+		end)
 		local responseBackPageId = "Main"
 		if requestCommand then
 			local command = Shine.Commands[requestCommandName]
 			chatCmd = type(command.ChatCmd) == "string" and command.ChatCmd or ""
-			responseBackPageId = "Admin"
+			responseBackPageId = currentPage[client]
 			TGNS.DoForReverse(requestCommand.args, function(arg)
 				if arg.name == requestArgName then
-					responseBackPageId = requestCommandName .. requestArgName
+					responseBackPageId = currentPage[client] .. requestCommandName .. requestArgName
 					return true
 				end
 				responseArg = arg
 			end)
 			if responseArg.name then
-				responsePageId = requestCommandName .. responseArg.name
+				responsePageId = currentPage[client] .. requestCommandName .. responseArg.name
 				responsePageName = requestCommandName
 				local buttonOptions = type(responseArg.options) == "string" and loadstring("return " .. responseArg.options)() or responseArg.options
 				TGNS.DoFor(buttonOptions, function(option)
@@ -65,12 +72,17 @@ function Plugin:Initialise()
 				TGNS.ExecuteClientCommand(client, string.format("%s %s", requestCommandName, getArgs(client, requestCommandName, requestCommand.args)))
 			end
 		else
-			TGNS.DoForPairs(self.Config.Commands, function(commandName, commandData, index)
+			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.HELP_TEXT, {pageName=requestArgName, helpText=self.Config[requestArgName].HelpText})
+			TGNS.DoForPairs(self.Config[requestArgName].Commands, function(commandName, commandData, index)
 				if TGNS.ClientCanRunCommand(client, commandName) then
 					table.insert(responseButtons, {c=index, n=commandName})
 				end
 			end)
+			responsePageId = requestArgName
+			responsePageName = requestArgName
+			currentPage[client] = requestArgName
 		end
+		TGNS.SortAscending(responseButtons, function(b) return b.n end)
 		local buttonsJson = json.encode(responseButtons)
 		TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.MENU_DATA, {commandIndex=message.commandIndex, argName=responseArg.name or "", pageId=responsePageId, pageName=responsePageName, backPageId=responseBackPageId or "", chatCmd=chatCmd, buttonsJson=buttonsJson})
 	end)
