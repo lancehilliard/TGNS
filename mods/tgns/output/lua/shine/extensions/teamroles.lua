@@ -25,24 +25,28 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 end
 
 local roles = {
-	CreateRole("Temp Admin"
-		, "Supporting Members who have signed the TGNS Primer"
-		, "tempadmin_group"
-		, "TEMPADMIN"
-		, "sh_tempadmin"
-		, "tempadmin"
-		, TGNS.IsClientTempAdmin
-		, TGNS.IsClientAdmin
-		, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) end)
-	, CreateRole("Guardian"
-		, "players who have signed the TGNS Primer"
+	//CreateRole("Temp Admin"
+	//	, "Supporting Members who have signed the TGNS Primer"
+	//	, "tempadmin_group"
+	//	, "TEMPADMIN"
+	//	, "sh_tempadmin"
+	//	, "tempadmin"
+	//	, TGNS.IsClientTempAdmin
+	//	, TGNS.IsClientAdmin
+	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) end), 
+	CreateRole("Guardian"
+		, "TGNS Primer signers who've played >=15 full rounds on this server"
 		, "guardian_group"
 		, "GUARDIAN"
 		, "sh_guardian"
 		, "guardian"
 		, TGNS.IsClientGuardian
-		, TGNS.IsClientAdmin
-		, function(client) return TGNS.HasClientSignedPrimer(client) and not TGNS.IsClientTempAdmin(client) end)
+		, function(client) return false end
+		, function(client)
+			local numberOfGuardiansAlreadyOnTeam = #TGNS.Where(TGNS.GetTeamClients(TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber), TGNS.GetPlayerList()), TGNS.IsClientGuardian)
+			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
+			return TGNS.HasClientSignedPrimer(client) and numberOfGuardiansAlreadyOnTeam < 2 and totalGamesPlayed >= 15 and not TGNS.IsClientAdmin(client)
+		end)
 }
 
 
@@ -83,7 +87,7 @@ end
 local function ToggleOptIn(client, role)
 	local message
 	if role:IsClientBlacklisted(client) then
-		message = "Contact an Admin to get access to Temp Admin: tacticalgamer.com/natural-selection-contact-admin"
+		message = string.format("Contact an Admin to get access to %s: tacticalgamer.com/natural-selection-contact-admin", role.displayName)
 	else
 		local pdrData = role:LoadOptInData(client)
 		pdrData.optin = not pdrData.optin
