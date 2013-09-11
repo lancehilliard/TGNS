@@ -10,7 +10,25 @@ local gameStarted
 local readyPlayerClients
 local readyCaptainClients
 
-local function enableCaptainsMode(enablingClient, captain1Client, captain2Client)
+local function setCaptainsGameConfig()
+	if not originalForceEvenTeamsOnJoinSetting then
+		originalForceEvenTeamsOnJoinSetting = Server.GetConfigSetting("force_even_teams_on_join")
+	end
+	Server.SetConfigSetting("force_even_teams_on_join", false)
+end
+
+local function setOriginalConfig()
+	if originalForceEvenTeamsOnJoinSetting then
+		Server.SetConfigSetting("force_even_teams_on_join", originalForceEvenTeamsOnJoinSetting)
+	end
+end
+
+function disableCaptainsMode()
+	captainsModeEnabled = false
+	TGNS.DoFor(captainClients, function(c) TGNS.RemoveTempGroup(c, "captains_group") end)
+end
+
+local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	local randomizedCaptainClients = TGNS.GetRandomizedElements({captain1Client,captain2Client})
 	captainClients = { randomizedCaptainClients[1], randomizedCaptainClients[2] }
 	captainTeamNumbers[captainClients[1]] = 1
@@ -18,7 +36,7 @@ local function enableCaptainsMode(enablingClient, captain1Client, captain2Client
 	captainsModeEnabled = true
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c) TGNS.AddTempGroup(c, "captains_group") end)
-	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", TGNS.GetClientName(enablingClient)))
+	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	TGNS.ScheduleAction(3, function()
 		md:ToAllNotifyInfo(string.format("%s: %s! %s: %s! Who will pick first? Who will pick two?", TGNS.GetClientName(captainClients[1]), TGNS.GetTeamName(captainTeamNumbers[captainClients[1]]), TGNS.GetClientName(captainClients[2]), TGNS.GetTeamName(captainTeamNumbers[captainClients[2]])))
 	end)
@@ -27,53 +45,44 @@ local function enableCaptainsMode(enablingClient, captain1Client, captain2Client
 	TGNS.ForcePlayersToReadyRoom(TGNS.GetPlayerList())
 end
 
-local function getDescriptionOfWhatElseIsNeededToPlayCaptains(playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
+local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	local result = ""
 	local percentageOfplayingReadyPlayerClients = numberOfPlayingReadyPlayerClients / #playingClients
 	if percentageOfplayingReadyPlayerClients < .82 or numberOfPlayingReadyCaptainClients < 2 then
 		local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumber(.82 * #playingClients)
-		result = string.format("Ready so far: Players: %s/%s - Captains %s/2.", numberOfPlayingReadyPlayerClients, numberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
+		result = string.format("%s is ready! Ready so far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, numberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	end
 	return result
 end
 
-local function updateCaptainsReadyProgress()
+local function updateCaptainsReadyProgress(readyClient)
 	local playingClients = TGNS.GetClientList()
 	local playingReadyCaptainClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyCaptainClients, c) end)
 	local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) or TGNS.Has(playingReadyCaptainClients, c) end)
-	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients)
+	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
+		local message = string.format("You're marked as ready to play%s a Captains Game.", TGNS.Has(playingReadyCaptainClients, readyClient) and " (and lead)" or "")
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
 		md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
 	else
-		enableCaptainsMode(playingReadyPlayerClients[#playingReadyPlayerClients], playingReadyCaptainClients[1], playingReadyCaptainClients[2])
+		enableCaptainsMode(string.format("%s and %s", TGNS.GetClientName(playingReadyCaptainClients[1]), TGNS.GetClientName(playingReadyCaptainClients[2])), playingReadyCaptainClients[1], playingReadyCaptainClients[2])
 	end
 end
 
-local function toggleReadyPlayerClient(client)
+local function addReadyPlayerClient(client)
 	readyPlayerClients = readyPlayerClients or {}
-	if TGNS.Has(readyPlayerClients, client) then
-		TGNS.RemoveAllMatching(readyPlayerClients, client)
-		TGNS.RemoveAllMatching(readyCaptainClients, client)
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You're no longer marked as wanting to play (or lead) Captains.")
-	else
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You're marked as wanting to play (but not lead) Captains.")
+	if not TGNS.Has(readyPlayerClients, client) then
 		table.insert(readyPlayerClients, client)
 	end
-	updateCaptainsReadyProgress()
+	updateCaptainsReadyProgress(client)
 end
 
-local function toggleReadyCaptainClient(client)
+local function addReadyCaptainClient(client)
 	readyCaptainClients = readyCaptainClients or {}
-	if TGNS.Has(readyCaptainClients, client) then
-		TGNS.RemoveAllMatching(readyCaptainClients, client)
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You're still marked to play Captains, but not to lead.")
-	else
-		readyPlayerClients = readyPlayerClients or {}
-		table.insert(readyPlayerClients, client)
+	if not TGNS.Has(readyCaptainClients, client) then
 		table.insert(readyCaptainClients, client)
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You're marked as wanting to play (and lead) Captains.")
 	end
-	updateCaptainsReadyProgress()
+	updateCaptainsReadyProgress(client)
 end
 
 //function swapTeamsAfterDelay(delayInSeconds)
@@ -98,24 +107,6 @@ local function bothCaptainsAreReady()
 		return readyTeams[clientTeamName]
 	end)
 	return result
-end
-
-local function setCaptainsGameConfig()
-	if not originalForceEvenTeamsOnJoinSetting then
-		originalForceEvenTeamsOnJoinSetting = Server.GetConfigSetting("force_even_teams_on_join")
-	end
-	Server.SetConfigSetting("force_even_teams_on_join", false)
-end
-
-local function setOriginalConfig()
-	if originalForceEvenTeamsOnJoinSetting then
-		Server.SetConfigSetting("force_even_teams_on_join", originalForceEvenTeamsOnJoinSetting)
-	end
-end
-
-function disableCaptainsMode()
-	captainsModeEnabled = false
-	TGNS.DoFor(captainClients, function(c) TGNS.RemoveTempGroup(c, "captains_group") end)
 end
 
 local Plugin = {}
@@ -189,7 +180,7 @@ function Plugin:CreateCommands()
 							if captain2Player ~= nil then
 								local captain1Client = TGNS.GetClient(captain1Player)
 								local captain2Client = TGNS.GetClient(captain2Player)
-								enableCaptainsMode(client, captain1Client, captain2Client)
+								enableCaptainsMode(TGNS.GetClientName(client), captain1Client, captain2Client)
 							else
 								md:ToPlayerNotifyError(player, string.format("'%s' does not uniquely match a player.", captain2Predicate))
 							end
@@ -240,10 +231,10 @@ function Plugin:CreateCommands()
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		else
-			toggleReadyCaptainClient(client)
+			addReadyCaptainClient(client)
 		end
 	end, true)
-	willCaptainsCommand:Help("Toggle whether you're willing to lead a team in a Captains Game.")
+	willCaptainsCommand:Help("Tell that you're willing to lead a team in a Captains Game.")
 
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
 		local player = TGNS.GetPlayer(client)
@@ -252,10 +243,10 @@ function Plugin:CreateCommands()
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		else
-			toggleReadyPlayerClient(client)
+			addReadyPlayerClient(client)
 		end
 	end, true)
-	wantCaptainsCommand:Help("Toggle whether you want to play a Captains Game.")
+	wantCaptainsCommand:Help("Tell that you want to play a Captains Game.")
 
 end
 
