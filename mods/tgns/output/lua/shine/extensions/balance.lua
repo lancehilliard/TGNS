@@ -6,15 +6,15 @@ local SCORE_PER_MINUTE_DATAPOINTS_TO_KEEP = 30
 local RECENT_BALANCE_DURATION_IN_SECONDS = 15
 local NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD = 30
 local LOCAL_DATAPOINTS_COUNT_THRESHOLD = 10
+local totalGamesPlayedCache = {}
 
 local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
-			balance.wins = balance.wins ~= nil and balance.wins or 0
-			balance.losses = balance.losses ~= nil and balance.losses or 0
-			balance.total = balance.total ~= nil and balance.total or 0
-			balance.scoresPerMinute = balance.scoresPerMinute ~= nil and balance.scoresPerMinute or {}
-			return balance
-		end
-	)
+	balance.wins = balance.wins ~= nil and balance.wins or 0
+	balance.losses = balance.losses ~= nil and balance.losses or 0
+	balance.total = balance.total ~= nil and balance.total or 0
+	balance.scoresPerMinute = balance.scoresPerMinute ~= nil and balance.scoresPerMinute or {}
+	return balance
+end)
 	
 local md = TGNSMessageDisplayer.Create("BALANCE")
 
@@ -23,9 +23,13 @@ function Balance.IsInProgress()
 	return balanceInProgress
 end
 function Balance.GetTotalGamesPlayed(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	local data = pdr:Load(steamId)
-	local result = data.total
+	local result = totalGamesPlayedCache[client]
+	if not result then
+		local steamId = TGNS.GetClientSteamId(client)
+		local data = pdr:Load(steamId)
+		local result = data.total
+		totalGamesPlayedCache[client] = result
+	end
 	return result
 end
 
@@ -243,6 +247,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 			changeBalanceFunction(balance)
 			AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
 			pdr:Save(balance)
+			totalGamesPlayedCache[c] = nil
 		end
 	end)
 end
