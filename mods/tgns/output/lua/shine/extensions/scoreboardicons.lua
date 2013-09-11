@@ -4,8 +4,8 @@ local function PlayerCanSeeAfkStatus(scorePlayer, sendToPlayer)
 	end
 		local sendToPlayerCanKickAfkPlayers = TGNS.ClientAction(sendToPlayer, function(c)
 				local playerIsAdmin = TGNS.IsClientAdmin(c)
-				local playerIsTempAdmin = TGNS.IsClientTempAdmin(c)
-				return playerIsAdmin or playerIsTempAdmin
+				local playerIsGuardian = TGNS.IsClientGuardian(c)
+				return playerIsAdmin or playerIsGuardian
 			end
 		)
 		local sameTeams = TGNS.PlayersAreTeammates(scorePlayer, sendToPlayer)
@@ -14,7 +14,7 @@ local function PlayerCanSeeAfkStatus(scorePlayer, sendToPlayer)
 end
 
 local function prependPlayerName(playerName, icon)
-	if icon and string.len(icon) then
+	if TGNS.HasNonEmptyValue(icon) then
 		return string.sub(icon .. "> " .. playerName, 0, kMaxNameLength)
 	end
 	return playerName
