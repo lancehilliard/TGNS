@@ -48,6 +48,7 @@
 
 !mods/tgns/output/lua/shine/extensions/everysecond/shared.lua
 
+!mods/tgns/output/lua/shine/extensions/autoexec.lua
 !mods/tgns/output/lua/shine/extensions/balance.lua
 !mods/tgns/output/lua/shine/extensions/betterknownas.lua
 !mods/tgns/output/lua/shine/extensions/bots.lua
