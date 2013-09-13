@@ -129,7 +129,7 @@ function TGNS.DoTeamSizeComparisonAction(player, playerList, action)
 end
 
 function TGNS.GetOtherPlayingTeamNumber(playingTeamNumber)
-	assert(TGNS.IsGameplayTeam(playingTeamNumber), "Input team number is not a playing team number.")
+	assert(TGNS.IsGameplayTeamNumber(playingTeamNumber), "Input team number is not a playing team number.")
 	local result = playingTeamNumber == kMarineTeamType and kAlienTeamType or kMarineTeamType
 	return result
 end
@@ -616,7 +616,7 @@ function TGNS.IsGameWinningState(gameState)
 	return result
 end
 
-function TGNS.IsGameplayTeam(teamNumber)
+function TGNS.IsGameplayTeamNumber(teamNumber)
 	local result = teamNumber == kMarineTeamType or teamNumber == kAlienTeamType
 	return result
 end
@@ -914,7 +914,7 @@ function TGNS.GetMatchingClients(playerList, predicate)
 end
 
 function TGNS.PlayerIsOnPlayingTeam(player)
-	local result = TGNS.IsGameplayTeam(TGNS.GetPlayerTeamNumber(player))
+	local result = TGNS.IsGameplayTeamNumber(TGNS.GetPlayerTeamNumber(player))
 	return result
 end
 

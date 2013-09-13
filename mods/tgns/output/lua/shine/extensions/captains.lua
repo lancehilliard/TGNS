@@ -207,7 +207,7 @@ function Plugin:CreateCommands()
 			md:ToPlayerNotifyError(player, "Captains Game not enabled. Cannot pick a player.")
 		elseif not TGNS.Has(captainClients, client) then
 			md:ToPlayerNotifyError(player, "You must be a Captain to pick a player.")
-		elseif not TGNS.IsGameplayTeam(teamNumber) then
+		elseif not TGNS.IsGameplayTeamNumber(teamNumber) then
 			md:ToPlayerNotifyError(player, "Oops. I see you're a Captain, but your team is unknown.")
 		elseif playerPredicate == nil or playerPredicate == "" then
 			md:ToPlayerNotifyError(player, "You must specify a player.")

@@ -344,7 +344,7 @@ end
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local cancel = false
     local joiningClient = TGNS.GetClient(player)
-    if TGNS.IsGameplayTeam(newTeamNumber) then
+    if TGNS.IsGameplayTeamNumber(newTeamNumber) then
 		cancel = IsClientBumped(joiningClient)
 	end
 	TGNS.ScheduleAction(2, UpdateReservedSlotAmount)

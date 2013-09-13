@@ -62,7 +62,7 @@ end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeam(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
+	if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
 		md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
 		if newTeamNumber ~= kMarineTeamType then
 			return false

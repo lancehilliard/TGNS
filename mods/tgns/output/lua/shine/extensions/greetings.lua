@@ -24,7 +24,7 @@ local PRIMERONLY_EXTENDED_WELCOME_LINES = { ""
 							   , "slot on this server? You can join this full server anytime more than two Strangers*"
 							   , "are playing. So bookmark us and play with a server full of regulars!"
 							   , ""
-							   , "* Stranger = player who hasn't signed the TGNS Primer and isn't a Supporting Member"	
+							   , "* Stranger = player who hasn't signed the TGNS Primer and isn't a Supporting Member"
 							   , ""
 							   , "If you want to show MORE support for what Tactical Gamer offers -- and/or if you'd"
 							   , "like a more powerful reserved slot -- consider becoming a Supporting Member! You"
@@ -43,7 +43,7 @@ local welcomeBackMd = TGNSMessageDisplayer.Create("Welcome Back")
 local Plugin = {}
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-	if Balance and TGNS.IsGameplayTeam(newTeamNumber) then
+	if Balance and TGNS.IsGameplayTeamNumber(newTeamNumber) then
 		local client = TGNS.GetClient(player)
 		local totalGames = Balance.GetTotalGamesPlayed(client)
 		if totalGames >= GAMES_TO_PLAY_BEFORE_GREETINGS then

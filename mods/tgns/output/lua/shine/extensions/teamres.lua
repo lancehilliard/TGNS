@@ -22,7 +22,7 @@ local function AbandonResources(client)
 	if TGNS.IsGameInProgress() then
 		local player = TGNS.GetPlayer(client)
 		local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
-		if TGNS.IsGameplayTeam(playerTeamNumber) then
+		if TGNS.IsGameplayTeamNumber(playerTeamNumber) then
 			if abandonedResources[playerTeamNumber][client] == nil then
 				local resources = TGNS.GetPlayerTotalCost(player)
 				abandonedResources[playerTeamNumber][client] = resources
@@ -48,7 +48,7 @@ end
 local function DistributeAbandonedResources(client, teamNumber)
 	local player = TGNS.GetPlayer(client)
 	local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
-	if TGNS.IsGameplayTeam(playerTeamNumber) and playerTeamNumber == teamNumber then
+	if TGNS.IsGameplayTeamNumber(playerTeamNumber) and playerTeamNumber == teamNumber then
 		local resKey
 		local giveableResources
 		if lastKnownGameplayTeamNumber[client] == teamNumber then
@@ -97,8 +97,8 @@ function Plugin:Initialise()
 	Shine.Hook.Add("JoinTeam", "TeamResJoinTeam", function(self, player, newTeamNumber, force, shineForce)
 		local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
 		local joiningClient = TGNS.GetClient(player)
-		local playerIsDroppingToReadyRoom = TGNS.IsGameplayTeam(playerTeamNumber) and newTeamNumber == kTeamReadyRoom
-		local playerIsJoiningTeam = TGNS.IsGameplayTeam(newTeamNumber)
+		local playerIsDroppingToReadyRoom = TGNS.IsGameplayTeamNumber(playerTeamNumber) and newTeamNumber == kTeamReadyRoom
+		local playerIsJoiningTeam = TGNS.IsGameplayTeamNumber(newTeamNumber)
 		if playerIsDroppingToReadyRoom then
 			AbandonResources(joiningClient)
 		elseif playerIsJoiningTeam then

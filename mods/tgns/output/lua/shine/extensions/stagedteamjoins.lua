@@ -21,7 +21,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local cancel = false
 	local balanceIsInProgress = Balance and Balance.IsInProgress()
 	if not force and not shineForce and not balanceIsInProgress and not TGNS.ClientAction(player, TGNS.GetIsClientVirtual) and not TGNS.IsGameInCountdown() and not TGNS.IsGameInProgress() then
-		if TGNS.IsGameplayTeam(newTeamNumber) then
+		if TGNS.IsGameplayTeamNumber(newTeamNumber) then
 			if TGNS.Any(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), TGNS.IsClientSM) then
 				local secondsRemainingBeforeAllMayJoin = math.floor(allMayJoinAt - Shared.GetTime())
 				if secondsRemainingBeforeAllMayJoin > 0 then
