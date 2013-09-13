@@ -224,7 +224,7 @@ local function GetBumpCounts()
     result.primerOnlyVictims = TGNS.GetNumericValueOrZero(victimBumpCounts.primerOnly)
     result.strangerVictims = TGNS.GetNumericValueOrZero(victimBumpCounts.stranger)
     result.primerOnlyRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.primerOnly)
-    result.strangerRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.stranger) 
+    result.strangerRejects = TGNS.GetNumericValueOrZero(rejectBumpCounts.stranger)
     result.totalVictims = result.primerOnlyVictims + result.strangerVictims
     result.totalRejects = result.primerOnlyRejects + result.strangerRejects
     return result
@@ -305,7 +305,7 @@ TGNS.RegisterEventHook("OnSlotTaken", function(client)
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
-	TGNS.ScheduleAction(8, function()
+	TGNS.ScheduleAction(kTimeToReadyRoom, function()
 		local bumpCounts = GetBumpCounts()
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			PrintBumpCountsReport(c)
@@ -316,7 +316,7 @@ end
 
 function Plugin:CreateCommands()
 	local logCommand = self:BindCommand( "sh_cslog", "cslog", function(client)
-		TGNS.DoFor(actionslog, function(logline, index) 
+		TGNS.DoFor(actionslog, function(logline, index)
 				tgnsMd:ToClientConsole(client, logline)
 				if #actionslog - index <= 5 then
 					tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), logline)
@@ -369,7 +369,7 @@ end)
 
 function Plugin:Think()
     TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientCommander), function(client)
-        commandStructureLastOccupancies[client] = Shared.GetTime() 
+        commandStructureLastOccupancies[client] = Shared.GetTime()
     end)
 end
 
