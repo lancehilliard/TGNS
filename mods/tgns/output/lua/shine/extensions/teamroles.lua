@@ -33,7 +33,7 @@ local roles = {
 	//	, "tempadmin"
 	//	, TGNS.IsClientTempAdmin
 	//	, TGNS.IsClientAdmin
-	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) end), 
+	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) end),
 	CreateRole("Guardian"
 		, "TGNS Primer signers who've played >=15 full rounds on this server"
 		, "guardian_group"
@@ -57,7 +57,7 @@ local function GetCandidateClient(teamPlayers, role)
 		local clientsAlreadyInTheRole = TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
 		if #clientsAlreadyInTheRole == 0 then
 			TGNS.SortAscending(teamPlayers, function(p) return TGNS.ClientAction(p, function(c) return role:IsClientPreferred(c) end) and 1 or 0 end)
-			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p) 
+			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p)
 				return role:IsClientEligible(c)
 			end)
 		end
@@ -72,8 +72,10 @@ local function AddToClient(client, role)
 end
 
 local function RemoveFromClient(client, role)
+	if role.IsClientOneOf(client) then
+		TGNS.PlayerAction(client, function(p) md:ToPlayerNotifyInfo(p, string.format("You are no longer a %s.", role.displayName)) end)
+	end
 	TGNS.RemoveTempGroup(client, role.groupName)
-	TGNS.PlayerAction(client, function(p) md:ToPlayerNotifyInfo(p, string.format("You are no longer a %s.", role.displayName)) end)
 	TGNS.UpdateAllScoreboards()
 end
 
@@ -100,7 +102,7 @@ local function ToggleOptIn(client, role)
 		end
 	end
 	local roleMd = TGNSMessageDisplayer.Create(role.messagePrefix)
-	roleMd:ToClientConsole(client, message)
+	roleMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
 end
 
 local function CheckRoster()
