@@ -15,6 +15,14 @@ local getArgs = function(client, commandName, args)
 	return result
 end
 
+function Plugin:ClientConfirmConnect(client)
+	TGNS.ScheduleAction(2, function()
+		TGNS.DoForPairs(self.Config, function(pageName, pageData)
+			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.MAIN_BUTTONS_REQUESTED, {buttonText=pageName, pageName=pageName})
+		end)
+	end)
+end
+
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.HookNetworkMessage(self.ADMIN_MENU_REQUESTED, function(client, message)
