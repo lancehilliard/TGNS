@@ -145,11 +145,11 @@ function Plugin:EndGame(gamerules, winningTeam)
 			disableCaptainsMode()
 			message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
 		end
-		TGNS.ScheduleAction(8, function()
+		TGNS.ScheduleAction(kTimeToReadyRoom, function()
 			//swapTeamsAfterDelay(3)
 			md:ToAllNotifyInfo(message)
 		end)
-		TGNS.ScheduleAction(7, function()
+		TGNS.ScheduleAction(kTimeToReadyRoom + 2, function()
 			TGNS.DoFor(TGNS.GetPlayers(TGNS.GetStrangerClients(TGNS.GetPlayerList())), function(p)
 				md:ToPlayerNotifyInfo(p, "If you enjoy playing here, be sure to bookmark this TacticalGamer.com server!")
 			end)
