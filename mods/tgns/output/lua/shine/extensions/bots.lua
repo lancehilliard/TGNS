@@ -49,7 +49,7 @@ local function removeBots(players, count)
 end
 
 function Plugin:ClientConnect(client)
-	if getTotalNumberOfBots() > 0 and not TGNS.GetClientIsVirtual(client) then
+	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
 		if #TGNS.GetPlayerList() >= PLAYER_COUNT_THRESHOLD then
 			md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Removing all bots.", PLAYER_COUNT_THRESHOLD))
 			TGNS.ScheduleAction(4, function()
@@ -117,7 +117,7 @@ function Plugin:CreateCommands()
 					end)
 					Shine.Plugins.forceroundstart:ForceRoundStart()
 				end
-				
+
 			else
 				removeBots(players, math.abs(countModifier))
 			end
