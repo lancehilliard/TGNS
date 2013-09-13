@@ -56,6 +56,10 @@ function TGNS.ExecuteClientCommand(client, command)
 	Server.ClientCommand(TGNS.GetPlayer(client), command)
 end
 
+function TGNS.SendClientCommand(client, command)
+	Server.SendCommand(TGNS.GetPlayer(client), command)
+end
+
 function TGNS.ExecuteServerCommand(command)
 	Shared.ConsoleCommand(command)
 end
@@ -659,7 +663,7 @@ function TGNS.IsClientCommander(client)
 			result = player:GetIsCommander()
 		end
 	end
-	return result	
+	return result
 end
 
 function TGNS.IsClientGuardian(client)
@@ -787,7 +791,7 @@ end
 
 function TGNS.GetClientNameSteamIdCombo(client)
 	local result = string.format("%s (%s)", TGNS.GetClientName(client), TGNS.GetClientSteamId(client))
-	return result	
+	return result
 end
 
 function TGNS.GetIsClientVirtual(client)
@@ -854,7 +858,7 @@ function TGNS.GetPlayerList()
 	return result
 end
 
-function TGNS.GetPlayerCount() 
+function TGNS.GetPlayerCount()
 	local result = #TGNS.GetPlayerList()
 	return result
 end
@@ -1021,10 +1025,10 @@ end
 function TGNS.GetPlayerMatchingName(name, team)
 
 	assert(type(name) == "string")
-	
+
 	local nameMatchCount = 0
 	local match = nil
-	
+
 	local function Matches(player)
 		if nameMatchCount == -1 then
 			return // exact match found, skip others to avoid further partial matches
@@ -1044,14 +1048,14 @@ function TGNS.GetPlayerMatchingName(name, team)
 				end
 			end
 		end
-		
+
 	end
 	TGNS.AllPlayers(Matches)()
-	
+
 	if nameMatchCount > 1 then
 		match = nil // if partial match is not unique, clear the match
 	end
-	
+
 	return match
 
 end
@@ -1059,21 +1063,21 @@ end
 function TGNS.GetPlayerMatchingSteamId(steamId, team)
 
 	assert(type(steamId) == "number")
-	
+
 	local match = nil
-	
+
 	local function Matches(player)
-	
+
 		local playerClient = Server.GetOwner(player)
 		if playerClient and playerClient:GetUserId() == steamId then
 			if team == nil or team == -1 or team == player:GetTeamNumber() then
 				match = player
 			end
 		end
-		
+
 	end
 	TGNS.AllPlayers(Matches)()
-	
+
 	return match
 
 end
