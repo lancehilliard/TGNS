@@ -43,9 +43,8 @@ local roles = {
 		, TGNS.IsClientGuardian
 		, function(client) return false end
 		, function(client)
-			local numberOfGuardiansAlreadyOnTeam = #TGNS.Where(TGNS.GetTeamClients(TGNS.PlayerAction(client, TGNS.GetPlayerTeamNumber), TGNS.GetPlayerList()), TGNS.IsClientGuardian)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
-			return TGNS.HasClientSignedPrimer(client) and numberOfGuardiansAlreadyOnTeam < 2 and totalGamesPlayed >= 15 and not TGNS.IsClientAdmin(client)
+			return TGNS.HasClientSignedPrimer(client) and totalGamesPlayed >= 15 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
 		end)
 }
 
@@ -55,7 +54,7 @@ local function GetCandidateClient(teamPlayers, role)
 	local teamIsEligible = role:IsTeamEligible(teamPlayers)
 	if teamIsEligible then
 		local clientsAlreadyInTheRole = TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
-		if #clientsAlreadyInTheRole == 0 then
+		if #clientsAlreadyInTheRole < 2 then
 			TGNS.SortAscending(teamPlayers, function(p) return TGNS.ClientAction(p, function(c) return role:IsClientPreferred(c) end) and 1 or 0 end)
 			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p)
 				return role:IsClientEligible(c)
@@ -140,7 +139,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			local teamPlayers = TGNS.GetPlayers(teamClients)
 			local numberOnNewTeam = #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
 			local numberOfBlockersOnNewTeam = #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientBlockerOf(c) end)
-			if (numberOnNewTeam > 0 or numberOfBlockersOnNewTeam > 0) then
+			if (numberOnNewTeam >= 2 or numberOfBlockersOnNewTeam > 0) then
 				TGNS.ClientAction(player, function(c) RemoveFromClient(c, role) end)
 			end
 		end
