@@ -6,6 +6,8 @@ TGNS.NORMAL_EVENT_HANDLER_PRIORITY = 0
 TGNS.VERY_LOW_EVENT_HANDLER_PRIORITY = 10
 TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 20
 
+TGNS.ENDGAME_TIME_TO_READYROOM = 8
+
 function TGNS.GetRandomizedElements(elements)
 	local result = {}
 	TGNS.DoFor(elements, function(e) table.insert(result, e) end)

@@ -305,7 +305,7 @@ TGNS.RegisterEventHook("OnSlotTaken", function(client)
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
-	TGNS.ScheduleAction(kTimeToReadyRoom, function()
+	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 		local bumpCounts = GetBumpCounts()
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			PrintBumpCountsReport(c)
