@@ -409,7 +409,7 @@ function TGNS.IsPluginEnabled(pluginName)
 end
 
 function TGNS.ClientCanRunCommand(client, command)
-	local result = Shine:GetPermission(client, command)
+	local result = Shine:GetPermission(client, command) or Shine:HasAccess(client, command)
 	return result
 end
 
