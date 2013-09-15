@@ -23,7 +23,7 @@ local function OnEntityKilled(self, targetEntity, attacker, doer, point, directi
 		end
 	end
 end
-TGNS:RegisterEventHook("OnEntityKilled", OnEntityKilled)
+TGNS.RegisterEventHook("OnEntityKilled", OnEntityKilled)
 
 local originalGetCanAttack
 originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack",
