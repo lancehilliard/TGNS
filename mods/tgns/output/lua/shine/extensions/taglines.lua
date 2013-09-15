@@ -7,7 +7,7 @@ end)
 
 local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
 local taglineMd = TGNSMessageDisplayer.Create("TAGLINE")
-	
+
 local function GetTaglineMessage(...)
 	local result = ""
 	local concatenation = StringConcatArgs(...)
@@ -30,7 +30,7 @@ local function ShowCurrentTagline(client)
 	end
 end
 
-local function ShowUsage(client) 
+local function ShowUsage(client)
 	taglineMd:ToClientConsole(client, "")
 	taglineMd:ToClientConsole(client, "Usage:")
 	taglineMd:ToClientConsole(client, "    sh_tagline <whatever you want all players to see when you join as a Supporting Member>")
@@ -75,7 +75,7 @@ function Plugin:Initialise()
 						 message = message .. " " .. tagline.message
 					end
 				elseif TGNS.IsClientStranger(client) then
-					message = message .. " Use 'Goodbye' & 'Affirm Stranger' responsibly."
+					message = message .. " Use 'Affirm Stranger' responsibly."
 				end
 				tgnsMd:ToAllNotifyInfo(message)
 			end
