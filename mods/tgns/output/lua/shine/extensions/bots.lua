@@ -12,6 +12,11 @@ local function getTotalNumberOfBots()
 	return result
 end
 
+local function getTotalNumberOfHumans()
+	local result = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
+	return result
+end
+
 local function setBotConfig()
 	if not originalEndRoundOnTeamUnbalanceSetting then
 		originalEndRoundOnTeamUnbalanceSetting = Server.GetConfigSetting("end_round_on_team_unbalance")
@@ -48,15 +53,23 @@ local function removeBots(players, count)
 	end)
 end
 
+
+//local function OnEntityKilled(self, targetEntity, attacker, doer, point, direction)
+//	if targetEntity:isa("Player") then
+//		local client = TGNS.GetClient(targetEntity)
+//		if TGNS.GetIsClientVirtual(client) then
+//			TGNS.ScheduleAction(2, function()
+//				TGNS.RespawnPlayer(targetEntity)
+//			end)
+//		end
+//	end
+//end
+//TGNS.RegisterEventHook("OnEntityKilled", OnEntityKilled)
+
 function Plugin:ClientConnect(client)
-	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
-		if #TGNS.GetPlayerList() >= PLAYER_COUNT_THRESHOLD then
-			md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Removing all bots.", PLAYER_COUNT_THRESHOLD))
-			TGNS.ScheduleAction(4, function()
-				setOriginalConfig()
-				removeBots(TGNS.GetPlayerList())
-			end)
-		end
+	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() then
+		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
+		Shine.Plugins.votesurrender:Surrender(kAlienTeamType)
 	end
 end
 
