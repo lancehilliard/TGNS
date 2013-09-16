@@ -75,7 +75,7 @@ function Plugin:Initialise()
 						 message = message .. " " .. tagline.message
 					end
 				elseif TGNS.IsClientStranger(client) then
-					message = message .. " Use 'Affirm Stranger' responsibly."
+					message = message .. " Use 'sh_affirm' responsibly."
 				end
 				tgnsMd:ToAllNotifyInfo(message)
 			end
