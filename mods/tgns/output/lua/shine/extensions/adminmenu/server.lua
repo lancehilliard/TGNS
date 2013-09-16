@@ -82,7 +82,7 @@ function Plugin:Initialise()
 		else
 			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.HELP_TEXT, {pageName=requestArgName, helpText=self.Config[requestArgName].HelpText})
 			TGNS.DoForPairs(self.Config[requestArgName].Commands, function(commandName, commandData, index)
-				if TGNS.ClientCanRunCommand(client, commandName) then
+				if Shine:GetPermission(client, commandName) then
 					table.insert(responseButtons, {c=index, n=commandName})
 				end
 			end)
