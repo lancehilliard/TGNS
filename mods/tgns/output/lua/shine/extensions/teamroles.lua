@@ -116,7 +116,6 @@ local function CheckRoster()
 		EnsureAmongPlayers(alienPlayers, role)
 	end)
 end
-TGNS.ScheduleActionInterval(10, CheckRoster)
 
 local function RegisterCommandHook(plugin, role)
 	local command = plugin:BindCommand(role.optInConsoleCommandName, nil, function(client)
@@ -146,8 +145,13 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	end)
 end
 
+function Plugin:ClientConfirmConnect(client)
+	CheckRoster()
+end
+
 function Plugin:Initialise()
 	self.Enabled = true
+	TGNS.ScheduleActionInterval(10, CheckRoster)
 	TGNS.DoFor(roles, function(r) RegisterCommandHook(self, r) end)
 	return true
 end
