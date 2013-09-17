@@ -59,8 +59,11 @@ local function checkForModChange()
 						lastKnownUpdate[id] = update
 					elseif lastKnownUpdate[id] ~= update then
 						lastKnownUpdate[id] = update
-						changedModName = getModNameFromResponse(response)
-						announceChangedMod()
+						local modName = getModNameFromResponse(response)
+						if TGNS.HasNonEmptyValue(modName) then
+							changedModName = modName
+							announceChangedMod()
+						end
 					end
 				end
 			end)
