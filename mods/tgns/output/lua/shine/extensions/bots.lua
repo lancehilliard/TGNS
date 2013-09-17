@@ -3,6 +3,7 @@ local BOT_COUNT_THRESHOLD = 25
 local originalEndRoundOnTeamUnbalanceSetting
 local originalForceEvenTeamsOnJoinSetting
 local originalAutoTeamBalanceSetting
+local winOrLoseOccurredRecently
 local md
 
 local Plugin = {}
@@ -67,9 +68,11 @@ end
 //TGNS.RegisterEventHook("OnEntityKilled", OnEntityKilled)
 
 function Plugin:ClientConnect(client)
-	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() then
+	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
 		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
 		Shine.Plugins.votesurrender:Surrender(kAlienTeamType)
+		winOrLoseOccurredRecently = true
+		TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
 	end
 end
 
