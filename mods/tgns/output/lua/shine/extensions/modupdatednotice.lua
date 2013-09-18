@@ -3,7 +3,7 @@ local MOD_IDS = {"171315805", "117887554"}
 local lastKnownUpdate = {}
 local changedModName
 local md
-local announceChangedModInterval = 10
+local announceChangedModInterval = 0
 
 local function announceChangedMod()
 	if #TGNS.GetPlayerList() == 0 then
@@ -11,8 +11,8 @@ local function announceChangedMod()
 	else
 		md:ToAllNotifyError(string.format("%s mod has updated in Steam Workshop.", changedModName))
 		md:ToAllNotifyError("Players cannot connect to the server until mapchange.")
+		announceChangedModInterval = announceChangedModInterval + 30
 		TGNS.ScheduleAction(announceChangedModInterval, announceChangedMod)
-		announceChangedModInterval = announceChangedModInterval + 10
 	end
 end
 
