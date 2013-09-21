@@ -259,55 +259,61 @@ function Plugin:PlayerSay(client, networkMessage)
 			local teamsAreSufficientlyBalanced = math.abs(#TGNS.GetMarineClients() - #TGNS.GetAlienClients()) <= 1
 			local message = StringTrim(networkMessage.message)
 			if TGNS.Has({"ready", "unready"}, message) then
-				local nameOfOtherPersonOnTeamWhoIsCaptain = ""
-				TGNS.DoFor(TGNS.GetTeamClients(TGNS.GetPlayerTeamNumber(player), TGNS.GetPlayerList()), function(c)
-					if TGNS.Has(captainClients, c) and client ~= c then
-						nameOfOtherPersonOnTeamWhoIsCaptain = TGNS.GetClientName(c)
-					end
-				end)
-				if TGNS.HasNonEmptyValue(nameOfOtherPersonOnTeamWhoIsCaptain) then
-					md:ToPlayerNotifyError(player, string.format("%s is Captain and should ready or unready.", nameOfOtherPersonOnTeamWhoIsCaptain))
-					shouldSuppressChatMessageDisplay = true
-				else
-					if message == "ready" then
-						shouldSuppressChatMessageDisplay = readyTeams[playerTeamName]
-						if teamsAreSufficientlyBalanced then
-							readyTeams[playerTeamName] = true
-							md:ToAllNotifyInfo(string.format("%s has readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(player)))
-						else
-							md:ToPlayerNotifyError(player, "Ready halted: Team counts must match (or be off by only one) to play.")
-						end
-					elseif message == "unready" then
-						shouldSuppressChatMessageDisplay = not readyTeams[playerTeamName]
-						if readyTeams[playerTeamName] then
-							if TGNS.Has(captainClients, client) then
-								readyTeams[playerTeamName] = false
-								md:ToAllNotifyInfo(string.format("%s has UN-readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(player)))
-							else
-								md:ToPlayerNotifyError(player, "Only captains may unready. Team remains ready.")
-							end
-						else
-							md:ToPlayerNotifyInfo(player, "Team is not ready.")
-						end
-					end
-				end
-				if bothCaptainsAreReady() then
-					TGNS.ScheduleAction(5, function()
-						if bothCaptainsAreReady() and not gameStarted then
-							gameStarted = true
-							md:ToAllNotifyInfo(string.format("Both teams are ready! Round %s of 2 starts now!", captainsGamesFinished + 1))
-							TGNS.ScheduleAction(1, function()
-								setOriginalConfig()
-								TGNS.ForceGameStart()
-								TGNS.ScheduleAction(kCountDownLength + 2, function()
-									TGNS.DoFor(captainClients, function(c)
-										readyTeams[TGNS.PlayerAction(c, TGNS.GetPlayerTeamName)] = nil
-									end)
-								end)
-							end)
+				if TGNS.IsGameInPreGame() then
+					local nameOfOtherPersonOnTeamWhoIsCaptain = ""
+					TGNS.DoFor(TGNS.GetTeamClients(TGNS.GetPlayerTeamNumber(player), TGNS.GetPlayerList()), function(c)
+						if TGNS.Has(captainClients, c) and client ~= c then
+							nameOfOtherPersonOnTeamWhoIsCaptain = TGNS.GetClientName(c)
 						end
 					end)
-					md:ToAllNotifyInfo("Both teams are ready? Captains: \"unready\" or prepare to play!")
+					if TGNS.HasNonEmptyValue(nameOfOtherPersonOnTeamWhoIsCaptain) then
+						md:ToPlayerNotifyError(player, string.format("%s is Captain and should ready or unready.", nameOfOtherPersonOnTeamWhoIsCaptain))
+						shouldSuppressChatMessageDisplay = true
+					else
+						if message == "ready" then
+							shouldSuppressChatMessageDisplay = readyTeams[playerTeamName]
+							if teamsAreSufficientlyBalanced then
+								readyTeams[playerTeamName] = true
+								md:ToAllNotifyInfo(string.format("%s has readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(player)))
+							else
+								md:ToPlayerNotifyError(player, "Ready halted: Team counts must match (or be off by only one) to play.")
+							end
+						elseif message == "unready" then
+							shouldSuppressChatMessageDisplay = not readyTeams[playerTeamName]
+							if readyTeams[playerTeamName] then
+								if TGNS.Has(captainClients, client) then
+									readyTeams[playerTeamName] = false
+									md:ToAllNotifyInfo(string.format("%s has UN-readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(player)))
+								else
+									md:ToPlayerNotifyError(player, "Only captains may unready. Team remains ready.")
+								end
+							else
+								md:ToPlayerNotifyInfo(player, "Team is not ready.")
+							end
+						end
+					end
+					if bothCaptainsAreReady() then
+						TGNS.ScheduleAction(5, function()
+							if bothCaptainsAreReady() and not gameStarted then
+								gameStarted = true
+								md:ToAllNotifyInfo(string.format("Both teams are ready! Round %s of 2 starts now!", captainsGamesFinished + 1))
+								TGNS.ScheduleAction(1, function()
+									if TGNS.IsGameInPreGame() then
+										setOriginalConfig()
+										TGNS.ForceGameStart()
+										TGNS.ScheduleAction(kCountDownLength + 2, function()
+											TGNS.DoFor(captainClients, function(c)
+												readyTeams[TGNS.PlayerAction(c, TGNS.GetPlayerTeamName)] = nil
+											end)
+										end)
+									end
+								end)
+							end
+						end)
+						md:ToAllNotifyInfo("Both teams are ready? Captains: \"unready\" or prepare to play!")
+					end
+				else
+					md:ToAllNotifyInfo("Captains may ready/unready only during the pregame.")
 				end
 			end
 		end
