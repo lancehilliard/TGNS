@@ -101,11 +101,8 @@ end
 //	end)
 //end
 
-local function bothCaptainsAreReady()
-	local result = TGNS.All(captainClients, function(c)
-		local clientTeamName = TGNS.PlayerAction(c, TGNS.GetPlayerTeamName)
-		return readyTeams[clientTeamName]
-	end)
+local function bothTeamsAreReady()
+	local result = readyTeams["Marines"] == true and readyTeams["Aliens"] == true
 	return result
 end
 
@@ -117,7 +114,7 @@ end
 
 function Plugin:CheckGameStart(gamerules)
 	//local result = true
-	if captainsModeEnabled and not bothCaptainsAreReady() then
+	if captainsModeEnabled and not bothTeamsAreReady() then
 		return false
 	end
 	//return result
@@ -233,7 +230,7 @@ function Plugin:CreateCommands()
 		else
 			addReadyCaptainClient(client)
 		end
-	end, true)
+	end)
 	willCaptainsCommand:Help("Tell that you're willing to lead a team in a Captains Game.")
 
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
@@ -259,7 +256,9 @@ function Plugin:PlayerSay(client, networkMessage)
 			local teamsAreSufficientlyBalanced = math.abs(#TGNS.GetMarineClients() - #TGNS.GetAlienClients()) <= 1
 			local message = StringTrim(networkMessage.message)
 			if TGNS.Has({"ready", "unready"}, message) then
-				if TGNS.IsGameInPreGame() then
+				if TGNS.IsGameInProgress() then
+					md:ToAllNotifyInfo("Captains may ready/unready only during the pregame.")
+				else
 					local nameOfOtherPersonOnTeamWhoIsCaptain = ""
 					TGNS.DoFor(TGNS.GetTeamClients(TGNS.GetPlayerTeamNumber(player), TGNS.GetPlayerList()), function(c)
 						if TGNS.Has(captainClients, c) and client ~= c then
@@ -292,28 +291,23 @@ function Plugin:PlayerSay(client, networkMessage)
 							end
 						end
 					end
-					if bothCaptainsAreReady() then
+					if bothTeamsAreReady() then
 						TGNS.ScheduleAction(5, function()
-							if bothCaptainsAreReady() and not gameStarted then
+							if bothTeamsAreReady() and not gameStarted then
 								gameStarted = true
 								md:ToAllNotifyInfo(string.format("Both teams are ready! Round %s of 2 starts now!", captainsGamesFinished + 1))
 								TGNS.ScheduleAction(1, function()
-									if TGNS.IsGameInPreGame() then
-										setOriginalConfig()
-										TGNS.ForceGameStart()
-										TGNS.ScheduleAction(kCountDownLength + 2, function()
-											TGNS.DoFor(captainClients, function(c)
-												readyTeams[TGNS.PlayerAction(c, TGNS.GetPlayerTeamName)] = nil
-											end)
-										end)
-									end
+									setOriginalConfig()
+									TGNS.ForceGameStart()
+									TGNS.ScheduleAction(kCountDownLength + 2, function()
+										readyTeams["Marines"] = false
+										readyTeams["Aliens"] = false
+									end)
 								end)
 							end
 						end)
 						md:ToAllNotifyInfo("Both teams are ready? Captains: \"unready\" or prepare to play!")
 					end
-				else
-					md:ToAllNotifyInfo("Captains may ready/unready only during the pregame.")
 				end
 			end
 		end
