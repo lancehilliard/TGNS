@@ -133,7 +133,6 @@ function Plugin:CreateCommands()
 					end)
 					Shine.Plugins.forceroundstart:ForceRoundStart()
 				end
-
 			else
 				removeBots(players, math.abs(countModifier))
 			end
@@ -141,6 +140,23 @@ function Plugin:CreateCommands()
 	end)
 	botsCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
 	botsCommand:Help( "<countModifier> +/- the count of alien bots." )
+
+	local botsMaxCommand = self:BindCommand( "sh_botsmax", "botsmax", function(client, maxCandidate)
+		local player = TGNS.GetPlayer(client)
+		local max = tonumber(maxCandidate)
+		if max <= 0 then
+			md:ToPlayerNotifyError(player, "Bots maximum must be a positive number.")
+		else
+			BOT_COUNT_THRESHOLD = max
+			local excessBotCount = getTotalNumberOfBots() - BOT_COUNT_THRESHOLD
+			if excessBotCount > 0 then
+				removeBots(TGNS.GetPlayerList(), excessBotCount)
+			end
+			md:ToPlayerNotifyInfo(player, string.format("Maximum possible bots set to %s.", max))
+		end
+	end)
+	botsMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	botsMaxCommand:Help( "<max> Set the maximum possible count of bots." )
 end
 
 function Plugin:Initialise()
