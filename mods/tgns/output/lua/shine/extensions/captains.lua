@@ -50,7 +50,7 @@ local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClien
 	local percentageOfplayingReadyPlayerClients = numberOfPlayingReadyPlayerClients / #playingClients
 	if percentageOfplayingReadyPlayerClients < .82 or numberOfPlayingReadyCaptainClients < 2 then
 		local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumber(.82 * #playingClients)
-		result = string.format("%s is ready! Ready so far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, numberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
+		result = string.format("%s wants Captains! So far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, numberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	end
 	return result
 end
