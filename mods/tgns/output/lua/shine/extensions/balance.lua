@@ -15,7 +15,7 @@ local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
 	balance.scoresPerMinute = balance.scoresPerMinute ~= nil and balance.scoresPerMinute or {}
 	return balance
 end)
-	
+
 local md = TGNSMessageDisplayer.Create("BALANCE")
 
 Balance = {}
@@ -23,14 +23,14 @@ function Balance.IsInProgress()
 	return balanceInProgress
 end
 function Balance.GetTotalGamesPlayed(client)
-	local result = totalGamesPlayedCache[client]
+	local result = TGNS.GetIsClientVirtual(client) and 0 or totalGamesPlayedCache[client]
 	if not result then
 		local steamId = TGNS.GetClientSteamId(client)
 		local data = pdr:Load(steamId)
 		local result = data.total
 		totalGamesPlayedCache[client] = result
 	end
-	return result
+	return result or 0
 end
 
 local addWinToBalance = function(balance)
@@ -40,8 +40,8 @@ local addWinToBalance = function(balance)
 			balance.losses = balance.losses - 1
 		end
 	end
-local addLossToBalance = function(balance) 
-		balance.losses = balance.losses + 1 
+local addLossToBalance = function(balance)
+		balance.losses = balance.losses + 1
 		balance.total = balance.total + 1
 		if balance.wins + balance.losses > 100 then
 			balance.wins = balance.wins - 1
@@ -52,7 +52,7 @@ local function BalanceStartedRecently()
 	local result = Shared.GetTime() > RECENT_BALANCE_DURATION_IN_SECONDS and Shared.GetTime() - lastBalanceStartTimeInSeconds < RECENT_BALANCE_DURATION_IN_SECONDS
 	return result
 end
-	
+
 local function AddScorePerMinuteData(balance, scorePerMinute)
 	table.insert(balance.scoresPerMinute, scorePerMinute)
 	local scoresPerMinuteToKeep = {}
@@ -63,7 +63,7 @@ local function AddScorePerMinuteData(balance, scorePerMinute)
 	end)
 	balance.scoresPerMinute = scoresPerMinuteToKeep
 end
-	
+
 local function GetWinLossRatio(player, balance)
 	local result = 0.5
 	if balance ~= nil then
@@ -80,7 +80,7 @@ end
 
 local function GetPlayerBalance(player)
 	local result
-	TGNS.ClientAction(player, function(c) 
+	TGNS.ClientAction(player, function(c)
 		local steamId = TGNS.GetClientSteamId(c)
 		result = pdr:Load(steamId)
 		end
@@ -136,10 +136,10 @@ end
 
 local function SendNextPlayer()
 	local wantToUseWinLossToBalance = false
-	
+
 	local sortedPlayersGetter
 	local teamAverageGetter
-	
+
 	if wantToUseWinLossToBalance then
 		sortedPlayersGetter = function(playerList)
 			local playersWithFewerThanTenGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total < LOCAL_DATAPOINTS_COUNT_THRESHOLD end))
