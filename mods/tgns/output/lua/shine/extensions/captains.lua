@@ -9,6 +9,8 @@ local originalForceEvenTeamsOnJoinSetting
 local gameStarted
 local readyPlayerClients
 local readyCaptainClients
+local timeAtWhichToForceRoundStart
+local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -28,12 +30,64 @@ function disableCaptainsMode()
 	TGNS.DoFor(captainClients, function(c) TGNS.RemoveTempGroup(c, "captains_group") end)
 end
 
+local function startGame()
+	timeAtWhichToForceRoundStart = 0
+	TGNS.ScheduleAction(2, function()
+		setOriginalConfig()
+		TGNS.ForceGameStart()
+		TGNS.ScheduleAction(kCountDownLength + 2, function()
+			readyTeams["Marines"] = false
+			readyTeams["Aliens"] = false
+		end)
+	end)
+end
+
+local function bothTeamsAreReady()
+	local result = readyTeams["Marines"] == true and readyTeams["Aliens"] == true
+	return result
+end
+
+local function warnOfPendingCaptainsGameStart()
+	local now = TGNS.GetSecondsSinceMapLoaded()
+	if timeAtWhichToForceRoundStart and timeAtWhichToForceRoundStart ~= 0 then
+		if bothTeamsAreReady() then
+			TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
+		else
+			local message
+			if timeAtWhichToForceRoundStart > now then
+				local secondsRemaining = timeAtWhichToForceRoundStart - now
+				local when = secondsRemaining > 4 and string.TimeToString(secondsRemaining) or "a few seconds"
+				message = string.format("Game will force-start in %s.", when)
+				local secondsBeforeNextWarning
+				if secondsRemaining > 88 then
+					secondsBeforeNextWarning = 30
+				elseif secondsRemaining > 43 then
+					secondsBeforeNextWarning = 15
+				else
+					secondsBeforeNextWarning = 5
+				end
+				TGNS.ScheduleAction(secondsBeforeNextWarning, warnOfPendingCaptainsGameStart)
+			else
+				message = "Planning time expired. Game is force-starting now."
+				startGame()
+			end
+			md:ToAllNotifyInfo(message)
+		end
+	end
+end
+
+local function setTimeAtWhichToForceRoundStart()
+	timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START + 30
+	TGNS.ScheduleAction(29, warnOfPendingCaptainsGameStart)
+end
+
 local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	local randomizedCaptainClients = TGNS.GetRandomizedElements({captain1Client,captain2Client})
 	captainClients = { randomizedCaptainClients[1], randomizedCaptainClients[2] }
 	captainTeamNumbers[captainClients[1]] = 1
 	captainTeamNumbers[captainClients[2]] = 2
 	captainsModeEnabled = true
+	setTimeAtWhichToForceRoundStart()
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c) TGNS.AddTempGroup(c, "captains_group") end)
 	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
@@ -101,11 +155,6 @@ end
 //	end)
 //end
 
-local function bothTeamsAreReady()
-	local result = readyTeams["Marines"] == true and readyTeams["Aliens"] == true
-	return result
-end
-
 local Plugin = {}
 
 function Plugin:IsCaptainsModeEnabled()
@@ -138,6 +187,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 		end)
 		if captainsGamesFinished < 2 then
 			setCaptainsGameConfig()
+			setTimeAtWhichToForceRoundStart()
 		else
 			disableCaptainsMode()
 			message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
@@ -279,15 +329,20 @@ function Plugin:PlayerSay(client, networkMessage)
 							end
 						elseif message == "unready" then
 							shouldSuppressChatMessageDisplay = not readyTeams[playerTeamName]
-							if readyTeams[playerTeamName] then
-								if TGNS.Has(captainClients, client) then
-									readyTeams[playerTeamName] = false
-									md:ToAllNotifyInfo(string.format("%s has UN-readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(player)))
-								else
-									md:ToPlayerNotifyError(player, "Only captains may unready. Team remains ready.")
-								end
+							if gameStarted then
+								shouldSuppressChatMessageDisplay = true
+								md:ToPlayerNotifyError(player, "UN-ready not allowed. Game is starting.")
 							else
-								md:ToPlayerNotifyInfo(player, "Team is not ready.")
+								if readyTeams[playerTeamName] then
+									if TGNS.Has(captainClients, client) then
+										readyTeams[playerTeamName] = false
+										md:ToAllNotifyInfo(string.format("%s has UN-readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(player)))
+									else
+										md:ToPlayerNotifyError(player, "Only captains may unready. Team remains ready.")
+									end
+								else
+									md:ToPlayerNotifyInfo(player, "Team is not ready.")
+								end
 							end
 						end
 					end
@@ -296,17 +351,12 @@ function Plugin:PlayerSay(client, networkMessage)
 							if bothTeamsAreReady() and not gameStarted then
 								gameStarted = true
 								md:ToAllNotifyInfo(string.format("Both teams are ready! Round %s of 2 starts now!", captainsGamesFinished + 1))
-								TGNS.ScheduleAction(1, function()
-									setOriginalConfig()
-									TGNS.ForceGameStart()
-									TGNS.ScheduleAction(kCountDownLength + 2, function()
-										readyTeams["Marines"] = false
-										readyTeams["Aliens"] = false
-									end)
-								end)
+								startGame()
 							end
 						end)
-						md:ToAllNotifyInfo("Both teams are ready? Captains: \"unready\" or prepare to play!")
+						if not gameStarted then
+							md:ToAllNotifyInfo("Both teams are ready? Captains: \"unready\" or prepare to play!")
+						end
 					end
 				end
 			end
