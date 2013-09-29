@@ -1,8 +1,8 @@
 local GAMES_TO_PLAY_BEFORE_GREETINGS = 1
 local GAMES_TO_PLAY_BEFORE_FORUM_REMINDERS = 2
 local GAMES_COUNT_TO_NOTIFY_TEAMMATES = 15
-local STRANGER_MESSAGE_CODE = 421 // this is month and day of last message modification
-local PRIMERONLY_MESSAGE_CODE = 421 // this is month and day of last message modification
+local STRANGER_MESSAGE_CODE = 928 // this is month and day of last message modification
+local PRIMERONLY_MESSAGE_CODE = 928 // this is month and day of last message modification
 local STRANGER_EXTENDED_WELCOME_LINES = { ""
                                , " === TACTICAL GAMER NATURAL SELECTION 2 SERVER WELCOME MESSAGE === "
 							   , "This server requires mature teamwork and communication. If that's how you like to play,"
@@ -16,6 +16,7 @@ local STRANGER_EXTENDED_WELCOME_LINES = { ""
 							   , " TacticalGamer.com/natural-selection"
 							   , ""
 							   , "Enjoy your time here, and thank you for taking the time to read this message! :)"
+							   , "Oh! And don't forget about pressing M > INFO to learn more about TGNS!"
 							   , "" }
 
 local PRIMERONLY_EXTENDED_WELCOME_LINES = { ""
@@ -35,6 +36,7 @@ local PRIMERONLY_EXTENDED_WELCOME_LINES = { ""
 							   , " TacticalGamer.com/natural-selection"
 							   , ""
 							   , "Enjoy your time here, and thank you for contributing to this community! :)"
+							   , "Oh! And don't forget about pressing M > INFO to learn more about TGNS!"
 							   , "" }
 
 local md = TGNSMessageDisplayer.Create("TacticalGamer.com")
