@@ -213,17 +213,22 @@ local function BeginBalance()
 end
 
 local function svBalance(client)
-	local gameState = GetGamerules():GetGameState()
-	if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
-		md:ToAllNotifyInfo(string.format("%s is balancing teams using TG and ns2stats score-per-minute data.", TGNS.GetClientName(client)))
-		md:ToAllNotifyInfo("Scoreboard is hidden until you're placed on a team.")
-		balanceInProgress = true
-		lastBalanceStartTimeInSeconds = Shared.GetTime()
-		TGNS.ScheduleAction(5, BeginBalance)
-		TGNS.ScheduleAction(RECENT_BALANCE_DURATION_IN_SECONDS + 1, TGNS.UpdateAllScoreboards)
-		TGNS.UpdateAllScoreboards()
+	local player = TGNS.GetPlayer(client)
+	if balanceInProgress then
+		md:ToPlayerNotifyError(player, "Balance is already in progress.")
 	else
-		md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Balance cannot be used during a game.")
+		local gameState = GetGamerules():GetGameState()
+		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
+			md:ToAllNotifyInfo(string.format("%s is balancing teams using TG and ns2stats score-per-minute data.", TGNS.GetClientName(client)))
+			md:ToAllNotifyInfo("Scoreboard is hidden until you're placed on a team.")
+			balanceInProgress = true
+			lastBalanceStartTimeInSeconds = Shared.GetTime()
+			TGNS.ScheduleAction(5, BeginBalance)
+			TGNS.ScheduleAction(RECENT_BALANCE_DURATION_IN_SECONDS + 1, TGNS.UpdateAllScoreboards)
+			TGNS.UpdateAllScoreboards()
+		else
+			md:ToPlayerNotifyError(player, "Balance cannot be used during a game.")
+		end
 	end
 end
 
