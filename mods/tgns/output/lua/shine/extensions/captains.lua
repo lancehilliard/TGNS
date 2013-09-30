@@ -371,6 +371,13 @@ function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
 	self:CreateCommands()
+
+	TGNS.RegisterEventHook("OnEverySecond", function(deltatime)
+		if captainsModeEnabled and not TGNS.IsGameInProgress() then
+			TGNS.DoFor(TGNS.GetPlayerList(), TGNS.ResetPlayerAFK)
+		end
+	end)
+
     return true
 end
 
