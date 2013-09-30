@@ -392,13 +392,19 @@ function TGNS.ClientIsInGroup(client, groupName)
 	return result
 end
 
+function TGNS.ResetPlayerAFK(player)
+	if Shine.Plugins.afkkick and Shine.Plugins.afkkick.Enabled then
+		TGNS.ClientAction(player, function(c) Shine.Plugins.afkkick:ResetAFKTime(c) end)
+	end
+end
+
 function TGNS.IsPlayerAFK(player)
 	local result = false
 	local AFKKick = Shine.Plugins.afkkick
 	local AFKEnabled = AFKKick and AFKKick.Enabled
 	if AFKEnabled then
-		local LastMove = TGNS.ClientAction(player, function(c) AFKKick:GetLastMoveTime(c) end)
-		result = LastMove and Shared.GetTime() - LastMove > 30
+		local LastMoveTime = TGNS.ClientAction(player, function(c) return AFKKick:GetLastMoveTime(c) end)
+		result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 30)
 	end
 	return result
 end
