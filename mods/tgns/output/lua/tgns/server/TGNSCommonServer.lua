@@ -403,8 +403,12 @@ function TGNS.IsPlayerAFK(player)
 	local AFKKick = Shine.Plugins.afkkick
 	local AFKEnabled = AFKKick and AFKKick.Enabled
 	if AFKEnabled then
-		local LastMoveTime = TGNS.ClientAction(player, function(c) return AFKKick:GetLastMoveTime(c) end)
-		result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 30)
+		if #TGNS.GetPlayerList() < AFKKick.Config.MinPlayers then
+			result = false
+		else
+			local LastMoveTime = TGNS.ClientAction(player, function(c) return AFKKick:GetLastMoveTime(c) end)
+			result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 30)
+		end
 	end
 	return result
 end
