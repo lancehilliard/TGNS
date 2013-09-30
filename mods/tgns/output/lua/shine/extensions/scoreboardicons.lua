@@ -50,6 +50,9 @@ function Plugin:Initialise()
 			scoresMessage.playerName = prependPlayerName(scoresMessage.playerName, icon)
 		end
 	end)
+	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
+		TGNS.UpdateAllScoreboards()
+	end)
     return true
 end
 
