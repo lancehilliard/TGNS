@@ -44,7 +44,7 @@ local welcomeBackMd = TGNSMessageDisplayer.Create("Welcome Back")
 
 local Plugin = {}
 
-function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	if Balance and TGNS.IsGameplayTeamNumber(newTeamNumber) then
 		local client = TGNS.GetClient(player)
 		local totalGames = Balance.GetTotalGamesPlayed(client)
