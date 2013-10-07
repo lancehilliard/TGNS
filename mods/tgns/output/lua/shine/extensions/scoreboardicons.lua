@@ -44,9 +44,6 @@ function Plugin:Initialise()
 			if TGNS.IsPlayerAFK(scorePlayer) and PlayerCanSeeAfkStatus(scorePlayer, sendToPlayer) then
 				icon = icon .. Shine.Plugins.scoreboardicons.Config.AFK
 			end
-			if TGNS.IsClientSM(client) then
-				icon = string.upper(icon)
-			end
 			scoresMessage.playerName = prependPlayerName(scoresMessage.playerName, icon)
 		end
 	end)
