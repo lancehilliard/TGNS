@@ -75,17 +75,22 @@ function Plugin:Initialise()
     self.Enabled = true
     TGNS.ScheduleAction(10, function()
 		Shine.Plugins.votesurrender.Surrender = function(x, team)
-			local teamDescription = team == kMarineTeamType and "Marines" or "Aliens"
-			local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamDescription, Shine.Plugins.winorlose.Config.NoAttackDuration), 1, kMaxChatLength)
-			md:ToAllNotifyInfo(chatMessage)
-			timeInSecondsAtWhichVoteSucceeded = Shared.GetTime()
-			teamWhichWillWinIfCountdownExpires = GetGamerules():GetTeam(team)
-			secondsRemainingInCountdown = Shine.Plugins.winorlose.Config.NoAttackDuration
-			local teamPlayers = TGNS.GetPlayers(TGNS.GetTeamClients(team, TGNS.GetPlayerList()))
-			TGNS.DoFor(teamPlayers, function(p)
-				p:SelectNextWeapon()
-				p:SelectPrevWeapon()
-			end)
+			if timeInSecondsAtWhichVoteSucceeded > 0 then
+				local chatMessage = "WinOrLose vote succeeded, but WinOrLose already in progress!"
+				md:ToTeamNotifyError(team, chatMessage)
+			else
+				local teamDescription = team == kMarineTeamType and "Marines" or "Aliens"
+				local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamDescription, Shine.Plugins.winorlose.Config.NoAttackDuration), 1, kMaxChatLength)
+				md:ToAllNotifyInfo(chatMessage)
+				timeInSecondsAtWhichVoteSucceeded = Shared.GetTime()
+				teamWhichWillWinIfCountdownExpires = GetGamerules():GetTeam(team)
+				secondsRemainingInCountdown = Shine.Plugins.winorlose.Config.NoAttackDuration
+				local teamPlayers = TGNS.GetPlayers(TGNS.GetTeamClients(team, TGNS.GetPlayerList()))
+				TGNS.DoFor(teamPlayers, function(p)
+					p:SelectNextWeapon()
+					p:SelectPrevWeapon()
+				end)
+			end
 		end
     end)
     return true
