@@ -72,6 +72,11 @@ function TGNS.GetSecondsSinceMapLoaded()
 	return result
 end
 
+function TGNS.GetSecondsSinceServerProcessStarted()
+	local result = Shared.GetSystemTimeReal()
+	return result
+end
+
 function TGNS.GetCurrentDateTimeAsGmtString()
 	local result = Shared.GetGMTString(false)
 	return result
