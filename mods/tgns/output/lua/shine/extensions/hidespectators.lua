@@ -3,7 +3,7 @@ local Plugin = {}
 function Plugin:Initialise()
     self.Enabled = true
 	TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
-		return TGNS.IsTeamNumberSpectator(message.teamNumber) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin)
+		return TGNS.IsTeamNumberSpectator(message.teamNumber) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin) and not TGNS.IsPlayerSpectator(targetPlayer)
 	end)
     return true
 end
