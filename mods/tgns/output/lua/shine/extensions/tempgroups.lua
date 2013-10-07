@@ -16,7 +16,7 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	originalIsInGroup = TGNS.ReplaceClassMethod("Shine", "IsInGroup", function(self, client, groupName)
-		local isInTempGroup = tempGroups[groupName] and tempGroups[groupName][client]
+		local isInTempGroup = tempGroups[groupName] ~= nil and tempGroups[groupName][client] ~= nil
 		local result = originalIsInGroup(self, client, groupName) or isInTempGroup
 		return result
 	end)
