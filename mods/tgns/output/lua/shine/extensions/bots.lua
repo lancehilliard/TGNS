@@ -1,8 +1,8 @@
 local PLAYER_COUNT_THRESHOLD = 10
 local BOT_COUNT_THRESHOLD = 25
-local originalEndRoundOnTeamUnbalanceSetting
-local originalForceEvenTeamsOnJoinSetting
-local originalAutoTeamBalanceSetting
+local originalEndRoundOnTeamUnbalanceSetting = 0.4
+local originalForceEvenTeamsOnJoinSetting = true
+local originalAutoTeamBalanceSetting = { enabled_after_seconds = 10, enabled_on_unbalance_amount = 2 }
 local winOrLoseOccurredRecently
 local md
 
@@ -54,19 +54,6 @@ local function removeBots(players, count)
 	end)
 end
 
-
-//local function OnEntityKilled(self, targetEntity, attacker, doer, point, direction)
-//	if targetEntity:isa("Player") then
-//		local client = TGNS.GetClient(targetEntity)
-//		if TGNS.GetIsClientVirtual(client) then
-//			TGNS.ScheduleAction(2, function()
-//				TGNS.RespawnPlayer(targetEntity)
-//			end)
-//		end
-//	end
-//end
-//TGNS.RegisterEventHook("OnEntityKilled", OnEntityKilled)
-
 function Plugin:ClientConnect(client)
 	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
 		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
@@ -78,10 +65,12 @@ end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
-		md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
-		if newTeamNumber ~= kMarineTeamType then
-			return false
+	if not (force or shineForce) then
+		if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
+			md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
+			if newTeamNumber ~= kMarineTeamType then
+				return false
+			end
 		end
 	end
 end
@@ -162,6 +151,7 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("BOTS")
+	TGNS.ScheduleAction(10, setOriginalConfig)
 	self:CreateCommands()
     return true
 end
