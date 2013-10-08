@@ -23,15 +23,16 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 	end
 end
 
+function Plugin:ClientConfirmConnect(client)
+	local player = TGNS.GetPlayer(client)
+	local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
+	if nonPrintableCharactersCount>0 then
+		md:ToPlayerNotifyError(player, Shine.Plugins.printablenames.Config.WarnMessage)
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
-	TGNS.RegisterEventHook("OnSlotTaken", function(client)
-		local player = TGNS.GetPlayer(client)
-		local _, nonPrintableCharactersCount = string.gsub(player:GetName(), "[^\32-\126]", "")
-		if nonPrintableCharactersCount>0 then
-			md:ToPlayerNotifyError(player, Shine.Plugins.printablenames.Config.WarnMessage)
-		end
-	end)
     return true
 end
 
