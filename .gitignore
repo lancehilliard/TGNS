@@ -58,6 +58,7 @@
 !mods/tgns/output/lua/shine/extensions/chatchannels.lua
 !mods/tgns/output/lua/shine/extensions/communityslots.lua
 !mods/tgns/output/lua/shine/extensions/endgamecommands.lua
+!mods/tgns/output/lua/shine/extensions/enforceteamsizes.lua
 !mods/tgns/output/lua/shine/extensions/forceroundstart.lua
 !mods/tgns/output/lua/shine/extensions/gamestracker.lua
 !mods/tgns/output/lua/shine/extensions/greetings.lua
