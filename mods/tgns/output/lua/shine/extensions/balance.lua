@@ -172,8 +172,7 @@ local function SendNextPlayer()
 
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
 	local sortedPlayers = sortedPlayersGetter(playerList)
-	//local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
-	local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) end)
+	local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
 	if #eligiblePlayers > 0 then
 		local marineClients = TGNS.GetMarineClients(playerList)
 		local alienClients = TGNS.GetAlienClients(playerList)
