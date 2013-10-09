@@ -359,14 +359,14 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	elseif newTeamNumber == kSpectatorIndex then
 		if ServerIsFull(GetPlayingPlayers()) then
 			if not (force or shineForce) then
-				if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators then
+				if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators and not TGNS.IsClientAdmin(joiningClient) then
 					cancel = true
 			    	tgnsMd:ToPlayerNotifyError(player, "Sorry. Spectate is full (spectators are usually hidden on scoreboard).")
 			    	tgnsMd:ToAdminConsole(string.format("%s was not allowed to Spectate.", TGNS.GetPlayerName(player)))
 				end
 			end
 		else
-			if not TGNS.IsClientAdmin(joiningClient) then
+			if not TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient) then
 				tgnsMd:ToPlayerNotifyError(player, "Spectate is available only when server is full.")
 				cancel = true
 			end
@@ -453,7 +453,7 @@ function Plugin:PlayerSay(client, networkMessage)
 	if not teamOnly then
 		TGNS.PlayerAction(client, function(p)
 			if TGNS.IsPlayerSpectator(p) and not TGNS.IsClientAdmin(client) then
-				tgnsMd:ToPlayerNotifyError(p, "Press 'y' to chat with other Spectators.")
+				tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator or @admin chat.")
 				cancel = true
 			end
 		end)
