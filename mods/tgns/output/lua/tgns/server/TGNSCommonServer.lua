@@ -4,6 +4,15 @@ local scheduledActionsErrorCount = 0
 
 local CHAT_MESSAGE_SENDER = "Admin"
 
+function TGNS.GetCount(elements)
+	return #elements
+end
+
+function TGNS.AtLeastOneElementExists(elements)
+	local result = elements ~= nil and #elements > 0
+	return result
+end
+
 function TGNS.GetVoteableMapNames()
 	local result = {}
 	local mapCycleMapNames = TGNS.GetMapCycleMapNames()
@@ -1015,8 +1024,19 @@ function TGNS.GetSmClients(playerList)
 	return result
 end
 
+function TGNS.GetSumFor(numbers)
+	local result = 0
+	TGNS.DoFor(numbers, function(n) result = result + n end)
+	return result
+end
+
+function TGNS.GetSum(operand1, operand2)
+	local result = operand1 + operand2
+	return result
+end
+
 function TGNS.GetSumUpTo(operand1, operand2, sumLimit)
-	local sum = operand1 + operand2
+	local sum = TGNS.GetSum(operand1, operand2)
 	local result = sum <= sumLimit and sum or sumLimit
 	return result
 end
