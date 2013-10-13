@@ -316,7 +316,7 @@ function __runAllTests( testSuite, options )
 
 	local theTestNames = {}
 	for testName,test in pairs(testSuite) do
-		if type(test)=='function' and type(testName)=='string' and (testName:find("^test") or testName:find("test$")) then
+		if type(test)=='function' and type(testName)=='string' and ((testName:find("^test") or testName:find("test$")) or testName:find("^should")) then
 			theTestNames[#theTestNames+1] = testName
 		end
 	end
@@ -327,7 +327,16 @@ function __runAllTests( testSuite, options )
 		local testScratchpad = {}
 		io.write( testName..": " )
 		if testSuite.setup then testSuite.setup(testScratchpad) end
-		local successFlag, errorMessage = pcall( testSuite[testName], testScratchpad )
+
+		if testSuite.arrange then testSuite.systemUnderTest = testSuite.arrange(testScratchpad) end
+
+		local success, result, result2, result3, err
+
+		if testSuite.act then
+			success, err = pcall(function() result, result2, result3 = testSuite.act(testSuite.systemUnderTest) end)
+		end
+
+		local successFlag, errorMessage = pcall( function() testSuite[testName]({sut=testSuite.systemUnderTest, result=result, result2=result2, result3=result3,error=err}) end, testScratchpad )
 		if successFlag then
 			print( "pass" )
 			theSuccessCount = theSuccessCount + 1
