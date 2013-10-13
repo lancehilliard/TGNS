@@ -366,8 +366,8 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 				end
 			end
 		else
-			if not TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient) then
-				tgnsMd:ToPlayerNotifyError(player, "Spectate is available only when server is full.")
+			if not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) then
+				tgnsMd:ToPlayerNotifyError(player, "Spectate is available only when teams are 8v8.")
 				cancel = true
 			end
 		end
@@ -398,7 +398,7 @@ local function sweep()
     local countOfPlayingPlayers = #GetPlayingPlayers()
 	TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
 		if totalPlayersOnServer > 16 then
-			if countOfPlayingPlayers >= 10 then
+			if countOfPlayingPlayers >= 10 or totalPlayersOnServer >= Shine.Plugins.communityslots.Config.MaximumSlots-3 then
 				local lastTeamChangeTime = inReadyRoomSinceTimes[c]
 				if lastTeamChangeTime then
 					local secondsRemaining = TGNS.RoundPositiveNumber(lastTeamChangeTime + 60 - TGNS.GetSecondsSinceMapLoaded())
@@ -409,7 +409,7 @@ local function sweep()
                             AnnounceOtherServerOptionsToBumpedClient(c)
 						end
 					else
-						TGNSClientKicker.Kick(c, "Too long spent in Ready Room of ready-to-play server.", nil, AnnounceClientBumpToStrangers)
+						TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
 						tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
 					end
 				else
