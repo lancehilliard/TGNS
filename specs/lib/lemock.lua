@@ -64,13 +64,13 @@ function Action.generic:assert_satisfied ()
 	assert( self.replay_count <= self.max_replays, "lemock internal error" )
 	if not (
 self.min_replays <= self.replay_count
-                                  ) then
+								  ) then
 		error( sfmt( "Wrong replay count %d (expected %d..%d) for %s"
-		             , self.replay_count
-		             , self.min_replays, self.max_replays
-		             , self:tostring()
-		       )
-		       , 0
+					 , self.replay_count
+					 , self.min_replays, self.max_replays
+					 , self:tostring()
+			   )
+			   , 0
 		)
 	end
 end
@@ -103,12 +103,12 @@ self.min_replays <= self.replay_count
 end
 function Action.generic:match (key)
 	if getmetatable(self) ~= getmetatable(key)  then return false end
-	if self.mock ~= key.mock                    then return false end
+	if self.mock ~= key.mock					then return false end
 	return self:is_expected()
 end
 function Action.generic:new (mock)
 	local a = object( self )
-	a.mock         = mock
+	a.mock		 = mock
 	a.replay_count = 0
 	a.min_replays  = 1
 	a.max_replays  = 1
@@ -119,14 +119,14 @@ function Action.generic:set_times (a, b)
 	max = b or min
 	min, max = tonumber(min), tonumber(max)
 	if (not min) or (not max) or (min >= math.huge)
-	             or (min ~= min) or (max ~= max) -- NaN
-	             or (min < 0) or (max <= 0) or (min > max) then
+				 or (min ~= min) or (max ~= max) -- NaN
+				 or (min < 0) or (max <= 0) or (min > max) then
 		error( sfmt( "Unrealistic time arguments (%s, %s)"
-		           , qtostring( min )
-		           , qtostring( max )
-		           )
-		     , 0
-		     )
+				   , qtostring( min )
+				   , qtostring( max )
+				   )
+			 , 0
+			 )
 	end
 	self.min_replays = min
 	self.max_replays = max
@@ -144,7 +144,7 @@ function Action.generic_call:set_returnvalue (...)
 end
 function Action.generic_call:match (q)
 	if not Action.generic.match( self, q )  then return false end
-	if not self.argv:equal( q.argv )        then return false end
+	if not self.argv:equal( q.argv )		then return false end
 	return true
 end
 function Action.generic_call:new (m, ...)
@@ -156,7 +156,7 @@ end
 Action.call = class( Action.generic_call )
 function Action.call:match (q)
 	if not Action.generic_call.match( self, q )  then return false end
-	if self.key ~= q.key                         then return false end
+	if self.key ~= q.key						 then return false end
 	return true
 end
 function Action.call:new (m, key, ...)
@@ -167,15 +167,15 @@ end
 function Action.call:tostring ()
 	if self.has_returnvalue then
 		return sfmt( "call %s(%s) => %s"
-		             , tostring(self.key)
-		             , self.argv:tostring()
-		             , self.returnvalue:tostring()
-		       )
+					 , tostring(self.key)
+					 , self.argv:tostring()
+					 , self.returnvalue:tostring()
+			   )
 	else
 		return sfmt( "call %s(%s)"
-		             , tostring(self.key)
-		             , self.argv:tostring()
-		       )
+					 , tostring(self.key)
+					 , self.argv:tostring()
+			   )
 	end
 end
 Action.index = class( Action.generic )
@@ -189,7 +189,7 @@ function Action.index:set_returnvalue (v)
 end
 function Action.index:match (q)
 	if not Action.generic.match( self, q )  then return false end
-	if self.key ~= q.key                    then return false end
+	if self.key ~= q.key					then return false end
 	return true
 end
 function Action.index:new (m, key)
@@ -201,39 +201,39 @@ function Action.index:tostring ()
 	local key = 'index '..tostring( self.key )
 	if self.has_returnvalue then
 		return sfmt( "index %s => %s"
-		             , tostring( self.key )
-		             , qtostring( self.returnvalue )
-		       )
+					 , tostring( self.key )
+					 , qtostring( self.returnvalue )
+			   )
 	elseif self.is_callable then
 		return sfmt( "index %s()"
-		             , tostring( self.key )
-		       )
+					 , tostring( self.key )
+			   )
 	else
 		return sfmt( "index %s"
-		             , tostring( self.key )
-		       )
+					 , tostring( self.key )
+			   )
 	end
 end
 Action.newindex = class( Action.generic )
 function Action.newindex:match (q)
 	if not Action.generic.match( self, q )  then return false end
-	if self.key ~= q.key                    then return false end
+	if self.key ~= q.key					then return false end
 	if not value_equal( self.val, q.val )
 	   and self.val ~= Argv.ANYARG
-	   and q.val    ~= Argv.ANYARG          then return false end
+	   and q.val	~= Argv.ANYARG		  then return false end
 	return true
 end
 function Action.newindex:new (m, key, val)
 	local a = Action.generic.new( self, m )
-	a.key    = key
-	a.val    = val
+	a.key	= key
+	a.val	= val
 	return a
 end
 function Action.newindex:tostring ()
 	return sfmt( "newindex %s = %s"
-	             , tostring(self.key)
-	             , qtostring(self.val)
-	       )
+				 , tostring(self.key)
+				 , qtostring(self.val)
+		   )
 end
 Action.selfcall = class( Action.generic_call )
 function Action.selfcall:match (q)
@@ -246,13 +246,13 @@ end
 function Action.selfcall:tostring ()
 	if self.has_returnvalue then
 		return sfmt( "selfcall (%s) => %s"
-		             , self.argv:tostring()
-		             , self.returnvalue:tostring()
-		       )
+					 , self.argv:tostring()
+					 , self.returnvalue:tostring()
+			   )
 	else
 		return sfmt( "selfcall (%s)"
-		             , self.argv:tostring()
-		       )
+					 , self.argv:tostring()
+			   )
 	end
 end
 Argv = class()
@@ -435,7 +435,7 @@ function Controller:times (min, max)
 	return self -- for chaining
 end
 -- convenience functions
-function Controller:anytimes()    return self:times( 0, math.huge ) end
+function Controller:anytimes()	return self:times( 0, math.huge ) end
 function Controller:atleastonce() return self:times( 1, math.huge ) end
 function Controller:verify ()
 	if self.is_recording then
@@ -536,10 +536,10 @@ if #expected == 0 then
 	expected[1] = "(Nothing)"
 end
 	error( sfmt( "Unexpected action %s, expected:\n%s\n"
-	             , actual:tostring()
-	             , table.concat(expected,'\n')
-	       )
-	       , 0
+				 , actual:tostring()
+				 , table.concat(expected,'\n')
+		   )
+		   , 0
 	)
 end
 function Controller:make_callable (action)

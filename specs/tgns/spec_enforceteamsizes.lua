@@ -10,11 +10,13 @@ module(context("server initializes enforceteamsizes plugin", "no errors occur"),
 	end
 
 	function should_enable_plugin(x)
-		assertTrue(x.sut.Enabled)
+		assert.is_true(x.sut.Enabled)
+		__assertionSucceeded()
 	end
 
 	function should_return_true(x)
-		assertTrue(x.result)
+		assert.is_true(x.result)
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}
@@ -31,7 +33,8 @@ module(context("server initializes enforceteamsizes plugin", "message displayer 
 	end
 
 	function should_throw_error(x)
-		assertNotNil(x.error:find("test$"))
+		assert.truthy(x.error:find("test$"))
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}

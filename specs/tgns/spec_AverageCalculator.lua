@@ -10,7 +10,8 @@ module(context("server calculates average", "divisor is non-zero"), lunity)
 	end
 
 	function should_return_expected_result(x)
-		assertEqual(x.result, 2)
+		assert.same(2, x.result)
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}
@@ -27,7 +28,8 @@ module(context("server calculates average", "divisor is zero"), lunity)
 	end
 
 	function should_return_inf(x)
-		assertEqual(tostring(x.result), tostring(4/0))
+		assert.same(tostring(4/0), tostring(x.result))
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}
@@ -44,7 +46,8 @@ module(context("server adds and averages", "nil numbers are given"), lunity)
 	end
 
 	function should_return_nothing(x)
-		assertNil(x.result)
+		assert.same(nil, x.result)
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}
@@ -61,7 +64,8 @@ module(context("server adds and averages", "empty numbers is given"), lunity)
 	end
 
 	function should_return_nothing(x)
-		assertNil(x.result)
+		assert.same(nil, x.result)
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}
@@ -82,7 +86,8 @@ module(context("server adds and averages", "numbers are given"), lunity)
 	end
 
 	function should_return_expected_average(x)
-		assertEqual(x.result, AverageValue)
+		assert.same(x.result, AverageValue)
+		__assertionSucceeded()
 	end
 
 runTests{useANSI = false}

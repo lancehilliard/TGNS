@@ -1,4 +1,7 @@
 package.path = package.path .. ";../lib/?.lua;../../mods/tgns/output/lua/shine/extensions/?.lua"
+assert = require("luassert")
+spy = require("luassert.spy")
+
 require("lunity")
 require("lemock")
 require("specObjects")
@@ -39,5 +42,6 @@ function context(story, scenario)
 	return story .. ": when " .. scenario
 end
 
+require("spoofs.spec_TGNS")
 require("spec_enforceteamsizes")
 require("spec_AverageCalculator")
