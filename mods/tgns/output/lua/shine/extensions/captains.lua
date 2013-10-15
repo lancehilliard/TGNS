@@ -117,7 +117,7 @@ local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClien
 end
 
 local function updateCaptainsReadyProgress(readyClient)
-	local playingClients = TGNS.GetClientList()
+	local playingClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.PlayerAction(c, TGNS.IsPlayerSpectator) end)
 	local playingReadyCaptainClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyCaptainClients, c) end)
 	local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) end)
 	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients)
