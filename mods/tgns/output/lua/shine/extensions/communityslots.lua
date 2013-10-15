@@ -458,6 +458,14 @@ function Plugin:PlayerSay(client, networkMessage)
                     tgnsMd:ToPlayerNotifyError(p, "Full admin note: sh_say (chat: !say) is also available.")
                 end
 				cancel = true
+            else
+                if TGNS.PlayerIsReadyRoom(p) and TGNS.IsGameInProgress() then
+                    if ServerIsFull(GetPlayingPlayers()) and not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
+                        tgnsMd:ToPlayerNotifyError(p, "Ready Room may not chat to a full game.")
+                        tgnsMd:ToPlayerNotifyError(p, "Team chat with '@' goes to all admins.")
+                        cancel = true
+                    end
+                end
 			end
 		end)
 	end
