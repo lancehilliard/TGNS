@@ -814,7 +814,7 @@ function TGNS.GetClientNameSteamIdCombo(client)
 end
 
 function TGNS.GetIsClientVirtual(client)
-	local result = client:GetIsVirtual()
+	local result = client and client.GetIsVirtual and client:GetIsVirtual()
 	return result
 end
 
