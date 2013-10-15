@@ -27,7 +27,7 @@ function Plugin:Initialise()
 		end
 		return result
 	end)
-	TGNS.ScheduleActionInterval(5, function()
+	TGNS.ScheduleActionInterval(90, function()
 		local specPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) and playerShouldSeeSpecMods(p) end)
 		TGNS.DoFor(specPlayers, function(p)
 			md:ToPlayerNotifyInfo(p, "Limit of 8 per team. Join when you see an opening. Spectate while you wait.")
