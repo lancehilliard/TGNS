@@ -3,15 +3,17 @@ local Plugin = {}
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local cancel = false
-	local client = TGNS.GetClient(player)
-	if not (force or shineForce) and not TGNS.GetIsClientVirtual(client) then
-		local playerList = TGNS.GetPlayerList()
-		if #TGNS.GetTeamClients(newTeamNumber, playerList) >= 8 then
-			local otherPlayingTeamNumber = TGNS.GetOtherPlayingTeamNumber(newTeamNumber)
-			if #TGNS.GetTeamClients(otherPlayingTeamNumber, playerList) < 8 then
-				cancel = true
-				TGNS.SendToTeam(player, otherPlayingTeamNumber)
-				md:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve 8v8.", TGNS.GetTeamName(otherPlayingTeamNumber)))
+	if TGNS.IsGameplayTeamNumber(newTeamNumber) then
+		local client = TGNS.GetClient(player)
+		if not (force or shineForce) and not TGNS.GetIsClientVirtual(client) then
+			local playerList = TGNS.GetPlayerList()
+			if #TGNS.GetTeamClients(newTeamNumber, playerList) >= 8 then
+				local otherPlayingTeamNumber = TGNS.GetOtherPlayingTeamNumber(newTeamNumber)
+				if #TGNS.GetTeamClients(otherPlayingTeamNumber, playerList) < 8 then
+					cancel = true
+					TGNS.SendToTeam(player, otherPlayingTeamNumber)
+					md:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve 8v8.", TGNS.GetTeamName(otherPlayingTeamNumber)))
+				end
 			end
 		end
 	end
