@@ -1,4 +1,4 @@
-local md = TGNSMessageDisplayer.Create("MUTES")
+local md
 
 local function OnMutePlayer(client, networkMessage)
 	clientIndex, isMuted = ParseMutePlayerMessage(networkMessage)
@@ -9,8 +9,11 @@ local function OnMutePlayer(client, networkMessage)
 			else
 				muteText = "unmuted"
 			end
-			local message = string.format("%s has %s %s.", TGNS.GetClientName(client), muteText, TGNS.GetPlayerName(player))
-			md:ToAuthorizedNotifyInfo(message, "sh_mutes")
+			local sourcePlayer = TGNS.GetPlayer(client)
+			if TGNS.PlayerIsOnPlayingTeam(sourcePlayer) and TGNS.PlayersAreTeammates(sourcePlayer, player) then
+				local message = string.format("%s has %s %s.", TGNS.GetClientName(client), muteText, TGNS.GetPlayerName(player))
+				md:ToAuthorizedNotifyInfo(message, "sh_mutes")
+			end
 			break
 		end
 	end
@@ -23,8 +26,10 @@ local function GetPlayerMutes()
 	TGNS.DoFor(playerList, function(sourcePlayer)
 			if sourcePlayer then
 				TGNS.DoFor(playerList, function(targetPlayer)
-						if sourcePlayer:GetClientMuted(targetPlayer:GetClientIndex()) then
-							table.insert(result, { sourcePlayer = sourcePlayer, targetPlayer = targetPlayer })
+						if TGNS.PlayerIsOnPlayingTeam(sourcePlayer) and TGNS.PlayersAreTeammates(sourcePlayer, targetPlayer) then
+							if sourcePlayer:GetClientMuted(targetPlayer:GetClientIndex()) then
+								table.insert(result, { sourcePlayer = sourcePlayer, targetPlayer = targetPlayer })
+							end
 						end
 				end)
 			end
@@ -33,28 +38,27 @@ local function GetPlayerMutes()
 	return result
 end
 
-function GetPlayerMuteMessage(playerMute)
+local function GetPlayerMuteMessage(playerMute)
 	local result = string.format("%s has %s muted.", TGNS.GetPlayerName(playerMute.sourcePlayer), TGNS.GetPlayerName(playerMute.targetPlayer))
 	return result
 end
 
-function TellAdminsAboutPlayerMutes()
+local function TellAdminsAboutPlayerMutes()
 	local playerMutes = GetPlayerMutes()
-	if TGNS.Any(playerMutes) then
-		local firstPlayerMute = playerMutes[1]
-		TGNS.SendAdminChat(GetPlayerMuteMessage(firstPlayerMute))
+	Shared.Message(#playerMutes)
+	if #playerMutes > 0 then
+		local firstPlayerMute = TGNS.GetFirst(playerMutes)
+		md:ToAdminNotifyInfo(GetPlayerMuteMessage(firstPlayerMute))
 		TGNS.DoFor(playerMutes, function(m)
-				md:ToAdminNotifyInfo(GetPlayerMuteMessage(m))
-			end
-		)
-	end		
+				md:ToAdminConsole(GetPlayerMuteMessage(m))
+		end)
+	end
 end
-TGNS.ScheduleActionInterval(30, TellAdminsAboutPlayerMutes)
 
 //local function ListMutes(client)
 //	// build look up table for player names by clientindex
 //	playerNames = {}
-//	
+//
 //	ServerAdminPrint(client, "Player Mutes:")
 //	for _, player in pairs(TGNS.GetPlayerList()) do
 //		playerNames[player:GetClientIndex()] = player:GetName()
@@ -73,6 +77,8 @@ local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
+    md = TGNSMessageDisplayer.Create("MUTES")
+    TGNS.ScheduleActionInterval(30, TellAdminsAboutPlayerMutes)
     return true
 end
 
