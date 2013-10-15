@@ -318,17 +318,17 @@ function Plugin:EndGame(gamerules, winningTeam)
 end
 
 function Plugin:CreateCommands()
-	local logCommand = self:BindCommand( "sh_cslog", "cslog", function(client)
-		TGNS.DoFor(actionslog, function(logline, index)
-				tgnsMd:ToClientConsole(client, logline)
-				if #actionslog - index <= 5 then
-					tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), logline)
-				end
-			end
-		)
-		PrintBumpCountsReport(client)
-	end)
-	logCommand:Help( "View the Community Slots log." )
+    local logCommand = self:BindCommand( "sh_cslog", "cslog", function(client)
+        TGNS.DoFor(actionslog, function(logline, index)
+                tgnsMd:ToClientConsole(client, logline)
+                if #actionslog - index <= 5 then
+                    tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), logline)
+                end
+            end
+        )
+        PrintBumpCountsReport(client)
+    end)
+    logCommand:Help( "View the Community Slots log." )
 end
 
 //local function PrintPlayerSlotsStatuses(client)
@@ -452,8 +452,11 @@ function Plugin:PlayerSay(client, networkMessage)
 	local message = StringTrim(networkMessage.message)
 	if not teamOnly then
 		TGNS.PlayerAction(client, function(p)
-			if TGNS.IsPlayerSpectator(p) and not TGNS.IsClientAdmin(client) then
+			if TGNS.IsPlayerSpectator(p) then
 				tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator or @admin chat.")
+                if TGNS.IsClientAdmin(client) then
+                    tgnsMd:ToPlayerNotifyError(p, "Full admin note: sh_say (chat: !say) is also available.")
+                end
 				cancel = true
 			end
 		end)
@@ -469,10 +472,6 @@ function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
 	TGNS.ScheduleActionInterval(10, sweep)
-	TGNS.ScheduleActionInterval(90, function()
-		tgnsMd:ToTeamNotifyInfo(kSpectatorIndex, "Limit of 8 per team. Join when you see an opening. Spectate while you wait.")
-		tgnsMd:ToTeamNotifyInfo(kSpectatorIndex, "Enjoy the show for now. Spectating is a fun privilege! Don't abuse it!")
-	end)
     TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
     return true
 end
