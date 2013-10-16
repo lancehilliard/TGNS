@@ -1,4 +1,4 @@
-module(context("TGNS spoofs network messages", "one is registered hooked and called"), lunity)
+module(context("TGNS spoofs network messages", "one is registered, hooked, and called"), lunity)
 
 	function arrange()
 		dofile("spoofs/TGNS.lua")
@@ -29,4 +29,29 @@ module(context("TGNS spoofs network messages", "one is registered hooked and cal
 		__assertionSucceeded()
 	end
 	
+runTests{useANSI = false}
+
+module(context("TGNS spoofs event hooks", "one is registered, hooked, and called"), lunity)
+	
+	function arrange()
+		dofile("spoofs/TGNS.lua")
+		return TGNS
+	end
+	
+	function act(sut)
+		local normalPrioritySpy = spy.new(function() end)
+		sut.RegisterEventHook("test event", normalPrioritySpy)
+		sut.ExecuteEventHook("test event", "123", "456")
+		return normalPrioritySpy, "123", "456"
+	end
+	
+	function should_call_spy(params)
+		local normalPrioritySpy = params.result
+		local sentWith = { params.result2, params.result3 }
+		
+		assert.spy(normalPrioritySpy).was_called()
+		__assertionSucceeded()
+		assert.spy(normalPrioritySpy).was_called_with(sentWith)
+		__assertionSucceeded()
+	end
 runTests{useANSI = false}

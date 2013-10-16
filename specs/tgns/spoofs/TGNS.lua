@@ -66,13 +66,22 @@ function TGNS.RegisterEventHook(eventName, handler, priority)
 	priority = priority or TGNS.NORMAL_EVENT_HANDLER_PRIORITY
 	
 	__EventHooks[eventName] = __EventHooks[eventName] or {}
-	
-	__EventHooks[priority] = __EventHooks[priority] or {}
-	__EventHooks[priority][#__EventHooks[priority] + 1] = handler
+	__EventHooks[eventName][priority] = __EventHooks[eventName][priority] or {}
+	__EventHooks[eventName][priority][#__EventHooks[eventName][priority] + 1] = handler
 end
 
 function TGNS.ExecuteEventHook(eventName, ...)
 	assert.is_not.same(nil, __EventHooks[eventName])
+	arg.n = nil
+	for priority = TGNS.HIGHEST_EVENT_HANDLER_PRIORITY, TGNS.LOWEST_EVENT_HANDLER_PRIORITY do
+		if __EventHooks[eventName][priority] then
+			local ind = 1
+			while __EventHooks[eventName][priority][ind] ~= nil do
+				__EventHooks[eventName][priority][ind](arg)
+				ind = ind + 1
+			end
+		end
+	end
 end
 
 -- TGNSCommonShared Debug Methods
