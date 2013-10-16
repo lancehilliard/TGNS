@@ -14,7 +14,7 @@ function Plugin:CreateCommands()
         local player = TGNS.GetPlayer(client)
         specmods[player] = not (specmods[player] == nil or specmods[player] == true)
         md:ToPlayerNotifyInfo(player, string.format("Spectate modifications are %s.", specmods[player] == true and "on" or "off"))
-    end)
+    end, true)
     modCommand:Help( "Toggle spectate modifications on/off." )
 end
 
