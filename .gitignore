@@ -98,6 +98,9 @@
 !specs/lib/lemock.lua
 !specs/lib/lunity.lua
 
+!specs/tgns/spoofs/TGNS.lua
+!specs/tgns/spoofs/spec_TGNS.lua
+
 !specs/tgns/runSpecs.lua
 !specs/tgns/specObjects.lua
 !specs/tgns/spec_AverageCalculator.lua
