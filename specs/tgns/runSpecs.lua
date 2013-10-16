@@ -11,8 +11,8 @@ function stub(object, member, value)
 end
 
 function setup()
-	--initializeTestingObjects()
-	--initializeTestingValues()
+	initializeTestingObjects()
+	initializeTestingValues()
 	--mc:replay()
 end
 
@@ -43,5 +43,5 @@ function context(story, scenario)
 end
 
 require("spoofs.spec_TGNS")
---require("spec_enforceteamsizes")
---require("spec_AverageCalculator")
+require("spec_enforceteamsizes")
+require("spec_AverageCalculator")

@@ -2,13 +2,10 @@ systemUnderTest = nil
 mc = nil
 Shine = nil
 TGNSMessageDisplayer = nil
-TGNS = nil
-
 function initializeTestingObjects()
 	mc = lemock.controller()
 	Shine = mc:mock()
 	TGNSMessageDisplayer = mc:mock()
-	TGNS = mc:mock()
 end
 
 SumValue = nil
