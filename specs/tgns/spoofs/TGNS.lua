@@ -38,6 +38,10 @@ local __NetworkMessages = {}
 -- 		the first event hook registered to 'OnUse' with very high priority.
 local __EventHooks = {}
 
+
+local __CPUStartTime = os.clock()
+local __LastMapChange = __CPUStartTime
+
 function TGNS.PrintInfo(message)
 	print(message)
 end
@@ -84,6 +88,68 @@ function TGNS.ExecuteEventHook(eventName, ...)
 	end
 end
 
+function TGNS.GetSecondsSinceMapLoaded() 
+    return __LastMapChange - os.clock()
+end
+
+function TGNS.GetSecondsSinceServerProcessStarted()
+	return __CPUStartTime - os.clock()
+end
+
+local MONTH_STRING_TABLE = {
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"June",
+	"July",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec"
+}
+
+local WDAY_STRING_TABLE = {
+	"Sun",
+	"Mon",
+	"Tue",
+	"Thu",
+	"Fri",
+	"Sat",
+	"Sun"
+}
+function TGNS.GetCurrentDateTimeAsGmtString()
+	local gmtFormat = "%s, %d %s %d %d:%d:%d GMT"
+	local d = os.date('*t')
+	local result = string.format(gmtFormat, 
+									WDAY_STRING_TABLE[d.wday], 
+									d.day, 
+									MONTH_STRING_TABLE[d.month], 
+									d.year,
+									d.hour,
+									d.min,
+									d.sec
+								)
+	return result
+end
+
+function TGNS.GetSecondsSinceEpoch()
+	return os.clock()
+end
+
+function TGNS.GetHttpAsync(url, callback)
+	-- luasocket might be the best for this
+	-- GitHub\TGNS\mods\tgns\output\lua\shine\extensions\modupdatednotice.lua (1 hits)
+	-- Line 55: 			TGNS.GetHttpAsync(url, function(response)
+	-- GitHub\TGNS\mods\tgns\output\lua\tgns\server\TGNSNs2StatsProxy.lua (1 hits)
+	-- Line 26: 			TGNS.GetHttpAsync(fetchUrl, function(response) processResponse(steamId, response) end)
+	-- GitHub\TGNS\mods\tgns\output\lua\tgns\shared\TGNSCommonShared.lua (1 hits)
+	-- Line 90: function TGNS.GetHttpAsync(url, callback)
+	error("Not implemented yet")
+end
+
 -- TGNSCommonShared Debug Methods
 
 function TGNS.CallNetworkMessage(messageName, ...)
@@ -99,4 +165,8 @@ end
 
 function TGNS.RemoveNetworkMessage(messageName)
 	__NetworkMessages[messageName] = nil
+end
+
+function TGNS.SetLastMapChange(cpuTime)
+    __LastMapChange = cpuTime
 end

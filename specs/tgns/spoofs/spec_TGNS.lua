@@ -54,4 +54,25 @@ module(context("TGNS spoofs event hooks", "one is registered, hooked, and called
 		assert.spy(normalPrioritySpy).was_called_with(sentWith)
 		__assertionSucceeded()
 	end
+
+runTests{useANSI = false}
+
+module("TGNS spoofs time functions", lunity)
+	
+	function arrange()
+		dofile("spoofs/TGNS.lua")
+		return TGNS
+	end
+	
+	function should_create_functions()
+		assert.truthy(TGNS.GetSecondsSinceMapLoaded)
+		__assertionSucceeded()
+		assert.truthy(TGNS.GetSecondsSinceServerProcessStarted)
+		__assertionSucceeded()
+		assert.truthy(TGNS.GetCurrentDateTimeAsGmtString)
+		__assertionSucceeded()
+		assert.truthy(TGNS.GetSecondsSinceEpoch)
+		__assertionSucceeded()
+	end
+
 runTests{useANSI = false}
