@@ -226,6 +226,13 @@ function Plugin:EndGame(gamerules, winningTeam)
 				md:ToPlayerNotifyInfo(p, "If you enjoy playing here, be sure to bookmark this TacticalGamer.com server!")
 			end)
 		end)
+	else
+		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 10, function()
+			if Shine.Plugins.mapvote:VoteStarted() then
+				md:ToAllNotifyInfo("Join us Friday nights for Captains Games! Passworded, scrim-style gameplay")
+				md:ToAllNotifyInfo("from ~7PM 'til. Read more in our forums: TacticalGamer.com/natural-selection")
+			end
+		end)
 	end
 	gamesFinished = gamesFinished + 1
 end
