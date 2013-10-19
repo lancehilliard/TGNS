@@ -401,7 +401,7 @@ local function sweep()
 			if countOfPlayingPlayers >= 10 or totalPlayersOnServer >= Shine.Plugins.communityslots.Config.MaximumSlots-3 then
 				local lastTeamChangeTime = inReadyRoomSinceTimes[c]
 				if lastTeamChangeTime then
-					local secondsRemaining = TGNS.RoundPositiveNumber(lastTeamChangeTime + 60 - TGNS.GetSecondsSinceMapLoaded())
+					local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 60 - TGNS.GetSecondsSinceMapLoaded())
 					if secondsRemaining > 0 then
 						// todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
 						if secondsRemaining < 40 then

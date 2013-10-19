@@ -324,7 +324,7 @@ function TGNS.IsGameInProgress()
 	return result
 end
 
-function TGNS.RoundPositiveNumber(num, numberOfDecimalPlaces)
+function TGNS.RoundPositiveNumberDown(num, numberOfDecimalPlaces)
 	local mult = 10^(numberOfDecimalPlaces or 0)
 	local result = math.floor(num * mult + 0.5) / mult
 	return result

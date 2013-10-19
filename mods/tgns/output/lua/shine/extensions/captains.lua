@@ -108,7 +108,7 @@ end
 
 local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	local result = ""
-	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumber(.82 * #playingClients)
+	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(.82 * #playingClients)
 	local adjustedNumberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients <= 16 and numberOfNeededReadyPlayerClients or 16
 	if numberOfPlayingReadyPlayerClients < adjustedNumberOfNeededReadyPlayerClients or numberOfPlayingReadyCaptainClients < 2 then
 		result = string.format("%s wants Captains! So far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, adjustedNumberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
