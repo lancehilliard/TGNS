@@ -3,6 +3,7 @@ local BOT_COUNT_THRESHOLD = 25
 local originalEndRoundOnTeamUnbalanceSetting = 0.4
 local originalForceEvenTeamsOnJoinSetting = true
 local originalAutoTeamBalanceSetting = { enabled_after_seconds = 10, enabled_on_unbalance_amount = 2 }
+local originalHatchCooldown = kHatchCooldown
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -32,6 +33,8 @@ local function setBotConfig()
 		originalAutoTeamBalanceSetting = Server.GetConfigSetting("auto_team_balance")
 	end
 	Server.SetConfigSetting("auto_team_balance", {enabled_after_seconds=0, enabled_on_unbalance_amount=0})
+	
+	kHatchCooldown = 1
 end
 
 local function setOriginalConfig()
@@ -44,6 +47,7 @@ local function setOriginalConfig()
 	if originalAutoTeamBalanceSetting then
 		Server.SetConfigSetting("auto_team_balance", originalAutoTeamBalanceSetting)
 	end
+	kHatchCooldown = originalHatchCooldown
 end
 
 local function removeBots(players, count)
