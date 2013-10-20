@@ -76,3 +76,28 @@ module("TGNS spoofs time functions", lunity)
 	end
 
 runTests{useANSI = false}
+
+module(context("TGNS can use http", "a basic website is called"), lunity)
+
+	function arrange()
+		dofile("spoofs/TGNS.lua")
+		return TGNS
+	end
+	
+	function act(sut)
+		local mSpy = spy.new(function() end)
+		sut.GetHttpAsync("http://www.umad-barnyard.com/tmp.txt", mSpy)
+		return mSpy
+	end
+	
+	function should_call_spy(params)
+		local mSpy = params.result
+		assert.falsy(mSpy.error)
+		__assertionSucceeded()
+		assert.spy(mSpy).was_called()
+		__assertionSucceeded()
+		assert.spy(mSpy).was_called_with("This is a test for the downloading")
+		__assertionSucceeded()
+	end
+
+runTests{useANSI = false}

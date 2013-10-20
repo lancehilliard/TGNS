@@ -19,6 +19,9 @@ TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 20
 
 TGNS.ENDGAME_TIME_TO_READYROOM = 8
 
+local http = require("socket.http")
+local ltn12 = require("ltn12")
+
 -- TGNSCommonShared
 
 --- Contains all of the registered network messages. 
@@ -139,15 +142,18 @@ function TGNS.GetSecondsSinceEpoch()
 	return os.clock()
 end
 
+--- This is not async, which is fine for testing them. Makes it 
+-- easier, in fact.
 function TGNS.GetHttpAsync(url, callback)
 	-- luasocket might be the best for this
-	-- GitHub\TGNS\mods\tgns\output\lua\shine\extensions\modupdatednotice.lua (1 hits)
-	-- Line 55: 			TGNS.GetHttpAsync(url, function(response)
-	-- GitHub\TGNS\mods\tgns\output\lua\tgns\server\TGNSNs2StatsProxy.lua (1 hits)
-	-- Line 26: 			TGNS.GetHttpAsync(fetchUrl, function(response) processResponse(steamId, response) end)
-	-- GitHub\TGNS\mods\tgns\output\lua\tgns\shared\TGNSCommonShared.lua (1 hits)
-	-- Line 90: function TGNS.GetHttpAsync(url, callback)
-	error("Not implemented yet")
+	local result_table = {}
+	local result, respcode, respheaders, respstatus = http.request {
+		method = "GET",
+		sink = ltn12.sink.table(result_table),
+		url = url
+	}
+	local webText = table.concat(result_table)
+	callback(webText)
 end
 
 -- TGNSCommonShared Debug Methods
