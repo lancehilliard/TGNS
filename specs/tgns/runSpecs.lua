@@ -45,3 +45,4 @@ end
 require("spoofs.spec_TGNS")
 require("spec_enforceteamsizes")
 require("spec_AverageCalculator")
+require("spec_afkkickimproved")

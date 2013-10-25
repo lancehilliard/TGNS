@@ -101,3 +101,30 @@ module(context("TGNS can use http", "a basic website is called"), lunity)
 	end
 
 runTests{useANSI = false}
+
+module(context("TGNS Spoofs Scheduled Actions", "one is created and run scheduled is forced"), lunity)
+
+	function arrange()
+		dofile("spoofs/TGNS.lua")
+		return TGNS
+	end
+	
+	function act(sut)
+		local mSpy = spy.new(function() end)
+		
+		sut.ScheduleAction(10, mSpy)
+		sut.RunScheduled(true)
+		sut.RunScheduled(true)
+		
+		return mSpy
+	end
+	
+	function should_call_spy_once(params)
+		assert.falsy(params.error)
+		__assertionSucceeded()
+		local mSpy = params.result
+		assert.spy(mSpy).was_called(1)
+		__assertionSucceeded()
+	end
+
+runTests{useANSI = false}

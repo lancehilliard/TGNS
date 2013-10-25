@@ -105,3 +105,4 @@
 !specs/tgns/specObjects.lua
 !specs/tgns/spec_AverageCalculator.lua
 !specs/tgns/spec_enforceteamsizes.lua
+!specs/tgns/spec_afkkickimproved.lua

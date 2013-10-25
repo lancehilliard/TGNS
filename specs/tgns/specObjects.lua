@@ -4,8 +4,8 @@ Shine = nil
 TGNSMessageDisplayer = nil
 function initializeTestingObjects()
 	mc = lemock.controller()
-	Shine = mc:mock()
-	TGNSMessageDisplayer = mc:mock()
+	Shine = {} -- Tables are much more spy-friendly than mocks.
+	TGNSMessageDisplayer = {}
 end
 
 SumValue = nil

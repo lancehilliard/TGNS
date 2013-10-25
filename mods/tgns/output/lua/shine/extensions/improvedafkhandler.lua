@@ -42,6 +42,10 @@ local PlayerAFK = {} -- this name is too general to put on the global namespace
 -- @return false if the client's afk timer was not set, true otherwise
 function PlayerAFK:ResetAFKTimer( Client )
 	if not Client then return false end
+	if not Client.GetIsVirtual then 
+		print("Called with something that isn't a client:")
+		require 'pl.pretty'.dump(Client) 
+	end
 	if Client:GetIsVirtual() then return false end
 	LastActionTimes[Client] = LastActionTimes[Client] or {}
 	LastActionTimes[Client].LastMove = TGNS.GetSecondsSinceServerProcessStarted()
@@ -160,10 +164,10 @@ end
 
 function Plugin:Initialise()
 	self.Enabled = true
-	md = TGNSMessageDisplay.Create("AFK-Kick+")
+	md = TGNSMessageDisplayer.Create("AFK-Kick+")
 	
 	
-	function TGNS.ScheduleActionInterval(1, function() 
+	TGNS.ScheduleActionInterval(1, function() 
 		local Clients = TGNS.GetClients(TGNS.GetPlayerList())
 		for c in Clients do
 			PlayerAFK:PerformActionAgainst( c )
@@ -188,7 +192,7 @@ function Plugin:OnProcessMove( Player, Input )
 	local Gamerules = GetGamerules()
 	local Started = Gamerules and Gamerules:GetGameStarted()
 	
-	local Client = Player:GetOwner()
+	local Client = GetOwner( Player )
 	
 	local ClientActionTimes = LastActionTimes[Client]
 	if not ClientActionTimes then 
@@ -214,7 +218,8 @@ function Plugin:OnProcessMove( Player, Input )
 end
 
 function Plugin:PlayerNameChange( Player, ... )
-	PlayerAFK:ResetAFKTimer( GetOwner( Player ) )
+	local Client = GetOwner( Player ) 
+	PlayerAFK:ResetAFKTimer( Client ) 
 end
 
 function Plugin:PlayerSay( Client, ... )
@@ -267,7 +272,7 @@ function Plugin:OnCommanderNotify( Commander, ... )
 end
 
 function Plugin:CommLogout( Player )
-	PlayerAFK:ResetAFKTimer( Player:GetClient() )
+	PlayerAFK:ResetAFKTimer( GetOwner( Player ) )
 end
 
 -- End Commander Functions

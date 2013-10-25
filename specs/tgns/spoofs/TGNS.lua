@@ -176,3 +176,45 @@ end
 function TGNS.SetLastMapChange(cpuTime)
     __LastMapChange = cpuTime
 end
+
+-- TGNSCommonServer
+
+--- A table of tables. Each table has a time to call
+-- and the a delay in seconds.
+-- [timeCPU] = As per GetSecondsSinceServerProcessStarted, the cpu time
+-- [actionF] = Function to call
+local scheduledActions = {}
+local recentlyScheduled = {}
+local scheduledIsLocked = true
+
+function TGNS.ScheduleAction(delayInSeconds, action)
+	local toSchedule = { timeCPU = TGNS.GetSecondsSinceServerProcessStarted() + delayInSeconds, actionF = action }
+	if not scheduledIsLocked then
+		scheduledActions[#scheduledActions + 1] = toSchedule
+	else
+		recentlyScheduled[#recentlyScheduled + 1] = toSchedule
+	end
+end
+
+function TGNS.ScheduleActionInterval(intervalInSeconds, action)
+	TGNS.ScheduleAction(intervalInSeconds, action)
+	TGNS.ScheduleAction(intervalInSeconds, function() TGNS.ScheduleActionInterval(intervalInSeconds, action) end)
+end
+
+-- TGNSCommonServer Debug Methods
+
+function TGNS.RunScheduled(force)
+	force = force or false
+	local scheduledIsLocked = true
+	for i = 1, #scheduledActions do
+	   if force or scheduledActions[i].timeCPU <= TGNS.GetSecondsSinceServerProcessStarted() then
+			scheduledActions[i].actionF()
+	   end
+	end
+	scheduledActions = {}
+	scheduledIsLocked = false
+	for i = 1, #recentlyScheduled do
+		scheduledActions[#scheduledActions + 1] = recentlyScheduled[i]
+	end
+	recentlyScheduled = {}
+end
