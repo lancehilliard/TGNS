@@ -80,15 +80,26 @@ function Plugin:Initialise()
 				TGNS.ExecuteClientCommand(client, string.format("%s %s", requestCommandName, getArgs(client, requestCommandName, requestCommand.args)))
 			end
 		else
-			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.HELP_TEXT, {pageName=requestArgName, helpText=self.Config[requestArgName].HelpText})
+			local immediateCommandName = nil
 			TGNS.DoForPairs(self.Config[requestArgName].Commands, function(commandName, commandData, index)
 				if Shine:GetPermission(client, commandName) then
-					table.insert(responseButtons, {c=index, n=commandName})
+					if commandData.immediate == true then
+						immediateCommandName = commandName
+						return true
+					else
+						table.insert(responseButtons, {c=index, n=commandName})
+					end
 				end
 			end)
-			responsePageId = requestArgName
-			responsePageName = requestArgName
-			currentPage[client] = requestArgName
+			if TGNS.HasNonEmptyValue(immediateCommandName) then
+				responseBackPageId = nil
+				TGNS.ExecuteClientCommand(client, immediateCommandName)
+			else
+				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.HELP_TEXT, {pageName=requestArgName, helpText=self.Config[requestArgName].HelpText})
+				responsePageId = requestArgName
+				responsePageName = requestArgName
+				currentPage[client] = requestArgName
+			end
 		end
 		TGNS.SortAscending(responseButtons, function(b) return b.n end)
 		local buttonsJson = json.encode(responseButtons)
