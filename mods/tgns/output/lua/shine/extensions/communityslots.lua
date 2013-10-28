@@ -49,10 +49,10 @@ local function TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
 end
 
 local function GetRemainingPublicSlots(playingPlayers)
-	local totalPublicSlots = Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots
-	local result = totalPublicSlots - #playingPlayers
-	result = result > 0 and result or 0
-	return result
+    local totalPublicSlots = Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots
+    local result = totalPublicSlots - #playingPlayers
+    result = result > 0 and result or 0
+    return result
 end
 
 local function ServerIsFull(playerList)
@@ -115,19 +115,19 @@ local function AnnounceClientBumpToStrangers(targetClient)
 end
 
 local function AnnounceOtherServerOptionsToBumpedClient(client)
-	local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
-	if otherServerStaticInfo then
-		local otherServerDynamicInfo = TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName)
-		if otherServerDynamicInfo.HasRecentData then
-			local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
-			if otherServerRemainingPublicSlots >= 4 then
-				local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
-				tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
-				tgnsMd:ToClientConsole(client, message)
-				tgnsMd:ToAdminConsole(message)
-			end
-		end
-	end
+    local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+    if otherServerStaticInfo then
+        local otherServerDynamicInfo = TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName)
+        if otherServerDynamicInfo.HasRecentData then
+            local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
+            if otherServerRemainingPublicSlots >= 4 then
+                local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
+                tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+                tgnsMd:ToClientConsole(client, message)
+                tgnsMd:ToAdminConsole(message)
+            end
+        end
+    end
 end
 
 local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
@@ -142,9 +142,9 @@ end
 
 local function GetPlayingPlayers(clientToExclude)
     local allPlayingPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p)
-    	local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(p)
-    	local clientIsVirtual = TGNS.ClientAction(p, TGNS.GetIsClientVirtual)
-    	return playerIsOnPlayingTeam and not clientIsVirtual
+        local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(p)
+        local clientIsVirtual = TGNS.ClientAction(p, TGNS.GetIsClientVirtual)
+        return playerIsOnPlayingTeam and not clientIsVirtual
     end)
     local result = {}
     TGNS.DoFor(allPlayingPlayers, function(p)
@@ -157,18 +157,18 @@ local function GetPlayingPlayers(clientToExclude)
 end
 
 local function UpdateReservedSlotAmount()
-	local reservedSlotCount = Shine.Plugins.communityslots.Config.CommunitySlots - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
-	if lastSetReservedSlotAmount ~= reservedSlotCount then
-		SetReservedSlotAmount(reservedSlotCount)
-		lastSetReservedSlotAmount = reservedSlotCount
-	end
+    local reservedSlotCount = Shine.Plugins.communityslots.Config.CommunitySlots - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
+    if lastSetReservedSlotAmount ~= reservedSlotCount then
+        SetReservedSlotAmount(reservedSlotCount)
+        lastSetReservedSlotAmount = reservedSlotCount
+    end
 end
 
 local function AnnounceRemainingPublicSlots()
-	local playingPlayers = GetPlayingPlayers()
-	local remainingPublicSlots = GetRemainingPublicSlots(playingPlayers)
-	TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots)
-	UpdateReservedSlotAmount()
+    local playingPlayers = GetPlayingPlayers()
+    local remainingPublicSlots = GetRemainingPublicSlots(playingPlayers)
+    TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots)
+    UpdateReservedSlotAmount()
 end
 
 local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
@@ -189,31 +189,31 @@ end
 
 local function IsClientBumped(joiningClient)
     local result = false
-	if not TGNS.GetIsClientVirtual(joiningClient) then
-		local playerList = GetPlayingPlayers(joiningClient)
-		if ServerIsFull(playerList) then
-			local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
-			local victimClient = FindVictimClient(joiningSteamId, playerList)
-			if victimClient ~= nil then
-				local victimPlayer = TGNS.GetPlayer(victimClient)
-				tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimClient))
-				onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
+    if not TGNS.GetIsClientVirtual(joiningClient) then
+        local playerList = GetPlayingPlayers(joiningClient)
+        if ServerIsFull(playerList) then
+            local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
+            local victimClient = FindVictimClient(joiningSteamId, playerList)
+            if victimClient ~= nil then
+                local victimPlayer = TGNS.GetPlayer(victimClient)
+                tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimClient))
+                onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
-				tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
-				TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
-				tgnsMd:ToAdminConsole(string.format("%s was bumped.", TGNS.GetPlayerName(victimPlayer)))
+                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
+                TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
+                tgnsMd:ToAdminConsole(string.format("%s was bumped.", TGNS.GetPlayerName(victimPlayer)))
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
-			else
-				local joiningPlayer = TGNS.GetPlayer(joiningClient)
-				tgnsMd:ToPlayerNotifyInfo(joiningPlayer, Shine.Plugins.communityslots:GetBumpMessage(joiningClient))
-				tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
-				onPreJoinerKick(joiningClient,joiningPlayer,playerList)
-				TGNS.ExecuteClientCommand(joiningClient, "readyroom")
-				tgnsMd:ToAdminConsole(string.format("%s was bumped.", TGNS.GetPlayerName(joiningPlayer)))
-				result = true
-			end
-		end
-	end
+            else
+                local joiningPlayer = TGNS.GetPlayer(joiningClient)
+                tgnsMd:ToPlayerNotifyInfo(joiningPlayer, Shine.Plugins.communityslots:GetBumpMessage(joiningClient))
+                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
+                onPreJoinerKick(joiningClient,joiningPlayer,playerList)
+                TGNS.ExecuteClientCommand(joiningClient, "readyroom")
+                tgnsMd:ToAdminConsole(string.format("%s was bumped.", TGNS.GetPlayerName(joiningPlayer)))
+                result = true
+            end
+        end
+    end
     return result
 end
 
@@ -255,66 +255,66 @@ end
 
 function Plugin:GetBumpMessage(targetClient)
     local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, TGNS.GetClientName(targetClient), Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots, Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots)
-	if Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
-		result = result .. " Captains Game in play!"
-	end
+    if Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
+        result = result .. " Captains Game in play!"
+    end
     return result
 end
 
 function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     local result = not TGNS.GetIsClientVirtual(targetClient)
-	if result then
-		local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
-		local targetIsSM = TGNS.IsClientSM(targetClient)
-		local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
-		local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
-		local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
-		local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
-		local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
-		local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
-		local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
+    if result then
+        local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
+        local targetIsSM = TGNS.IsClientSM(targetClient)
+        local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
+        local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
+        local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
+        local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
+        local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
+        local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
+        local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
 
-		if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
-		then
-			result = false
-		end
-	end
+        if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
+        then
+            result = false
+        end
+    end
     return result
 end
 
 function Plugin:ClientConnect(joiningClient)
-	if TGNS.GetIsClientVirtual(joiningClient) then
-		TGNS.ScheduleAction(3, function() self:ClientConfirmConnect(joiningClient) end)
-	end
+    if TGNS.GetIsClientVirtual(joiningClient) then
+        TGNS.ScheduleAction(3, function() self:ClientConfirmConnect(joiningClient) end)
+    end
 end
 
 function Plugin:ClientConfirmConnect(client)
-	TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(client)
+    TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(client)
     local chatMessage
     if TGNS.IsClientSM(client) then
         chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
-   	elseif TGNS.HasClientSignedPrimer(client) then
-		chatMessage = string.format("TGNS Primer signer! Join the full server when >%s strangers are playing!", Shine.Plugins.communityslots.Config.MinimumStrangers)
+    elseif TGNS.HasClientSignedPrimer(client) then
+        chatMessage = string.format("TGNS Primer signer! Join the full server when >%s strangers are playing!", Shine.Plugins.communityslots.Config.MinimumStrangers)
     else
         chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
-	end
-	if not TGNS.GetIsClientVirtual(client) then
-		TGNS.PlayerAction(client, function(p) tgnsMd:ToPlayerNotifyInfo(p, chatMessage) end)
-	end
+    end
+    if not TGNS.GetIsClientVirtual(client) then
+        TGNS.PlayerAction(client, function(p) tgnsMd:ToPlayerNotifyInfo(p, chatMessage) end)
+    end
 end
 
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
-	UpdateReservedSlotAmount()
+    UpdateReservedSlotAmount()
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
-	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
-		local bumpCounts = GetBumpCounts()
-		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			PrintBumpCountsReport(c)
-		end)
-		commandStructureLastOccupancies = {}
-	end)
+    TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+        local bumpCounts = GetBumpCounts()
+        TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
+            PrintBumpCountsReport(c)
+        end)
+        commandStructureLastOccupancies = {}
+    end)
 end
 
 function Plugin:CreateCommands()
@@ -345,40 +345,52 @@ end
 //TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-	local cancel = false
+    local cancel = false
     local joiningClient = TGNS.GetClient(player)
     if TGNS.IsGameplayTeamNumber(newTeamNumber) then
-    	if not (force or shineForce) then
-			cancel = IsClientBumped(joiningClient)
-		end
-		if cancel then
-	    	tgnsMd:ToPlayerNotifyError(player, "Teams are full (8v8). You might be able to join Spectate.")
-	    	tgnsMd:ToAdminConsole(string.format("%s was not allowed to JoinTeam.", TGNS.GetPlayerName(player)))
-			TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
-		end
-	elseif newTeamNumber == kSpectatorIndex then
-		if ServerIsFull(GetPlayingPlayers()) then
-			if not (force or shineForce) then
-				if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators and not TGNS.IsClientAdmin(joiningClient) then
-					cancel = true
-			    	tgnsMd:ToPlayerNotifyError(player, "Sorry. Spectate is full (spectators are usually hidden on scoreboard).")
-			    	tgnsMd:ToAdminConsole(string.format("%s was not allowed to Spectate.", TGNS.GetPlayerName(player)))
-				end
-			end
-		else
-			if not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) then
-				tgnsMd:ToPlayerNotifyError(player, "Spectate is available only when teams are 8v8.")
-				cancel = true
-			end
-		end
-		if not cancel then
-	    	TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
-		end
-	end
-	TGNS.ScheduleAction(2, UpdateReservedSlotAmount)
-	if cancel then
-		return false
-	end
+        if not (force or shineForce) then
+            cancel = IsClientBumped(joiningClient)
+        end
+        if cancel then
+            tgnsMd:ToPlayerNotifyError(player, "Teams are full (8v8). You might be able to join Spectate.")
+            tgnsMd:ToAdminConsole(string.format("%s was not allowed to JoinTeam.", TGNS.GetPlayerName(player)))
+            TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+        else
+            if not (force or shineForce) and not TGNS.GetIsClientVirtual(joiningClient) then
+                local playerList = TGNS.GetPlayerList()
+                if #TGNS.GetTeamClients(newTeamNumber, playerList) >= 8 then
+                    local otherPlayingTeamNumber = TGNS.GetOtherPlayingTeamNumber(newTeamNumber)
+                    if #TGNS.GetTeamClients(otherPlayingTeamNumber, playerList) < 8 then
+                        cancel = true
+                        TGNS.SendToTeam(player, otherPlayingTeamNumber)
+                        tgnsMd:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve 8v8.", TGNS.GetTeamName(otherPlayingTeamNumber)))
+                    end
+                end
+            end
+        end
+    elseif newTeamNumber == kSpectatorIndex then
+        if ServerIsFull(GetPlayingPlayers()) then
+            if not (force or shineForce) then
+                if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators and not TGNS.IsClientAdmin(joiningClient) then
+                    cancel = true
+                    tgnsMd:ToPlayerNotifyError(player, "Sorry. Spectate is full (spectators are usually hidden on scoreboard).")
+                    tgnsMd:ToAdminConsole(string.format("%s was not allowed to Spectate.", TGNS.GetPlayerName(player)))
+                end
+            end
+        else
+            if not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) then
+                tgnsMd:ToPlayerNotifyError(player, "Spectate is available only when teams are 8v8.")
+                cancel = true
+            end
+        end
+        if not cancel then
+            TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
+        end
+    end
+    TGNS.ScheduleAction(2, UpdateReservedSlotAmount)
+    if cancel then
+        return false
+    end
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
@@ -396,40 +408,40 @@ local function sweep()
     local totalPlayersOnServer = TGNS.GetPlayerList()
     local countOfTotalPlayersOnServer = #totalPlayersOnServer
     local countOfPlayingPlayers = #GetPlayingPlayers()
-	TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
-		if totalPlayersOnServer > 16 then
-			if countOfPlayingPlayers >= 10 or totalPlayersOnServer >= Shine.Plugins.communityslots.Config.MaximumSlots-3 then
-				local lastTeamChangeTime = inReadyRoomSinceTimes[c]
-				if lastTeamChangeTime then
-					local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 60 - TGNS.GetSecondsSinceMapLoaded())
-					if secondsRemaining > 0 then
-						// todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
-						if secondsRemaining < 40 then
-							tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
+    TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
+        if totalPlayersOnServer > 16 then
+            if countOfPlayingPlayers >= 10 or totalPlayersOnServer >= Shine.Plugins.communityslots.Config.MaximumSlots-3 then
+                local lastTeamChangeTime = inReadyRoomSinceTimes[c]
+                if lastTeamChangeTime then
+                    local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 60 - TGNS.GetSecondsSinceMapLoaded())
+                    if secondsRemaining > 0 then
+                        // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
+                        if secondsRemaining < 40 then
+                            tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
                             AnnounceOtherServerOptionsToBumpedClient(c)
-						end
-					else
-						TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
-						tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
-					end
-				else
-					inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
-				end
-			else
-				inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
-			end
-		else
-			inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
-		end
-	end)
+                        end
+                    else
+                        TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
+                        tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
+                    end
+                else
+                    inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
+                end
+            else
+                inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
+            end
+        else
+            inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
+        end
+    end)
 end
 
 function Plugin:ClientDisconnect(client)
-	UpdateReservedSlotAmount()
+    UpdateReservedSlotAmount()
 end
 
 TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
-	local result = true
+    local result = true
     if not TGNS.IsSteamIdAdmin(joiningSteamId) then
         local playerList = GetPlayingPlayers()
         if ServerIsFull(playerList) then
@@ -437,7 +449,7 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
             result = bumpableClient ~= nil
         end
     end
-	return result
+    return result
 end)
 
 function Plugin:Think()
@@ -447,17 +459,17 @@ function Plugin:Think()
 end
 
 function Plugin:PlayerSay(client, networkMessage)
-	local cancel = false
-	local teamOnly = networkMessage.teamOnly
-	local message = StringTrim(networkMessage.message)
-	if not teamOnly then
-		TGNS.PlayerAction(client, function(p)
-			if TGNS.IsPlayerSpectator(p) then
-				tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator or @admin chat.")
+    local cancel = false
+    local teamOnly = networkMessage.teamOnly
+    local message = StringTrim(networkMessage.message)
+    if not teamOnly then
+        TGNS.PlayerAction(client, function(p)
+            if TGNS.IsPlayerSpectator(p) then
+                tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator or @admin chat.")
                 if TGNS.IsClientAdmin(client) then
                     tgnsMd:ToPlayerNotifyError(p, "Full admin note: sh_say (chat: !say) is also available.")
                 end
-				cancel = true
+                cancel = true
             else
                 if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() then
                     if ServerIsFull(GetPlayingPlayers()) and not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
@@ -466,20 +478,20 @@ function Plugin:PlayerSay(client, networkMessage)
                         cancel = true
                     end
                 end
-			end
-		end)
-	end
-	if cancel then
-		return ""
-	end
+            end
+        end)
+    end
+    if cancel then
+        return ""
+    end
 end
 
 
 
 function Plugin:Initialise()
     self.Enabled = true
-	self:CreateCommands()
-	TGNS.ScheduleActionInterval(10, sweep)
+    self:CreateCommands()
+    TGNS.ScheduleActionInterval(10, sweep)
     TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
     return true
 end
