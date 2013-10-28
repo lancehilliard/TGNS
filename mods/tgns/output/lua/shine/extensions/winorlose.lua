@@ -1,8 +1,20 @@
+local kWinOrLoseVoteArray = { }
+local kWinOrLoseTeamCount = 2
+local kTimeAtWhichWinOrLoseVoteSucceeded = 0
+local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
+local kCountdownTimeRemaining = 0
 local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag" }
-local timeInSecondsAtWhichVoteSucceeded = 0
-local teamWhichWillWinIfCountdownExpires = nil
-local secondsRemainingInCountdown = 0
-local md = TGNSMessageDisplayer.Create("WINORLOSE")
+local VOTE_HOWTO_TEXT = "Press 'M > Surrender' to vote."
+local md
+
+local originalGetCanAttack
+
+local function SetupWinOrLoseVars()
+	for i = 1, kWinOrLoseTeamCount do
+		local WinOrLoseVoteTeamArray = {WinOrLoseRunning = 0, WinOrLoseVotes = { }, WinOrLoseVotesAlertTime = 0}
+		table.insert(kWinOrLoseVoteArray, WinOrLoseVoteTeamArray)
+	end
+end
 
 local function GetCommandStructureToKeep(commandStructures)
 	local builtAndAliveCommandStructures = TGNS.Where(commandStructures, TGNS.CommandStructureIsBuiltAndAlive)
@@ -16,89 +28,215 @@ local function GetCommandStructureToKeep(commandStructures)
 	return result
 end
 
-local function OnEntityKilled(self, targetEntity, attacker, doer, point, direction)
-	if timeInSecondsAtWhichVoteSucceeded > 0 then
-		if TGNS.EntityIsCommandStructure(targetEntity) then
-			TGNS.DestroyAllEntities("CommandStructure", targetEntity:GetTeamNumber())
-		end
-	end
+local function getNumberOfRequiredVotes(votersCount)
+	local result = math.floor((votersCount * (Shine.Plugins.winorlose.Config.MinimumPercentage / 100)))
+	return result
 end
-TGNS.RegisterEventHook("OnEntityKilled", OnEntityKilled)
 
-local originalGetCanAttack
-originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack",
-	function(self)
-		local winOrLoseChallengeIsInProgressByMyTeam = timeInSecondsAtWhichVoteSucceeded > 0 and self:GetTeam() == teamWhichWillWinIfCountdownExpires
-		local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam
-		return canAttack
-	end
-)
+local function UpdateWinOrLoseVotes()
+	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
+		if kCountdownTimeRemaining > 0 then
+			if (math.fmod(kCountdownTimeRemaining, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) == 0 or kCountdownTimeRemaining <= 5) then
+				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
+				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
+				TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
+				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
+				local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
+				local chatMessage = string.format("%s can't attack. Game ends in %s secs. Hurry to %s!", teamName, kCountdownTimeRemaining, locationNameOfCommandStructureToKeep)
+				md:ToAllNotifyInfo(chatMessage)
+				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
+					TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
+				end)
+			end
+			kCountdownTimeRemaining = kCountdownTimeRemaining - 1
+		else
+			md:ToAllNotifyInfo("WinOrLose! On to the next game!")
+			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
+			kTimeAtWhichWinOrLoseVoteSucceeded = 0
+		end
+	else
+		for i = 1, kWinOrLoseTeamCount do
+			if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and TGNS.IsGameInProgress() and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
+				local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return p:GetTeamNumber() == i end))
+				local totalvotes = 0
+				for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
+					local clientid = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]
+					local stillplaying = false
 
-TGNS.RegisterEventHook("OnEverySecond", function(deltatime)
-	if TGNS.IsGameInProgress() then
-		if timeInSecondsAtWhichVoteSucceeded > 0 then
-			local teamNumberWhichWillWinIfWinLoseCountdownExpires = teamWhichWillWinIfCountdownExpires:GetTeamNumber()
-			local countdownFinished = Shared.GetTime() - timeInSecondsAtWhichVoteSucceeded > Shine.Plugins.winorlose.Config.NoAttackDuration
-			if countdownFinished then
-				md:ToAllNotifyInfo("WinOrLose! On to the next game!")
-				TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
-				timeInSecondsAtWhichVoteSucceeded = 0
-			else
-				if (math.fmod(secondsRemainingInCountdown, Shine.Plugins.winorlose.Config.WarningInterval) == 0 or secondsRemainingInCountdown <= 5) then
-					local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
-					local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
-					TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
-					local teamDescription = teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and "Marines" or "Aliens"
-					local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
-					local chatMessage = string.format("%s can't attack. Game ends in %s secs. Hurry to %s!", teamDescription, secondsRemainingInCountdown, locationNameOfCommandStructureToKeep)
+					for k = 1, #playerRecords do
+						local player = playerRecords[k]
+						if player ~= nil then
+							local client = Server.GetOwner(player)
+							if client ~= nil then
+								if clientid == client:GetUserId() then
+									stillplaying = true
+									totalvotes = totalvotes + 1
+									break
+								end
+							end
+						end
+					end
+
+					if not stillplaying then
+						table.remove(kWinOrLoseVoteArray[i].WinOrLoseVotes, j)
+					end
+				end
+				if totalvotes >= getNumberOfRequiredVotes(#playerRecords) then
+					local teamName = TGNS.GetTeamName(i)
+					local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
 					md:ToAllNotifyInfo(chatMessage)
-					TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
-						TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
+					for i = 1, #playerRecords do
+						if playerRecords[i] ~= nil then
+							kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
+							kTeamWhichWillWinIfWinLoseCountdownExpires = playerRecords[i]:GetTeam()
+							kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
+							break
+						end
+					end
+					TGNS.DoFor(playerRecords, function(p)
+						pcall(function()
+							p:SelectNextWeapon()
+							p:SelectPrevWeapon()
+						end)
+					end)
+					kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
+					kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
+					kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
+				else
+					local chatMessage
+					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
+						chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(#playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
+						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
+					elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + Shine.Plugins.winorlose.Config.VotingTimeInSeconds < TGNS.GetSecondsSinceMapLoaded() then
+						--local abstainedNames = {}
+						--TGNS.DoFor(playerRecords, function(p)
+						--	local playerSteamId = TGNS.ClientAction(p, TGNS.GetClientSteamId)
+						--	if not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, playerSteamId) then
+						--		table.insert(abstainedNames, TGNS.GetPlayerName(p))
+						--	end
+						--end)
+						--chatMessage = string.sub(string.format("Concede vote expired. Abstained: %s", TGNS.Join(abstainedNames, ", ")), 1, kMaxChatLength)
+						chatMessage = "Concede vote expired."
+						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
+						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
+						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
+					else
+						chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
+						 getNumberOfRequiredVotes(#playerRecords),
+						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + Shine.Plugins.winorlose.Config.VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
+						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
+					end
+					TGNS.DoFor(playerRecords, function(p)
+						md:ToPlayerNotifyInfo(p, chatMessage)
 					end)
 				end
-				secondsRemainingInCountdown = secondsRemainingInCountdown - 1
 			end
 		end
 	end
-end)
+end
+
+local function ClearWinOrLoseVotes()
+	for i = 1, kWinOrLoseTeamCount do
+		kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
+		kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
+		kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
+	end
+	kTimeAtWhichWinOrLoseVoteSucceeded = 0
+end
+
+local function OnCommandWinOrLose(client)
+	local player = TGNS.GetPlayer(client)
+	if TGNS.IsGameInProgress() then
+		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+			md:ToPlayerNotifyError(player, "WinOrLose in progress.")
+		else
+			--if player:GetTeam():GetNumAliveCommandStructures() <= 2 then
+				local clientID = client:GetUserId()
+				local teamNumber = TGNS.GetPlayerTeamNumber(player)
+				if TGNS.IsGameplayTeamNumber(teamNumber) then
+					if kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning ~= 0 then
+						local alreadyvoted = false
+						for i = #kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, 1, -1 do
+							if kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes[i] == clientID then
+								alreadyvoted = true
+								break
+							end
+						end
+						if alreadyvoted then
+							chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
+							md:ToPlayerNotifyError(player, chatMessage)
+						else
+							md:ToTeamNotifyInfo(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+						end
+					else
+						md:ToTeamNotifyInfo(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+						kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
+						table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+					end
+				else
+					md:ToPlayerNotifyError(player, "You must be on a team.")
+				end
+			--else
+			--	chatMessage = string.sub(string.format("You may concede only when you have one or two command structures."), 1, kMaxChatLength)
+			--	Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+			--end
+		end
+	else
+		md:ToPlayerNotifyError(player, "Game is not in progress.")
+	end
+end
 
 local Plugin = {}
 Plugin.HasConfig = true
 Plugin.ConfigName = "winorlose.json"
 
-function Plugin:EndGame(gamerules, winningTeam)
-	timeInSecondsAtWhichVoteSucceeded = 0
+function Plugin:CreateCommands()
+	local command = self:BindCommand("sh_winorlose", nil, OnCommandWinOrLose, true)
+	command:Help("Cast a WinOrLose vote.")
 end
-
 
 function Plugin:Initialise()
     self.Enabled = true
-    TGNS.ScheduleAction(10, function()
-		Shine.Plugins.votesurrender.Surrender = function(x, team)
-			if timeInSecondsAtWhichVoteSucceeded > 0 then
-				local chatMessage = "WinOrLose vote succeeded, but WinOrLose already in progress!"
-				md:ToTeamNotifyError(team, chatMessage)
-			else
-				local teamDescription = team == kMarineTeamType and "Marines" or "Aliens"
-				local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamDescription, Shine.Plugins.winorlose.Config.NoAttackDuration), 1, kMaxChatLength)
-				md:ToAllNotifyInfo(chatMessage)
-				timeInSecondsAtWhichVoteSucceeded = Shared.GetTime()
-				teamWhichWillWinIfCountdownExpires = GetGamerules():GetTeam(team)
-				secondsRemainingInCountdown = Shine.Plugins.winorlose.Config.NoAttackDuration
-				local teamPlayers = TGNS.GetPlayers(TGNS.GetTeamClients(team, TGNS.GetPlayerList()))
-				TGNS.DoFor(teamPlayers, function(p)
-					p:SelectNextWeapon()
-					p:SelectPrevWeapon()
-				end)
-			end
-		end
-    end)
+	md = TGNSMessageDisplayer.Create("WINORLOSE")
+	originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack", function(self)
+		local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
+		local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam
+		return canAttack
+	end)
+	SetupWinOrLoseVars()
+	TGNS.RegisterEventHook("OnEverySecond", UpdateWinOrLoseVotes)
+	self:CreateCommands()
     return true
+end
+
+function Plugin:EndGame(gamerules, winningTeam)
+	ClearWinOrLoseVotes()
+end
+
+function Plugin:CastVoteByPlayer(gamerules, voteTechId, player)
+	local cancel = false
+	if voteTechId == kTechId.VoteConcedeRound then
+		TGNS.ClientAction(player, OnCommandWinOrLose)
+		cancel = true
+	end
+	if cancel then
+		return true
+	end
+end
+
+function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
+	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+		if TGNS.EntityIsCommandStructure(victimEntity) then
+			TGNS.DestroyAllEntities("CommandStructure", victimEntity:GetTeamNumber())
+		end
+	end
 end
 
 function Plugin:Cleanup()
     --Cleanup your extra stuff like timers, data etc.
-    self.BaseClass.Cleanup( self )
+    self.BaseClass.Cleanup(self)
 end
 
-Shine:RegisterExtension("winorlose", Plugin )
+Shine:RegisterExtension("winorlose", Plugin)
