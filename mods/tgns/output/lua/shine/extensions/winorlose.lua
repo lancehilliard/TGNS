@@ -6,6 +6,7 @@ local kCountdownTimeRemaining = 0
 local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag" }
 local VOTE_HOWTO_TEXT = "Press 'M > Surrender' to vote."
 local md
+local lastVoteStartTimes = {}
 
 local originalGetCanAttack
 
@@ -143,6 +144,7 @@ local function ClearWinOrLoseVotes()
 		kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 	end
 	kTimeAtWhichWinOrLoseVoteSucceeded = 0
+	lastVoteStartTimes = {}
 end
 
 local function OnCommandWinOrLose(client)
@@ -171,9 +173,15 @@ local function OnCommandWinOrLose(client)
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 						end
 					else
-						md:ToTeamNotifyInfo(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
-						kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
-						table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + 180 <= TGNS.GetSecondsSinceMapLoaded() then
+							md:ToTeamNotifyInfo(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+							kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
+							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+							lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
+						else
+							md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
+							md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
+						end
 					end
 				else
 					md:ToPlayerNotifyError(player, "You must be on a team.")
