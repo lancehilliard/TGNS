@@ -189,6 +189,7 @@ end
 
 local function IsClientBumped(joiningClient)
     local result = false
+    local victimTeamNumber = nil
     if not TGNS.GetIsClientVirtual(joiningClient) then
         local playerList = GetPlayingPlayers(joiningClient)
         if ServerIsFull(playerList) then
@@ -196,6 +197,7 @@ local function IsClientBumped(joiningClient)
             local victimClient = FindVictimClient(joiningSteamId, playerList)
             if victimClient ~= nil then
                 local victimPlayer = TGNS.GetPlayer(victimClient)
+                victimTeamNumber = TGNS.GetPlayerTeamNumber(victimPlayer)
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimClient))
                 onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
@@ -214,7 +216,7 @@ local function IsClientBumped(joiningClient)
             end
         end
     end
-    return result
+    return result, victimTeamNumber
 end
 
 local function GetBumpCounts()
@@ -346,10 +348,11 @@ end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
     local cancel = false
+    local victimTeamNumber = nil
     local joiningClient = TGNS.GetClient(player)
     if TGNS.IsGameplayTeamNumber(newTeamNumber) then
         if not (force or shineForce) then
-            cancel = IsClientBumped(joiningClient)
+            cancel, victimTeamNumber = IsClientBumped(joiningClient)
         end
         if cancel then
             tgnsMd:ToPlayerNotifyError(player, "Teams are full (8v8). You might be able to join Spectate.")
@@ -357,14 +360,10 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
             TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
         else
             if not (force or shineForce) and not TGNS.GetIsClientVirtual(joiningClient) then
-                local playerList = TGNS.GetPlayerList()
-                if #TGNS.GetTeamClients(newTeamNumber, playerList) >= 8 then
-                    local otherPlayingTeamNumber = TGNS.GetOtherPlayingTeamNumber(newTeamNumber)
-                    if #TGNS.GetTeamClients(otherPlayingTeamNumber, playerList) < 8 then
-                        cancel = true
-                        TGNS.SendToTeam(player, otherPlayingTeamNumber)
-                        tgnsMd:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve 8v8.", TGNS.GetTeamName(otherPlayingTeamNumber)))
-                    end
+                if victimTeamNumber ~= nil and newTeamNumber ~= victimTeamNumber then
+                    cancel = true
+                    TGNS.SendToTeam(player, victimTeamNumber)
+                    tgnsMd:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve 8v8.", TGNS.GetTeamName(victimTeamNumber)))
                 end
             end
         end
