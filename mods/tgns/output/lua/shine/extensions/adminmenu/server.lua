@@ -32,9 +32,24 @@ function Plugin:Initialise()
 		local responseArg = {}
 		local chatCmd = ""
 		local requestCommandName = message.commandIndex
+		local requestArgName = message.argName
+		local pageIsImmediate = false
 		if requestCommandName == 0 then
 			requestCommandName = ""
-		else
+			currentPage[client] = nil
+			TGNS.DoForPairs(self.Config[requestArgName].Commands, function(commandName, commandData, index)
+				if Shine:GetPermission(client, commandName) then
+					if commandData.immediate == true then
+						pageIsImmediate = true
+						requestCommandName = index
+						message.commandIndex = index
+						currentPage[client] = requestArgName
+						return true
+					end
+				end
+			end)
+		end
+		if currentPage[client] ~= nil then
 			TGNS.DoForPairs(self.Config[currentPage[client]].Commands, function(commandName, commandData, index)
 				if requestCommandName == index then
 					requestCommandName = commandName
@@ -42,7 +57,6 @@ function Plugin:Initialise()
 				end
 			end)
 		end
-		local requestArgName = message.argName
 		local requestArgValue = message.argValue
 		rememberArgs(client, requestCommandName, requestArgName, requestArgValue)
 		local requestCommand
@@ -56,7 +70,9 @@ function Plugin:Initialise()
 		if requestCommand then
 			local command = Shine.Commands[requestCommandName]
 			chatCmd = type(command.ChatCmd) == "string" and command.ChatCmd or ""
-			responseBackPageId = currentPage[client]
+			if not pageIsImmediate then
+				responseBackPageId = currentPage[client]
+			end
 			TGNS.DoForReverse(requestCommand.args, function(arg)
 				if arg.name == requestArgName then
 					responseBackPageId = currentPage[client] .. requestCommandName .. requestArgName
@@ -80,26 +96,15 @@ function Plugin:Initialise()
 				TGNS.ExecuteClientCommand(client, string.format("%s %s", requestCommandName, getArgs(client, requestCommandName, requestCommand.args)))
 			end
 		else
-			local immediateCommandName = nil
 			TGNS.DoForPairs(self.Config[requestArgName].Commands, function(commandName, commandData, index)
 				if Shine:GetPermission(client, commandName) then
-					if commandData.immediate == true then
-						immediateCommandName = commandName
-						return true
-					else
-						table.insert(responseButtons, {c=index, n=commandName})
-					end
+					table.insert(responseButtons, {c=index, n=commandName})
 				end
 			end)
-			if TGNS.HasNonEmptyValue(immediateCommandName) then
-				responseBackPageId = nil
-				TGNS.ExecuteClientCommand(client, immediateCommandName)
-			else
-				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.HELP_TEXT, {pageName=requestArgName, helpText=self.Config[requestArgName].HelpText})
-				responsePageId = requestArgName
-				responsePageName = requestArgName
-				currentPage[client] = requestArgName
-			end
+			responsePageId = requestArgName
+			responsePageName = requestArgName
+			currentPage[client] = requestArgName
+			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.HELP_TEXT, {pageName=requestArgName, helpText=self.Config[requestArgName].HelpText})
 		end
 		TGNS.SortAscending(responseButtons, function(b) return b.n end)
 		local buttonsJson = json.encode(responseButtons)
