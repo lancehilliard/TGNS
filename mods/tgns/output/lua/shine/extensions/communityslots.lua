@@ -368,22 +368,20 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
             end
         end
     elseif newTeamNumber == kSpectatorIndex then
-        if ServerIsFull(GetPlayingPlayers()) then
-            if not (force or shineForce) then
-                if #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators and not TGNS.IsClientAdmin(joiningClient) then
+        -- SMs may spec mid-game; anyone may spec pre-game (limit enforced)
+        if not (force or shineForce) then
+            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators
+            if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) then
+                tgnsMd:ToPlayerNotifyError(player, "Mid-game spectate is available only when teams are 8v8.")
+                cancel = true
+            end
+            if not cancel then
+                if spectateIsFull and not TGNS.IsClientAdmin(joiningClient) then
                     cancel = true
                     tgnsMd:ToPlayerNotifyError(player, "Sorry. Spectate is full (spectators are usually hidden on scoreboard).")
                     tgnsMd:ToAdminConsole(string.format("%s was not allowed to Spectate.", TGNS.GetPlayerName(player)))
                 end
             end
-        else
-            if not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) then
-                tgnsMd:ToPlayerNotifyError(player, "Spectate is available only when teams are 8v8.")
-                cancel = true
-            end
-        end
-        if not cancel then
-            TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
         end
     end
     TGNS.ScheduleAction(2, UpdateReservedSlotAmount)
@@ -400,6 +398,8 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
             table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
             TGNS.ExecuteEventHooks("OnSlotTaken", client)
         end
+    elseif newTeamNumber == kSpectatorIndex then
+        TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
     end
 end
 
