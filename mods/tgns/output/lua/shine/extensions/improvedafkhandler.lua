@@ -51,7 +51,7 @@ function PlayerAFK:ResetAFKTimer( Client )
 	LastActionTimes[Client].LastMove = TGNS.GetSecondsSinceServerProcessStarted()
 	LastActionTimes[Client].LastWarn = nil
 	if LastActionTimes[Client].IsAfk then
-		TGNS.ExecuteEventHooks("AfkChanged", Player, true)
+		TGNS.ExecuteEventHooks("AfkChanged", Player, false)
 	end
 	LastActionTimes[Client].IsAfk = false
 	return true

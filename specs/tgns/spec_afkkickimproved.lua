@@ -44,8 +44,7 @@ module(context("afk-kick+ resets afk timer and does not error", "client connects
 	function should_handle_client_connection(params)
 		local sut = params.sut
 		local playerAfk, fakeClient, fakePlayer = params.result, params.result2, params.result3
-		
-		local resetAfkSpy = spy.on(playerAfk, "ResetAFKTimer")
+		spy.on(playerAfk, "ResetAFKTimer")
 		sut:ClientConnect( fakeClient )
 		assert.spy(playerAfk.ResetAFKTimer).was_called()
 		__assertionSucceeded()

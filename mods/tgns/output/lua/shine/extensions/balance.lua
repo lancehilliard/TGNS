@@ -44,19 +44,19 @@ function Balance.GetTotalGamesPlayed(client)
 end
 
 local addWinToBalance = function(balance)
-		balance.wins = balance.wins + 1
-		balance.total = balance.total + 1
-		if balance.wins + balance.losses > 100 then
-			balance.losses = balance.losses - 1
-		end
+	balance.wins = balance.wins + 1
+	balance.total = balance.total + 1
+	if balance.wins + balance.losses > 100 then
+		balance.losses = balance.losses - 1
 	end
+end
 local addLossToBalance = function(balance)
-		balance.losses = balance.losses + 1
-		balance.total = balance.total + 1
-		if balance.wins + balance.losses > 100 then
-			balance.wins = balance.wins - 1
-		end
+	balance.losses = balance.losses + 1
+	balance.total = balance.total + 1
+	if balance.wins + balance.losses > 100 then
+		balance.wins = balance.wins - 1
 	end
+end
 
 local function BalanceStartedRecently()
 	local result = Shared.GetTime() > RECENT_BALANCE_DURATION_IN_SECONDS and Shared.GetTime() - lastBalanceStartTimeInSeconds < RECENT_BALANCE_DURATION_IN_SECONDS
