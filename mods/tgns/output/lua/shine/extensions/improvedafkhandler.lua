@@ -67,7 +67,7 @@ end
 
 function PlayerAFK:IsAFKFor( Client, TimeSeconds )
 	if not LastActionTimes[Client] then return false end
-	return self:TimeAFK() >= TimeSeconds
+	return self:TimeAFK( Client ) >= TimeSeconds
 end
 
 function PlayerAFK:HasBeenWarned( Client )
