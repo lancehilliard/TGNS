@@ -43,8 +43,7 @@ local PlayerAFK = {} -- this name is too general to put on the global namespace
 function PlayerAFK:ResetAFKTimer( Client )
 	if not Client then return false end
 	if not Client.GetIsVirtual then 
-		print("Called with something that isn't a client:")
-		require 'pl.pretty'.dump(Client) 
+		error( "Invalid Client (No GetIsVirtual method supplied)" )
 	end
 	if Client:GetIsVirtual() then return false end
 	LastActionTimes[Client] = LastActionTimes[Client] or {}
@@ -124,7 +123,7 @@ function PlayerAFK:PerformActionAgainst( Client )
 			md:ToPlayerNotifyInfo( "You have been afk for " .. TimeAfk .. " seconds, and will be kicked in " .. (self.Config.KickTime - TimeAfk) .. " seconds" )
 		end
 	elseif self.Config.KickTime - TimeAfk <= 0.01 then -- No warnings left
-		TGNSClientKicker.Kick( Client, "You were kicked for being afk for " .. TimeAfk .. " seconds", function () end, function() end, false )
+		TGNSClientKicker.Kick( Client, "You were kicked for being afk for " .. TimeAfk .. " seconds" )
 	end
 end
 
@@ -177,7 +176,7 @@ function Plugin:Initialise()
 end
 
 -- 
--- These functions merely detect movement/actions that reset afk timers in roguhly
+-- These functions merely detect movement/actions that reset afk timers in roughly
 -- the order they would happen in (for convienent scanning)
 --
 function Plugin:ClientConnect( Client )
@@ -257,10 +256,10 @@ function Plugin:OnConstructInit( Building )
 end
 
 function Plugin:OnCommanderTechTreeAction( Commander, ... )
-        local Client = GetOwner( Commander )
-        if not Client then return end
-        
-        PlayerAFK:ResetAFKTimer( Client )
+	local Client = GetOwner( Commander )
+	if not Client then return end
+	
+	PlayerAFK:ResetAFKTimer( Client )
 end
 
 function Plugin:OnRecycle( Building, ResearchID )
@@ -268,7 +267,7 @@ function Plugin:OnRecycle( Building, ResearchID )
 end
 
 function Plugin:OnCommanderNotify( Commander, ... )
-        PlayerAFK:ResetAFKTimer( GetOwner( Commander ) )
+    PlayerAFK:ResetAFKTimer( GetOwner( Commander ) )
 end
 
 function Plugin:CommLogout( Player )
