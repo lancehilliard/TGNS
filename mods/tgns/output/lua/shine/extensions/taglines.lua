@@ -67,7 +67,7 @@ function Plugin:Initialise()
 		if not TGNS.GetIsClientVirtual(client) then
 			local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
 			if connectedTimeInSeconds < 120 then
-				local message = TGNS.GetClientName(client) .. " joined!"
+				local message = TGNS.GetClientName(client) .. string.format(" joined (%s)!", TGNS.PlayerAction(client, TGNS.GetPlayerTeamName))
 				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") then
 					local steamId = TGNS.GetClientSteamId(client)
 					local tagline = pdr:Load(steamId)
