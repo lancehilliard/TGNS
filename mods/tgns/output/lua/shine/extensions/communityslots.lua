@@ -7,6 +7,8 @@ local rejectBumpCounts = {}
 local commandStructureLastOccupancies = {}
 local lastSetReservedSlotAmount
 local inReadyRoomSinceTimes = {}
+local fullSpecDataRepository
+local fullSpecSteamIds
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 
@@ -300,8 +302,13 @@ function Plugin:ClientConfirmConnect(client)
     else
         chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
     end
+    local player = TGNS.GetPlayer(client)
     if not TGNS.GetIsClientVirtual(client) then
-        TGNS.PlayerAction(client, function(p) tgnsMd:ToPlayerNotifyInfo(p, chatMessage) end)
+        tgnsMd:ToPlayerNotifyInfo(player, chatMessage)
+    end
+    local steamId = TGNS.GetClientSteamId(client)
+    if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
+        tgnsMd:ToPlayerNotifyInfo(player, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
     end
 end
 
@@ -322,15 +329,28 @@ end
 function Plugin:CreateCommands()
     local logCommand = self:BindCommand( "sh_cslog", "cslog", function(client)
         TGNS.DoFor(actionslog, function(logline, index)
-                tgnsMd:ToClientConsole(client, logline)
-                if #actionslog - index <= 5 then
-                    tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), logline)
-                end
+            tgnsMd:ToClientConsole(client, logline)
+            if #actionslog - index <= 5 then
+                tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), logline)
             end
-        )
+        end)
         PrintBumpCountsReport(client)
     end)
-    logCommand:Help( "View the Community Slots log." )
+    logCommand:Help("View the Community Slots log.")
+    local fullSpecCommand = self:BindCommand( "sh_fullspec", "fs", function(client)
+        local fullSpecData = fullSpecDataRepository.Load()
+        local steamId = TGNS.GetClientSteamId(client)
+        if TGNS.Has(fullSpecData.enrolled, steamId) then
+            TGNS.RemoveAllMatching(fullSpecData.enrolled, steamId)
+        else
+            table.insert(fullSpecData.enrolled, steamId)
+        end
+        fullSpecSteamIds = fullSpecData.enrolled
+        fullSpecDataRepository.Save(fullSpecData)
+        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
+        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Execute the command again to toggle. Help: M > Info > sh_fullspec")
+    end, true)
+    fullSpecCommand:Help("Toggle your sh_fullspec. Help: M > Info > sh_fullspec")
 end
 
 //local function PrintPlayerSlotsStatuses(client)
@@ -442,10 +462,10 @@ end
 TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
     local result = true
     if not TGNS.IsSteamIdAdmin(joiningSteamId) then
-        local playerList = GetPlayingPlayers()
-        if ServerIsFull(playerList) then
-            local bumpableClient = FindVictimClient(joiningSteamId, playerList)
-            result = bumpableClient ~= nil
+        local playingPlayers = GetPlayingPlayers()
+        if ServerIsFull(playingPlayers) then
+            local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
+            result = bumpableClient ~= nil or (TGNS.Has(fullSpecSteamIds, joiningSteamId) and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < Shine.Plugins.communityslots.Config.MaximumSpectators)
         end
     end
     return result
@@ -486,13 +506,17 @@ function Plugin:PlayerSay(client, networkMessage)
     end
 end
 
-
-
 function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
     TGNS.ScheduleActionInterval(10, sweep)
     TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
+    fullSpecDataRepository = TGNSDataRepository.Create("fullspec", function(data)
+        data.enrolled = data.enrolled or {}
+        return data
+    end)
+    local fullSpecData = fullSpecDataRepository.Load()
+    fullSpecSteamIds = fullSpecData.enrolled
     return true
 end
 
