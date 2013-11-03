@@ -32,12 +32,14 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 			end
 			local targetName = TGNS.GetClientName(client)
 			local adminMessage = string.format("Kicking %s: %s", targetName, reason)
-			md:ToAdminConsole(adminMessage)
-			md:ToClientConsole(client, reason)
-			if repeatOffensesIsCauseForBan then
-				md:ToClientConsole(client, "Note: Too many kicks may create a temporary ban.") 
+			if not TGNS.GetIsClientVirtual(client) then
+				md:ToAdminConsole(adminMessage)
+				md:ToClientConsole(client, reason)
+				if repeatOffensesIsCauseForBan then
+					md:ToClientConsole(client, "Note: Too many kicks may create a temporary ban.")
+				end
+				md:ToClientConsole(client, "Contact TGNS administration: http://www.tacticalgamer.com/natural-selection-contact-admin/")
 			end
-			md:ToClientConsole(client, "Contact TGNS administration: http://www.tacticalgamer.com/natural-selection-contact-admin/") 
 			TGNS.ScheduleAction(kickDelayInSeconds, function()
 				if repeatOffensesIsCauseForBan then
 					local targetSteamId = TGNS.GetClientSteamId(client)

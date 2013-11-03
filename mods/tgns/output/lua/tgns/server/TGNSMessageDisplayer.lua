@@ -22,6 +22,16 @@ local function SendChatMessage(player, message, channel, isTeamMessage)
 	end
 end
 
+local function NotifyInfo(player, message, messagesChannel)
+	Shine:NotifyDualColour(player, 240, 230, 130, "[" .. messagesChannel .. "]", 255, 255, 255, message)
+	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+end
+
+local function NotifyError(player, message, messagesChannel)
+	Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. " ERROR]", 255, 255, 255, message)
+	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+end
+
 TGNSMessageDisplayer = {}
 
 function TGNSMessageDisplayer.Create(messagesChannel)
@@ -29,13 +39,18 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 	result.messagesChannel = GetChannelOrTgns(messagesChannel)
 
 	function result:ToPlayerChat(player, message)
-		SendChatMessage(player, message, self.messagesChannel)
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s chat: %s", TGNS.GetClientName(client), message))
+		local client = TGNS.GetClient(player)
+		if not TGNS.GetIsClientVirtual(client) then
+			SendChatMessage(player, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s chat: %s", TGNS.GetClientName(client), message))
+		end
 	end
 
 	function result:ToClientConsole(client, message)
-		SendConsoleMessage(client, message, self.messagesChannel)
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s console: %s", TGNS.GetClientName(client), message))
+		if not TGNS.GetIsClientVirtual(client) then
+			SendConsoleMessage(client, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s console: %s", TGNS.GetClientName(client), message))
+		end
 	end
 
 	function result:ToAdminChat(message)
@@ -97,55 +112,59 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 	end
 
 	function result:ToPlayerNotifyInfo(player, message)
-		Shine:NotifyDualColour(player, 240, 230, 130, "[" .. self.messagesChannel .. "]", 255, 255, 255, message)
-		SendConsoleMessage(TGNS.GetClient(player), message, self.messagesChannel)
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyinfo: %s", TGNS.GetPlayerName(player), message))
+		local client = TGNS.GetClient(player)
+		if not TGNS.GetIsClientVirtual(client) then
+			NotifyInfo(player, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyinfo: %s", TGNS.GetPlayerName(player), message))
+		end
 	end
 
 	function result:ToPlayerNotifyError(player, message)
-		Shine:NotifyDualColour(player, 255, 0, 0, "[" .. self.messagesChannel .. " ERROR]", 255, 255, 255, message)
-		SendConsoleMessage(TGNS.GetClient(player), message, self.messagesChannel)
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyerror: %s", TGNS.GetPlayerName(player), message))
+		local client = TGNS.GetClient(player)
+		if not TGNS.GetIsClientVirtual(client) then
+			NotifyError(player, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyerror: %s", TGNS.GetPlayerName(player), message))
+		end
 	end
 
 	function result:ToAllNotifyInfo(message)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-			self:ToPlayerNotifyInfo(p, message)
+			NotifyInfo(p, message, self.messagesChannel)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To all notifyinfo: %s", message))
 	end
 
 	function result:ToAllNotifyError(message)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-			self:ToPlayerNotifyError(p, message)
+			NotifyError(p, message, self.messagesChannel)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To all notifyerror: %s", message))
 	end
 
 	function result:ToTeamNotifyInfo(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
-			TGNS.PlayerAction(c, function(p) self:ToPlayerNotifyInfo(p, message, self.messagesChannel, true) end)
+			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To team %s notifyinfo: %s", teamNumber, message))
 	end
 
 	function result:ToTeamNotifyError(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
-			TGNS.PlayerAction(c, function(p) self:ToPlayerNotifyError(p, message, self.messagesChannel, true) end)
+			TGNS.PlayerAction(c, function(p) NotifyError(p, message, self.messagesChannel) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To team %s notifyerror: %s", teamNumber, message))
 	end
 
 	function result:ToAdminNotifyInfo(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			TGNS.PlayerAction(c, function(p) self:ToPlayerNotifyInfo(p, message) end)
+			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyinfo: %s", message))
 	end
 
 	function result:ToAuthorizedNotifyInfo(message, commandName)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c) return TGNS.ClientCanRunCommand(c, commandName) end), function(c)
-			TGNS.PlayerAction(c, function(p) self:ToPlayerNotifyInfo(p, message) end)
+			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To %s authorized notifyinfo: %s", commandName, message))
 	end
