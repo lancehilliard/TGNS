@@ -41,6 +41,14 @@ local function UpdateWinOrLoseVotes()
 			if (math.fmod(kCountdownTimeRemaining, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) == 0 or kCountdownTimeRemaining <= 5) then
 				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
+				if teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType then
+					commandStructureToKeep.GetCanBeNanoShieldedOverride = function(self, resultTable)
+	    				resultTable.shieldedAllowed = false
+	    				local commanderClient = TGNS.GetFirst(TGNS.Where(TGNS.GetTeamClients(teamNumberWhichWillWinIfWinLoseCountdownExpires), TGNS.IsClientCommander))
+	    				local commanderPlayer = TGNS.GetPlayer(commanderClient)
+	    				md:ToPlayerNotifyError(commanderPlayer, "Command chairs may not be nanoshielded during WinOrLose.")
+	    			end
+				end
 				TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
 				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
