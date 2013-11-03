@@ -37,7 +37,7 @@ local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pref
 	whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
 end
 
-local function ShowUsage(client, targetSteamId) 
+local function ShowUsage(client, targetSteamId)
 	local md = TGNSMessageDisplayer.Create("BKA")
 	md:ToClientConsole(client, " ")
 	md:ToClientConsole(client, " Usage:")
@@ -92,7 +92,7 @@ function Plugin:ClientConfirmConnect(client)
 	TGNS.UpdateAllScoreboards()
 end
 
-function Plugin:ClientConnect(client)
+function Plugin:ClientConfirmConnect(client)
 	local bkaData = pdr:Load(TGNS.GetClientSteamId(client))
 	if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
 		bkas[client] = bkaData.BKA
@@ -121,7 +121,7 @@ function Plugin:CreateCommands()
 	end, true)
 	whoisCommand:AddParam{ Type = "string", Optional = true }
 	whoisCommand:Help( "<player> View player's aliases." )
-	
+
 	local bkaCommand = self:BindCommand( "sh_bka", "bka", function(client, playerName, newBkaName)
 		local md = TGNSMessageDisplayer.Create("BKA")
 		local targetPlayer = TGNS.GetPlayerMatching(playerName, nil)
@@ -188,7 +188,7 @@ function Plugin:CreateCommands()
 	end, true)
 	nameCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true}
 	nameCommand:Help(string.format("<name> Edit your own Better Known As (%s cooldown between edits).", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
-	
+
 	local akaCommand = self:BindCommand( "sh_aka", "aka", function(client, playerName, newBkaName)
 		local md = TGNSMessageDisplayer.Create()
 		local targetPlayer = TGNS.GetPlayerMatching(playerName, nil)

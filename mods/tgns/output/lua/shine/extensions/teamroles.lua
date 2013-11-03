@@ -1,7 +1,9 @@
 local md = TGNSMessageDisplayer.Create()
+local pdrCache = {}
 
 local function CreateRole(displayName, candidatesDescription, groupName, messagePrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery)
 	local result = {}
+	pdrCache[persistedDataName] = {}
 	local pdr = TGNSPlayerDataRepository.Create(persistedDataName, function(data)
 			data.optin = data.optin ~= nil and data.optin or false
 			return data
@@ -18,8 +20,20 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 	function result:IsTeamEligible(teamPlayers) return TGNS.GetLastMatchingClient(teamPlayers, self.IsClientBlockerOf) == nil end
 	function result:IsClientBlacklisted(client) return pbr:IsClientBlacklisted(client) end
 	function result:IsClientPreferred(client) return ppr:IsClientPreferred(client) end
-	function result:LoadOptInData(client) return pdr:Load(TGNS.GetClientSteamId(client)) end
-	function result:SaveOptInData(pdrData) pdr:Save(pdrData) end
+	function result:LoadOptInData(client)
+		local pdrData
+		local steamId = TGNS.GetClientSteamId(client)
+		if pdrCache[persistedDataName][steamId] ~= nil then
+			pdrData = pdrCache[persistedDataName][steamId]
+		else
+			pdrData = pdr:Load(TGNS.GetClientSteamId(client))
+		end
+		return pdrData
+	end
+	function result:SaveOptInData(pdrData)
+		pdrCache[persistedDataName][pdrData.steamId] = pdrData
+		pdr:Save(pdrData)
+	end
 	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(client).optin and not self:IsClientBlacklisted(client) end
 	return result
 end
