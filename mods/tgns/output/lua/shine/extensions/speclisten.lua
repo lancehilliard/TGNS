@@ -1,6 +1,6 @@
 local originalGetCanPlayerHearPlayer
 local md
-local specmodes = {}
+local specmodes
 local modeDescriptions = {["0"] = "Chat Advisory ON; Voicecomm: All"
 	, ["1"] = "Chat Advisory OFF; Voicecomm: Marines only"
 	, ["2"] = "Chat Advisory OFF; Voicecomm: Aliens only"
@@ -9,9 +9,10 @@ local modeDescriptions = {["0"] = "Chat Advisory ON; Voicecomm: All"
 	, ["5"] = "Chat Advisory OFF; Voicecomm: None"}
 
 local function listenerSpectatorShouldHearSpeaker(listenerPlayer, speakerPlayer)
-	local playerCanHearAllVoices = specmodes[listenerPlayer] == 0
-	local playerIsOnGameplayTeamThatPlayerCanHear = (TGNS.PlayerIsOnPlayingTeam(speakerPlayer) and (specmodes[listenerPlayer] == 3 or specmodes[listenerPlayer] == TGNS.GetPlayerTeamNumber(speakerPlayer)))
-	local bothPlayersAreSpectatorsAndPlayerCanHearSpectators = TGNS.IsPlayerSpectator(listenerPlayer) and TGNS.IsPlayerSpectator(speakerPlayer) and specmodes[listenerPlayer] == 4
+	local listenerClient = TGNS.GetClient(listenerPlayer)
+	local playerCanHearAllVoices = specmodes[listenerClient] == 0
+	local playerIsOnGameplayTeamThatPlayerCanHear = (TGNS.PlayerIsOnPlayingTeam(speakerPlayer) and (specmodes[listenerClient] == 3 or specmodes[listenerClient] == TGNS.GetPlayerTeamNumber(speakerPlayer)))
+	local bothPlayersAreSpectatorsAndPlayerCanHearSpectators = TGNS.IsPlayerSpectator(listenerPlayer) and TGNS.IsPlayerSpectator(speakerPlayer) and specmodes[listenerClient] == 4
 	local result = playerCanHearAllVoices or playerIsOnGameplayTeamThatPlayerCanHear or bothPlayersAreSpectatorsAndPlayerCanHearSpectators
 	return result
 end
@@ -23,8 +24,7 @@ end
 local Plugin = {}
 
 function Plugin:ClientConfirmConnect(client)
-	local player = TGNS.GetPlayer(client)
-	specmodes[player] = specmodes[player] or 0
+	specmodes[client] = specmodes[client] or 0
 end
 
 function Plugin:CreateCommands()
@@ -34,9 +34,9 @@ function Plugin:CreateCommands()
     	if mode == nil or mode < 0 or mode > 5 then
     		showUsage(player)
     	else
-    		specmodes[player] = mode
+    		specmodes[client] = mode
     	end
-    	local currentSpecMode = tostring(specmodes[player] or 0)
+    	local currentSpecMode = tostring(specmodes[client] or 0)
     	md:ToPlayerNotifyInfo(player, string.format("Current sh_specmode: %s (%s)", currentSpecMode, modeDescriptions[currentSpecMode]))
     end, true)
     modCommand:AddParam{ Type = "string", TakeRestofLine = true, Optional = true }
@@ -45,6 +45,7 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
+	specmodes = {}
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
 		local result
 		if TGNS.IsPlayerSpectator(listenerPlayer) then
@@ -55,7 +56,7 @@ function Plugin:Initialise()
 		return result
 	end)
 	TGNS.ScheduleActionInterval(90, function()
-		local specPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) and specmodes[p] == 0 end)
+		local specPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) and TGNS.ClientAction(p, function(c) return specmodes[c] end) == 0 end)
 		TGNS.DoFor(specPlayers, function(p)
 			md:ToPlayerNotifyInfo(p, "Limit of 8 per team. Join when you can. Spec while you wait!")
 			md:ToPlayerNotifyInfo(p, "Adjust what you hear in Spectate: press M > Spec Voicecomms")
