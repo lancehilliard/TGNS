@@ -206,7 +206,7 @@ function TGNS.Replace(original, pattern, replace)
 end
 
 function TGNS.GetNextMapName()
-	local result = MapCycle_GetNextMapInCycle().map
+	local result = Shine.Plugins.mapvote:GetNextMap()
 	return result
 end
 
