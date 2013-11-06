@@ -474,12 +474,17 @@ function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
 	self:CreateCommands()
-
-	TGNS.RegisterEventHook("OnEverySecond", function(deltatime)
-		if captainsModeEnabled and not TGNS.IsGameInProgress() then
-			TGNS.DoFor(TGNS.GetPlayerList(), TGNS.ResetPlayerAFK)
+	
+	local AFKKick = Shine.Plugins.improvedafkhandler
+	if AFKKick and AFKKick.Enabled then
+		local PlayerAFK = AFKKick:GetPlayerAFK()
+		local oldIsImmune = PlayerAFK.IsImmune
+		-- Colon doesn't work in this instance I guess
+		PlayerAFK.IsImmune = function(self, Config, Player, Client)
+			if captainsModeEnabled and not TGNS.IsGameInProgress() then return true end
+			return oldIsImmune(self, Config, Player, Client)
 		end
-	end)
+	end
 
 	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
 		if captainsModeEnabled and not TGNS.IsGameInProgress() then

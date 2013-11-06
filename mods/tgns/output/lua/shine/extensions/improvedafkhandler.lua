@@ -3,6 +3,8 @@ local Plugin = {}
 Plugin.Version = "1.0"
 Plugin.HasConfig = true
 
+Plugin.ConfigName = "improvedafkhandler.json"
+
 Plugin.Conflicts = {
 	DisableThem = "afkkick"
 }
@@ -13,7 +15,7 @@ Plugin.DefaultConfig = {
 		IgnoreAllSpectators = false,
 		IgnorePrimerSpectators = false,
 		IgnoreSMSpectators = false,
-		ConsiderAFKTime = 60, -- Time when AfkChanged is executed
+		ConsiderAFKTime = 30, -- Time when AfkChanged is executed
 		KickTime = 180, -- Time in seconds
 		WarnTimes = {
 			90,	45,	20,	10, 5, 4, 3, 2,	1
@@ -29,8 +31,7 @@ local md
 -- contain, at most:
 -- IsAFK 	 - If AfkChanged was called on this client
 -- LastMove  - From a call to TGNS.GetSecondsSinceServerProcessStarted()
--- LastWarn  - A time, in seconds, that the player was last warned at 
---			  (e.g 45 would be 45 seconds of not moving) (nil if (s)he hasn't been warned since (s)he last moved)
+-- LastWarn  - The index of the last warn time used, 1 would be 90 seconds remaining, 2 would be 45.. etc.
 -- LastPitch - Last pitch we've seen from this player
 -- LastYaw   - Last yaw 
 local LastActionTimes = {} 
@@ -41,6 +42,7 @@ local PlayerAFK = {} -- this name is too general to put on the global namespace
 -- @param Client a client
 -- @return false if the client's afk timer was not set, true otherwise
 function PlayerAFK:ResetAFKTimer( Client )
+	--error( "What the hell" )
 	if not Client then return false end
 	if not Client.GetIsVirtual then 
 		error( "Invalid Client (No GetIsVirtual method supplied)" )
@@ -49,10 +51,12 @@ function PlayerAFK:ResetAFKTimer( Client )
 	LastActionTimes[Client] = LastActionTimes[Client] or {}
 	LastActionTimes[Client].LastMove = TGNS.GetSecondsSinceServerProcessStarted()
 	LastActionTimes[Client].LastWarn = nil
-	if LastActionTimes[Client].IsAfk then
+	if LastActionTimes[Client].IsAFK then
+		local Player = TGNS.GetPlayer( Client )
 		TGNS.ExecuteEventHooks("AfkChanged", Player, false)
+		Print( TGNS.GetPlayerName( Player ) .. " is no longer afk" )
 	end
-	LastActionTimes[Client].IsAfk = false
+	LastActionTimes[Client].IsAFK = false
 	return true
 end
 
@@ -77,56 +81,57 @@ end
 --- Decides if a client is immune to AFK-Kick actions.
 -- @param Player the player that controls the client
 -- @param Client the client to check
-function PlayerAFK:IsImmune( Player, Client )
+function PlayerAFK:IsImmune( Config, Player, Client )
 	if Client:GetIsVirtual() then return true end
 	
 	if not Player then return true end
+	if not TGNS.IsPlayerAlive( Player ) then return true end
 	
 	local TeamNum = TGNS.GetPlayerTeamNumber( Player )
 	if TeamNum == kSpectatorIndex and (
-			self.Config.IgnoreAllSpecators or
-			(self.Config.IgnorePrimerSpectators and TGNS.IsPrimerOnlyClient( Client )) or
-			(self.Config.IgnoreSMSpectators and TGNS.IsClientSM( Client ))
+			Config.IgnoreAllSpecators or
+			(Config.IgnorePrimerSpectators and TGNS.IsPrimerOnlyClient( Client )) or
+			(Config.IgnoreSMSpectators and TGNS.IsClientSM( Client ))
 		) then return true end
 	
+	--local Players = Shared.GetEntitiesWithClassname( "Player" )
+	--if #Players < Config.MinPlayers then return true end
 	return false
 end
 
 --- Takes the necessary action against the Client if necessary
 -- @param Client the client to perform an action against
 -- @return if any action was taken
-function PlayerAFK:PerformActionAgainst( Client )
-	-- First decide if any action needs to be taken against anyone
-	local Players = Shared.GetEntitiesWithClassname( "Player" )
-	if #Players < self.Config.MinPlayers then return false end
-	
+function PlayerAFK:PerformActionAgainst( Config, Client )
 	local Player = TGNS.GetPlayer( Client ) 
-	-- Next check for various immunities
-	if PlayerAFK:IsImmune( Player, Client ) then return false end
-	
-	local TimeAfk = PlayerAFK:TimeAFK( Player, Client )
-	if not LastActionTimes[Client].IsAFK and TimeAfk >= self.Config.ConsiderAFKTime then
+	-- Check for various immunities
+	local TimeAfk = PlayerAFK:TimeAFK( Client )
+	if not LastActionTimes[Client].IsAFK and TimeAfk >= Config.ConsiderAFKTime then
 		LastActionTimes[Client].IsAFK = true
 		TGNS.ExecuteEventHooks("AfkChanged", Player, true)
+		Print("improvedafkhandler: " ..  TGNS.GetPlayerName(Player) .. " is now afk")
 	end
+	-- Don't warn someone who is immune, but do set them to afk
+	if PlayerAFK:IsImmune( Config, Player, Client ) then return false end 
 	
 	local WarnTimeIndex = 1
 	if LastActionTimes[Client].LastWarn then
-		WarnTimeIndex = LastActionTimes[Client] + 1
+		WarnTimeIndex = LastActionTimes[Client].LastWarn + 1
 	end
-	
-	local WarnTimeSeconds = self.Config.WarnTimes[WarnTimeIndex]
+	local WarnTimeSeconds = Config.WarnTimes[WarnTimeIndex]
 	if WarnTimeSeconds then
-		if TimeAfk < WarnTimeSeconds then 
+		if (Config.KickTime - TimeAfk) > WarnTimeSeconds then 
 			return false
 		else
-			md:ToPlayerNotifyInfo( "You have been afk for " .. TimeAfk .. " seconds, and will be kicked in " .. (self.Config.KickTime - TimeAfk) .. " seconds" )
+			md:ToPlayerNotifyInfo( Player, "You have been afk for " .. (Config.KickTime - WarnTimeSeconds) .. " seconds, and will be kicked in " .. WarnTimeSeconds .. " seconds" )
+			LastActionTimes[Client].LastWarn = WarnTimeIndex
+			return true
 		end
-	elseif self.Config.KickTime - TimeAfk <= 0.01 then -- No warnings left
+	elseif Config.KickTime - TimeAfk <= 0.01 then -- No warnings left
 		TGNSClientKicker.Kick( Client, "You were kicked for being afk for " .. TimeAfk .. " seconds" )
+		return true
 	end
 end
-
 --- If, somehow, some players weren't removed from
 -- the list, this will fix that
 function PlayerAFK:CleanupMemory( )
@@ -141,7 +146,7 @@ function PlayerAFK:CleanupMemory( )
 		local Ply = Players[i]
 		
 		if Ply then
-			local Cli = GetOwner( Ply )
+			local Cli = TGNS.GetClient( Ply )
 			if Cli then
 				LastActionTimes[Cli].IsPlayerConnected = true
 			end
@@ -164,17 +169,24 @@ end
 function Plugin:Initialise()
 	self.Enabled = true
 	md = TGNSMessageDisplayer.Create("AFK-Kick+")
-	
+	self:CreateCommands()
 	
 	TGNS.ScheduleActionInterval(1, function() 
 		local Clients = TGNS.GetClients(TGNS.GetPlayerList())
-		for c in Clients do
-			PlayerAFK:PerformActionAgainst( c )
+		for _, c in pairs(Clients) do
+			PlayerAFK:PerformActionAgainst( Plugin.Config, c )
 		end
 	end)
 	return true
 end
 
+
+function Plugin:CreateCommands()
+	local showAfkStatusCommand = self:BindCommand( "sh_debugafk", "debugafk", function(client) 
+		Print("showAfkStatusCommand")
+		require 'pl.pretty'.dump(LastActionTimes)
+	end)
+end
 -- 
 -- These functions merely detect movement/actions that reset afk timers in roughly
 -- the order they would happen in (for convienent scanning)
@@ -191,7 +203,7 @@ function Plugin:OnProcessMove( Player, Input )
 	local Gamerules = GetGamerules()
 	local Started = Gamerules and Gamerules:GetGameStarted()
 	
-	local Client = GetOwner( Player )
+	local Client = TGNS.GetClient( Player )
 	
 	local ClientActionTimes = LastActionTimes[Client]
 	if not ClientActionTimes then 
@@ -217,7 +229,7 @@ function Plugin:OnProcessMove( Player, Input )
 end
 
 function Plugin:PlayerNameChange( Player, ... )
-	local Client = GetOwner( Player ) 
+	local Client = TGNS.GetClient( Player ) 
 	PlayerAFK:ResetAFKTimer( Client ) 
 end
 
@@ -230,8 +242,8 @@ local function GetBuildingOwnerClient( Building )
 	local Team = Building:GetTeam()
 
 	-- Check for spectate / modded team
-	if not Team or not Team.GetCommander then return end
-
+	if not Team or not Team.GetCommander then return nil end
+	
 	-- Get the owner of the building, which is whoever placed it (this might
 	-- not be the commander)
 	local Owner = Building:GetOwner()
@@ -242,13 +254,12 @@ local function GetBuildingOwnerClient( Building )
 	Owner = Owner or Team:GetCommander()
 
 	-- If there is no owner still, then do nothing
-	if not Owner then return end
-	
-	return GetOwner( Owner )
+	if not Owner then return nil end
+	return TGNS.GetClient( Owner )
 end
 
 function Plugin:CommLoginPlayer( Building, Player )
-	PlayerAFK:ResetAFKTimer( GetOwner( Player ) )
+	PlayerAFK:ResetAFKTimer( TGNS.GetClient( Player ) )
 end
 
 function Plugin:OnConstructInit( Building )
@@ -256,7 +267,7 @@ function Plugin:OnConstructInit( Building )
 end
 
 function Plugin:OnCommanderTechTreeAction( Commander, ... )
-	local Client = GetOwner( Commander )
+	local Client = TGNS.GetClient( Commander )
 	if not Client then return end
 	
 	PlayerAFK:ResetAFKTimer( Client )
@@ -267,11 +278,11 @@ function Plugin:OnRecycle( Building, ResearchID )
 end
 
 function Plugin:OnCommanderNotify( Commander, ... )
-    PlayerAFK:ResetAFKTimer( GetOwner( Commander ) )
+    PlayerAFK:ResetAFKTimer( TGNS.GetClient( Commander ) )
 end
 
 function Plugin:CommLogout( Player )
-	PlayerAFK:ResetAFKTimer( GetOwner( Player ) )
+	PlayerAFK:ResetAFKTimer( TGNS.GetClient( Player ) )
 end
 
 -- End Commander Functions
@@ -288,4 +299,4 @@ function Plugin:Cleanup()
     self.BaseClass.Cleanup( self )
 end
 
-Shine:RegisterExtension( "improvedafk", Plugin )
+Shine:RegisterExtension( "improvedafkhandler", Plugin )
