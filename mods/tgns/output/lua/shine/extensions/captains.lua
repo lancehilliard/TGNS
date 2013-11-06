@@ -12,6 +12,7 @@ local readyCaptainClients
 local timeAtWhichToForceRoundStart
 local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
 local whenToAllowTeamJoins = 0
+local lastPitches = {}
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -92,9 +93,10 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c)
 		TGNS.AddTempGroup(c, "captains_group")
-		TGNS.ScheduleAction(10, function()
-			TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam to force anyone's team.") end)
-		end)
+		TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
+		TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
 	end)
 	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	TGNS.ScheduleAction(3, function()
@@ -458,6 +460,11 @@ function Plugin:ClientConfirmConnect(client)
 	//TGNS.UpdateAllScoreboards()
 end
 
+function Plugin:OnProcessMove(player, input)
+	local client = TGNS.GetClient(player)
+	lastPitches[client] = input.pitch
+end
+
 function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
@@ -466,7 +473,28 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("OnEverySecond", function(deltatime)
 		if captainsModeEnabled and not TGNS.IsGameInProgress() then
 			TGNS.DoFor(TGNS.GetPlayerList(), TGNS.ResetPlayerAFK)
+			TGNS.UpdateAllScoreboards()
 		end
+	end)
+
+	TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
+		--return TGNS.IsTeamNumberSpectator(message.teamNumber) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin) and not TGNS.IsPlayerSpectator(targetPlayer)
+		local result = false
+		if captainsModeEnabled and not TGNS.IsGameInProgress() then
+			local targetClient = TGNS.GetClient(targetPlayer)
+			if TGNS.Has(captainClients, targetClient) then
+				lastPitches[targetClient] = lastPitches[targetClient] or 0
+				local targetPlayerIsLookingStraightDown = lastPitches[targetClient] < 1.6 and lastPitches[targetClient] > 1.2
+				if targetPlayerIsLookingStraightDown then
+					local messageClient = Server.GetClientById(message.clientId)
+					local messagePlayer = TGNS.GetPlayer(messageClient)
+					if not TGNS.ClientIsInGroup(messageClient, "captainsgame_group") then
+						result = true
+					end
+				end
+			end
+		end
+		return result
 	end)
 
     return true
