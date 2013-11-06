@@ -65,6 +65,7 @@
 !mods/tgns/output/lua/shine/extensions/greetings.lua
 !mods/tgns/output/lua/shine/extensions/groundedrookies.lua
 !mods/tgns/output/lua/shine/extensions/help.lua
+!mods/tgns/output/lua/shine/extensions/hidefullmodlist.lua
 !mods/tgns/output/lua/shine/extensions/hidespectators.lua
 !mods/tgns/output/lua/shine/extensions/modupdatednotice.lua
 !mods/tgns/output/lua/shine/extensions/noattackpregame.lua
