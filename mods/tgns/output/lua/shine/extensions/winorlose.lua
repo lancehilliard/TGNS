@@ -34,6 +34,24 @@ local function getNumberOfRequiredVotes(votersCount)
 	return result
 end
 
+local function onVoteSuccessful(teamNumber, players)
+	local teamName = TGNS.GetTeamName(teamNumber)
+	local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
+	md:ToAllNotifyInfo(chatMessage)
+	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
+	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
+	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
+	TGNS.DoFor(players, function(p)
+		pcall(function()
+			p:SelectNextWeapon()
+			p:SelectPrevWeapon()
+		end)
+	end)
+	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotesAlertTime = 0
+	kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = 0
+	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes = { }
+end
+
 local function UpdateWinOrLoseVotes()
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
@@ -92,26 +110,7 @@ local function UpdateWinOrLoseVotes()
 					end
 				end
 				if totalvotes >= getNumberOfRequiredVotes(#playerRecords) then
-					local teamName = TGNS.GetTeamName(i)
-					local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
-					md:ToAllNotifyInfo(chatMessage)
-					for i = 1, #playerRecords do
-						if playerRecords[i] ~= nil then
-							kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
-							kTeamWhichWillWinIfWinLoseCountdownExpires = playerRecords[i]:GetTeam()
-							kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
-							break
-						end
-					end
-					TGNS.DoFor(playerRecords, function(p)
-						pcall(function()
-							p:SelectNextWeapon()
-							p:SelectPrevWeapon()
-						end)
-					end)
-					kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
-					kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
-					kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
+					onVoteSuccessful(i, playerRecords)
 				else
 					local chatMessage
 					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
@@ -211,6 +210,10 @@ Plugin.ConfigName = "winorlose.json"
 function Plugin:CreateCommands()
 	local command = self:BindCommand("sh_winorlose", nil, OnCommandWinOrLose, true)
 	command:Help("Cast a WinOrLose vote.")
+end
+
+function Plugin:CallWinOrLose(teamNumber)
+	onVoteSuccessful(teamNumber, TGNS.GetPlayers(TGNS.GetTeamClients(teamNumber)))
 end
 
 function Plugin:Initialise()

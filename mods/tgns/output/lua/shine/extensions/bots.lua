@@ -57,7 +57,7 @@ end
 function Plugin:ClientConnect(client)
 	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
 		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
-		Shine.Plugins.votesurrender:Surrender(kAlienTeamType)
+		Shine.Plugins.winorlose:CallWinOrLose(kAlienTeamType)
 		winOrLoseOccurredRecently = true
 		TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
 	end
