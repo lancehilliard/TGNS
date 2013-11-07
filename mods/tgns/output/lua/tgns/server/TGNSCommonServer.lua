@@ -483,6 +483,11 @@ function TGNS.RespawnPlayer(player)
 	GetGamerules():RespawnPlayer(player)
 end
 
+function TGNS.GetTeamFromTeamNumber(teamNumber)
+	local result = GetGamerules():GetTeam(teamNumber)
+	return result
+end
+
 function TGNS.SendToRandomTeam(player)
 	local playerList = TGNS.GetPlayerList()
 	local marinesCount = #TGNS.GetMarineClients(playerList)
