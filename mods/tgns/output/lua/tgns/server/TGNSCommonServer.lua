@@ -708,6 +708,23 @@ function TGNS.IsClientTempAdmin(client)
 	return result
 end
 
+function TGNS.HasSteamIdSignedPrimerWithGames(steamId)
+	local result = TGNS.HasSteamIdSignedPrimer(steamId)
+	if result == true and Shine.Plugins.Balance and Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId then
+		result = Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId(steamId) >= 10
+	end
+	return result
+end
+
+function TGNS.HasClientSignedPrimerWithGames(client)
+	local result = false
+	if client ~= nil then
+		local steamId = TGNS.GetClientSteamId(client)
+		result = TGNS.HasSteamIdSignedPrimerWithGames(steamId)
+	end
+	return result
+end
+
 function TGNS.HasSteamIdSignedPrimer(steamId)
 	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "primer_group")
 	return result

@@ -91,7 +91,7 @@ end
 local function GetKickDetails(targetClient, joiningClient, playerList)
     local result = {}
     result.targetIsSM = TGNS.IsClientSM(targetClient) and "Y" or "N"
-    result.targetHasSignedPrimer = TGNS.HasClientSignedPrimer(targetClient) and "Y" or "N"
+    result.targetHasSignedPrimer = TGNS.HasClientSignedPrimerWithGames(targetClient) and "Y" or "N"
     result.joinerIsSM = TGNS.IsClientSM(joiningClient) and "Y" or "N"
     result.joinerHasSignedPrimer = TGNS.IsClientSM(joiningClient) and "Y" or "N"
     result.strangerCount = #TGNS.GetStrangersClients(playerList)
@@ -102,7 +102,7 @@ local function GetKickDetails(targetClient, joiningClient, playerList)
 end
 
 local function IncrementBumpCount(targetClient, bumpCounts)
-    if TGNS.HasClientSignedPrimer(targetClient) then
+    if TGNS.HasClientSignedPrimerWithGames(targetClient) then
         bumpCounts.primerOnly = TGNS.GetNumericValueOrZero(bumpCounts.primerOnly) + 1
     elseif TGNS.IsClientStranger(targetClient) then
         bumpCounts.stranger = TGNS.GetNumericValueOrZero(bumpCounts.stranger) + 1
@@ -290,6 +290,9 @@ function Plugin:ClientConnect(joiningClient)
     if TGNS.GetIsClientVirtual(joiningClient) then
         TGNS.ScheduleAction(3, function() self:ClientConfirmConnect(joiningClient) end)
     end
+    if TGNS.HasClientSignedPrimerWithGames(joiningClient) then
+        TGNS.AddTempGroup(joiningClient, "primerwithgames_group")
+    end
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -297,7 +300,7 @@ function Plugin:ClientConfirmConnect(client)
     local chatMessage
     if TGNS.IsClientSM(client) then
         chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
-    elseif TGNS.HasClientSignedPrimer(client) then
+    elseif TGNS.HasClientSignedPrimerWithGames(client) then
         chatMessage = string.format("TGNS Primer signer! Join the full server when >%s strangers are playing!", Shine.Plugins.communityslots.Config.MinimumStrangers)
     else
         chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
@@ -358,7 +361,7 @@ end
 //    local smClients = TGNS.GetSmClients(playerList)
 //    local primerOnlyClients = TGNS.GetPrimerOnlyClients(playerList)
 //    local strangerClients = TGNS.GetStrangersClients(playerList)
-//    TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimer(c) and "(signed TGNS Primer)" or ""), MESSAGE_PREFIX) end)
+//    TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimerWithGames(c) and "(signed TGNS Primer)" or ""), MESSAGE_PREFIX) end)
 //    TGNS.DoFor(primerOnlyClients, function(c) TGNS.ConsolePrint(client, string.format("Primer Only: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
 //    TGNS.DoFor(strangerClients, function(c) TGNS.ConsolePrint(client, string.format("Say Hello To: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
 //    TGNS.ConsolePrint(client, string.format("S: %s | P: %s | ?: %s", #smClients, #primerOnlyClients, #strangerClients), MESSAGE_PREFIX)
@@ -490,7 +493,7 @@ function Plugin:PlayerSay(client, networkMessage)
                 end
                 cancel = true
             else
-                if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() and not TGNS.HasClientSignedPrimer(client) then
+                if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() and not TGNS.HasClientSignedPrimerWithGames(client) then
                     if ServerIsFull(GetPlayingPlayers()) and not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
                         tgnsMd:ToPlayerNotifyError(p, "You must read and agree to the TGNS Primer")
                         tgnsMd:ToPlayerNotifyError(p, "to chat to a full game from the Ready Room.")

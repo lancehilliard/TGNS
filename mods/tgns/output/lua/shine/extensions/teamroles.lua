@@ -47,9 +47,9 @@ local roles = {
 	//	, "tempadmin"
 	//	, TGNS.IsClientTempAdmin
 	//	, TGNS.IsClientAdmin
-	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimer(client) end),
+	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimerWithGames(client) end),
 	CreateRole("Guardian"
-		, "TGNS Primer signers who've played >=15 full rounds on this server"
+		, "TGNS Primer signers who've played >=40 full rounds on this server"
 		, "guardian_group"
 		, "GUARDIAN"
 		, "sh_guardian"
@@ -58,7 +58,7 @@ local roles = {
 		, function(client) return false end
 		, function(client)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
-			return TGNS.HasClientSignedPrimer(client) and totalGamesPlayed >= 15 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
+			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
 		end)
 }
 
@@ -115,7 +115,7 @@ local function ToggleOptIn(client, role)
 		end
 	end
 	local roleMd = TGNSMessageDisplayer.Create(role.messagePrefix)
-	roleMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+	roleMd:ToClientConsole(client, message)
 end
 
 local function CheckRoster()

@@ -22,15 +22,22 @@ Balance = {}
 function Balance.IsInProgress()
 	return balanceInProgress
 end
-function Balance.GetTotalGamesPlayed(client)
-	local result = TGNS.GetIsClientVirtual(client) and 0 or totalGamesPlayedCache[client]
-	if not result then
-		local steamId = TGNS.GetClientSteamId(client)
-		local data = pdr:Load(steamId)
-		local result = data.total
-		totalGamesPlayedCache[client] = result
+function Balance.GetTotalGamesPlayedBySteamId(steamId)
+	local result = 0
+	if steamId ~= nil and steamId ~= 0 then
+		result = totalGamesPlayedCache[steamId]
+		if result == nil then
+			local data = pdr:Load(steamId)
+			local result = data.total
+			totalGamesPlayedCache[steamId] = result
+		end
 	end
-	return result or 0
+	return result
+end
+function Balance.GetTotalGamesPlayed(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	local result = Balance.GetTotalGamesPlayedBySteamId(steamId)
+	return result
 end
 
 local addWinToBalance = function(balance)
