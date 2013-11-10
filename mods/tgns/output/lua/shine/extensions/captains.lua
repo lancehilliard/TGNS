@@ -33,15 +33,17 @@ function disableCaptainsMode()
 end
 
 local function startGame()
-	timeAtWhichToForceRoundStart = 0
-	TGNS.ScheduleAction(2, function()
-		setOriginalConfig()
-		TGNS.ForceGameStart()
-		TGNS.ScheduleAction(kCountDownLength + 2, function()
-			readyTeams["Marines"] = false
-			readyTeams["Aliens"] = false
+	if timeAtWhichToForceRoundStart and timeAtWhichToForceRoundStart ~= 0 then
+		timeAtWhichToForceRoundStart = 0
+		TGNS.ScheduleAction(2, function()
+			setOriginalConfig()
+			TGNS.ForceGameStart()
+			TGNS.ScheduleAction(kCountDownLength + 2, function()
+				readyTeams["Marines"] = false
+				readyTeams["Aliens"] = false
+			end)
 		end)
-	end)
+	end
 end
 
 local function bothTeamsAreReady()
@@ -473,21 +475,22 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("OnEverySecond", function(deltatime)
 		if captainsModeEnabled and not TGNS.IsGameInProgress() then
 			TGNS.DoFor(TGNS.GetPlayerList(), TGNS.ResetPlayerAFK)
+		end
+	end)
+
+	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
+		if captainsModeEnabled and not TGNS.IsGameInProgress() then
 			TGNS.UpdateAllScoreboards()
 		end
 	end)
 
 	TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
-		--return TGNS.IsTeamNumberSpectator(message.teamNumber) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin) and not TGNS.IsPlayerSpectator(targetPlayer)
 		local result = false
 		if captainsModeEnabled and not TGNS.IsGameInProgress() then
 			local targetClient = TGNS.GetClient(targetPlayer)
+			local messageClient = TGNS.GetClientById(message.clientId)
 			if TGNS.Has(captainClients, targetClient) then
-				lastPitches[targetClient] = lastPitches[targetClient] or 0
-				local targetPlayerIsLookingStraightDown = lastPitches[targetClient] < 1.6 and lastPitches[targetClient] > 1.2
-				if targetPlayerIsLookingStraightDown then
-					local messageClient = Server.GetClientById(message.clientId)
-					local messagePlayer = TGNS.GetPlayer(messageClient)
+				if Shine.Plugins.lookdown and Shine.Plugins.lookdown.IsPlayerLookingDown and Shine.Plugins.lookdown:IsPlayerLookingDown(targetPlayer) then
 					if not TGNS.ClientIsInGroup(messageClient, "captainsgame_group") then
 						result = true
 					end
