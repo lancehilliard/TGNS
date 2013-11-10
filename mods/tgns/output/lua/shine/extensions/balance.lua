@@ -28,7 +28,7 @@ function Balance.GetTotalGamesPlayedBySteamId(steamId)
 		result = totalGamesPlayedCache[steamId]
 		if result == nil then
 			local data = pdr:Load(steamId)
-			local result = data.total
+			result = data.total
 			totalGamesPlayedCache[steamId] = result
 		end
 	end
