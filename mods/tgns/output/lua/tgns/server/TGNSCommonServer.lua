@@ -1134,6 +1134,11 @@ function TGNS.GetPlayerMatchingSteamId(steamId, team)
 
 end
 
+function TGNS.GetClientById(clientId)
+	local result = Server.GetClientById(clientId)
+	return result
+end
+
 function TGNS.GetPlayerByGameId(id, teamNumber)
 	local result
 	local client = Shine.GetClientByID(id)
