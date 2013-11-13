@@ -19,26 +19,6 @@ function TGNS.Shuffle(elements)
 	table.Shuffle(elements)
 end
 
-function TGNS.Skip(elements, count)
-	local result = {}
-	TGNS.DoFor(elements, function(element, i)
-		if i > count then
-			table.insert(result, element)
-		end
-	end)
-	return result
-end
-
-function TGNS.Take(elements, count)
-	local result = {}
-	TGNS.DoFor(elements, function(element, i)
-		if i <= count then
-			table.insert(result, element)
-		end
-	end)
-	return result
-end
-
 function TGNS.PrintInfo(message)
 	Shared.Message(message)
 end
@@ -137,24 +117,4 @@ function TGNS.DoForReverse(elements, elementAction)
 	if elements ~= nil then
 		DoFor(elements, elementAction, #elements, 1, -1)
 	end
-end
-
-function TGNS.Where(elements, predicate)
-	local result = {}
-	TGNS.DoFor(elements, function(e)
-		if predicate ~= nil and predicate(e) then
-			table.insert(result, e)
-		end
-	end)
-	return result
-end
-
-function TGNS.Any(elements, predicate)
-	local result = #TGNS.Where(elements, predicate) > 0
-	return result
-end
-
-function TGNS.All(elements, predicate)
-	local result = #TGNS.Where(elements, predicate) == #elements
-	return result
 end

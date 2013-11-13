@@ -150,14 +150,6 @@ function TGNS.GetPlayersOnOtherPlayingTeam(player, playerList)
 	return result
 end
 
-function TGNS.Select(elements, projector)
-	local result = {}
-	TGNS.DoFor(elements, function(e)
-		table.insert(result, projector(e))
-	end)
-	return result
-end
-
 function TGNS.GetPlayerScorePerMinute(player)
 	local result
 	local gameDurationInSeconds = TGNS.GetCurrentGameDurationInSeconds()
@@ -870,16 +862,6 @@ function TGNS.SortAscending(elements, sortFunction)
 	table.sort(elements, function(e1, e2)
 		return sortFunction(e1) < sortFunction(e2)
 	end)
-end
-
-function TGNS.GetLast(elements)
-	local result = elements[#elements]
-	return result
-end
-
-function TGNS.GetFirst(elements)
-	local result = elements[1]
-	return result
 end
 
 function TGNS.ElementIsFoundBeforeIndex(elements, element, index)
