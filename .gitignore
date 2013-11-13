@@ -37,6 +37,7 @@
 !mods/tgns/output/lua/tgns/server/TGNSSessionDataRepository.lua
 
 !mods/tgns/output/lua/tgns/shared/TGNSCommonShared.lua
+!mods/tgns/output/lua/tgns/shared/TGNSComprehension.lua
 !mods/tgns/output/lua/tgns/shared/TGNSJsonFileTranscoder.lua
 !mods/tgns/output/lua/tgns/shared/TGNSMenuDisplayer.lua
 
@@ -72,7 +73,9 @@
 !mods/tgns/output/lua/shine/extensions/noattackpregame.lua
 !mods/tgns/output/lua/shine/extensions/notifyadminonmuteplayer.lua
 !mods/tgns/output/lua/shine/extensions/permissions.lua
+!mods/tgns/output/lua/shine/extensions/playerlocationchanged.lua
 !mods/tgns/output/lua/shine/extensions/printablenames.lua
+!mods/tgns/output/lua/shine/extensions/reluse.lua
 !mods/tgns/output/lua/shine/extensions/rookiethrottle.lua
 !mods/tgns/output/lua/shine/extensions/scoreboardicons.lua
 !mods/tgns/output/lua/shine/extensions/speclimit.lua
@@ -82,6 +85,7 @@
 !mods/tgns/output/lua/shine/extensions/targetedcommands.lua
 !mods/tgns/output/lua/shine/extensions/teamres.lua
 !mods/tgns/output/lua/shine/extensions/teamroles.lua
+!mods/tgns/output/lua/shine/extensions/teamticker.lua
 !mods/tgns/output/lua/shine/extensions/tempgroups.lua
 !mods/tgns/output/lua/shine/extensions/uweranking.lua
 !mods/tgns/output/lua/shine/extensions/voicecommreminder.lua
