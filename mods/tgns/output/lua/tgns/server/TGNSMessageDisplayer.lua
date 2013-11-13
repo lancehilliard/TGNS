@@ -32,6 +32,11 @@ local function NotifyError(player, message, messagesChannel)
 	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
 end
 
+-- local function ShowTickerInfo(client, message, messagesChannel)
+-- 	TGNS.SendClientCommand(client, string.format("output [%s] %s", messagesChannel, message))
+-- 	SendConsoleMessage(client, message, messagesChannel)
+-- end
+
 TGNSMessageDisplayer = {}
 
 function TGNSMessageDisplayer.Create(messagesChannel)
@@ -168,6 +173,20 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To %s authorized notifyinfo: %s", commandName, message))
 	end
+
+	-- function result:ToTeamTickerInfo(teamNumber, message)
+	-- 	TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
+	-- 		ShowTickerInfo(c, message, messagesChannel)
+	-- 	end)
+	-- 	Shared.Message(string.format("TGNSMessageDisplayer: To team %s ticker info: %s", teamNumber, message))
+	-- end
+
+	-- function result:ToAllTickerInfo(message)
+	-- 	TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
+	-- 		ShowTickerInfo(c, message, messagesChannel)
+	-- 	end)
+	-- 	Shared.Message(string.format("TGNSMessageDisplayer: To all ticker info: %s", message))
+	-- end
 
 	return result
 end
