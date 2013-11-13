@@ -960,12 +960,12 @@ function TGNS.GetLastMatchingClient(playerList, predicate)
 	return result
 end
 
-function TGNS.UpdateScoreboard(player)
+function TGNS.AnnouncePlayerAsHavingNewScoreboardData(player)
 	player:SetScoreboardChanged(true)
 end
 
 function TGNS.UpdateAllScoreboards()
-	TGNS.DoFor(TGNS.GetPlayerList(), TGNS.UpdateScoreboard)
+	TGNS.DoFor(TGNS.GetPlayerList(), TGNS.AnnouncePlayerAsHavingNewScoreboardData)
 end
 
 function TGNS.GetTeamClients(teamNumber, playerList)
