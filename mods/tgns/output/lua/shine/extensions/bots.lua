@@ -5,6 +5,7 @@ local originalForceEvenTeamsOnJoinSetting = true
 local originalAutoTeamBalanceSetting = { enabled_after_seconds = 10, enabled_on_unbalance_amount = 2 }
 local winOrLoseOccurredRecently
 local md
+local botAdvisory
 
 local Plugin = {}
 
@@ -67,7 +68,11 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if not (force or shineForce) then
 		if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
-			md:ToPlayerNotifyInfo(player, string.format("Everyone plays Marines against bots until the server seeds to %s players.", PLAYER_COUNT_THRESHOLD))
+			md:ToPlayerNotifyInfo(player, botAdvisory)
+			TGNS.ScheduleAction(5, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
+			TGNS.ScheduleAction(10, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
+			TGNS.ScheduleAction(20, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
+			TGNS.ScheduleAction(40, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
 			if newTeamNumber ~= kMarineTeamType then
 				return false
 			end
@@ -153,6 +158,7 @@ function Plugin:Initialise()
 	md = TGNSMessageDisplayer.Create("BOTS")
 	TGNS.ScheduleAction(10, setOriginalConfig)
 	self:CreateCommands()
+	botAdvisory = string.format("Server switches to NS after %s players join.", PLAYER_COUNT_THRESHOLD)
     return true
 end
 
