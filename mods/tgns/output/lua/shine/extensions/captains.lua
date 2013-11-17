@@ -158,6 +158,7 @@ local function addReadyPlayerClient(client)
 	else
 		updateCaptainsReadyProgress(client)
 	end
+	TGNS.UpdateAllScoreboards()
 end
 
 local function addReadyCaptainClient(client)
