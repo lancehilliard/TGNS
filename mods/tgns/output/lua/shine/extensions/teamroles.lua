@@ -60,7 +60,7 @@ local roles = {
 		, function(client) return false end
 		, function(client)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
-			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 0 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
+			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
 		end
 		, "As Guardian, your responsibility now is to enforce the rules.")
 }
@@ -128,11 +128,13 @@ local function CheckRoster()
 	local marinePlayers = TGNS.GetMarinePlayers(playerList)
 	local alienPlayers = TGNS.GetAlienPlayers(playerList)
 	local readyRoomPlayers = TGNS.GetReadyRoomPlayers(playerList)
+	local spectatorPlayers = TGNS.GetSpectatorPlayers(playerList)
 
 	TGNS.DoFor(roles, function(role)
 		EnsureAmongPlayers(readyRoomPlayers, role)
 		EnsureAmongPlayers(marinePlayers, role)
 		EnsureAmongPlayers(alienPlayers, role)
+		EnsureAmongPlayers(spectatorPlayers, role)
 	end)
 end
 
