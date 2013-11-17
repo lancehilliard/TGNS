@@ -12,10 +12,10 @@ end
 ResetAbandonedResources()
 
 local function AnnounceAbandonedResources(client, resources)
-	local debugMessage = string.format("%s abandoned %s resources.", TGNS.GetClientName(client), math.floor(resources))
-	if math.floor(resources) > 0 then
-		md:ToAdminConsole(debugMessage)
-	end
+	//local debugMessage = string.format("%s abandoned %s resources.", TGNS.GetClientName(client), math.floor(resources))
+	//if math.floor(resources) > 0 then
+	//	md:ToAdminConsole(debugMessage)
+	//end
 end
 
 local function AbandonResources(client)
