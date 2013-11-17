@@ -1000,6 +1000,11 @@ function TGNS.GetReadyRoomPlayers(playerList)
 	return result
 end
 
+function TGNS.GetSpectatorPlayers(playerList)
+	local result = TGNS.GetPlayers(TGNS.GetSpectatorClients(playerList))
+	return result
+end
+
 function TGNS.GetMarinePlayers(playerList)
 	local result = TGNS.GetPlayers(TGNS.GetMarineClients(playerList))
 	return result
