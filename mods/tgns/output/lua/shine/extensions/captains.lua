@@ -340,6 +340,8 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		if Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
+		elseif TGNS.IsPlayerSpectator(player) then
+			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
 		else
 			addReadyPlayerClient(client)
 		end
