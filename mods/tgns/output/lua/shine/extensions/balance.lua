@@ -228,6 +228,10 @@ local function svBalance(client)
 		md:ToPlayerNotifyError(player, "Balance is already in progress.")
 	elseif BalanceStartedRecently() then
 		md:ToPlayerNotifyError(player, string.format("Balance has a server-wide cooldown of %s seconds.", RECENT_BALANCE_DURATION_IN_SECONDS))
+	elseif (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) then
+		md:ToPlayerNotifyError(player, "You may not Balance during Captains.")
+	elseif mayBalanceAt > Shared.GetTime() then
+		md:ToPlayerNotifyError(player, "Wait a bit to let players join teams of choice.")
 	else
 		local gameState = GetGamerules():GetGameState()
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
