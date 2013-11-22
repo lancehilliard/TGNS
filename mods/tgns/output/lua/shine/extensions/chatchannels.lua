@@ -12,12 +12,12 @@ local function ProcessChatCommand(sourceClient, channel, command, message)
 	local sourceClientCanReceiveMessagesOnChannel = TGNS.ClientCanRunCommand(sourceClient, label)
 	local name
 	local chatMessage
-	local md = TGNSMessageDisplayer.Create(label)
+	local md = TGNSMessageDisplayer.Create(label .. "(" .. channel.triggerChar .. ")")
 	local sourcePlayer = TGNS.GetPlayer(sourceClient)
 	local sourceClientName = TGNS.GetClientName(sourceClient)
-	
+
 	Shared.Message(tostring(sourceClientCanReceiveMessagesOnChannel))
-	
+
 	if sourceClientCanReceiveMessagesOnChannel and channel.canPM then
 		_, _, name, chatMessage = string.find(message, "([%w%p]*) (.*)")
 		chatMessage = GetChatMessage(chatMessage)
