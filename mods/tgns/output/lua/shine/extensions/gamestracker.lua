@@ -30,8 +30,6 @@ GameCountIncrementerFactory.Create = function(c, data)
 	return result
 end
 
-local steamIdsWhichStartedGame = {}
-
 local dr = TGNSDataRepository.Create("gamestracker", function(data)
 	data.supportingMembers = data.supportingMembers ~= nil and data.supportingMembers or {}
 	data.supportingMembersCount = data.supportingMembersCount ~= nil and data.supportingMembersCount or 0
@@ -50,26 +48,17 @@ end, TGNSMonthlyNumberGetter.Get)
 
 local Plugin = {}
 
-function Plugin:SetGameState(gamerules, state, oldState)
-	if state ~= oldState and TGNS.IsGameStartingState(state) then
-		steamIdsWhichStartedGame = {}
-		TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c) table.insert(steamIdsWhichStartedGame, TGNS.GetClientSteamId(c)) end)
-	end
-end
-
-function Plugin:EndGame(gamerules, winningTeam)
-	local data = dr.Load()
-	TGNS.DoForClientsWithId(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c, steamId)
-		if TGNS.Has(steamIdsWhichStartedGame, steamId) then
-			local gameCountIncrementer = GameCountIncrementerFactory.Create(c, data)
-			gameCountIncrementer.Increment(steamId)
-		end
-	end)
-	dr.Save(data)
-end
-
 function Plugin:Initialise()
     self.Enabled = true
+	TGNS.RegisterEventHook("FullGamePlayed", function(clients)
+		local data = dr.Load()
+		TGNS.DoFor(clients, function(c)
+			local gameCountIncrementer = GameCountIncrementerFactory.Create(c, data)
+			local steamId = TGNS.GetClientSteamId(c)
+			gameCountIncrementer.Increment(steamId)
+		end)
+		dr.Save(data)
+	end)
     return true
 end
 
