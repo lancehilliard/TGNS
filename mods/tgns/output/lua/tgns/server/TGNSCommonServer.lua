@@ -601,15 +601,17 @@ function TGNS.ForceGameStart()
 	local gamerules = GetGamerules()
     gamerules:ResetGame()
     gamerules:SetGameState(kGameState.Countdown)
-	TGNS.DoFor(TGNS.GetPlayerList(), TGNS.ResetPlayerScores)
+	TGNS.ResetAllPlayerScores()
     gamerules.countdownTime = kCountDownLength
     gamerules.lastCountdownPlayed = nil
 end
 
-function TGNS.ResetPlayerScores(player)
-	if player.ResetScores then
-		player:ResetScores()
-	end
+function TGNS.ResetAllPlayerScores()
+    for _, player in ientitylist(Shared.GetEntitiesWithClassname("Player")) do
+        if player.ResetScores then
+            player:ResetScores()
+        end
+    end
 end
 
 function TGNS.IsGameInPreGame()

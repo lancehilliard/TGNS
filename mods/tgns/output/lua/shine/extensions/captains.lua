@@ -106,7 +106,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	end)
 	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + 2
 	setCaptainsGameConfig()
-	TGNS.ForcePlayersToReadyRoom(TGNS.GetPlayerList())
+	TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
 	whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 end
 
@@ -184,6 +184,16 @@ end
 //		md:ToAllNotifyInfo("Teams have been swapped!")
 //	end)
 //end
+
+function getCaptainsGameStateDescription()
+	local result = ""
+	if captainsGamesFinished < 2 then
+		result = string.format("It's a Captains Game! Round %s %s!", captainsGamesFinished + 1, TGNS.IsGameInProgress() and "in progress" or "starting soon")
+	else
+		result = "Round Two of a Captains Game just finished! Captains Game over!"
+	end
+	return result
+end
 
 local Plugin = {}
 
@@ -328,6 +338,8 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		if captainsModeEnabled then
 			md:ToPlayerNotifyError(player, "Captains Game is already active.")
+		elseif TGNS.IsPlayerSpectator(player) then
+			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		else
@@ -456,6 +468,9 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		end
 	elseif newTeamNumber == kSpectatorIndex then
 		TGNS.RemoveAllMatching(readyPlayerClients, client)
+		if captainsModeEnabled then
+			md:ToPlayerNotifyInfo(player, getCaptainsGameStateDescription())
+		end
     end
     TGNS.UpdateAllScoreboards()
 end
@@ -463,6 +478,9 @@ end
 function Plugin:ClientConfirmConnect(client)
 	//TGNS.AddTempGroup(client, "captainsgame_group")
 	//TGNS.UpdateAllScoreboards()
+	if captainsModeEnabled then
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
+	end
 end
 
 function Plugin:OnProcessMove(player, input)
@@ -474,7 +492,7 @@ function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
 	self:CreateCommands()
-	
+
 	local AFKKick = Shine.Plugins.improvedafkhandler
 	if AFKKick and AFKKick.Enabled then
 		local PlayerAFK = AFKKick:GetPlayerAFK()
