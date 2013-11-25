@@ -466,7 +466,8 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
     local result = true
     if not TGNS.IsSteamIdAdmin(joiningSteamId) then
         local playingPlayers = GetPlayingPlayers()
-        if ServerIsFull(playingPlayers) then
+        local nonSpectatorPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end)
+        if ServerIsFull(nonSpectatorPlayers) then
             local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
             result = bumpableClient ~= nil or (TGNS.Has(fullSpecSteamIds, joiningSteamId) and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < Shine.Plugins.communityslots.Config.MaximumSpectators)
         end
