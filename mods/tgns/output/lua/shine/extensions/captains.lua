@@ -479,7 +479,9 @@ function Plugin:ClientConfirmConnect(client)
 	//TGNS.AddTempGroup(client, "captainsgame_group")
 	//TGNS.UpdateAllScoreboards()
 	if captainsModeEnabled then
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
+		TGNS.ScheduleAction(6, function()
+			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
+		end)
 	end
 end
 
