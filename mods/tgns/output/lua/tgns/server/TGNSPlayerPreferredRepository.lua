@@ -1,4 +1,4 @@
-local DATA_FILENAME = "config://PreferredPlayers.json"
+local DATA_FILENAME = "config://tgnsdata/PreferredPlayers.json"
 local isPreferredCache = {}
 
 TGNSPlayerPreferredRepository = {}

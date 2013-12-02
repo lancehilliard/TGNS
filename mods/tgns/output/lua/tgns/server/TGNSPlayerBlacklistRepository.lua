@@ -1,4 +1,4 @@
-local DATA_FILENAME = "config://BlacklistedPlayers.json"
+local DATA_FILENAME = "config://tgnsdata/BlacklistedPlayers.json"
 
 TGNSPlayerBlacklistRepository = {}
 
@@ -6,7 +6,7 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 	assert(blacklistTypeName ~= nil and blacklistTypeName ~= "")
 	local result = {}
 	result.blacklistTypeName = blacklistTypeName
-	
+
 	function result:IsClientBlacklisted(client)
 		local steamId = TGNS.GetClientSteamId(client)
 		local isBlacklisted = false
@@ -18,6 +18,6 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 		end
 		return isBlacklisted
 	end
-	
+
 	return result
 end

@@ -6,7 +6,7 @@ TGNSDataRepository.Create = function(dataTypeName, onDataLoaded, dataFilenameStu
 
 	local getDataFilename = function(recordId)
 		local filenameStub = dataFilenameStubCreator and dataFilenameStubCreator(recordId) or dataTypeName
-		local result = string.format("config://%s/%s.json", dataTypeName, filenameStub)
+		local result = string.format("config://tgnsdata/%s/%s.json", dataTypeName, filenameStub)
 		return result
 	end
 
@@ -32,6 +32,6 @@ TGNSDataRepository.Create = function(dataTypeName, onDataLoaded, dataFilenameStu
 		data = onDataLoaded(data)
 		return data
 	end
-	
+
 	return result
 end
