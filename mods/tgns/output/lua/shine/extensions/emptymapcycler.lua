@@ -2,13 +2,13 @@ local mapMightBeBroken = true
 
 local Plugin = {}
 
-function Plugin:ClientConnect()
+function Plugin:ClientConfirmConnect()
 	mapMightBeBroken = false
 end
 
 function Plugin:Initialise()
     self.Enabled = true
-    TGNS.ScheduleAction(60, function()
+    TGNS.ScheduleAction(90, function()
     	if mapMightBeBroken == true then
             local nextMapName = TGNS.GetNextMapName()
             Shared.Message(string.format("emptymapcycler cycling to %s...", nextMapName))
