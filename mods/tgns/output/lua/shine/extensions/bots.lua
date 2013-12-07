@@ -34,7 +34,7 @@ local function setBotConfig()
 		originalAutoTeamBalanceSetting = Server.GetConfigSetting("auto_team_balance")
 	end
 	Server.SetConfigSetting("auto_team_balance", {enabled_after_seconds=0, enabled_on_unbalance_amount=0})
-	
+
 	kHatchCooldown = 1
 	kAlienSpawnTime = 0.5
 end
@@ -162,6 +162,19 @@ function Plugin:CreateCommands()
 	end)
 	botsMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
 	botsMaxCommand:Help( "<max> Set the maximum possible count of bots." )
+
+	local humansMaxCommand = self:BindCommand( "sh_botsplayerthreshold", nil, function(client, maxCandidate)
+		local player = TGNS.GetPlayer(client)
+		local max = tonumber(maxCandidate)
+		if max <= 0 then
+			md:ToPlayerNotifyError(player, "Bots player threshold must be a positive number.")
+		else
+			PLAYER_COUNT_THRESHOLD = max
+			md:ToPlayerNotifyInfo(player, string.format("Bots player threshold set to %s.", max))
+		end
+	end)
+	humansMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	humansMaxCommand:Help( "<threshold> Set the player threshold count for bots." )
 end
 
 function Plugin:Initialise()
