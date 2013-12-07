@@ -12,7 +12,6 @@ local readyCaptainClients
 local timeAtWhichToForceRoundStart
 local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
 local whenToAllowTeamJoins = 0
-local lastPitches = {}
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -41,6 +40,9 @@ local function startGame()
 			TGNS.ScheduleAction(kCountDownLength + 2, function()
 				readyTeams["Marines"] = false
 				readyTeams["Aliens"] = false
+				if (captainsGamesFinished > 0) then
+					Shine.Plugins.mapvote.Config.RoundLimit = 1
+				end
 			end)
 		end)
 	end
@@ -483,11 +485,6 @@ function Plugin:ClientConfirmConnect(client)
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
 		end)
 	end
-end
-
-function Plugin:OnProcessMove(player, input)
-	local client = TGNS.GetClient(player)
-	lastPitches[client] = input.pitch
 end
 
 function Plugin:Initialise()
