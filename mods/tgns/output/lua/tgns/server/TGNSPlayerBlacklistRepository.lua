@@ -1,21 +1,22 @@
-local DATA_FILENAME = "config://tgnsdata/BlacklistedPlayers.json"
-
 TGNSPlayerBlacklistRepository = {}
 
 function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 	assert(blacklistTypeName ~= nil and blacklistTypeName ~= "")
+
+	local dr = TGNSDataRepository.Create("blacklist", function(data)
+        data.blacklists = data.blacklists or {}
+        return data
+    end)
+
 	local result = {}
 	result.blacklistTypeName = blacklistTypeName
 
 	function result:IsClientBlacklisted(client)
+		local blacklistData = dr.Load()
+		local blacklists = blacklistData.blacklists
 		local steamId = TGNS.GetClientSteamId(client)
-		local isBlacklisted = false
-		local dataFile = io.open(DATA_FILENAME, "r")
-		if dataFile then
-			local blacklists = json.decode(dataFile:read("*all")) or { }
-			dataFile:close()
-			isBlacklisted = TGNS.Any(blacklists, function(b) return b.from == self.blacklistTypeName and b.id == steamId end)
-		end
+		local isBlacklisted = TGNS.Any(blacklists, function(b) return b.from == self.blacklistTypeName and b.id == steamId end)
+		Shared.Message("IsClientBlacklisted: " .. steamId .. " from " .. self.blacklistTypeName .. " = " .. tostring(isBlacklisted))
 		return isBlacklisted
 	end
 
