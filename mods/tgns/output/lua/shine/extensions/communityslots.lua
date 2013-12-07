@@ -430,7 +430,6 @@ end
 
 local function sweep()
     local totalPlayersOnServer = TGNS.GetPlayerList()
-    local countOfTotalPlayersOnServer = #totalPlayersOnServer
     local countOfPlayingPlayers = #GetPlayingPlayers()
     TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
         if #totalPlayersOnServer > 16 then
