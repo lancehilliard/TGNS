@@ -4,6 +4,19 @@ local scheduledActionsErrorCount = 0
 
 local CHAT_MESSAGE_SENDER = "Admin"
 
+function TGNS.GetTechPoints()
+	local result = {}
+    for _, techPoint in ientitylist(Shared.GetEntitiesWithClassname("TechPoint")) do
+        table.insert(result, techPoint)
+    end
+	return result
+end
+
+function TGNS.GetTechPointLocationNames()
+	local result = TGNS.Select(TGNS.GetTechPoints(), function(t) return t:GetLocationName() end)
+	return result
+end
+
 function TGNS.GetCount(elements)
 	return #elements
 end
@@ -566,9 +579,7 @@ local function ProcessScheduledActions()
 			else
 				scheduledActionsErrorCount = scheduledActionsErrorCount + 1
 				if scheduledActionsErrorCount < 1 then
-					local errorMessage = string.format("ScheduledAction Error (%s, %s): %s", scheduledActionsErrorCount, Shared.GetTime(), result)
-					Shared.Message(errorMessage)
-					TGNS.EnhancedLog(errorMessage)
+					TGNS.EnhancedLog(string.format("ScheduledAction Error (%s, %s): %s", scheduledActionsErrorCount, Shared.GetTime(), result))
 				else
 					table.remove(scheduledActions, index)
 				end
