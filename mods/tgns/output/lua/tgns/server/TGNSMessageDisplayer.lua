@@ -167,6 +167,13 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyinfo: %s", message))
 	end
 
+	function result:ToAdminNotifyError(message)
+		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
+			TGNS.PlayerAction(c, function(p) NotifyError(p, message, self.messagesChannel) end)
+		end)
+		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyerror: %s", message))
+	end
+
 	function result:ToAuthorizedNotifyInfo(message, commandName)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c) return TGNS.ClientCanRunCommand(c, commandName) end), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel) end)
