@@ -49,7 +49,7 @@
 
 !mods/tgns/output/lua/shine/extensions/everysecond/shared.lua
 
-!mods/tgns/output/lua/shine/extensions/improvedafkhandler.lua
+!mods/tgns/output/lua/shine/extensions/afkchanged.lua
 !mods/tgns/output/lua/shine/extensions/autoexec.lua
 !mods/tgns/output/lua/shine/extensions/balance.lua
 !mods/tgns/output/lua/shine/extensions/betterknownas.lua
@@ -70,6 +70,7 @@
 !mods/tgns/output/lua/shine/extensions/help.lua
 !mods/tgns/output/lua/shine/extensions/hidefullmodlist.lua
 !mods/tgns/output/lua/shine/extensions/hidespectators.lua
+!mods/tgns/output/lua/shine/extensions/improvedafkhandler.lua
 !mods/tgns/output/lua/shine/extensions/lookdown.lua
 !mods/tgns/output/lua/shine/extensions/modupdatednotice.lua
 !mods/tgns/output/lua/shine/extensions/noattackpregame.lua
