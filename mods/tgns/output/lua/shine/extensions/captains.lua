@@ -219,6 +219,22 @@ function Plugin:UpdatePregame(gamerules)
 	//return result
 end
 
+-- local function TakeDamage( OldFunc, self, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
+-- 	local victim = self
+-- 	if victim:isa("Player") and Attacker:isa("Player") and victim ~= Attacker and Inflictor ~= nil and Inflictor:GetParent() == Attacker and victim:GetTeamNumber() == Attacker:GetTeamNumber() then
+-- 		victim = Attacker
+-- 		HealthUsed = HealthUsed < victim:GetHealth() and HealthUsed or (victim:GetHealth() > 1 and (victim:GetHealth() - 0.1) or 0)
+-- 	end
+-- 	return OldFunc( victim, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
+-- end
+-- Shine.Hook.SetupClassHook( "LiveMixin", "TakeDamage", "TakeDamage", TakeDamage )
+
+-- function Plugin:GetFriendlyFire()
+-- 	--if captainsModeEnabled then
+-- 		return true
+-- 	--end
+-- end
+
 function Plugin:EndGame(gamerules, winningTeam)
 	if captainsModeEnabled then
 		gameStarted = false
