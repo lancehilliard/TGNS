@@ -16,7 +16,7 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 		local blacklists = blacklistData.blacklists
 		local steamId = TGNS.GetClientSteamId(client)
 		local isBlacklisted = TGNS.Any(blacklists, function(b) return b.from == self.blacklistTypeName and b.id == steamId end)
-		Shared.Message("IsClientBlacklisted: " .. steamId .. " from " .. self.blacklistTypeName .. " = " .. tostring(isBlacklisted))
+		--Shared.Message("IsClientBlacklisted: " .. steamId .. " from " .. self.blacklistTypeName .. " = " .. tostring(isBlacklisted))
 		return isBlacklisted
 	end
 
