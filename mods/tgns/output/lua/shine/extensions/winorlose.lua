@@ -138,9 +138,10 @@ local function UpdateWinOrLoseVotes()
 						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + Shine.Plugins.winorlose.Config.VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
 					end
-					TGNS.DoFor(playerRecords, function(p)
-						md:ToPlayerNotifyInfo(p, chatMessage)
-					end)
+					md:ToTeamNotifyInfo(i, chatMessage)
+					-- TGNS.DoFor(playerRecords, function(p)
+					-- 	md:ToPlayerNotifyInfo(p, chatMessage)
+					-- end)
 				end
 			end
 		end
