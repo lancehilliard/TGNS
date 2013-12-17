@@ -23,7 +23,7 @@ function TGNSPlayerPreferredRepository.Create(preferredTypeName)
 			local preferredData = dr.Load()
 			local preferreds = preferredData.preferreds
 			isPreferred = TGNS.Any(preferreds, function(p) return p.plugin == self.preferredTypeName and p.id == steamId end)
-			Shared.Message("IsClientPreferred: " .. steamId .. " for " .. self.preferredTypeName .. " = " .. tostring(isPreferred))
+			--Shared.Message("IsClientPreferred: " .. steamId .. " for " .. self.preferredTypeName .. " = " .. tostring(isPreferred))
 			isPreferredCache[preferredTypeName][steamId] = isPreferred
 		end
 		return isPreferred
