@@ -8,15 +8,12 @@ end
 
 local function ProcessChatCommand(sourceClient, channel, command, message)
 	local label = channel.label
-	Shared.Message(tostring(command))
 	local sourceClientCanReceiveMessagesOnChannel = TGNS.ClientCanRunCommand(sourceClient, label)
 	local name
 	local chatMessage
 	local md = TGNSMessageDisplayer.Create(label .. "(" .. channel.triggerChar .. ")")
 	local sourcePlayer = TGNS.GetPlayer(sourceClient)
 	local sourceClientName = TGNS.GetClientName(sourceClient)
-
-	Shared.Message(tostring(sourceClientCanReceiveMessagesOnChannel))
 
 	if sourceClientCanReceiveMessagesOnChannel and channel.canPM then
 		_, _, name, chatMessage = string.find(message, "([%w%p]*) (.*)")
@@ -42,7 +39,6 @@ local function ProcessChatCommand(sourceClient, channel, command, message)
 		end
 	// Non-admins will send the message to all admins
 	else
-		Shared.Message(tostring(chatMessage))
 		local chatMessage = GetChatMessage(message)
 		if chatMessage then
 			local notification = string.format("%s: %s", sourceClientName, chatMessage)
