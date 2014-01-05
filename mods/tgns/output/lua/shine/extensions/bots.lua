@@ -1,4 +1,4 @@
-local PLAYER_COUNT_THRESHOLD = 10
+local PLAYER_COUNT_THRESHOLD = 12
 local BOT_COUNT_THRESHOLD = 25
 local originalEndRoundOnTeamUnbalanceSetting = 0.4
 local originalForceEvenTeamsOnJoinSetting = true
@@ -8,6 +8,8 @@ local originalAlienSpawnTime = kAlienSpawnTime
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
+local alltalk = false
+local originalGetCanPlayerHearPlayer
 
 local Plugin = {}
 
@@ -37,6 +39,12 @@ local function setBotConfig()
 
 	kHatchCooldown = 1
 	kAlienSpawnTime = 0.5
+
+	TGNS.ScheduleAction(2, function()
+		alltalk = true
+		md:ToAllNotifyInfo("All talk enabled during bots play.")
+	end)
+
 end
 
 local function setOriginalConfig()
@@ -51,6 +59,14 @@ local function setOriginalConfig()
 	end
 	kHatchCooldown = originalHatchCooldown
 	kAlienSpawnTime = originalAlienSpawnTime
+
+	if alltalk then
+		alltalk = false
+		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+			md:ToAllNotifyInfo("All talk disabled.")
+		end)
+	end
+
 end
 
 local function removeBots(players, count)
@@ -81,9 +97,10 @@ end
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if not (force or shineForce) then
-		if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) and not force then
+		if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
 			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
-			if alienHumanClients >= 1 and newTeamNumber ~= kMarineTeamType then
+			if #alienHumanClients >= 1 and newTeamNumber ~= kMarineTeamType then
+			--if newTeamNumber ~= kMarineTeamType then
 				md:ToPlayerNotifyInfo(player, "Only one human player is allowed on the bot team.")
 				return false
 			end
@@ -185,6 +202,12 @@ function Plugin:Initialise()
 	TGNS.ScheduleAction(10, setOriginalConfig)
 	self:CreateCommands()
 	botAdvisory = string.format("Server switches to NS after %s players join.", PLAYER_COUNT_THRESHOLD)
+
+	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
+		local result = alltalk or originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
+		return result
+	end)
+
     return true
 end
 
