@@ -42,7 +42,7 @@ local function onVoteSuccessful(teamNumber, players)
 	md:ToAllNotifyInfo(chatMessage)
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
-	numberOfSecondsToDeductFromCountdownTimeRemaining = 1
+	numberOfSecondsToDeductFromCountdownTimeRemaining = 2
 	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
 	TGNS.DoFor(players, function(p)
 		pcall(function()
@@ -260,15 +260,15 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 		if TGNS.EntityIsCommandStructure(victimEntity) and victimEntity:GetTeamNumber() == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 			TGNS.DestroyAllEntities("CommandStructure", victimEntity:GetTeamNumber())
 		else
-			if kCountdownTimeRemaining < 55 then
+			if kCountdownTimeRemaining < 57 then
 				if victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity then
 					local commandStructureDescription = teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and "CHAIR" or "HIVE"
 					if kCountdownTimeRemaining > 25 then
 						if TGNS.GetPlayerTeamNumber(attackerEntity) ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and TGNS.GetPlayerTeamNumber(victimEntity) == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining + 1
-							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 7 and 7 or numberOfSecondsToDeductFromCountdownTimeRemaining
+							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 8 and 8 or numberOfSecondsToDeductFromCountdownTimeRemaining
 							kCountdownTimeRemaining = kCountdownTimeRemaining - numberOfSecondsToDeductFromCountdownTimeRemaining
-							local secondsDescription = numberOfSecondsToDeductFromCountdownTimeRemaining > 1 and "more seconds" or "second"
+							--local secondsDescription = numberOfSecondsToDeductFromCountdownTimeRemaining > 1 and "more seconds" or "second"
 							md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(attackerEntity), string.format("%s killed a player. Timer reduced to %s! Kill the %s!", TGNS.GetPlayerName(attackerEntity), kCountdownTimeRemaining, commandStructureDescription))
 							md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(victimEntity), string.format("%s did not die in vain! Timer reduced!", TGNS.GetPlayerName(victimEntity)))
 						end
