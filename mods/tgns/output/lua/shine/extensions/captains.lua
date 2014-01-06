@@ -12,6 +12,7 @@ local readyCaptainClients
 local timeAtWhichToForceRoundStart
 local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
 local whenToAllowTeamJoins = 0
+local voteStartedAt
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -114,7 +115,7 @@ end
 
 local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	local result = ""
-	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(.82 * #playingClients)
+	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(.75 * #playingClients)
 	local adjustedNumberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients <= 16 and numberOfNeededReadyPlayerClients or 16
 	if numberOfPlayingReadyPlayerClients < adjustedNumberOfNeededReadyPlayerClients or numberOfPlayingReadyCaptainClients < 2 then
 		result = string.format("%s wants Captains! So far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, adjustedNumberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
@@ -340,7 +341,7 @@ function Plugin:CreateCommands()
 							md:ToPlayerNotifyError(player, string.format("'%s' is not recognizable as Marines or Aliens.", teamNumberCandidate))
 						end
 					else
-						md:ToAllNotifyError(string.format("%s did not sh_iwantcaptains (Scoreboard: c>) and cannot be picked.", TGNS.GetPlayerName(targetPlayer)))
+						md:ToAllNotifyError(string.format("%s did not sh_iwantcaptains and cannot be picked.", TGNS.GetPlayerName(targetPlayer)))
 					end
 				end
 			else
