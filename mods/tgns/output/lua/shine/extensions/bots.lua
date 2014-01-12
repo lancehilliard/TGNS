@@ -190,6 +190,7 @@ function Plugin:CreateCommands()
 		else
 			PLAYER_COUNT_THRESHOLD = max
 			md:ToPlayerNotifyInfo(player, string.format("Bots player threshold set to %s.", max))
+			botAdvisory = string.format("Server switches to NS after %s players join.", PLAYER_COUNT_THRESHOLD)
 		end
 	end)
 	humansMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
