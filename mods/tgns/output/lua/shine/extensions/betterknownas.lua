@@ -12,6 +12,28 @@ local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	return bkaData
 end)
 
+local function getTitleFromWebPageSource(source)
+	local result = nil
+	local openingTag = "<title>"
+	local closingTag = "</title>"
+	local indexOfOpeningTag = TGNS.IndexOf(source, openingTag)
+	if indexOfOpeningTag ~= -1 then
+		local modName = TGNS.Substring(source, indexOfOpeningTag + string.len(openingTag))
+		local indexOfClosingTag = TGNS.IndexOf(modName, closingTag)
+		if indexOfClosingTag ~= -1 then
+			modName = TGNS.Substring(modName, 1, indexOfClosingTag - 1)
+			modName = StringTrim(modName)
+			result = modName
+		end
+	end
+	return result
+end
+
+local function getSteamProfileNameFromSteamCommunityProfilePageTitle(title)
+	local result = TGNS.Replace(title, "Steam Community :: ", "")
+	return result
+end
+
 local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, prefix)
 	local md = TGNSMessageDisplayer.Create(prefix)
 	local bkaData = pdr:Load(targetSteamId)
@@ -33,8 +55,21 @@ local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pref
 	else
 		TGNS.DoFor(bkaData.AKAs, function(a) md:ToClientConsole(client, string.format("     %s", a)) end)
 	end
+	md:ToClientConsole(client, " ")
 	local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
 	whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
+	md:ToClientConsole(client, " ")
+	local steamCommunityProfileUrl = TGNS.GetSteamCommunityProfileUrlFromNs2Id(targetSteamId)
+	md:ToClientConsole(client, "Steam Community URL:")
+	md:ToClientConsole(client, steamCommunityProfileUrl)
+	md:ToClientConsole(client, " ")
+	TGNS.GetHttpAsync(steamCommunityProfileUrl, function(response)
+		local title = getTitleFromWebPageSource(response)
+		local steamProfileName = getSteamProfileNameFromSteamCommunityProfilePageTitle(title)
+		md:ToClientConsole(client, "Steam Community Profile Name:")
+		md:ToClientConsole(client, steamProfileName)
+		md:ToClientConsole(client, " ")
+	end)
 end
 
 local function ShowUsage(client, targetSteamId)
