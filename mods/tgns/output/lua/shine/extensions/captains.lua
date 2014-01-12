@@ -1,5 +1,4 @@
 local md
-local tgnsMd
 local captainClients = {}
 local captainsModeEnabled
 local captainsGamesFinished = 0
@@ -15,7 +14,6 @@ local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
 local whenToAllowTeamJoins = 0
 local votesAllowedUntil
 local mayVoteYet
-local clientFriendlyFireWarnings = {}
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -245,29 +243,6 @@ function Plugin:UpdatePregame(gamerules)
 	//return result
 end
 
-local function TakeDamage( OldFunc, self, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
-	local victim = self
-	--if victim:isa("Player") and Attacker:isa("Player") and victim ~= Attacker and Inflictor ~= nil and Inflictor:GetParent() == Attacker and victim:GetTeamNumber() == Attacker:GetTeamNumber() then
-	if Attacker and victim and Attacker:isa("Player") and victim ~= Attacker and Inflictor ~= nil and Inflictor:GetParent() == Attacker and victim:GetTeamNumber() == Attacker:GetTeamNumber() then
-		-- victim = Attacker
-		-- HealthUsed = HealthUsed < victim:GetHealth() and HealthUsed or (victim:GetHealth() > 1 and (victim:GetHealth() - 0.1) or 0)
-		local attackerClient = TGNS.GetClient(Attacker)
-		clientFriendlyFireWarnings[attackerClient] = clientFriendlyFireWarnings[attackerClient] or 0
-		if clientFriendlyFireWarnings[attackerClient] < 3 then
-			clientFriendlyFireWarnings[attackerClient] = clientFriendlyFireWarnings[attackerClient] + 1
-			tgnsMd:ToPlayerNotifyError(Attacker, "Friendly fire ENABLED! Please check your fire.")
-		end
-	end
-	return OldFunc( victim, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
-end
-Shine.Hook.SetupClassHook( "LiveMixin", "TakeDamage", "TakeDamage", TakeDamage )
-
--- function Plugin:GetFriendlyFire()
--- 	--if captainsModeEnabled then
--- 		return true
--- 	--end
--- end
-
 function Plugin:EndGame(gamerules, winningTeam)
 	if captainsModeEnabled then
 		gameStarted = false
@@ -409,15 +384,13 @@ function Plugin:CreateCommands()
 
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
 		local player = TGNS.GetPlayer(client)
-		if captainsModeEnabled then
-			md:ToPlayerNotifyError(player, "Captains Game is already active.")
-		elseif mayVoteYet ~= true and votesAllowedUntil ~= math.huge then
+		if mayVoteYet ~= true and votesAllowedUntil ~= math.huge then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted for about a minute after the map loads.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		elseif TGNS.IsPlayerSpectator(player) then
 			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
-		elseif votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
+		elseif not captainsModeEnabled and votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
 			md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
 		else
 			addReadyPlayerClient(client)
@@ -545,11 +518,6 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		end
     end
     TGNS.UpdateAllScoreboards()
-    if TGNS.IsGameplayTeamNumber(newTeamNumber) and TGNS.IsClientStranger(client) then
-    	TGNS.ScheduleAction(6, function()
-    		tgnsMd:ToPlayerNotifyInfo(player, "Friendly Fire is ENABLED! Please be careful when attacking.")
-    	end)
-    end
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -565,7 +533,6 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
-	tgnsMd = TGNSMessageDisplayer.Create()
 	self:CreateCommands()
 
 	local AFKKick = Shine.Plugins.improvedafkhandler
