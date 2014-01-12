@@ -27,6 +27,11 @@ local function NotifyInfo(player, message, messagesChannel)
 	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
 end
 
+local function NotifyRed(player, message, messagesChannel)
+	Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. "]", 255, 255, 255, message)
+	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+end
+
 local function NotifyError(player, message, messagesChannel)
 	Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. " ERROR]", 255, 255, 255, message)
 	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
@@ -129,6 +134,14 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyError(player, message, self.messagesChannel)
 			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyerror: %s", TGNS.GetPlayerName(player), message))
+		end
+	end
+
+	function result:ToPlayerNotifyRed(player, message)
+		local client = TGNS.GetClient(player)
+		if not TGNS.GetIsClientVirtual(client) then
+			NotifyRed(player, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyred: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
