@@ -4,12 +4,55 @@ local scheduledActionsErrorCount = 0
 
 local CHAT_MESSAGE_SENDER = "Admin"
 
+function TGNS.GetReadableSteamIdFromNs2Id(ns2id)
+	local result = GetReadableSteamId(ns2id)
+	return result
+end
+
+function TGNS.GetSteamCommunityProfileIdFromReadableSteamId(readableSteamId)
+	local parts = TGNS.Split( ':', string.sub(readableSteamId,7) )
+	local id_64 = (1197960265728 + tonumber(parts[2])) + (tonumber(parts[3]) * 2)
+	local str = string.format('%f',id_64)
+	local result = '7656'..string.sub( str, 1, string.find(str,'.',1,true)-1 )
+	return result
+end
+
+function TGNS.GetSteamCommunityProfileIdFromNs2Id(ns2id)
+	local readableSteamId = TGNS.GetReadableSteamIdFromNs2Id(ns2id)
+	local result = TGNS.GetSteamCommunityProfileIdFromReadableSteamId(readableSteamId)
+	return result
+end
+
+function TGNS.GetSteamCommunityProfileUrlFromNs2Id(ns2id)
+	local steamCommunityProfileId = TGNS.GetSteamCommunityProfileIdFromNs2Id(ns2id)
+	local result = string.format("http://steamcommunity.com/profiles/%s", steamCommunityProfileId)
+	return result
+end
+
 function TGNS.GetTechPoints()
 	local result = {}
     for _, techPoint in ientitylist(Shared.GetEntitiesWithClassname("TechPoint")) do
         table.insert(result, techPoint)
     end
 	return result
+end
+
+function TGNS.Split(d,p)
+  local t, ll
+  t={}
+  ll=0
+  if(#p == 1) then return {p} end
+    while true do
+      l=string.find(p,d,ll,true) -- find the next d in the string
+      if l~=nil then -- if "not not" found then..
+        table.insert(t, string.sub(p,ll,l-1)) -- Save it in our array.
+        ll=l+1 -- save just after where we found it for searching next time.
+      else
+        table.insert(t, string.sub(p,ll)) -- Save what's left in our array.
+        break -- Break at end, as it should be, according to the lua manual.
+      end
+    end
+  return t
 end
 
 function TGNS.GetTechPointLocationNames()
