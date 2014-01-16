@@ -3,6 +3,7 @@ local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
 
 local warned = {}
 local bkas = {}
+local steamProfileNames = {}
 
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
@@ -63,13 +64,9 @@ local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pref
 	md:ToClientConsole(client, "Steam Community URL:")
 	md:ToClientConsole(client, steamCommunityProfileUrl)
 	md:ToClientConsole(client, " ")
-	TGNS.GetHttpAsync(steamCommunityProfileUrl, function(response)
-		local title = getTitleFromWebPageSource(response)
-		local steamProfileName = getSteamProfileNameFromSteamCommunityProfilePageTitle(title)
-		md:ToClientConsole(client, "Steam Community Profile Name:")
-		md:ToClientConsole(client, steamProfileName)
-		md:ToClientConsole(client, " ")
-	end)
+	md:ToClientConsole(client, "Steam Community Profile Name:")
+	md:ToClientConsole(client, steamProfileNames[targetSteamId])
+	md:ToClientConsole(client, " ")
 end
 
 local function ShowUsage(client, targetSteamId)
@@ -122,6 +119,22 @@ local function ShowWhoisUsage(client)
 end
 
 local Plugin = {}
+
+function Plugin:ClientConnect(client)
+	local ns2id = TGNS.GetClientSteamId(client)
+	local steamCommunityProfileUrl = TGNS.GetSteamCommunityProfileUrlFromNs2Id(ns2id)
+	TGNS.GetHttpAsync(steamCommunityProfileUrl, function(response)
+		local title = getTitleFromWebPageSource(response)
+		local steamProfileName = getSteamProfileNameFromSteamCommunityProfilePageTitle(title)
+		steamProfileNames[ns2id] = steamProfileName
+	end)
+end
+
+function Plugin:GetSteamProfileName(client)
+	local ns2id = TGNS.GetClientSteamId(client)
+	local result = steamProfileNames[ns2id]
+	return result
+end
 
 function Plugin:ClientConfirmConnect(client)
 	TGNS.UpdateAllScoreboards()
