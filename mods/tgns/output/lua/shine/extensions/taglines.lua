@@ -67,15 +67,17 @@ function Plugin:Initialise()
 		if not TGNS.GetIsClientVirtual(client) then
 			local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
 			if connectedTimeInSeconds < 120 then
-				local message = TGNS.GetClientName(client) .. string.format(" joined (%s)!", TGNS.PlayerAction(client, TGNS.GetPlayerTeamName))
+				local steamProfileName = Shine.Plugins.betterknownas and Shine.Plugins.betterknownas.GetSteamProfileName and Shine.Plugins.betterknownas:GetSteamProfileName(client)
+				local steamProfileNameDisplay = (TGNS.HasNonEmptyValue(steamProfileName) and steamProfileName ~= TGNS.GetClientName(client)) and string.format("    Steam: %s", steamProfileName) or ""
+				local message = string.format("%s joined (%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), steamProfileNameDisplay)
+				tgnsMd:ToAllNotifyInfo(message)
 				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") then
 					local steamId = TGNS.GetClientSteamId(client)
 					local tagline = pdr:Load(steamId)
 					if tagline ~= nil and tagline.message ~= "" then
-						 message = message .. " " .. tagline.message
+						tgnsMd:ToAllNotifyInfo(string.format("-- %s", tagline.message))
 					end
 				end
-				tgnsMd:ToAllNotifyInfo(message)
 			end
 		end
 	end)
