@@ -569,7 +569,7 @@ function Plugin:Initialise()
 	end)
 
 	mayVoteYet = false
-	TGNS.ScheduleAction(85, function()
+	TGNS.ScheduleAction(115, function()
 		mayVoteYet = true
 	end)
 
