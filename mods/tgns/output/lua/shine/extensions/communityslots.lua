@@ -432,7 +432,7 @@ local function sweep()
     local totalPlayersOnServer = TGNS.GetPlayerList()
     local countOfPlayingPlayers = #GetPlayingPlayers()
     TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
-        if #totalPlayersOnServer > 16 then
+        if #totalPlayersOnServer > 16 and TGNS.IsGameInProgress() then
             if countOfPlayingPlayers >= 10 or #totalPlayersOnServer >= Shine.Plugins.communityslots.Config.MaximumSlots-3 then
                 local lastTeamChangeTime = inReadyRoomSinceTimes[c]
                 if lastTeamChangeTime then
