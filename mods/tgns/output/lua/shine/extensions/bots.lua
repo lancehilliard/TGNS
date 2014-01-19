@@ -1,4 +1,4 @@
-local PLAYER_COUNT_THRESHOLD = 12
+local PLAYER_COUNT_THRESHOLD = 14
 local BOT_COUNT_THRESHOLD = 25
 local originalEndRoundOnTeamUnbalanceSetting = 0.4
 local originalForceEvenTeamsOnJoinSetting = true
