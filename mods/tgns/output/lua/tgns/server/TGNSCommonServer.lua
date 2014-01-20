@@ -1,7 +1,7 @@
 TGNS = TGNS or {}
 local scheduledActions = {}
 local scheduledActionsErrorCount = 0
-
+local config
 local CHAT_MESSAGE_SENDER = "Admin"
 
 function TGNS.GetReadableSteamIdFromNs2Id(ns2id)
@@ -26,6 +26,12 @@ end
 function TGNS.GetSteamCommunityProfileUrlFromNs2Id(ns2id)
 	local steamCommunityProfileId = TGNS.GetSteamCommunityProfileIdFromNs2Id(ns2id)
 	local result = string.format("http://steamcommunity.com/profiles/%s", steamCommunityProfileId)
+	return result
+end
+
+function TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
+	local steamCommunityProfileId = TGNS.GetSteamCommunityProfileIdFromNs2Id(ns2id)
+	local result = string.format("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s", config.SteamApiKey, steamCommunityProfileId)
 	return result
 end
 
@@ -1207,6 +1213,23 @@ function TGNS.GetPlayerMatching(id, team)
 	end
 end
 
+function TGNS.GetTitleFromWebPageSource(source)
+	local result = nil
+	local openingTag = "<title>"
+	local closingTag = "</title>"
+	local indexOfOpeningTag = TGNS.IndexOf(source, openingTag)
+	if indexOfOpeningTag ~= -1 then
+		local modName = TGNS.Substring(source, indexOfOpeningTag + string.len(openingTag))
+		local indexOfClosingTag = TGNS.IndexOf(modName, closingTag)
+		if indexOfClosingTag ~= -1 then
+			modName = TGNS.Substring(modName, 1, indexOfClosingTag - 1)
+			modName = StringTrim(modName)
+			result = modName
+		end
+	end
+	return result
+end
+
 ////////////////////////////////
 // Intercept Network Messages //
 ////////////////////////////////
@@ -1239,3 +1262,7 @@ Server.HookNetworkMessage = function(messageName, callback)
 	originalHookNetworkMessage(messageName, callback)
 
 end
+
+ TGNS.ScheduleAction(1, function()
+ 	config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
+ end)
