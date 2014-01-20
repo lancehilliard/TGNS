@@ -15,13 +15,13 @@ end)
 
 local function getSteamIdProfileName(steamId)
 	local steamPlayerData = steamPlayerDatas[steamId]
-	local result = steamPlayerData and steamPlayerData.personaname or "<unknown>"
+	local result = steamPlayerData and steamPlayerData.personaname or nil
 	return result
 end
 
 local function getSteamIdProfileUrl(steamId)
 	local steamPlayerData = steamPlayerDatas[steamId]
-	local result = steamPlayerData and steamPlayerData.profileurl or "<unknown>"
+	local result = steamPlayerData and steamPlayerData.profileurl or nil
 	return result
 end
 
@@ -51,10 +51,10 @@ local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pref
 	whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
 	md:ToClientConsole(client, " ")
 	md:ToClientConsole(client, "Steam Community URL:")
-	md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId))
+	md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId) or "<unknown>")
 	md:ToClientConsole(client, " ")
 	md:ToClientConsole(client, "Steam Community Profile Name:")
-	md:ToClientConsole(client, getSteamIdProfileName(targetSteamId))
+	md:ToClientConsole(client, getSteamIdProfileName(targetSteamId) or "<unknown>")
 	md:ToClientConsole(client, " ")
 end
 
