@@ -3,7 +3,7 @@ local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
 
 local warned = {}
 local bkas = {}
-local steamProfileNames = {}
+local steamPlayerDatas = {}
 
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
@@ -13,25 +13,15 @@ local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	return bkaData
 end)
 
-local function getTitleFromWebPageSource(source)
-	local result = nil
-	local openingTag = "<title>"
-	local closingTag = "</title>"
-	local indexOfOpeningTag = TGNS.IndexOf(source, openingTag)
-	if indexOfOpeningTag ~= -1 then
-		local modName = TGNS.Substring(source, indexOfOpeningTag + string.len(openingTag))
-		local indexOfClosingTag = TGNS.IndexOf(modName, closingTag)
-		if indexOfClosingTag ~= -1 then
-			modName = TGNS.Substring(modName, 1, indexOfClosingTag - 1)
-			modName = StringTrim(modName)
-			result = modName
-		end
-	end
+local function getSteamIdProfileName(steamId)
+	local steamPlayerData = steamPlayerDatas[steamId]
+	local result = steamPlayerData and steamPlayerData.personaname or "<unknown>"
 	return result
 end
 
-local function getSteamProfileNameFromSteamCommunityProfilePageTitle(title)
-	local result = TGNS.Replace(title, "Steam Community :: ", "")
+local function getSteamIdProfileUrl(steamId)
+	local steamPlayerData = steamPlayerDatas[steamId]
+	local result = steamPlayerData and steamPlayerData.profileurl or "<unknown>"
 	return result
 end
 
@@ -60,12 +50,11 @@ local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pref
 	local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
 	whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
 	md:ToClientConsole(client, " ")
-	local steamCommunityProfileUrl = TGNS.GetSteamCommunityProfileUrlFromNs2Id(targetSteamId)
 	md:ToClientConsole(client, "Steam Community URL:")
-	md:ToClientConsole(client, steamCommunityProfileUrl)
+	md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId))
 	md:ToClientConsole(client, " ")
 	md:ToClientConsole(client, "Steam Community Profile Name:")
-	md:ToClientConsole(client, steamProfileNames[targetSteamId])
+	md:ToClientConsole(client, getSteamIdProfileName(targetSteamId))
 	md:ToClientConsole(client, " ")
 end
 
@@ -122,22 +111,24 @@ local Plugin = {}
 
 function Plugin:ClientConnect(client)
 	local ns2id = TGNS.GetClientSteamId(client)
-	local steamCommunityProfileUrl = TGNS.GetSteamCommunityProfileUrlFromNs2Id(ns2id)
-	TGNS.GetHttpAsync(steamCommunityProfileUrl, function(response)
-		local title = getTitleFromWebPageSource(response)
-		local steamProfileName = getSteamProfileNameFromSteamCommunityProfilePageTitle(title)
-		steamProfileNames[ns2id] = steamProfileName
+	local steamApiProfileUrl = TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
+	TGNS.GetHttpAsync(steamApiProfileUrl, function(response)
+		local data = json.decode(response)
+		local steamPlayerData = TGNS.GetFirst(data.response.players)
+		steamPlayerDatas[ns2id] = steamPlayerData
 	end)
 end
 
 function Plugin:GetSteamProfileName(client)
 	local ns2id = TGNS.GetClientSteamId(client)
-	local result = steamProfileNames[ns2id]
+	local result = getSteamIdProfileName(ns2id)
 	return result
 end
 
-function Plugin:ClientConfirmConnect(client)
-	TGNS.UpdateAllScoreboards()
+function Plugin:GetSteamProfileUrl(client)
+	local ns2id = TGNS.GetClientSteamId(client)
+	local result = getSteamIdProfileUrl(ns2id)
+	return result
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -145,6 +136,7 @@ function Plugin:ClientConfirmConnect(client)
 	if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
 		bkas[client] = bkaData.BKA
 	end
+	TGNS.UpdateAllScoreboards()
 end
 
 function Plugin:CreateCommands()
