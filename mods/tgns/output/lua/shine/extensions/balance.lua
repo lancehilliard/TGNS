@@ -251,32 +251,6 @@ local Plugin = {}
 
 function Plugin:EndGame(gamerules, winningTeam)
 	mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
-
-	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam)
-		TGNS.DoFor(clients, function(c)
-			local player = TGNS.GetPlayer(c)
-			local changeBalanceFunction = TGNS.PlayerIsOnTeam(player, winningTeam) and addWinToBalance or addLossToBalance
-			local steamId = TGNS.GetClientSteamId(c)
-			local balance = pdr:Load(steamId)
-			changeBalanceFunction(balance)
-			AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
-			pdr:Save(balance)
-			totalGamesPlayedCache[c] = nil
-		end)
-	end)
-
-
-	TGNS.DoForClientsWithId(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c, steamId)
-		if TGNS.Has(steamIdsWhichStartedGame, steamId) then
-			local player = TGNS.GetPlayer(c)
-			local changeBalanceFunction = TGNS.PlayerIsOnTeam(player, winningTeam) and addWinToBalance or addLossToBalance
-			local balance = pdr:Load(steamId)
-			changeBalanceFunction(balance)
-			AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
-			pdr:Save(balance)
-			totalGamesPlayedCache[c] = nil
-		end
-	end)
 end
 
 
@@ -327,6 +301,18 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
+	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam)
+		TGNS.DoFor(clients, function(c)
+			local player = TGNS.GetPlayer(c)
+			local changeBalanceFunction = TGNS.PlayerIsOnTeam(player, winningTeam) and addWinToBalance or addLossToBalance
+			local steamId = TGNS.GetClientSteamId(c)
+			local balance = pdr:Load(steamId)
+			changeBalanceFunction(balance)
+			AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
+			pdr:Save(balance)
+			totalGamesPlayedCache[c] = nil
+		end)
+	end)
     return true
 end
 
