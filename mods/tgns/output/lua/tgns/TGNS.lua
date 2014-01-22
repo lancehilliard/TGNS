@@ -1,6 +1,7 @@
 Script.Load("lua/tgns/shared/TGNSCommonShared.lua")
 Script.Load("lua/tgns/shared/TGNSComprehension.lua")
 Script.Load("lua/tgns/shared/TGNSMenuDisplayer.lua")
+Script.Load("lua/tgns/shared/TGNSJsonEndpointTranscoder.lua")
 Script.Load("lua/tgns/shared/TGNSJsonFileTranscoder.lua")
 if Server then
 	Script.Load("lua/tgns/server/TGNSAverageCalculator.lua")
