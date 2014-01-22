@@ -14,21 +14,12 @@ TGNSDataRepository.Create = function(dataTypeName, onDataLoaded, dataFilenameStu
 
 	result.Save = function(data, recordId)
 		local dataFilename = getDataFilename(recordId)
-		local dataFile = io.open(dataFilename, "w+")
-		if dataFile then
-			dataFile:write(json.encode(data))
-			dataFile:close()
-		end
+		TGNSJsonFileTranscoder.EncodeToFile(dataFilename, data)
 	end
 
 	result.Load = function(recordId)
-		local data = {}
 		local dataFilename = getDataFilename(recordId)
-		local dataFile = io.open(dataFilename, "r")
-		if dataFile then
-			data = json.decode(dataFile:read("*all")) or { }
-			dataFile:close()
-		end
+		local data = TGNSJsonFileTranscoder.DecodeFromFile(dataFilename)
 		data = onDataLoaded(data)
 		return data
 	end
