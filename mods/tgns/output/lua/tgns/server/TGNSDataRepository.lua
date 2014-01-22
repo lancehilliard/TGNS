@@ -15,6 +15,7 @@ TGNSDataRepository.Create = function(dataTypeName, onDataLoaded, dataFilenameStu
 	result.Save = function(data, recordId)
 		local dataFilename = getDataFilename(recordId)
 		TGNSJsonFileTranscoder.EncodeToFile(dataFilename, data)
+		TGNSJsonEndpointTranscoder.EncodeToEndpoint(dataFilename, data)
 	end
 
 	result.Load = function(recordId)
