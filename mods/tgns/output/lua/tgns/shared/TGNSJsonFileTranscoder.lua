@@ -9,7 +9,7 @@ local function using(filename, mode, delegate)
 end
 
 function TGNSJsonFileTranscoder.DecodeFromFile(filename)
-	local result
+	local result = {}
 	using(filename, "r", function(dataFile) result = json.decode(dataFile:read("*all")) or { } end)
 	return result
 end
