@@ -33,18 +33,18 @@ local Plugin = {}
 
 function Plugin:CreateCommands()
 	local autofpsCommand = self:BindCommand("sh_autofps", "autofps", function(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	local data = pdr:Load(steamId)
-	local message
-	if TGNS.Has(data.commands, "fps") then
-		TGNS.RemoveAllMatching(data.commands, "fps")
-		message = "You have toggled off the FPS counter automatic display."
-	else
-		table.insert(data.commands, "fps")
-		message = "You have toggled on the FPS counter automatic display."
-	end
-	pdr:Save(data)
-	md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+		local steamId = TGNS.GetClientSteamId(client)
+		local data = pdr:Load(steamId)
+		local message
+		if TGNS.Has(data.commands, "fps") then
+			TGNS.RemoveAllMatching(data.commands, "fps")
+			message = "You have toggled off the FPS counter automatic display."
+		else
+			table.insert(data.commands, "fps")
+			message = "You have toggled on the FPS counter automatic display."
+		end
+		pdr:Save(data)
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
 	end, true)
 	autofpsCommand:Help("Toggle FPS counter automatic display.")
 end
