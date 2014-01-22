@@ -38,6 +38,7 @@
 
 !mods/tgns/output/lua/tgns/shared/TGNSCommonShared.lua
 !mods/tgns/output/lua/tgns/shared/TGNSComprehension.lua
+!mods/tgns/output/lua/tgns/shared/TGNSJsonEndpointTranscoder.lua
 !mods/tgns/output/lua/tgns/shared/TGNSJsonFileTranscoder.lua
 !mods/tgns/output/lua/tgns/shared/TGNSMenuDisplayer.lua
 
