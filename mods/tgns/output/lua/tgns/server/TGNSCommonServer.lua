@@ -1,8 +1,9 @@
 TGNS = TGNS or {}
 local scheduledActions = {}
 local scheduledActionsErrorCount = 0
-local config
 local CHAT_MESSAGE_SENDER = "Admin"
+
+TGNS.Config = {}
 
 function TGNS.GetReadableSteamIdFromNs2Id(ns2id)
 	local result = GetReadableSteamId(ns2id)
@@ -31,7 +32,7 @@ end
 
 function TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
 	local steamCommunityProfileId = TGNS.GetSteamCommunityProfileIdFromNs2Id(ns2id)
-	local result = string.format("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s", config.SteamApiKey, steamCommunityProfileId)
+	local result = string.format("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s", TGNS.Config.SteamApiKey, steamCommunityProfileId)
 	return result
 end
 
@@ -1230,6 +1231,16 @@ function TGNS.GetTitleFromWebPageSource(source)
 	return result
 end
 
+function TGNS.UrlEncode(str)
+  if (str) then
+    str = string.gsub (str, "\n", "\r\n")
+    str = string.gsub (str, "([^%w %-%_%.%~])",
+        function (c) return string.format ("%%%02X", string.byte(c)) end)
+    str = string.gsub (str, " ", "+")
+  end
+  return str
+end
+
 ////////////////////////////////
 // Intercept Network Messages //
 ////////////////////////////////
@@ -1264,5 +1275,5 @@ Server.HookNetworkMessage = function(messageName, callback)
 end
 
  TGNS.ScheduleAction(1, function()
- 	config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
+ 	TGNS.Config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
  end)
