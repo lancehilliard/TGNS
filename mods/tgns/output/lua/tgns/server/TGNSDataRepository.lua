@@ -12,17 +12,37 @@ TGNSDataRepository.Create = function(dataTypeName, onDataLoaded, dataFilenameStu
 
 	local result = {}
 
-	result.Save = function(data, recordId)
+	-- result.Save = function(data, recordId, callback)
+	-- 	callback = callback or function() end
+	-- 	local dataFilename = getDataFilename(recordId)
+	-- 	TGNSJsonFileTranscoder.EncodeToFile(dataFilename, data)
+	-- 	TGNSJsonEndpointTranscoder.EncodeToEndpoint(dataFilename, data)
+	-- 	callback({success=true})
+	-- end
+
+	-- result.Load = function(recordId, callback)
+	-- 	callback = callback or function() end
+	-- 	local dataFilename = getDataFilename(recordId)
+	-- 	local data = TGNSJsonFileTranscoder.DecodeFromFile(dataFilename)
+	-- 	data = onDataLoaded(data) -- note mlh: when switching to endpoint, make sure onDataLoaded happens no matter what
+	-- 	local result = {success=true,value=data}
+	-- 	callback(result)
+	-- end
+
+	result.Save = function(data, recordId, callback)
+		callback = callback or function() end
 		local dataFilename = getDataFilename(recordId)
-		TGNSJsonFileTranscoder.EncodeToFile(dataFilename, data)
-		TGNSJsonEndpointTranscoder.EncodeToEndpoint(dataFilename, data)
+		TGNSJsonEndpointTranscoder.EncodeToEndpoint(dataFilename, data, callback)
 	end
 
-	result.Load = function(recordId)
+	result.Load = function(recordId, callback)
+		callback = callback or function() end
 		local dataFilename = getDataFilename(recordId)
-		local data = TGNSJsonFileTranscoder.DecodeFromFile(dataFilename)
-		data = onDataLoaded(data)
-		return data
+		TGNSJsonEndpointTranscoder.DecodeFromEndpoint(dataFilename, function(decodeResponse)
+			decodeResponse.value = decodeResponse.success and decodeResponse.value or {}
+			decodeResponse.value = onDataLoaded(decodeResponse.value)
+			callback(decodeResponse)
+		end)
 	end
 
 	return result

@@ -34,33 +34,44 @@ local Plugin = {}
 function Plugin:CreateCommands()
 	local autofpsCommand = self:BindCommand("sh_autofps", "autofps", function(client)
 		local steamId = TGNS.GetClientSteamId(client)
-		local data = pdr:Load(steamId)
-		local message
-		if TGNS.Has(data.commands, "fps") then
-			TGNS.RemoveAllMatching(data.commands, "fps")
-			message = "You have toggled off the FPS counter automatic display."
-		else
-			table.insert(data.commands, "fps")
-			message = "You have toggled on the FPS counter automatic display."
-		end
-		pdr:Save(data)
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+		pdr:Load(steamId, function(loadResponse)
+			if loadResponse.success then
+				local data = loadResponse.value
+				local message
+				if TGNS.Has(data.commands, "fps") then
+					TGNS.RemoveAllMatching(data.commands, "fps")
+					message = "You have toggled off the FPS counter automatic display."
+				else
+					table.insert(data.commands, "fps")
+					message = "You have toggled on the FPS counter automatic display."
+				end
+				pdr:Save(data, function(saveResponse)
+					if saveResponse.success then
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+					else
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to save player data.")
+					end
+				end)
+			else
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
+			end
+		end)
 	end, true)
 	autofpsCommand:Help("Toggle FPS counter automatic display.")
 end
 
 function Plugin:ClientConfirmConnect(client)
 	local steamId = TGNS.GetClientSteamId(client)
-	local data = pdr:Load(steamId)
-	TGNS.DoFor(data.commands, function(command)
-		TGNS.SendClientCommand(client, command)
+	pdr:Load(steamId, function(loadResponse)
+		if loadResponse.success then
+			local data = loadResponse.value
+			TGNS.DoFor(data.commands, function(command)
+				TGNS.SendClientCommand(client, command)
+			end)
+		else
+			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
+		end
 	end)
-
-	//local delayInSeconds = 0
-	//TGNS.DoFor(data.commands, function(c)
-	//	TGNS.ScheduleAction(delayInSeconds, commandAction(c))
-	//	delayInSeconds = delayInSeconds + 1
-	//end)
 end
 
 function Plugin:Initialise()

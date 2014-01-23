@@ -51,13 +51,23 @@ local Plugin = {}
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients)
-		local data = dr.Load()
-		TGNS.DoFor(clients, function(c)
-			local gameCountIncrementer = GameCountIncrementerFactory.Create(c, data)
-			local steamId = TGNS.GetClientSteamId(c)
-			gameCountIncrementer.Increment(steamId)
+		dr.Load(nil, function(loadResponse)
+			if loadResponse.success then
+				local data = loadResponse.value
+				TGNS.DoFor(clients, function(c)
+					local gameCountIncrementer = GameCountIncrementerFactory.Create(c, data)
+					local steamId = TGNS.GetClientSteamId(c)
+					gameCountIncrementer.Increment(steamId)
+				end)
+				dr.Save(data, nil, function(saveResponse)
+					if not saveResponse.success then
+						Shared.Message("gamestracker ERROR: Unable to save data.")
+					end
+				end)
+			else
+				Shared.Message("gamestracker ERROR: Unable to access data.")
+			end
 		end)
-		dr.Save(data)
 	end)
     return true
 end

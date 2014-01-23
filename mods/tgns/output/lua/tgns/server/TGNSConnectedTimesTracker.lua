@@ -10,23 +10,32 @@ end)
 
 function TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(client, connectedTimeInSeconds)
 	local steamId = TGNS.GetClientSteamId(client)
-	local data = pdr:Load(steamId)
-	local tooLongHasPassedSinceLastSeen = data.lastSeen == nil or (Shared.GetSystemTime() - data.lastSeen > DISCONNECTED_TIME_ALLOWED_IN_SECONDS)
-	local noExistingConnectionTimeIsOnRecord = data.when == nil
-	if connectedTimeInSeconds or tooLongHasPassedSinceLastSeen or noExistingConnectionTimeIsOnRecord then
-		data.when = connectedTimeInSeconds or Shared.GetSystemTime()
-		pdr:Save(data)
+	if connectedTimeInSeconds then
+		connectedTimes[steamId] = connectedTimeInSeconds
 	end
-	connectedTimes[steamId] = data.when
+	pdr:Load(steamId, function(loadResponse)
+		if loadResponse.success then
+			local data = loadResponse.value
+			local tooLongHasPassedSinceLastSeen = data.lastSeen == nil or (Shared.GetSystemTime() - data.lastSeen > DISCONNECTED_TIME_ALLOWED_IN_SECONDS)
+			local noExistingConnectionTimeIsOnRecord = data.when == nil
+			if connectedTimeInSeconds or tooLongHasPassedSinceLastSeen or noExistingConnectionTimeIsOnRecord then
+				data.when = connectedTimeInSeconds or Shared.GetSystemTime()
+				pdr:Save(data, function(saveResponse)
+					if not saveResponse.success then
+						Shared.Message("ConnectedTimesTracker ERROR: unable to save data")
+					end
+				end)
+			end
+			connectedTimes[steamId] = data.when
+		else
+			Shared.Message("ConnectedTimesTracker ERROR: unable to access data")
+		end
+	end)
 end
 
 function TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
 	local steamId = TGNS.GetClientSteamId(client)
 	local result = connectedTimes[steamId]
-	if result == nil then
-		local data = pdr:Load(steamId)
-		result = data.when
-	end
 	result = result ~= nil and result or 0
 	return result
 end
@@ -58,9 +67,18 @@ end
 
 local function SetClientLastSeenNow(client)
 	local steamId = TGNS.GetClientSteamId(client)
-	local data = pdr:Load(steamId)
-	data.lastSeen = Shared.GetSystemTime()
-	pdr:Save(data)
+	pdr:Load(steamId, function(loadResponse)
+		if not loadResponse.success then
+			Shared.Message("ConnectedTimesTracker ERROR: unable to access data")
+		end
+		local data = loadResponse.value
+		data.lastSeen = Shared.GetSystemTime()
+		pdr:Save(data, function(saveResponse)
+			if not saveResponse.success then
+				Shared.Message("ConnectedTimesTracker ERROR: unable to save data")
+			end
+		end)
+	end)
 end
 
 local function SetLastSeenTimes()
