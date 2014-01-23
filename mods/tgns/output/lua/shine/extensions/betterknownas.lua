@@ -83,6 +83,7 @@ local function ShowUsage(client, targetSteamId)
 end
 
 local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues, callback)
+	callback = callback or function() end
 	pdr:Load(targetSteamId, function(loadResponse)
 		if loadResponse.success then
 			local bkaData = loadResponse.value

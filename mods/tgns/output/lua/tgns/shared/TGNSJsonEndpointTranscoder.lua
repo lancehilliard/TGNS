@@ -1,10 +1,11 @@
 TGNSJsonEndpointTranscoder = {}
 
-function TGNSJsonEndpointTranscoder.DecodeFromEndpoint(key, callback)
+function TGNSJsonEndpointTranscoder.DecodeFromEndpoint(dataTypeName, recordId, callback)
 	callback = callback or function() end
-	local url = string.format("%s&key=%s", TGNS.Config.DataEndpointBaseUrl, TGNS.UrlEncode(key))
+	local url = string.format("%s&d=%s&i=%s", TGNS.Config.DataEndpointBaseUrl, TGNS.UrlEncode(dataTypeName), TGNS.UrlEncode(recordId))
 	TGNS.GetHttpAsync(url, function(response)
-		-- Shared.Message("key: " .. key)
+		-- Shared.Message("dataTypeName: " .. dataTypeName)
+		-- Shared.Message("recordId: " .. recordId)
 		-- Shared.Message("response: " .. response)
 		local result = json.decode(response) or {}
 		-- Shared.Message("success: " .. tostring(result.success))
@@ -16,9 +17,9 @@ function TGNSJsonEndpointTranscoder.DecodeFromEndpoint(key, callback)
 	end)
 end
 
-function TGNSJsonEndpointTranscoder.EncodeToEndpoint(key, data, callback)
+function TGNSJsonEndpointTranscoder.EncodeToEndpoint(dataTypeName, recordId, data, callback)
 	callback = callback or function() end
-	local url = string.format("%s&key=%s&value=%s", TGNS.Config.DataEndpointBaseUrl, TGNS.UrlEncode(key), TGNS.UrlEncode(json.encode(data)))
+	local url = string.format("%s&d=%s&i=%s&v=%s", TGNS.Config.DataEndpointBaseUrl, TGNS.UrlEncode(dataTypeName), TGNS.UrlEncode(recordId), TGNS.UrlEncode(json.encode(data)))
 	TGNS.GetHttpAsync(url, function(response)
 		callback(json.decode(response) or {})
 	end)
