@@ -6,6 +6,7 @@ local RECENT_BALANCE_DURATION_IN_SECONDS = 15
 local NS2STATS_SCORE_PER_MINUTE_VALID_DATA_THRESHOLD = 30
 local LOCAL_DATAPOINTS_COUNT_THRESHOLD = 10
 local totalGamesPlayedCache = {}
+local balanceCache = {}
 local mayBalanceAt = 0
 local FIRSTCLIENT_TIME_BEFORE_BALANCE = 30
 local GAMEEND_TIME_BEFORE_BALANCE = TGNS.ENDGAME_TIME_TO_READYROOM + 10
@@ -26,16 +27,11 @@ function Balance.IsInProgress()
 	return balanceInProgress
 end
 function Balance.GetTotalGamesPlayedBySteamId(steamId)
-	local result = 0
+	local result
 	if steamId ~= nil and steamId ~= 0 then
 		result = totalGamesPlayedCache[steamId]
-		if result == nil then
-			local data = pdr:Load(steamId)
-			result = data.total
-			totalGamesPlayedCache[steamId] = result
-		end
 	end
-	return result
+	return result or 0
 end
 function Balance.GetTotalGamesPlayed(client)
 	local steamId = TGNS.GetClientSteamId(client)
@@ -89,12 +85,7 @@ local function GetWinLossRatio(player, balance)
 end
 
 local function GetPlayerBalance(player)
-	local result
-	TGNS.ClientAction(player, function(c)
-		local steamId = TGNS.GetClientSteamId(c)
-		result = pdr:Load(steamId)
-		end
-	)
+	local result = balanceCache[TGNS.GetClient(player)] or 0
 	return result
 end
 
@@ -279,6 +270,18 @@ TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message
 	return BalanceStartedRecently() and not TGNS.PlayerIsOnPlayingTeam(targetPlayer) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin)
 end)
 
+function Plugin:ClientConnect(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	pdr:Load(steamId, function(loadResponse)
+		if loadResponse.success then
+			totalGamesPlayedCache[client] = loadResponse.value.total
+			balanceCache[client] = loadResponse.value
+		else
+			Shared.Message("balance ERROR: unable to access data")
+		end
+	end)
+end
+
 function Plugin:ClientConfirmConnect(client)
 	if not firstClientProcessed then
 		mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
@@ -306,11 +309,23 @@ function Plugin:Initialise()
 			local player = TGNS.GetPlayer(c)
 			local changeBalanceFunction = TGNS.PlayerIsOnTeam(player, winningTeam) and addWinToBalance or addLossToBalance
 			local steamId = TGNS.GetClientSteamId(c)
-			local balance = pdr:Load(steamId)
-			changeBalanceFunction(balance)
-			AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
-			pdr:Save(balance)
-			totalGamesPlayedCache[c] = nil
+			pdr:Load(steamId, function(loadResponse)
+				if loadResponse.success then
+					local balance = loadResponse.value
+					changeBalanceFunction(balance)
+					AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
+					pdr:Save(balance, function(saveResponse)
+						if saveResponse.success then
+							totalGamesPlayedCache[c] = balance.total
+							balanceCache[c] = loadResponse.value
+						else
+							Shared.Message("balance ERROR: unable to save data")
+						end
+					end)
+				else
+					Shared.Message("balance ERROR: unable to access data")
+				end
+			end)
 		end)
 	end)
     return true

@@ -1,37 +1,39 @@
-local sessions = {}
+-- note mlh: commented out during migration to endpoint... Load calls will need to support callback if this code is to be reinstated
 
-local getSteamIdConnectedTimeInSeconds = function(steamId)
-	local player = TGNS.GetPlayerMatchingSteamId(steamId)
-	local client = TGNS.GetClient(player)
-	local result = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
-	return result
-end
+-- local sessions = {}
 
-local sessionBoundOnDataLoaded = function(data, onDataLoaded)
-	if data.sessionId == nil or data.steamId == nil or data.sessionId ~= getSteamIdConnectedTimeInSeconds(data.steamId) then
-		data = {}
-	end
-	return onDataLoaded(data)
-end
+-- local getSteamIdConnectedTimeInSeconds = function(steamId)
+-- 	local player = TGNS.GetPlayerMatchingSteamId(steamId)
+-- 	local client = TGNS.GetClient(player)
+-- 	local result = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
+-- 	return result
+-- end
 
-TGNSSessionDataRepository = {}
+-- local sessionBoundOnDataLoaded = function(data, onDataLoaded)
+-- 	if data.sessionId == nil or data.steamId == nil or data.sessionId ~= getSteamIdConnectedTimeInSeconds(data.steamId) then
+-- 		data = {}
+-- 	end
+-- 	return onDataLoaded(data)
+-- end
 
-TGNSSessionDataRepository.Create = function(dataTypeName, onDataLoaded)
-	local dr = TGNSDataRepository.Create(dataTypeName, function(data) sessionBoundOnDataLoaded(data, onDataLoaded) end, function(recordId) return string.format("%s-session", recordId) end)
-	
-	local result = {}
-	
-	result.Save = function(self, data)
-		dr.Save(data, data.steamId)
-		sessions[data.steamId] = data
-	end
+-- TGNSSessionDataRepository = {}
 
-	result.Load = function(self, steamId)
-		local data = sessions[steamId] or dr.Load(steamId)
-		data.steamId = data.steamId or steamId
-		data.sessionId = data.sessionId or getSteamIdConnectedTimeInSeconds(steamId)
-		return data
-	end
-	
-	return result
-end
+-- TGNSSessionDataRepository.Create = function(dataTypeName, onDataLoaded)
+-- 	local dr = TGNSDataRepository.Create(dataTypeName, function(data) sessionBoundOnDataLoaded(data, onDataLoaded) end, function(recordId) return string.format("%s-session", recordId) end)
+
+-- 	local result = {}
+
+-- 	result.Save = function(self, data)
+-- 		dr.Save(data, data.steamId)
+-- 		sessions[data.steamId] = data
+-- 	end
+
+-- 	result.Load = function(self, steamId)
+-- 		local data = sessions[steamId] or dr.Load(steamId)
+-- 		data.steamId = data.steamId or steamId
+-- 		data.sessionId = data.sessionId or getSteamIdConnectedTimeInSeconds(steamId)
+-- 		return data
+-- 	end
+
+-- 	return result
+-- end

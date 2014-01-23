@@ -18,16 +18,24 @@ local function GetTaglineMessage(...)
 end
 
 local function ShowCurrentTagline(client)
-	taglineMd:ToClientConsole(client, "Your current tagline:")
 	local steamId = client:GetUserId()
-	local tagline = pdr:Load(steamId)
-	if tagline == nil or tagline.message == "" then
-		taglineMd:ToClientConsole(client, "     You don't currently have a tagline saved.")
-		taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You don't currently have a tagline saved.")
-	else
-		taglineMd:ToClientConsole(client, "     " .. tagline.message)
-		taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Your current tagline: " .. tagline.message)
-	end
+	pdr:Load(steamId, function(loadResponse)
+		if loadResponse.success then
+			local tagline = loadResponse.value
+			taglineMd:ToClientConsole(client, "Your current tagline:")
+			if tagline == nil or tagline.message == "" then
+				taglineMd:ToClientConsole(client, "     You don't currently have a tagline saved.")
+				taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You don't currently have a tagline saved.")
+			else
+				taglineMd:ToClientConsole(client, "     " .. tagline.message)
+				taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Your current tagline: " .. tagline.message)
+			end
+		else
+			Shared.Message("taglines ERROR: Unable to access data.")
+		end
+		taglineMd:ToClientConsole(client, "")
+		taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
+	end)
 end
 
 local function ShowUsage(client)
@@ -39,7 +47,6 @@ local function ShowUsage(client)
 	taglineMd:ToClientConsole(client, "* Taglines do not display to players in the first two minutes after a map loads")
 	taglineMd:ToClientConsole(client, "* To remove your tagline at any time: sh_tagline remove")
 	ShowCurrentTagline(client)
-	taglineMd:ToClientConsole(client, "")
 end
 
 function Plugin:CreateCommands()
@@ -48,13 +55,26 @@ function Plugin:CreateCommands()
 		if taglineMessage == nil or taglineMessage == "" then
 			ShowUsage(client)
 		else
-			local tagline = pdr:Load(steamId)
-			if taglineMessage == "remove" then
-				taglineMessage = ""
-			end
-			tagline.message = taglineMessage
-			pdr:Save(tagline)
-			ShowCurrentTagline(client)
+			pdr:Load(steamId, function(loadResponse)
+				if loadResponse.success then
+					local tagline = loadResponse.value
+					if taglineMessage == "remove" then
+						taglineMessage = ""
+					end
+					tagline.message = taglineMessage
+					pdr:Save(tagline, function(saveResponse)
+						if saveResponse.success then
+							ShowCurrentTagline(client)
+						else
+							taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to save tagline.")
+							Shared.Message("taglines ERROR: Unable to save data.")
+						end
+					end)
+				else
+					taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
+					Shared.Message("taglines ERROR: Unable to access data.")
+				end
+			end)
 		end
 	end, true)
 	taglineCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
@@ -70,13 +90,19 @@ function Plugin:Initialise()
 				local steamProfileName = Shine.Plugins.betterknownas and Shine.Plugins.betterknownas.GetSteamProfileName and Shine.Plugins.betterknownas:GetSteamProfileName(client)
 				local steamProfileNameDisplay = (TGNS.HasNonEmptyValue(steamProfileName) and TGNS.ToLower(steamProfileName) ~= TGNS.ToLower(TGNS.GetClientName(client))) and string.format("    Steam: %s", steamProfileName) or ""
 				local message = string.format("%s joined (%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), steamProfileNameDisplay)
-				tgnsMd:ToAllNotifyInfo(message)
 				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") then
 					local steamId = TGNS.GetClientSteamId(client)
-					local tagline = pdr:Load(steamId)
-					if tagline ~= nil and tagline.message ~= "" then
-						tgnsMd:ToAllNotifyInfo(string.format("-- %s", tagline.message))
-					end
+					pdr:Load(steamId, function(loadResponse)
+						tgnsMd:ToAllNotifyInfo(message)
+						if loadResponse.success then
+							local tagline = loadResponse.value
+							if tagline ~= nil and tagline.message ~= "" then
+								tgnsMd:ToAllNotifyInfo(string.format("-- %s", tagline.message))
+							end
+						else
+							Shared.Message("taglines ERROR: Unable to access data.")
+						end
+					end)
 				end
 			end
 		end

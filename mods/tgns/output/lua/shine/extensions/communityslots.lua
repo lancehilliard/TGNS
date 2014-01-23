@@ -119,16 +119,20 @@ end
 local function AnnounceOtherServerOptionsToBumpedClient(client)
     local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
     if otherServerStaticInfo then
-        local otherServerDynamicInfo = TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName)
-        if otherServerDynamicInfo.HasRecentData then
-            local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
-            if otherServerRemainingPublicSlots >= 4 then
-                local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
-                tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
-                tgnsMd:ToClientConsole(client, message)
-                tgnsMd:ToAdminConsole(message)
+        TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(getResponse)
+            if getResponse.success then
+                local otherServerDynamicInfo = getResponse.value
+                if otherServerDynamicInfo.HasRecentData then
+                    local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
+                    if otherServerRemainingPublicSlots >= 4 then
+                        local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
+                        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+                        tgnsMd:ToClientConsole(client, message)
+                        tgnsMd:ToAdminConsole(message)
+                    end
+                end
             end
-        end
+        end)
     end
 end
 
@@ -287,6 +291,7 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
 end
 
 function Plugin:ClientConnect(joiningClient)
+    TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
     if TGNS.GetIsClientVirtual(joiningClient) then
         TGNS.ScheduleAction(3, function() self:ClientConfirmConnect(joiningClient) end)
     end
@@ -296,7 +301,6 @@ function Plugin:ClientConnect(joiningClient)
 end
 
 function Plugin:ClientConfirmConnect(client)
-    TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(client)
     local chatMessage
     if TGNS.IsClientSM(client) then
         chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
@@ -343,17 +347,28 @@ function Plugin:CreateCommands()
     local showTimesCommand = self:BindCommand( "sh_showtimes", "showtimes", TGNSConnectedTimesTracker.PrintConnectedDurations)
     showTimesCommand:Help("View connected time of each client.")
     local fullSpecCommand = self:BindCommand( "sh_fullspec", "fs", function(client)
-        local fullSpecData = fullSpecDataRepository.Load()
-        local steamId = TGNS.GetClientSteamId(client)
-        if TGNS.Has(fullSpecData.enrolled, steamId) then
-            TGNS.RemoveAllMatching(fullSpecData.enrolled, steamId)
-        else
-            table.insert(fullSpecData.enrolled, steamId)
-        end
-        fullSpecSteamIds = fullSpecData.enrolled
-        fullSpecDataRepository.Save(fullSpecData)
-        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
-        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Execute the command again to toggle. Help: M > Info > sh_fullspec")
+        fullSpecDataRepository.Load(nil, function(loadResponse)
+            if loadResponse.success then
+                fullSpecData = loadResponse.value
+                local steamId = TGNS.GetClientSteamId(client)
+                if TGNS.Has(fullSpecData.enrolled, steamId) then
+                    TGNS.RemoveAllMatching(fullSpecData.enrolled, steamId)
+                else
+                    table.insert(fullSpecData.enrolled, steamId)
+                end
+                fullSpecSteamIds = fullSpecData.enrolled
+                fullSpecDataRepository.Save(fullSpecData, nil, function(saveResponse)
+                    if saveResponse.success then
+                        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
+                        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Execute the command again to toggle. Help: M > Info > sh_fullspec")
+                    else
+                        tgnsMd:ToPlayerNotifyError("Unable to save sh_fullspec data.")
+                    end
+                end)
+            else
+                tgnsMd:ToPlayerNotifyError("Unable to access sh_fullspec data.")
+            end
+        end)
     end, true)
     fullSpecCommand:Help("Toggle your sh_fullspec. Help: M > Info > sh_fullspec")
 end
@@ -520,8 +535,16 @@ function Plugin:Initialise()
         data.enrolled = data.enrolled or {}
         return data
     end)
-    local fullSpecData = fullSpecDataRepository.Load()
-    fullSpecSteamIds = fullSpecData.enrolled
+    TGNS.ScheduleAction(2, function()
+        fullSpecDataRepository.Load(nil, function(loadResponse)
+            if loadResponse.success then
+                local fullSpecData = loadResponse.value
+                fullSpecSteamIds = fullSpecData.enrolled
+            else
+                Shared.Message("communityslots ERROR: unable to load fullSpecSteamIds")
+            end
+        end)
+    end)
     return true
 end
 

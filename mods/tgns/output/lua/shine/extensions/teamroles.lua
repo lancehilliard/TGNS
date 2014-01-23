@@ -1,15 +1,24 @@
 local md = TGNSMessageDisplayer.Create()
 local pdrCache = {}
+local pbrCache = {}
+local pprCache = {}
+local knownRoleDataNames = {}
+
+local function getPdr(persistedDataName)
+	local result = TGNSPlayerDataRepository.Create(persistedDataName, function(data)
+		data.optin = data.optin ~= nil and data.optin or false
+		return data
+	end)
+	return result
+end
 
 local function CreateRole(displayName, candidatesDescription, groupName, messagePrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery, chargeStatement)
 	local result = {}
 	pdrCache[persistedDataName] = {}
-	local pdr = TGNSPlayerDataRepository.Create(persistedDataName, function(data)
-			data.optin = data.optin ~= nil and data.optin or false
-			return data
-		end)
-	local pbr = TGNSPlayerBlacklistRepository.Create(persistedDataName)
-	local ppr = TGNSPlayerPreferredRepository.Create(persistedDataName)
+	pbrCache[persistedDataName] = {}
+	pprCache[persistedDataName] = {}
+	table.insertunique(knownRoleDataNames, persistedDataName)
+	local pdr = getPdr(persistedDataName)
 	result.displayName = displayName
 	result.candidatesDescription = candidatesDescription
 	result.groupName = groupName
@@ -19,21 +28,24 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 	result.IsClientOneOf = isClientOneOfQuery
 	result.IsClientBlockerOf = isClientBlockerQuery
 	function result:IsTeamEligible(teamPlayers) return TGNS.GetLastMatchingClient(teamPlayers, self.IsClientBlockerOf) == nil end
-	function result:IsClientBlacklisted(client) return pbr:IsClientBlacklisted(client) end
-	function result:IsClientPreferred(client) return ppr:IsClientPreferred(client) end
+	function result:IsClientBlacklisted(client) return pbrCache[persistedDataName][client] == true end
+	function result:IsClientPreferred(client) return pprCache[persistedDataName][client] == true end
 	function result:LoadOptInData(client)
-		local pdrData
 		local steamId = TGNS.GetClientSteamId(client)
-		if pdrCache[persistedDataName][steamId] ~= nil then
-			pdrData = pdrCache[persistedDataName][steamId]
-		else
-			pdrData = pdr:Load(TGNS.GetClientSteamId(client))
-		end
+		local pdrData = pdrCache[persistedDataName][steamId]
 		return pdrData
 	end
-	function result:SaveOptInData(pdrData)
-		pdrCache[persistedDataName][pdrData.steamId] = pdrData
-		pdr:Save(pdrData)
+	function result:SaveOptInData(pdrData, callback)
+		callback = callback or function() end
+		pdr:Save(pdrData, function(saveResponse)
+			if saveResponse.success then
+				pdrCache[persistedDataName][pdrData.steamId] = pdrData
+				callback(true)
+			else
+				Shared.Message("teamroles ERROR: Unable to save data.")
+				callback(false)
+			end
+		end)
 	end
 	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(client).optin and not self:IsClientBlacklisted(client) end
 	return result
@@ -105,22 +117,28 @@ local function EnsureAmongPlayers(players, role)
 end
 
 local function ToggleOptIn(client, role)
+	local roleMd = TGNSMessageDisplayer.Create(role.messagePrefix)
 	local message
 	if role:IsClientBlacklisted(client) then
 		message = string.format("Contact an Admin to get access to %s: tacticalgamer.com/natural-selection-contact-admin", role.displayName)
+		roleMd:ToClientConsole(client, message)
 	else
 		local pdrData = role:LoadOptInData(client)
 		pdrData.optin = not pdrData.optin
-		role:SaveOptInData(pdrData)
-		if pdrData.optin then
-			message = string.format("You are opted into %s. Only %s are considered.", role.displayName, role.candidatesDescription)
-		else
-			message = string.format("You will no longer be considered for %s.", role.displayName)
-			RemoveFromClient(client, role)
-		end
+		role:SaveOptInData(pdrData, function(saveSuccessful)
+			if saveSuccessful then
+				if pdrData.optin then
+					message = string.format("You are opted into %s. Only %s are considered.", role.displayName, role.candidatesDescription)
+				else
+					message = string.format("You will no longer be considered for %s.", role.displayName)
+					RemoveFromClient(client, role)
+				end
+			else
+				message = "Unable to change opt-in status."
+			end
+			roleMd:ToClientConsole(client, message)
+		end)
 	end
-	local roleMd = TGNSMessageDisplayer.Create(role.messagePrefix)
-	roleMd:ToClientConsole(client, message)
 end
 
 local function CheckRoster()
@@ -164,6 +182,32 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			end
 		end
 	end)
+end
+
+function Plugin:ClientConnect(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	TGNS.DoFor(knownRoleDataNames, function(roleName)
+		local pdr = getPdr(roleName)
+		pdr:Load(steamId, function(loadResponse)
+			pdrCache[roleName][steamId] = loadResponse.value
+			if not loadResponse.success then
+				Shared.Message("teamroles ERROR: Unable to access PDR data.")
+			end
+		end)
+
+		local pbr = TGNSPlayerBlacklistRepository.Create(roleName)
+		pbr:IsClientBlacklisted(client, function(isBlacklisted)
+			pbrCache[roleName][client] = isBlacklisted
+		end)
+
+		local ppr = TGNSPlayerPreferredRepository.Create(roleName)
+		ppr:IsClientPreferred(client, function(isPreferred)
+			pprCache[roleName][client] = isPreferred
+		end)
+
+	end)
+
+
 end
 
 function Plugin:ClientConfirmConnect(client)

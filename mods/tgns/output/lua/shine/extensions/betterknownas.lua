@@ -27,35 +27,42 @@ end
 
 local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, prefix)
 	local md = TGNSMessageDisplayer.Create(prefix)
-	local bkaData = pdr:Load(targetSteamId)
-	local player = TGNS.GetPlayerMatchingSteamId(targetSteamId)
-	md:ToClientConsole(client, " ")
-	if player ~= nil then
-		md:ToClientConsole(client, string.format(" For: %s", TGNS.GetPlayerName(player)))
-		md:ToClientConsole(client, " ")
-	end
-	md:ToClientConsole(client, string.format(" %s:", bkaHeader))
-	if bkaData == nil or bkaData.BKA == nil or string.len(bkaData.BKA) == 0 then
-		md:ToClientConsole(client, "     (none)")
-	else
-		md:ToClientConsole(client, string.format("     %s", bkaData.BKA))
-	end
-	md:ToClientConsole(client, string.format(" %s:", akasHeader))
-	if bkaData == nil or bkaData.AKAs == nil or #bkaData.AKAs == 0 then
-		md:ToClientConsole(client, "     (none)")
-	else
-		TGNS.DoFor(bkaData.AKAs, function(a) md:ToClientConsole(client, string.format("     %s", a)) end)
-	end
-	md:ToClientConsole(client, " ")
-	local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
-	whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
-	md:ToClientConsole(client, " ")
-	md:ToClientConsole(client, "Steam Community URL:")
-	md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId) or "<unknown>")
-	md:ToClientConsole(client, " ")
-	md:ToClientConsole(client, "Steam Community Profile Name:")
-	md:ToClientConsole(client, getSteamIdProfileName(targetSteamId) or "<unknown>")
-	md:ToClientConsole(client, " ")
+	pdr:Load(targetSteamId, function(loadResponse)
+		if loadResponse.success then
+			local bkaData = loadResponse.value
+			local player = TGNS.GetPlayerMatchingSteamId(targetSteamId)
+			md:ToClientConsole(client, " ")
+			if player ~= nil then
+				md:ToClientConsole(client, string.format(" For: %s", TGNS.GetPlayerName(player)))
+				md:ToClientConsole(client, " ")
+			end
+			md:ToClientConsole(client, string.format(" %s:", bkaHeader))
+			if bkaData == nil or bkaData.BKA == nil or string.len(bkaData.BKA) == 0 then
+				md:ToClientConsole(client, "     (none)")
+			else
+				md:ToClientConsole(client, string.format("     %s", bkaData.BKA))
+			end
+			md:ToClientConsole(client, string.format(" %s:", akasHeader))
+			if bkaData == nil or bkaData.AKAs == nil or #bkaData.AKAs == 0 then
+				md:ToClientConsole(client, "     (none)")
+			else
+				TGNS.DoFor(bkaData.AKAs, function(a) md:ToClientConsole(client, string.format("     %s", a)) end)
+			end
+			md:ToClientConsole(client, " ")
+			local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
+			whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
+			md:ToClientConsole(client, " ")
+			md:ToClientConsole(client, "Steam Community URL:")
+			md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId) or "<unknown>")
+			md:ToClientConsole(client, " ")
+			md:ToClientConsole(client, "Steam Community Profile Name:")
+			md:ToClientConsole(client, getSteamIdProfileName(targetSteamId) or "<unknown>")
+			md:ToClientConsole(client, " ")
+		else
+			Shared.Message("betterknownas ERROR: unable to access data")
+			whoisMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access data.")
+		end
+	end)
 end
 
 local function ShowUsage(client, targetSteamId)
@@ -75,15 +82,29 @@ local function ShowUsage(client, targetSteamId)
 	md:ToClientConsole(client, " ")
 end
 
-local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues)
-	local bkaData = pdr:Load(targetSteamId)
-	if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
-		table.insert(bkaData.AKAs, newBkaName)
-	else
-		bkaData.AKAs = {}
-	end
-	bkaData.AKAs = TGNS.TableUnique(bkaData.AKAs)
-	pdr:Save(bkaData)
+local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllAkaValues, callback)
+	pdr:Load(targetSteamId, function(loadResponse)
+		if loadResponse.success then
+			local bkaData = loadResponse.value
+			if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
+				table.insert(bkaData.AKAs, newBkaName)
+			else
+				bkaData.AKAs = {}
+			end
+			bkaData.AKAs = TGNS.TableUnique(bkaData.AKAs)
+			pdr:Save(bkaData, function(saveResponse)
+				if saveResponse.success then
+					callback(true)
+				else
+					Shared.Message("betterknownas ERROR: Unable to save data")
+					callback(false)
+				end
+			end)
+		else
+			Shared.Message("betterknownas ERROR: Unable to access data")
+			callback(false)
+		end
+	end)
 end
 
 local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bkaHeader, akaHeader, messagePrefix)
@@ -117,6 +138,16 @@ function Plugin:ClientConnect(client)
 		local steamPlayerData = TGNS.GetFirst(data.response.players)
 		steamPlayerDatas[ns2id] = steamPlayerData
 	end)
+	pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
+		if loadResponse.success then
+			local bkaData = loadResponse.value
+			if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
+				bkas[client] = bkaData.BKA
+			end
+		else
+			Shared.Message("betterknownas ERROR: unable to access data")
+		end
+	end)
 end
 
 function Plugin:GetSteamProfileName(client)
@@ -132,10 +163,6 @@ function Plugin:GetSteamProfileUrl(client)
 end
 
 function Plugin:ClientConfirmConnect(client)
-	local bkaData = pdr:Load(TGNS.GetClientSteamId(client))
-	if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
-		bkas[client] = bkaData.BKA
-	end
 	TGNS.UpdateAllScoreboards()
 end
 
@@ -175,8 +202,15 @@ function Plugin:CreateCommands()
 						newBkaName = nil
 					end
 					local targetSteamId = TGNS.GetClientSteamId(targetClient)
-					local bkaData = pdr:Load(targetSteamId)
-					OnBkaChanged(client, targetClient, bkaData, newBkaName, "BKA", "AKAs", "BKA")
+					pdr:Load(targetSteamId, function(loadResponse)
+						if loadResponse.success then
+							local bkaData = loadResponse.value
+							OnBkaChanged(client, targetClient, bkaData, newBkaName, "BKA", "AKAs", "BKA")
+						else
+							md:ToClientConsole(client, "ERROR: Unable to access BKA data. BKA not changed.")
+							Shared.Message("betterknownas ERROR: unable to access data")
+						end
+					end)
 				end
 			else
 				md:ToClientConsole(client, string.format("'%s' uniquely matches a player, but no client found.", playerName))
@@ -196,35 +230,42 @@ function Plugin:CreateCommands()
 	local nameCommand = self:BindCommand( "sh_name", nil, function(client, newBkaName)
 		local md = TGNSMessageDisplayer.Create("BKA")
 		local steamId = TGNS.GetClientSteamId(client)
-		local bkaData = pdr:Load(steamId)
-		local bkaChangeError
-		local timeRemainingBeforePlayerMayChangeOwnBkaInSeconds = bkaData.BKAPlayerModifiedAtInSeconds + PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS - TGNS.GetSecondsSinceEpoch()
-		if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 then
-			bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
-		else
-			if newBkaName == "" then
-				bkaChangeError = "No Better Known As name specified."
-			elseif newBkaName == "clear" then
-				bkaChangeError = "This Better Known As name may not be used."
-			end
-		end
-		if bkaChangeError then
-			md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
-			md:ToClientConsole(client, "Usage: sh_name <name>")
-		else
-			if warned[client] == newBkaName then
-				TGNS.ExecuteClientCommand(client, string.format("name %s", newBkaName))
-				bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
-				bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
-				OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA")
+		pdr:Load(steamId, function(loadResponse)
+			if loadResponse.success then
+				local bkaData = loadResponse.value
+				local bkaChangeError
+				local timeRemainingBeforePlayerMayChangeOwnBkaInSeconds = bkaData.BKAPlayerModifiedAtInSeconds + PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS - TGNS.GetSecondsSinceEpoch()
+				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 then
+					bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
+				else
+					if newBkaName == "" then
+						bkaChangeError = "No Better Known As name specified."
+					elseif newBkaName == "clear" then
+						bkaChangeError = "This Better Known As name may not be used."
+					end
+				end
+				if bkaChangeError then
+					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
+					md:ToClientConsole(client, "Usage: sh_name <name>")
+				else
+					if warned[client] == newBkaName then
+						TGNS.ExecuteClientCommand(client, string.format("name %s", newBkaName))
+						bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
+						bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
+						OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA")
+					else
+						md:ToClientConsole(client, string.format("WHOA! You're setting your Better Known As name, with a %s cooldown before you can edit it again!", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
+						md:ToClientConsole(client, "Your Better Known As name stays with you if you later choose a different player name.")
+						md:ToClientConsole(client, "Any player may view your Better Known As at any time with the sh_whois command.")
+						md:ToClientConsole(client, string.format("If you're sure '%s' is what you want, execute this same command again.", newBkaName))
+						warned[client] = newBkaName
+					end
+				end
 			else
-				md:ToClientConsole(client, string.format("WHOA! You're setting your Better Known As name, with a %s cooldown before you can edit it again!", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
-				md:ToClientConsole(client, "Your Better Known As name stays with you if you later choose a different player name.")
-				md:ToClientConsole(client, "Any player may view your Better Known As at any time with the sh_whois command.")
-				md:ToClientConsole(client, string.format("If you're sure '%s' is what you want, execute this same command again.", newBkaName))
-				warned[client] = newBkaName
+				md:ToClientConsole(client, "ERROR: Unable to access sh_name data. sh_name not changed.")
+				Shared.Message("betterknownas ERROR: Unable to access data.")
 			end
-		end
+		end)
 	end, true)
 	nameCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true}
 	nameCommand:Help(string.format("<name> Edit your own Better Known As (%s cooldown between edits).", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
@@ -237,8 +278,13 @@ function Plugin:CreateCommands()
 			if targetClient ~= nil then
 				local targetSteamId = TGNS.GetClientSteamId(targetClient)
 				if newBkaName ~= nil and newBkaName ~= "" then
-					AddAka(targetSteamId, newBkaName, true)
-					ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
+					AddAka(targetSteamId, newBkaName, true, function(success)
+						if success then
+							ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
+						else
+							md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to add AKA.")
+						end
+					end)
 				else
 					ShowUsage(client, targetSteamId)
 				end
