@@ -270,11 +270,17 @@ TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message
 	return BalanceStartedRecently() and not TGNS.PlayerIsOnPlayingTeam(targetPlayer) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin)
 end)
 
+local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
+	local steamId = TGNS.GetClientSteamId(client)
+	totalGamesPlayedCache[steamId] = totalGamesPlayed
+	TGNS.ExecuteEventHooks("TotalPlayedGamesCountUpdated", client, totalGamesPlayedCache[steamId])
+end
+
 function Plugin:ClientConnect(client)
 	local steamId = TGNS.GetClientSteamId(client)
 	pdr:Load(steamId, function(loadResponse)
 		if loadResponse.success then
-			totalGamesPlayedCache[client] = loadResponse.value.total
+			updateTotalGamesPlayedCache(client, loadResponse.value.total)
 			balanceCache[client] = loadResponse.value
 		else
 			Shared.Message("balance ERROR: unable to access data")
@@ -316,7 +322,7 @@ function Plugin:Initialise()
 					AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
 					pdr:Save(balance, function(saveResponse)
 						if saveResponse.success then
-							totalGamesPlayedCache[c] = balance.total
+							updateTotalGamesPlayedCache(c, balance.total)
 							balanceCache[c] = loadResponse.value
 						else
 							Shared.Message("balance ERROR: unable to save data")
