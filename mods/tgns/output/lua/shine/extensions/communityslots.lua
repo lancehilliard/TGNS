@@ -295,9 +295,6 @@ function Plugin:ClientConnect(joiningClient)
     if TGNS.GetIsClientVirtual(joiningClient) then
         TGNS.ScheduleAction(3, function() self:ClientConfirmConnect(joiningClient) end)
     end
-    if TGNS.HasClientSignedPrimerWithGames(joiningClient) then
-        TGNS.AddTempGroup(joiningClient, "primerwithgames_group")
-    end
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -544,6 +541,12 @@ function Plugin:Initialise()
                 Shared.Message("communityslots ERROR: unable to load fullSpecSteamIds")
             end
         end)
+    end)
+    TGNS.RegisterEventHook("TotalPlayedGamesCountUpdated", function(client, totalGamesPlayedCount)
+        if not TGNS.ClientIsInGroup(client, "primerwithgames_group") and TGNS.HasClientSignedPrimerWithGames(client) then
+            TGNS.AddTempGroup(client, "primerwithgames_group")
+            TGNS.UpdateAllScoreboards()
+        end
     end)
     return true
 end
