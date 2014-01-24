@@ -47,7 +47,7 @@ function Plugin:Broadcast(client, message)
 					table.insert(data[simpleServerName], {senderName=senderName, when=TGNS.GetSecondsSinceEpoch(), fromServer=thisServerSimpleName, message=message})
 				end
 			end)
-			dr.Save(data, function(saveResponse)
+			dr.Save(data, nil, function(saveResponse)
 				if saveResponse.success then
 					md:ToAllNotifyInfo(string.format("%s: %s", senderName, message))
 				else
