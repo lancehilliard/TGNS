@@ -32,9 +32,9 @@ local function ShowCurrentTagline(client)
 			end
 		else
 			Shared.Message("taglines ERROR: Unable to access data.")
+			taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
 		end
 		taglineMd:ToClientConsole(client, "")
-		taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
 	end)
 end
 
