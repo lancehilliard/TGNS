@@ -8,7 +8,7 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
-    TGNS.ScheduleAction(90, function()
+    TGNS.ScheduleAction(120, function()
     	if mapMightBeBroken == true then
             local nextMapName = TGNS.GetNextMapName()
             Shared.Message(string.format("emptymapcycler cycling to %s...", nextMapName))
