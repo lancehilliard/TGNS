@@ -42,7 +42,7 @@ local function onVoteSuccessful(teamNumber, players)
 	md:ToAllNotifyInfo(chatMessage)
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
-	numberOfSecondsToDeductFromCountdownTimeRemaining = 2
+	numberOfSecondsToDeductFromCountdownTimeRemaining = 3
 	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
 	TGNS.DoFor(players, function(p)
 		pcall(function()
@@ -263,7 +263,7 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 			if kCountdownTimeRemaining < 57 then
 				if victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) then
 					local commandStructureDescription = teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and "CHAIR" or "HIVE"
-					if kCountdownTimeRemaining > 23 then
+					if kCountdownTimeRemaining > 22 then
 						if TGNS.GetPlayerTeamNumber(attackerEntity) ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and TGNS.GetPlayerTeamNumber(victimEntity) == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining + 1
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 8 and 8 or numberOfSecondsToDeductFromCountdownTimeRemaining
