@@ -9,6 +9,7 @@ local lastSetReservedSlotAmount
 local inReadyRoomSinceTimes = {}
 local fullSpecDataRepository
 local fullSpecSteamIds
+local canNotifyAboutOtherServerSlots = true
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 
@@ -50,9 +51,14 @@ local function TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
     return result
 end
 
+local function getDefaultPublicSlots()
+    local result = Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots
+    return result
+end
+
 local function GetRemainingPublicSlots(playingPlayers)
-    local totalPublicSlots = Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots
-    local result = totalPublicSlots - #playingPlayers
+    local defaultPublicSlots = getDefaultPublicSlots()
+    local result = defaultPublicSlots - #playingPlayers
     result = result > 0 and result or 0
     return result
 end
@@ -173,7 +179,7 @@ end
 local function AnnounceRemainingPublicSlots()
     local playingPlayers = GetPlayingPlayers()
     local remainingPublicSlots = GetRemainingPublicSlots(playingPlayers)
-    TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots)
+    TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots, #playingPlayers)
     UpdateReservedSlotAmount()
 end
 
@@ -262,7 +268,8 @@ function Plugin:GetPlayersForNewGame()
 end
 
 function Plugin:GetBumpMessage(targetClient)
-    local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, TGNS.GetClientName(targetClient), Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots, Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots)
+    local defaultPublicSlots = getDefaultPublicSlots()
+    local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, TGNS.GetClientName(targetClient), defaultPublicSlots, defaultPublicSlots)
     if Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
         result = result .. " Captains Game in play!"
     end
@@ -546,6 +553,28 @@ function Plugin:Initialise()
         if not TGNS.ClientIsInGroup(client, "primerwithgames_group") and TGNS.HasClientSignedPrimerWithGames(client) then
             TGNS.AddTempGroup(client, "primerwithgames_group")
             TGNS.UpdateAllScoreboards()
+        end
+    end)
+    TGNS.ScheduleActionInterval(15, function()
+        if canNotifyAboutOtherServerSlots then
+            local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
+            if humansCount > 0 and humansCount < 10 then
+                local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+                if otherServerStaticInfo then
+                    TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(otherServerDynamicInfo)
+                        if otherServerDynamicInfo.HasRecentData then
+                            local otherServerPlayingPlayersCount = otherServerDynamicInfo.GetPlayingPlayersCount()
+                            local otherServerPublicSlotsRemaining = otherServerDynamicInfo.GetPublicSlotsRemaining()
+                            if otherServerPlayingPlayersCount > humansCount and otherServerPublicSlotsRemaining >= humansCount then
+                                tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
+                                tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
+                                canNotifyAboutOtherServerSlots = false
+                                TGNS.ScheduleAction(180, function() canNotifyAboutOtherServerSlots = true end)
+                            end
+                        end
+                    end)
+                end
+            end
         end
     end)
     return true
