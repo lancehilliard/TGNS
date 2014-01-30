@@ -267,7 +267,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			end
 		end
 		local playerList = TGNS.GetPlayerList()
-		if #TGNS.GetMarineClients(playerList) == #TGNS.GetAlienClients(playerList) and newTeamNumber == kAlienTeamType then
+		if #TGNS.GetMarineClients(playerList) == #TGNS.GetAlienClients(playerList) and newTeamNumber == kAlienTeamType and not (Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()) and not TGNS.Any(TGNS.GetClientList(), TGNS.GetIsClientVirtual) then
 			md:ToPlayerNotifyError(player, "Marines get the extra player on this server.")
 			return false
 		end
