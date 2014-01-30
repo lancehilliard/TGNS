@@ -11,6 +11,8 @@ local mayBalanceAt = 0
 local FIRSTCLIENT_TIME_BEFORE_BALANCE = 30
 local GAMEEND_TIME_BEFORE_BALANCE = TGNS.ENDGAME_TIME_TO_READYROOM + 10
 local firstClientProcessed = false
+local notedCommanderSteamIds = {}
+local notedPlayerSteamIds = {}
 
 local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
 	balance.wins = balance.wins ~= nil and balance.wins or 0
@@ -156,16 +158,20 @@ local function SendNextPlayer()
 	else
 		sortedPlayersGetter = function(playerList)
 			local result = {}
-			local rookiePlayers = TGNS.Where(playerList, TGNS.PlayerIsRookie)
-			local nonRookieStrangers = TGNS.Where(playerList, function(p) return not TGNS.Has(rookiePlayers, p) and TGNS.ClientAction(p, TGNS.IsClientStranger) end)
-			local nonRookieRegulars = TGNS.Where(playerList, function(p) return not TGNS.Has(rookiePlayers, p) and not TGNS.Has(nonRookieStrangers, p) end)
-			TGNS.SortDescending(rookiePlayers, GetPlayerScorePerMinuteAverage)
-			TGNS.SortDescending(nonRookieStrangers, GetPlayerScorePerMinuteAverage)
-			TGNS.SortDescending(nonRookieRegulars, GetPlayerScorePerMinuteAverage)
+			local notedCommanders = TGNS.Where(playerList, function(p) return TGNS.Has(notedCommanderSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
+			local notedPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and TGNS.Has(notedPlayerSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
+			local rookiePlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and not TGNS.Has(notedPlayers, p) and TGNS.PlayerIsRookie(p) end)
+			local nonRookieStrangers = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and not TGNS.Has(notedPlayers, p) and not TGNS.Has(rookiePlayers, p) and TGNS.ClientAction(p, TGNS.IsClientStranger) end)
+			local nonRookieRegulars = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and not TGNS.Has(notedPlayers, p) and not TGNS.Has(rookiePlayers, p) and not TGNS.Has(nonRookieStrangers, p) end)
+			local sortAction = math.random() < 0.5 and TGNS.SortDescending or TGNS.SortAscending
+			sortAction(notedCommanders, GetPlayerScorePerMinuteAverage)
+			sortAction(notedPlayers, GetPlayerScorePerMinuteAverage)
+			sortAction(rookiePlayers, GetPlayerScorePerMinuteAverage)
+			sortAction(nonRookieStrangers, GetPlayerScorePerMinuteAverage)
+			sortAction(nonRookieRegulars, GetPlayerScorePerMinuteAverage)
+			local playerGroups = TGNS.GetRandomizedElements({ notedCommanders, notedPlayers, rookiePlayers, nonRookieStrangers, nonRookieRegulars })
 			local addPlayerToResult = function(p) table.insert(result, p) end
-			TGNS.DoFor(rookiePlayers, addPlayerToResult)
-			TGNS.DoFor(nonRookieStrangers, addPlayerToResult)
-			TGNS.DoFor(nonRookieRegulars, addPlayerToResult)
+			TGNS.DoFor(playerGroups, function(g) TGNS.DoFor(g, addPlayerToResult) end)
 			return result
 		end
 		teamAverageGetter = GetScorePerMinuteAverage
@@ -244,25 +250,33 @@ function Plugin:EndGame(gamerules, winningTeam)
 	mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
 end
 
-
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-	if balanceInProgress and not force then
-		md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
-		return false
-	end
-	local balanceStartedRecently = BalanceStartedRecently()
-	local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
-	local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
-	if balanceStartedRecently then
-		TGNS.UpdateAllScoreboards()
-	end
-	if balanceStartedRecently and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
-		local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
-		if playerTeamIsSizedCorrectly then
-			local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
-			md:ToPlayerNotifyError(player, message)
+	if not (force or shineForce) then
+		if balanceInProgress then
+			md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
 			return false
 		end
+		local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
+		local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
+		if BalanceStartedRecently() and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
+			local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
+			if playerTeamIsSizedCorrectly then
+				local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
+				md:ToPlayerNotifyError(player, message)
+				return false
+			end
+		end
+		local playerList = TGNS.GetPlayerList()
+		if #TGNS.GetMarineClients(playerList) == #TGNS.GetAlienClients(playerList) and newTeamNumber == kAlienTeamType then
+			md:ToPlayerNotifyError(player, "Marines get the extra player on this server.")
+			return false
+		end
+	end
+end
+
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	if BalanceStartedRecently() then
+		TGNS.UpdateAllScoreboards()
 	end
 end
 
@@ -333,6 +347,22 @@ function Plugin:Initialise()
 				end
 			end)
 		end)
+	end)
+	TGNS.ScheduleAction(3, function()
+		local npdr = TGNSDataRepository.Create("notedplayers", function(data)
+	        data.NotedCommanders = data.NotedCommanders or {}
+	        data.NotedPlayers = data.NotedPlayers or {}
+	        return data
+	    end)
+	    npdr.Load(nil, function(loadResponse)
+	        if loadResponse.success then
+	            notedPlayersData = loadResponse.value
+	            notedCommanderSteamIds = TGNS.Select(notedPlayersData.NotedCommanders, function(x) return x.id end)
+	            notedPlayerSteamIds = TGNS.Select(notedPlayersData.NotedPlayers, function(x) return x.id end)
+	        else
+	            Shared.Message("balance ERROR: unable to access notedplayers data.")
+	        end
+	    end)
 	end)
     return true
 end
