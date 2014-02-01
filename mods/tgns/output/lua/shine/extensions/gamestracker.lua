@@ -44,14 +44,15 @@ local dr = TGNSDataRepository.Create("gamestracker", function(data)
 	data.strangersGamesCountAverage = data.strangersGamesCountAverage ~= nil and data.strangersGamesCountAverage or 0
 	data.strangersGamesCountTotal = data.strangersGamesCountTotal ~= nil and data.strangersGamesCountTotal or 0
 	return data
-end, TGNSMonthlyNumberGetter.Get)
+end)
 
 local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients)
-		dr.Load(nil, function(loadResponse)
+		local monthlyNumber = TGNSMonthlyNumberGetter.Get()
+		dr.Load(monthlyNumber, function(loadResponse)
 			if loadResponse.success then
 				local data = loadResponse.value
 				TGNS.DoFor(clients, function(c)
@@ -59,9 +60,9 @@ function Plugin:Initialise()
 					local steamId = TGNS.GetClientSteamId(c)
 					gameCountIncrementer.Increment(steamId)
 				end)
-				dr.Save(data, nil, function(saveResponse)
+				dr.Save(data, monthlyNumber, function(saveResponse)
 					if not saveResponse.success then
-						Shared.Message("gamestracker ERROR: Unable to save data.")
+						Shared.Message(string.format("gamestracker ERROR: Unable to save data. msg: '%s'; stacktrace: '%'", saveResponse.msg, saveResponse.stacktrace))
 					end
 				end)
 			else
