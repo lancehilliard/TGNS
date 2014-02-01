@@ -7,7 +7,7 @@ local dr = TGNSDataRepository.Create("serverinfo", function(data)
 	data.playingPlayersCount = data.playingPlayersCount or 0
 	data.lastUpdatedInSeconds = data.lastUpdatedInSeconds or 0
 	return data
-end, function(serverName) return serverName end)
+end)
 
 TGNSServerInfoGetter.GetInfoBySimpleServerName = function(simpleServerName, callback)
 	callback = callback or function() end

@@ -1,6 +1,6 @@
 TGNSDataRepository = {}
 
-TGNSDataRepository.Create = function(dataTypeName, onDataLoaded, dataFilenameStubCreator)
+TGNSDataRepository.Create = function(dataTypeName, onDataLoaded)
 	assert(dataTypeName ~= nil and dataTypeName ~= "")
 	assert(type(onDataLoaded) == "function")
 

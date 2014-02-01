@@ -6,7 +6,7 @@ local dr = TGNSDataRepository.Create("broadcast", function(data)
 		data[simpleServerName] = data[simpleServerName] or {}
 	end)
 	return data
-end, function(recordId)  end)
+end)
 
 local md = TGNSMessageDisplayer.Create("BROADCAST")
 

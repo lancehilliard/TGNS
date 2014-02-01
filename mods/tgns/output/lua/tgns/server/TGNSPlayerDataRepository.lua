@@ -1,7 +1,7 @@
 TGNSPlayerDataRepository = {}
 
 TGNSPlayerDataRepository.Create = function(dataTypeName, onDataLoaded)
-	local dr = TGNSDataRepository.Create(dataTypeName, onDataLoaded, function(steamId) return steamId end)
+	local dr = TGNSDataRepository.Create(dataTypeName, onDataLoaded)
 
 	local result = {}
 
