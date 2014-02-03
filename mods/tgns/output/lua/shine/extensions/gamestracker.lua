@@ -62,7 +62,7 @@ function Plugin:Initialise()
 				end)
 				dr.Save(data, monthlyNumber, function(saveResponse)
 					if not saveResponse.success then
-						Shared.Message(string.format("gamestracker ERROR: Unable to save data. msg: '%s'; stacktrace: '%'", saveResponse.msg, saveResponse.stacktrace))
+						Shared.Message(string.format("gamestracker ERROR: Unable to save data. msg: '%s'; stacktrace: '%s'", saveResponse.msg, saveResponse.stacktrace))
 					end
 				end)
 			else
