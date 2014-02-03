@@ -18,6 +18,15 @@ function TGNS.GetFirst(elements)
 	return result
 end
 
+function TGNS.SingleOrNil(elements, predicate)
+	local result = nil
+	local matching = TGNS.Where(elements, predicate)
+	if #matching > 0 then
+		result = TGNS.GetFirst(matching)
+	end
+	return result
+end
+
 function TGNS.Skip(elements, count)
 	local result = {}
 	TGNS.DoFor(elements, function(element, i)
