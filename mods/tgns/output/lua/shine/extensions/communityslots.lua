@@ -253,6 +253,10 @@ local Plugin = {}
 Plugin.HasConfig = true
 Plugin.ConfigName = "communityslots.json"
 
+function Plugin:IsClientRecentCommander(client)
+    return IsTargetProtectedCommander(client)
+end
+
 function Plugin:GetPlayersForNewGame()
     local clients = TGNS.GetClientList()
     TGNS.SortAscending(clients, function(c)
