@@ -87,7 +87,7 @@ local function GetWinLossRatio(player, balance)
 end
 
 local function GetPlayerBalance(player)
-	local result = balanceCache[TGNS.GetClient(player)] or 0
+	local result = balanceCache[TGNS.GetClient(player)] or {}
 	return result
 end
 
@@ -268,7 +268,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 		end
 		local playerList = TGNS.GetPlayerList()
 		local numberOfMarines = #TGNS.GetMarineClients(playerList)
-		if numberOfMarines > 3 and numberOfMarines == #TGNS.GetAlienClients(playerList) and newTeamNumber == kAlienTeamType and not (Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()) and not TGNS.Any(TGNS.GetClientList(), TGNS.GetIsClientVirtual) then
+		if numberOfMarines > 3 and numberOfMarines < 8 and numberOfMarines == #TGNS.GetAlienClients(playerList) and newTeamNumber == kAlienTeamType and not (Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()) and not TGNS.Any(TGNS.GetClientList(), TGNS.GetIsClientVirtual) then
 			md:ToPlayerNotifyError(player, "Marines get the extra player on this server.")
 			return true, kMarineTeamType
 		end
@@ -308,7 +308,7 @@ function Plugin:ClientConfirmConnect(client)
 		mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
 		firstClientProcessed = true
 	end
-	local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #GetPlayerBalance(p).scoresPerMinute < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
+	local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #(GetPlayerBalance(p).scoresPerMinute or {}) < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
 	if playerHasTooFewLocalScoresPerMinute then
 		local steamId = TGNS.GetClientSteamId(client)
 		TGNSNs2StatsProxy.AddSteamId(steamId)
