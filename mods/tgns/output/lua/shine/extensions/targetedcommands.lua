@@ -131,7 +131,9 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
-	self:CreateCommands()
+    TGNS.ScheduleAction(1, function()
+    	self:CreateCommands()
+    end)
     return true
 end
 

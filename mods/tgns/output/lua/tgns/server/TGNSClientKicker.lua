@@ -46,7 +46,7 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 					kickReasons[targetSteamId] = kickReasons[targetSteamId] or {}
 					table.insert(kickReasons[targetSteamId], reason)
 					if #kickReasons[targetSteamId] >= REPEAT_KICK_THRESHOLD then
-						Shine.Plugins.ban:AddBan(targetSteamId, targetName, REPEAT_KICK_BAN_DURATION_IN_MINUTES * 60, "TGNSClientKicker", TGNS.Join(kickReasons[targetSteamId], "+"))
+						Shine.Plugins.ban:AddBan(targetSteamId, targetName, REPEAT_KICK_BAN_DURATION_IN_MINUTES * 60, "TGNSClientKicker", 0, TGNS.Join(kickReasons[targetSteamId], "+"))
 					end
 				end
 				TGNS.DisconnectClient(client, reason)
