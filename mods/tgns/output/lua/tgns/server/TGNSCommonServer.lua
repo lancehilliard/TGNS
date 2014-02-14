@@ -1,6 +1,6 @@
 TGNS = TGNS or {}
 local scheduledActions = {}
-local scheduledActionsErrorCount = 0
+local scheduledActionsErrorCounts = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
@@ -630,9 +630,13 @@ local function ProcessScheduledActions()
 			if success then
 				table.remove(scheduledActions, index)
 			else
-				scheduledActionsErrorCount = scheduledActionsErrorCount + 1
-				if scheduledActionsErrorCount < 1 then
-					TGNS.EnhancedLog(string.format("ScheduledAction Error (%s, %s): %s", scheduledActionsErrorCount, Shared.GetTime(), result))
+				scheduledActionsErrorCount = scheduledActionsErrorCounts[scheduledAction.what] and scheduledActionsErrorCounts[scheduledAction.what] or 1
+				if scheduledActionsErrorCount <= 1 then
+					local errorTemplate = "ScheduledAction Error (#%s @ %s): %s"
+					--TGNS.EnhancedLog(string.format(errorTemplate, scheduledActionsErrorCount, Shared.GetTime(), result))
+					Shine:DebugPrint(errorTemplate, true, scheduledActionsErrorCount, Shared.GetTime(), result)
+					scheduledActionsErrorCount = scheduledActionsErrorCount + 1
+					scheduledActionsErrorCounts[scheduledAction.what] = scheduledActionsErrorCount
 				else
 					table.remove(scheduledActions, index)
 				end
@@ -1017,7 +1021,9 @@ function TGNS.GetLastMatchingClient(playerList, predicate)
 end
 
 function TGNS.AnnouncePlayerAsHavingNewScoreboardData(player)
-	player:SetScoreboardChanged(true)
+	if player.SetScoreboardChanged then
+		player:SetScoreboardChanged(true)
+	end
 end
 
 function TGNS.UpdateAllScoreboards()
