@@ -16,7 +16,6 @@ if Server then
 	Script.Load("lua/tgns/server/TGNSNs2StatsProxy.lua")
 	Script.Load("lua/tgns/server/TGNSPlayerBlacklistRepository.lua")
 	Script.Load("lua/tgns/server/TGNSPlayerPreferredRepository.lua")
-	Script.Load("lua/tgns/server/TGNSScoreboardMessageChanger.lua")
 	Script.Load("lua/tgns/server/TGNSServerInfoGetter.lua")
 	Script.Load("lua/tgns/server/TGNSSessionDataRepository.lua")
 elseif Client then
