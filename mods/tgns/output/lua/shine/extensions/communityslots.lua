@@ -570,8 +570,8 @@ function Plugin:Initialise()
                             local otherServerPlayingPlayersCount = otherServerDynamicInfo.GetPlayingPlayersCount()
                             local otherServerPublicSlotsRemaining = otherServerDynamicInfo.GetPublicSlotsRemaining()
                             if otherServerPlayingPlayersCount > humansCount and otherServerPublicSlotsRemaining >= humansCount then
-                                --tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
-                                --tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
+                                tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
+                                tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
                                 canNotifyAboutOtherServerSlots = false
                                 TGNS.ScheduleAction(180, function() canNotifyAboutOtherServerSlots = true end)
                             end
