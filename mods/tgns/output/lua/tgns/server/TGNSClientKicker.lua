@@ -86,8 +86,8 @@ local function onPlayerSay(client, networkMessage)
 end
 TGNS.RegisterEventHook("PlayerSay", onPlayerSay, 5)
 
-TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer)
-	local targetClient = TGNS.GetClient(targetPlayer)
-	local result = targetClient and TGNSClientKicker.IsClientKicked(targetClient)
-	return result
-end)
+-- TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer)
+-- 	local targetClient = TGNS.GetClient(targetPlayer)
+-- 	local result = targetClient and TGNSClientKicker.IsClientKicked(targetClient)
+-- 	return result
+-- end)

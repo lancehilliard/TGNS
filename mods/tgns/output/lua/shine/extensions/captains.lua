@@ -99,10 +99,10 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c)
 		TGNS.AddTempGroup(c, "captains_group")
-		TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
-		TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		--TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		--TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
 		TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
-		TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		--TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
 	end)
 	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	TGNS.ScheduleAction(3, function()
@@ -552,21 +552,21 @@ function Plugin:Initialise()
 		end
 	end)
 
-	TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
-		local result = false
-		if captainsModeEnabled and not TGNS.IsGameInProgress() then
-			local targetClient = TGNS.GetClient(targetPlayer)
-			local messageClient = TGNS.GetClientById(message.clientId)
-			if TGNS.Has(captainClients, targetClient) then
-				if Shine.Plugins.lookdown and Shine.Plugins.lookdown.IsPlayerLookingDown and Shine.Plugins.lookdown:IsPlayerLookingDown(targetPlayer) then
-					if not TGNS.ClientIsInGroup(messageClient, "captainsgame_group") then
-						result = true
-					end
-				end
-			end
-		end
-		return result
-	end)
+	-- TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
+	-- 	local result = false
+	-- 	if captainsModeEnabled and not TGNS.IsGameInProgress() then
+	-- 		local targetClient = TGNS.GetClient(targetPlayer)
+	-- 		local messageClient = TGNS.GetClientById(message.clientId)
+	-- 		if TGNS.Has(captainClients, targetClient) then
+	-- 			if Shine.Plugins.lookdown and Shine.Plugins.lookdown.IsPlayerLookingDown and Shine.Plugins.lookdown:IsPlayerLookingDown(targetPlayer) then
+	-- 				if not TGNS.ClientIsInGroup(messageClient, "captainsgame_group") then
+	-- 					result = true
+	-- 				end
+	-- 			end
+	-- 		end
+	-- 	end
+	-- 	return result
+	-- end)
 
 	mayVoteYet = false
 	TGNS.ScheduleAction(115, function()
