@@ -180,37 +180,25 @@ local function SendNextPlayer()
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
 	local sortedPlayers = sortedPlayersGetter(playerList)
 	local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
-	if #eligiblePlayers > 0 then
-		local marineClients = TGNS.GetMarineClients(playerList)
-		local alienClients = TGNS.GetAlienClients(playerList)
-		local marineAvg = teamAverageGetter(marineClients)
-		local alienAvg = teamAverageGetter(alienClients)
-		local teamNumber
-		local teamIsWeaker
-		if #marineClients <= #alienClients then
-			teamNumber = kMarineTeamType
-			teamIsWeaker = marineAvg <= alienAvg
-		else
-			teamNumber = kAlienTeamType
-			teamIsWeaker = alienAvg <= marineAvg
-		end
-		local player = TGNS.GetFirst(eligiblePlayers) // teamIsWeaker and TGNS.GetFirst(eligiblePlayers) or TGNS.GetLast(eligiblePlayers)
+	local marineClients = TGNS.GetMarineClients(playerList)
+	local alienClients = TGNS.GetAlienClients(playerList)
+	local teamNumber = #marineClients <= #alienClients and kAlienTeamType or kMarineTeamType
+	TGNS.DoFor(eligiblePlayers, function(player)
+		teamNumber = teamNumber == kAlienTeamType and kMarineTeamType or kAlienTeamType
 		local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
 		table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
 		TGNS.SendToTeam(player, teamNumber, true)
-		TGNS.ScheduleAction(0.25, SendNextPlayer)
-	else
-		md:ToAdminConsole("Balance finished.")
-		balanceInProgress = false
-		local playerList = TGNS.GetPlayerList()
-		local marineClients = TGNS.GetMarineClients(playerList)
-		local alienClients = TGNS.GetAlienClients(playerList)
-		local marineAvg = teamAverageGetter(marineClients)
-		local alienAvg = teamAverageGetter(alienClients)
-		local averagesReport = string.format("MarineAvg: %s | AlienAvg: %s", marineAvg, alienAvg)
-		table.insert(balanceLog, averagesReport)
-		TGNS.ScheduleAction(1, PrintBalanceLog)
-	end
+	end)
+	md:ToAdminConsole("Balance finished.")
+	balanceInProgress = false
+	local playerList = TGNS.GetPlayerList()
+	local marineClients = TGNS.GetMarineClients(playerList)
+	local alienClients = TGNS.GetAlienClients(playerList)
+	local marineAvg = teamAverageGetter(marineClients)
+	local alienAvg = teamAverageGetter(alienClients)
+	local averagesReport = string.format("MarineAvg: %s | AlienAvg: %s", marineAvg, alienAvg)
+	table.insert(balanceLog, averagesReport)
+	TGNS.ScheduleAction(1, PrintBalanceLog)
 end
 
 local function BeginBalance()
@@ -226,13 +214,13 @@ local function svBalance(client)
 		md:ToPlayerNotifyError(player, string.format("Balance has a server-wide cooldown of %s seconds.", RECENT_BALANCE_DURATION_IN_SECONDS))
 	elseif (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) then
 		md:ToPlayerNotifyError(player, "You may not Balance during Captains.")
-	elseif mayBalanceAt > Shared.GetTime() then
+	elseif false and mayBalanceAt > Shared.GetTime() then
 		md:ToPlayerNotifyError(player, "Wait a bit to let players join teams of choice.")
 	else
 		local gameState = GetGamerules():GetGameState()
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
 			md:ToAllNotifyInfo(string.format("%s is balancing teams using TG and ns2stats score-per-minute data.", TGNS.GetClientName(client)))
-			md:ToAllNotifyInfo("Scoreboard is hidden until you're placed on a team.")
+			--md:ToAllNotifyInfo("Scoreboard is hidden until you're placed on a team.")
 			balanceInProgress = true
 			lastBalanceStartTimeInSeconds = Shared.GetTime()
 			TGNS.ScheduleAction(5, BeginBalance)
@@ -292,10 +280,6 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		TGNS.UpdateAllScoreboards()
 	end
 end
-
-TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
-	return BalanceStartedRecently() and not TGNS.PlayerIsOnPlayingTeam(targetPlayer) and not TGNS.ClientAction(targetPlayer, TGNS.IsClientAdmin)
-end)
 
 local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
 	local steamId = TGNS.GetClientSteamId(client)
