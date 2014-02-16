@@ -15,14 +15,11 @@ function Plugin:Initialise()
     self.Enabled = true
 	dakData = TGNSJsonFileTranscoder.DecodeFromFile("config://ServerAdmin.json")
 	originalGetPermission = TGNS.ReplaceClassMethod("Shine", "GetPermission", function(self, client, conCommand)
-		local result = false
-		if client then
-			result = originalGetPermission(self, client, conCommand)
-			if not result then
-				local Command = self.Commands[ conCommand ]
-				if Command then
-					result = Command.NoPerm or self:HasAccess(client, conCommand)
-				end
+		local result = originalGetPermission(self, client, conCommand)
+		if not result then
+			local Command = self.Commands[ conCommand ]
+			if Command then
+				result = Command.NoPerm or self:HasAccess(client, conCommand)
 			end
 		end
 		return result
@@ -48,7 +45,7 @@ function Plugin:Initialise()
 		end
 		return result
 	end)
-	
+
 	TGNS.ReplaceClassMethod("Shine", "CanTarget", function(self, client, target) return true end)
 
 	originalIsInGroup = TGNS.ReplaceClassMethod("Shine", "IsInGroup", function(self, client, groupName)
