@@ -436,10 +436,12 @@ end
 
 function TGNS.AddTempGroup(client, groupName)
 	Shine.Plugins.tempgroups:AddTempGroup(client, groupName)
+	TGNS.ExecuteEventHooks("ClientGroupsChanged", client)
 end
 
 function TGNS.RemoveTempGroup(client, groupName)
 	Shine.Plugins.tempgroups:RemoveTempGroup(client, groupName)
+	TGNS.ExecuteEventHooks("ClientGroupsChanged", client)
 end
 
 function TGNS.ClientIsInGroup(client, groupName)
@@ -644,11 +646,7 @@ local function ProcessScheduledActions()
 		end
 	end)
 end
-
-local function CommonOnServerUpdate(deltatime)
-	ProcessScheduledActions()
-end
-TGNS.RegisterEventHook("Think", CommonOnServerUpdate)
+TGNS.RegisterEventHook("OnEverySecond", ProcessScheduledActions)
 
 function TGNS.PlayerIsOnTeam(player, team)
 	local result = player:GetTeam() == team
