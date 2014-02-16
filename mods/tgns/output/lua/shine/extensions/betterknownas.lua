@@ -112,17 +112,17 @@ local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bka
 	bkaData.BKA = newBkaName
 	pdr:Save(bkaData)
 	bkas[targetClient] = newBkaName
-	TGNS.UpdateAllScoreboards()
 	ShowCurrentBka(actingClient, TGNS.GetClientSteamId(targetClient), bkaHeader, akaHeader, messagePrefix)
+	TGNS.ExecuteEventHooks("BkaChanged", targetClient)
 end
 
-TGNSScoreboardMessageChanger.Add(TGNSScoreboardMessageChanger.Priority.LOWEST, function(scorePlayer, sendToPlayer, scoresMessage)
-	local client = TGNS.GetClient(scorePlayer)
-	local bkaName = bkas[client]
-	if bkaName ~= nil and not TGNS.StringEqualsCaseInsensitive(TGNS.GetPlayerName(scorePlayer), bkaName) then
-		scoresMessage.playerName = string.format("*%s", scoresMessage.playerName)
-	end
-end)
+-- TGNSScoreboardMessageChanger.Add(TGNSScoreboardMessageChanger.Priority.LOWEST, function(scorePlayer, sendToPlayer, scoresMessage)
+-- 	local client = TGNS.GetClient(scorePlayer)
+-- 	local bkaName = bkas[client]
+-- 	if bkaName ~= nil and not TGNS.StringEqualsCaseInsensitive(TGNS.GetPlayerName(scorePlayer), bkaName) then
+-- 		scoresMessage.playerName = string.format("*%s", scoresMessage.playerName)
+-- 	end
+-- end)
 
 local function ShowWhoisUsage(client)
 	local md = TGNSMessageDisplayer.Create("WHOIS")
@@ -130,6 +130,13 @@ local function ShowWhoisUsage(client)
 end
 
 local Plugin = {}
+
+function Plugin:IsPlayingWithoutBkaName(player)
+	local client = TGNS.GetClient(player)
+	local bkaName = bkas[client]
+	local result = bkaName ~= nil and not TGNS.StringEqualsCaseInsensitive(TGNS.GetPlayerName(player), bkaName)
+	return result
+end
 
 function Plugin:ClientConnect(client)
 	local ns2id = TGNS.GetClientSteamId(client)
