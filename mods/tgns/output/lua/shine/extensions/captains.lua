@@ -99,10 +99,10 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c)
 		TGNS.AddTempGroup(c, "captains_group")
-		--TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
-		--TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
+		TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
 		TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
-		--TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Look straight down when picking players.") end) end)
+		TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
 	end)
 	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	TGNS.ScheduleAction(3, function()
@@ -508,7 +508,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	local client = TGNS.GetClient(player)
 	TGNS.RemoveTempGroup(client, "captainsgame_group")
     if TGNS.IsPlayerReadyRoom(player) then
-		if TGNS.Has(readyPlayerClients, client) then
+		if captainsModeEnabled and TGNS.Has(readyPlayerClients, client) then
 			TGNS.AddTempGroup(client, "captainsgame_group")
 		end
 	elseif newTeamNumber == kSpectatorIndex then
@@ -521,8 +521,6 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:ClientConfirmConnect(client)
-	//TGNS.AddTempGroup(client, "captainsgame_group")
-	//TGNS.UpdateAllScoreboards()
 	if captainsModeEnabled then
 		TGNS.ScheduleAction(6, function()
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
@@ -546,11 +544,11 @@ function Plugin:Initialise()
 		end
 	end
 
-	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
-		if captainsModeEnabled and not TGNS.IsGameInProgress() then
-			TGNS.UpdateAllScoreboards()
-		end
-	end)
+	-- TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
+	-- 	if captainsModeEnabled and not TGNS.IsGameInProgress() then
+	-- 		TGNS.UpdateAllScoreboards()
+	-- 	end
+	-- end)
 
 	-- TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
 	-- 	local result = false
