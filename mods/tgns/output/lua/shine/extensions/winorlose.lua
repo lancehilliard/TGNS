@@ -27,6 +27,10 @@ local function GetCommandStructureToKeep(commandStructures)
 	local firstCommandStructureWithCommander = #commandStructuresWithCommanders > 0 and TGNS.GetFirst(commandStructuresWithCommanders) or nil
 	local firstCommandStationWithWorkingInfantryPortal = #builtAndAliveCommandStationsWithWorkingInfantryPortal > 0 and TGNS.GetFirst(builtAndAliveCommandStationsWithWorkingInfantryPortal) or nil
 	local firstBuiltAndAliveCommandStructure = #builtAndAliveCommandStructures > 0 and TGNS.GetFirst(builtAndAliveCommandStructures) or nil
+	Shine:DebugPrint(string.format("firstCommandStructureWithCommander: %s", firstCommandStructureWithCommander))
+	Shine:DebugPrint(string.format("firstCommandStationWithWorkingInfantryPortal: %s", firstCommandStationWithWorkingInfantryPortal))
+	Shine:DebugPrint(string.format("firstBuiltAndAliveCommandStructure: %s", firstBuiltAndAliveCommandStructure))
+	Shine:DebugPrint(string.format("TGNS.GetFirst(commandStructures): %s", TGNS.GetFirst(commandStructures)))
 	local result = firstCommandStructureWithCommander or firstCommandStationWithWorkingInfantryPortal or firstBuiltAndAliveCommandStructure or TGNS.GetFirst(commandStructures)
 	return result
 end
@@ -61,6 +65,9 @@ local function UpdateWinOrLoseVotes()
 		if kCountdownTimeRemaining > 0 then
 			if (math.fmod(kCountdownTimeRemaining, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) == 0 or kCountdownTimeRemaining <= 5) then
 				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
+
+				TGNS.DoFor(commandStructures, function(s) Shine:DebugPrint(string.format("command structure: %s", s)) end)
+
 				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
 				if teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType then
 					commandStructureToKeep.GetCanBeNanoShieldedOverride = function(self, resultTable)
@@ -232,10 +239,12 @@ function Plugin:Initialise()
 	end)
 	TGNS.RegisterEventHook("GameStarted", function()
 		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + 5
+		Shine:DebugPrint(string.format("New Game at %s", TGNS.GetCurrentDateTimeAsGmtString()))
 	end)
 	SetupWinOrLoseVars()
 	TGNS.RegisterEventHook("OnEverySecond", UpdateWinOrLoseVotes)
 	self:CreateCommands()
+	Shine:DebugPrint(string.format("New Map at %s", TGNS.GetCurrentDateTimeAsGmtString()))
     return true
 end
 
