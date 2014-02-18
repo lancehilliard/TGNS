@@ -58,7 +58,9 @@ Plugin.ConfigName = "chatchannels.json"
 
 function Plugin:ClientConfirmConnect(client)
 	local md = TGNSMessageDisplayer.Create("ADMINCHAT")
-	md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Any chat beginning with \"@\" shows only to admins. Try it!")
+	TGNS.ScheduleAction(7, function()
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Any chat beginning with \"@\" shows only to admins. Try it!")
+	end)
 end
 
 function Plugin:PlayerSay(client, networkMessage)
