@@ -317,9 +317,11 @@ function Plugin:ClientConfirmConnect(client)
     else
         chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
     end
-    local player = TGNS.GetPlayer(client)
     if not TGNS.GetIsClientVirtual(client) then
-        tgnsMd:ToPlayerNotifyInfo(player, chatMessage)
+        TGNS.ScheduleAction(2, function()
+            local player = TGNS.GetPlayer(client)
+            tgnsMd:ToPlayerNotifyInfo(player, chatMessage)
+        end)
     end
     local steamId = TGNS.GetClientSteamId(client)
     if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
