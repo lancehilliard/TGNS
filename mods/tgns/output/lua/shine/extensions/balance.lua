@@ -180,9 +180,10 @@ local function SendNextPlayer()
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
 	local sortedPlayers = sortedPlayersGetter(playerList)
 	local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
-	local marineClients = TGNS.GetMarineClients(playerList)
-	local alienClients = TGNS.GetAlienClients(playerList)
-	local teamNumber = #marineClients <= #alienClients and kAlienTeamType or kMarineTeamType
+	local gamerules = GetGamerules()
+	local numberOfMarines = gamerules:GetTeam(kTeam1Index):GetNumPlayers()
+	local numberOfAliens = gamerules:GetTeam(kTeam2Index):GetNumPlayers()
+	local teamNumber = numberOfMarines <= numberOfAliens and kAlienTeamType or kMarineTeamType
 	TGNS.DoFor(eligiblePlayers, function(player)
 		teamNumber = teamNumber == kAlienTeamType and kMarineTeamType or kAlienTeamType
 		local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
