@@ -4,8 +4,8 @@ local prefixes = {}
 local isCaptainsReady = {}
 local isCaptainsCaptain = {}
 
-local CaptainsReadyFontColor = Color(.3372, .7058, .9137, 1) -- skyblue http://www.mrexcel.com/forum/lounge-v-2-0/374530-color-choices-colorblind-viewers.html
-local CaptainsCaptainFontColor = Color(.8352, .3686, 0, 1) -- vermillon
+local CaptainsReadyFontColor = Color(1, 1, 1, 1)
+local CaptainsCaptainFontColor = Color(0, .933, 0, 1)
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
