@@ -47,6 +47,9 @@
 !mods/tgns/output/lua/shine/extensions/adminmenu/client.lua
 !mods/tgns/output/lua/shine/extensions/adminmenu/server.lua
 !mods/tgns/output/lua/shine/extensions/adminmenu/shared.lua
+!mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
+!mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
+!mods/tgns/output/lua/shine/extensions/scoreboard/shared.lua
 
 !mods/tgns/output/lua/shine/extensions/everysecond/shared.lua
 
