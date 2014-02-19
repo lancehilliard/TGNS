@@ -66,10 +66,10 @@ end
 function Plugin:ClientConfirmConnect(client)
 	TGNS.ScheduleAction(1, function()
 		if Shine:IsValidClient(client) then
+			table.insert(clientsReadyForScoreboardData, client)
 			local player = TGNS.GetPlayer(client)
 			UpdatePlayerPrefixes(player)
 			self:AnnouncePlayerPrefix(player)
-			table.insert(clientsReadyForScoreboardData, client)
 		end
 	end)
 end
