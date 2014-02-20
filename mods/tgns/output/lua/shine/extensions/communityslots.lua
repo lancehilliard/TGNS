@@ -325,8 +325,12 @@ function Plugin:ClientConfirmConnect(client)
     end
     local steamId = TGNS.GetClientSteamId(client)
     if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
-        local player = TGNS.GetPlayer(client)
-        tgnsMd:ToPlayerNotifyInfo(player, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
+        TGNS.ScheduleAction(1, function()
+            if Shine:IsValidClient(client) then
+                local player = TGNS.GetPlayer(client)
+                tgnsMd:ToPlayerNotifyInfo(player, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
+            end
+        end)
     end
 end
 
