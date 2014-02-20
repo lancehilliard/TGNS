@@ -4,7 +4,7 @@ local prefixes = {}
 local isCaptainsReady = {}
 local isCaptainsCaptain = {}
 
-local CaptainsReadyFontColor = Color(1, 1, 1, 1)
+local CaptainsReadyFontColor = Color(1, 1, 0, 1)
 local CaptainsCaptainFontColor = Color(0, .933, 0, 1)
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
