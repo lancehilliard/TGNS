@@ -183,12 +183,16 @@ local function SendNextPlayer()
 	local gamerules = GetGamerules()
 	local numberOfMarines = gamerules:GetTeam(kTeam1Index):GetNumPlayers()
 	local numberOfAliens = gamerules:GetTeam(kTeam2Index):GetNumPlayers()
-	local teamNumber = numberOfMarines <= numberOfAliens and kAlienTeamType or kMarineTeamType
 	TGNS.DoFor(eligiblePlayers, function(player)
-		teamNumber = teamNumber == kAlienTeamType and kMarineTeamType or kAlienTeamType
+		local teamNumber = numberOfMarines <= numberOfAliens and kMarineTeamType or kAlienTeamType
 		local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
 		table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
 		TGNS.SendToTeam(player, teamNumber, true)
+		if teamNumber == kMarineTeamType then
+			numberOfMarines = numberOfMarines + 1
+		else
+			numberOfAliens = numberOfAliens + 1
+		end
 	end)
 	md:ToAdminConsole("Balance finished.")
 	balanceInProgress = false
