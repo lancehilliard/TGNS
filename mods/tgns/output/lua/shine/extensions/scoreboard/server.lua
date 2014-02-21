@@ -17,7 +17,7 @@ local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 end
 
 local function GetPlayerPrefix(sourcePlayer, targetPlayer)
-	local result
+	local result = ""
 
 	local client = TGNS.GetClient(sourcePlayer)
 	if client then
