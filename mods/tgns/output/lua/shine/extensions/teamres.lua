@@ -102,7 +102,11 @@ function Plugin:Initialise()
 		if playerIsDroppingToReadyRoom then
 			AbandonResources(joiningClient)
 		elseif playerIsJoiningTeam then
-			TGNS.ScheduleAction(2, function() DistributeAbandonedResources(joiningClient, newTeamNumber) end)
+			TGNS.ScheduleAction(2, function()
+				if Shine:IsValidClient(joiningClient) then
+					DistributeAbandonedResources(joiningClient, newTeamNumber)
+				end
+			end)
 		end
 	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
     return true
