@@ -229,8 +229,6 @@ local function svBalance(client)
 			balanceInProgress = true
 			lastBalanceStartTimeInSeconds = Shared.GetTime()
 			TGNS.ScheduleAction(5, BeginBalance)
-			TGNS.ScheduleAction(RECENT_BALANCE_DURATION_IN_SECONDS + 1, TGNS.UpdateAllScoreboards)
-			TGNS.UpdateAllScoreboards()
 		else
 			md:ToPlayerNotifyError(player, "Balance cannot be used during a game.")
 		end
