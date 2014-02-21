@@ -78,6 +78,12 @@ local function removeBots(players, count)
 	end)
 end
 
+local function showBotAdvisory(client)
+	if Shine:IsValidClient(client) then
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), botAdvisory)
+	end
+end
+
 function Plugin:ClientConfirmConnect(client)
 	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
 		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
@@ -85,12 +91,11 @@ function Plugin:ClientConfirmConnect(client)
 		winOrLoseOccurredRecently = true
 		TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
 	elseif getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
-		local player = TGNS.GetPlayer(client)
-		md:ToPlayerNotifyInfo(player, botAdvisory)
-		TGNS.ScheduleAction(5, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
-		TGNS.ScheduleAction(10, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
-		TGNS.ScheduleAction(20, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
-		TGNS.ScheduleAction(40, function() md:ToPlayerNotifyInfo(player, botAdvisory) end)
+		showBotAdvisory(client)
+		TGNS.ScheduleAction(5, function() showBotAdvisory(client) end)
+		TGNS.ScheduleAction(10, function() showBotAdvisory(client) end)
+		TGNS.ScheduleAction(20, function() showBotAdvisory(client) end)
+		TGNS.ScheduleAction(40, function() showBotAdvisory(client) end)
 	end
 end
 
