@@ -30,7 +30,11 @@ end
 
 function disableCaptainsMode()
 	captainsModeEnabled = false
-	TGNS.DoFor(captainClients, function(c) TGNS.RemoveTempGroup(c, "captains_group") end)
+	TGNS.DoFor(captainClients, function(c)
+		if Shine:IsValidClient(c) then
+			TGNS.RemoveTempGroup(c, "captains_group")
+		end
+	end)
 end
 
 local function startGame()
