@@ -27,10 +27,10 @@ local function GetCommandStructureToKeep(commandStructures)
 	local firstCommandStructureWithCommander = #commandStructuresWithCommanders > 0 and TGNS.GetFirst(commandStructuresWithCommanders) or nil
 	local firstCommandStationWithWorkingInfantryPortal = #builtAndAliveCommandStationsWithWorkingInfantryPortal > 0 and TGNS.GetFirst(builtAndAliveCommandStationsWithWorkingInfantryPortal) or nil
 	local firstBuiltAndAliveCommandStructure = #builtAndAliveCommandStructures > 0 and TGNS.GetFirst(builtAndAliveCommandStructures) or nil
-	Shine:DebugPrint(string.format("firstCommandStructureWithCommander: %s", firstCommandStructureWithCommander))
-	Shine:DebugPrint(string.format("firstCommandStationWithWorkingInfantryPortal: %s", firstCommandStationWithWorkingInfantryPortal))
-	Shine:DebugPrint(string.format("firstBuiltAndAliveCommandStructure: %s", firstBuiltAndAliveCommandStructure))
-	Shine:DebugPrint(string.format("TGNS.GetFirst(commandStructures): %s", TGNS.GetFirst(commandStructures)))
+	-- Shine:DebugPrint(string.format("firstCommandStructureWithCommander: %s", firstCommandStructureWithCommander))
+	-- Shine:DebugPrint(string.format("firstCommandStationWithWorkingInfantryPortal: %s", firstCommandStationWithWorkingInfantryPortal))
+	-- Shine:DebugPrint(string.format("firstBuiltAndAliveCommandStructure: %s", firstBuiltAndAliveCommandStructure))
+	-- Shine:DebugPrint(string.format("TGNS.GetFirst(commandStructures): %s", TGNS.GetFirst(commandStructures)))
 	local result = firstCommandStructureWithCommander or firstCommandStationWithWorkingInfantryPortal or firstBuiltAndAliveCommandStructure or TGNS.GetFirst(commandStructures)
 	return result
 end
@@ -65,22 +65,23 @@ local function UpdateWinOrLoseVotes()
 		if kCountdownTimeRemaining > 0 then
 			if (math.fmod(kCountdownTimeRemaining, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) == 0 or kCountdownTimeRemaining <= 5) then
 				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
-
-				TGNS.DoFor(commandStructures, function(s) Shine:DebugPrint(string.format("command structure: %s", s)) end)
-
-				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
-				if teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType then
-					commandStructureToKeep.GetCanBeNanoShieldedOverride = function(self, resultTable)
-	    				resultTable.shieldedAllowed = false
-	    				local commanderClient = TGNS.GetFirst(TGNS.Where(TGNS.GetTeamClients(teamNumberWhichWillWinIfWinLoseCountdownExpires), TGNS.IsClientCommander))
-	    				local commanderPlayer = TGNS.GetPlayer(commanderClient)
-	    				md:ToPlayerNotifyError(commanderPlayer, "Command chairs may not be nanoshielded during WinOrLose.")
-	    			end
-				end
-				TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
+				--TGNS.DoFor(commandStructures, function(s) Shine:DebugPrint(string.format("command structure: %s", s)) end)
 				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
-				local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
-				local chatMessage = string.format("%s can't attack. Game ends in %s secs. Hurry to %s!", teamName, kCountdownTimeRemaining, locationNameOfCommandStructureToKeep)
+				local chatMessage = string.format("%s can't attack. Game ends in %s secs.", teamName, kCountdownTimeRemaining)
+				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
+				if commandStructureToKeep ~= nil then
+					if teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType then
+						commandStructureToKeep.GetCanBeNanoShieldedOverride = function(self, resultTable)
+		    				resultTable.shieldedAllowed = false
+		    				local commanderClient = TGNS.GetFirst(TGNS.Where(TGNS.GetTeamClients(teamNumberWhichWillWinIfWinLoseCountdownExpires), TGNS.IsClientCommander))
+		    				local commanderPlayer = TGNS.GetPlayer(commanderClient)
+		    				md:ToPlayerNotifyError(commanderPlayer, "Command chairs may not be nanoshielded during WinOrLose.")
+		    			end
+					end
+					local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
+					TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
+					chatMessage = string.format("%s Hurry to %s!", chatMessage, locationNameOfCommandStructureToKeep)
+				end
 				md:ToAllNotifyInfo(chatMessage)
 				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
 					TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
@@ -270,7 +271,7 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 			TGNS.DestroyAllEntities("CommandStructure", victimEntity:GetTeamNumber())
 		else
 			if kCountdownTimeRemaining < 57 then
-				if victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) then
+				if victimEntity and attackerEntity and victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) then
 					local commandStructureDescription = teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and "CHAIR" or "HIVE"
 					if kCountdownTimeRemaining > 22 then
 						if TGNS.GetPlayerTeamNumber(attackerEntity) ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and TGNS.GetPlayerTeamNumber(victimEntity) == teamNumberWhichWillWinIfWinLoseCountdownExpires then
