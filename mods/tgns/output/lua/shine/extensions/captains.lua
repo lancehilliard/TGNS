@@ -14,6 +14,10 @@ local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
 local whenToAllowTeamJoins = 0
 local votesAllowedUntil
 local mayVoteYet
+local automaticVoteAllowAction = function()
+	mayVoteYet = true
+end
+local MAX_NON_CAPTAIN_PLAYERS = 14
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -112,17 +116,17 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	TGNS.ScheduleAction(3, function()
 		md:ToAllNotifyInfo(string.format("%s: Player Choice! %s: Team Choice!", TGNS.GetClientName(captainClients[1]), TGNS.GetClientName(captainClients[2])))
 	end)
-	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + 2
 	setCaptainsGameConfig()
 	TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
 	whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 	votesAllowedUntil = nil
+	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + 2
 end
 
 local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	local result = ""
-	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(.82 * #playingClients)
-	local adjustedNumberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients <= 16 and numberOfNeededReadyPlayerClients or 16
+	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown((.82 * #playingClients) - 2)
+	local adjustedNumberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients <= 14 and numberOfNeededReadyPlayerClients or 14
 	if numberOfPlayingReadyPlayerClients < adjustedNumberOfNeededReadyPlayerClients or numberOfPlayingReadyCaptainClients < 2 then
 		result = string.format("%s wants Captains! So far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, adjustedNumberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
 	end
@@ -131,7 +135,7 @@ end
 
 local function updateCaptainsReadyProgress(readyClient)
 	local playingClients = TGNS.GetClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (TGNS.IsPlayerSpectator(p) or TGNS.IsPlayerAFK(p)) end))
-	local playingReadyCaptainClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyCaptainClients, c) end)
+	local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 	local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) end)
 	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
@@ -139,7 +143,9 @@ local function updateCaptainsReadyProgress(readyClient)
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
 		md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
 	else
-		enableCaptainsMode(string.format("%s and %s", TGNS.GetClientName(playingReadyCaptainClients[1]), TGNS.GetClientName(playingReadyCaptainClients[2])), playingReadyCaptainClients[1], playingReadyCaptainClients[2])
+		if not captainsModeEnabled then
+			enableCaptainsMode(string.format("%s and %s", TGNS.GetClientName(playingReadyCaptainClients[1]), TGNS.GetClientName(playingReadyCaptainClients[2])), playingReadyCaptainClients[1], playingReadyCaptainClients[2])
+		end
 	end
 end
 
@@ -166,12 +172,21 @@ local function addReadyPlayerClient(client)
 		TGNS.ScheduleAction(1, announceTimeRemaining)
 	end
 	readyPlayerClients = readyPlayerClients or {}
-	if not TGNS.Has(readyPlayerClients, client) then
+	if TGNS.Has(readyPlayerClients, client) then
+		updateCaptainsReadyProgress(client)
+	else
 		local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
-		if #playingReadyPlayerClients < 16 then
+		if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
 			table.insert(readyPlayerClients, client)
+			TGNS.RemoveAllMatching(readyCaptainClients, client)
+			updateCaptainsReadyProgress(client)
 		else
-			TGNS.PlayerAction(client, function(p) md:ToPlayerNotifyError(p, "There are already 16 people playing Captains.") end)
+			local player = TGNS.GetPlayer(client)
+			md:ToPlayerNotifyError(player, "Too many people have already opted in to play.")
+			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
+			if #playingReadyCaptainClients < 2 then
+				md:ToPlayerNotifyError(player, "There's still room for another Captain!")
+			end
 		end
 	end
 	if captainsModeEnabled then
@@ -180,13 +195,9 @@ local function addReadyPlayerClient(client)
 				if TGNS.PlayerAction(client, TGNS.IsPlayerReadyRoom) then
 					TGNS.AddTempGroup(client, "captainsgame_group")
 				end
-				TGNS.DoFor(readyPlayerClients, function(c)
-					TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, string.format("%s wants Captains, too!", TGNS.GetClientName(client))) end)
-				end)
+				md:ToAllNotifyInfo(string.format("%s wants Captains, too!", TGNS.GetClientName(client)))
 			end
 		end
-	else
-		updateCaptainsReadyProgress(client)
 	end
 	TGNS.UpdateAllScoreboards()
 end
@@ -195,8 +206,10 @@ local function addReadyCaptainClient(client)
 	readyCaptainClients = readyCaptainClients or {}
 	if not TGNS.Has(readyCaptainClients, client) then
 		table.insert(readyCaptainClients, client)
+		TGNS.RemoveAllMatching(readyPlayerClients, client)
 	end
-	addReadyPlayerClient(client)
+	--addReadyPlayerClient(client)
+	updateCaptainsReadyProgress(client)
 end
 
 //function swapTeamsAfterDelay(delayInSeconds)
@@ -372,8 +385,8 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		if captainsModeEnabled then
 			md:ToPlayerNotifyError(player, "Captains Game is already active.")
-		elseif mayVoteYet ~= true and votesAllowedUntil ~= math.huge then
-			md:ToPlayerNotifyError(player, "Captains voting is restricted for about a minute after the map loads.")
+		elseif mayVoteYet ~= true then
+			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 		elseif TGNS.IsPlayerSpectator(player) then
 			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
@@ -381,15 +394,25 @@ function Plugin:CreateCommands()
 		elseif votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
 			md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
 		else
-			addReadyCaptainClient(client)
+			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
+			if #playingReadyCaptainClients < 2 then
+				addReadyCaptainClient(client)
+			else
+				md:ToPlayerNotifyError(player, "Too many people have already opted in to be Captain.")
+				local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
+				if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
+					md:ToPlayerNotifyError(player, "Opting you in as non-Captain instead...")
+					addReadyPlayerClient(client)
+				end
+			end
 		end
 	end)
-	willCaptainsCommand:Help("Tell that you're willing to lead a team in a Captains Game.")
+	willCaptainsCommand:Help("Tell you're willing to lead a team in a Captains Game.")
 
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
 		local player = TGNS.GetPlayer(client)
 		if mayVoteYet ~= true and votesAllowedUntil ~= math.huge then
-			md:ToPlayerNotifyError(player, "Captains voting is restricted for about a minute after the map loads.")
+			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		elseif TGNS.IsPlayerSpectator(player) then
@@ -397,17 +420,31 @@ function Plugin:CreateCommands()
 		elseif not captainsModeEnabled and votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
 			md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
 		else
-			addReadyPlayerClient(client)
+			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
+			if TGNS.Has(playingReadyCaptainClients, client) then
+				md:ToPlayerNotifyError(player, "You may not undo your opt-in to be a Captain.")
+			else
+				addReadyPlayerClient(client)
+			end
 		end
 	end, true)
-	wantCaptainsCommand:Help("Tell that you want to play a Captains Game.")
+	wantCaptainsCommand:Help("Tell you want to play a Captains Game.")
 
-	local voteOverrideCommand = self:BindCommand("sh_allowcaptainsvotes", nil, function(client)
-		local player = TGNS.GetPlayer(client)
+	local voteAllowCommand = self:BindCommand("sh_allowcaptainsvotes", nil, function(client)
+		mayVoteYet = true
 		votesAllowedUntil = math.huge
+		local player = TGNS.GetPlayer(client)
 		md:ToPlayerNotifyInfo(player, "Captains vote time restriction lifted for this map.")
 	end, true)
-	voteOverrideCommand:Help("Lift time restriction on Captains vote.")
+	voteAllowCommand:Help("Lift time restriction on Captains votes.")
+
+	local voteRestrictCommand = self:BindCommand("sh_roland", nil, function(client)
+		mayVoteYet = false
+		local player = TGNS.GetPlayer(client)
+		md:ToPlayerNotifyInfo(player, "Captains votes disallowed until sh_allowcaptainsvotes.")
+		automaticVoteAllowAction = function() end
+	end, true)
+	voteRestrictCommand:Help("Disallow Captains votes.")
 
 end
 
@@ -490,13 +527,13 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 		    	if TGNS.IsGameInProgress() then
 					addReadyPlayerClient(client)
 		    	end
-		    	if TGNS.Has(readyPlayerClients, client) then
+		    	if TGNS.Has(readyPlayerClients, client) or TGNS.Has(readyCaptainClients, client) then
 					if whenToAllowTeamJoins > TGNS.GetSecondsSinceMapLoaded() then
 						md:ToPlayerNotifyError(player, "Captains Game! Stay in the Ready Room and listen for instruction.")
 						cancel = true
 					end
 		    	else
-		    		md:ToPlayerNotifyError(player, "Only sh_iwantcaptains users may join teams before Captains Games.")
+		    		md:ToPlayerNotifyError(player, "Only opted-in players may join teams during Captains Games.")
 		    		TGNS.RespawnPlayer(player)
 		    		cancel = true
 		    	end
@@ -571,9 +608,7 @@ function Plugin:Initialise()
 	-- end)
 
 	mayVoteYet = false
-	TGNS.ScheduleAction(115, function()
-		mayVoteYet = true
-	end)
+	TGNS.ScheduleAction(115, function() automaticVoteAllowAction() end)
 
     return true
 end
