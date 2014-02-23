@@ -47,7 +47,11 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 			end
 		end)
 	end
-	function result:IsClientEligible(client) return minimumRequirementsQuery(client) and self:LoadOptInData(client).optin and not self:IsClientBlacklisted(client) end
+	function result:IsClientEligible(client)
+		local optinData = self:LoadOptInData(client)
+		local clientIsOptedIn = optinData and optinData.optin
+		return clientIsOptedIn and minimumRequirementsQuery(client) and not self:IsClientBlacklisted(client)
+	end
 	return result
 end
 
