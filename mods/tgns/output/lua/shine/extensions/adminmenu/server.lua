@@ -18,7 +18,9 @@ end
 function Plugin:ClientConfirmConnect(client)
 	TGNS.ScheduleAction(2, function()
 		TGNS.DoForPairs(self.Config, function(pageName, pageData)
-			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.MAIN_BUTTONS_REQUESTED, {buttonText=pageName, pageName=pageName})
+			if Shine:IsValidClient(client) then
+				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.MAIN_BUTTONS_REQUESTED, {buttonText=pageName, pageName=pageName})
+			end
 		end)
 	end)
 end
