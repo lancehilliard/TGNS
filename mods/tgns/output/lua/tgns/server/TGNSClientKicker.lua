@@ -27,10 +27,14 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 				onPreKick(client, player)
 			end
 			TGNS.ScheduleAction(1, AdviseKickedClients)
-			if onPostKick ~= nil then
-				TGNS.ScheduleAction(kickDelayInSeconds + 0.5, function() onPostKick(client, player) end)
-			end
 			local targetName = TGNS.GetClientName(client)
+			if onPostKick ~= nil then
+				TGNS.ScheduleAction(kickDelayInSeconds + 0.5, function()
+					if Shine:IsValidClient(client) then
+						onPostKick(targetName)
+					end
+				end)
+			end
 			local adminMessage = string.format("Kicking %s: %s", targetName, reason)
 			if not TGNS.GetIsClientVirtual(client) then
 				md:ToAdminConsole(adminMessage)
