@@ -1,6 +1,7 @@
 TGNS = TGNS or {}
 local scheduledActions = {}
 local scheduledActionsErrorCounts = {}
+local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
@@ -646,7 +647,28 @@ local function ProcessScheduledActions()
 		end
 	end)
 end
-TGNS.RegisterEventHook("OnEverySecond", ProcessScheduledActions)
+
+local function ProcessScheduledRequests()
+	local unsentScheduledRequests = TGNS.Take(TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end), 10)
+	TGNS.DoFor(unsentScheduledRequests, function(r)
+		r.sent = true
+		Shared.SendHTTPRequest(r.url, "GET", function(response)
+			TGNS.RemoveAllMatching(scheduledRequests, r)
+			r.callback(response)
+		end)
+	end)
+end
+TGNS.RegisterEventHook("OnEverySecond", function()
+	ProcessScheduledActions()
+	ProcessScheduledRequests()
+end)
+
+function TGNS.GetHttpAsync(url, callback)
+	local scheduledRequest = {}
+	scheduledRequest.url = url
+	scheduledRequest.callback = callback
+	table.insert(scheduledRequests, scheduledRequest)
+end
 
 function TGNS.PlayerIsOnTeam(player, team)
 	local result = player:GetTeam() == team

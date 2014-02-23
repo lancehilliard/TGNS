@@ -67,10 +67,6 @@ function TGNS.GetSecondsSinceEpoch()
 	return result
 end
 
-function TGNS.GetHttpAsync(url, callback)
-	Shared.SendHTTPRequest(url, "GET", callback)
-end
-
 function TGNS.GetCurrentMapName()
 	local result = Shared.GetMapName()
 	return result
