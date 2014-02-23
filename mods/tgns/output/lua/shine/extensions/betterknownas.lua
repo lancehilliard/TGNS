@@ -143,8 +143,10 @@ function Plugin:ClientConnect(client)
 	local steamApiProfileUrl = TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
 	TGNS.GetHttpAsync(steamApiProfileUrl, function(response)
 		local data = json.decode(response)
-		local steamPlayerData = TGNS.GetFirst(data.response.players)
-		steamPlayerDatas[ns2id] = steamPlayerData
+		if data ~= nil then
+			local steamPlayerData = TGNS.GetFirst(data.response.players)
+			steamPlayerDatas[ns2id] = steamPlayerData
+		end
 	end)
 	pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
 		if loadResponse.success then
