@@ -13,13 +13,12 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 
 	function result:IsClientBlacklisted(client, callback)
 		callback = callback or function() end
+		local steamId = TGNS.GetClientSteamId(client)
 		dr.Load(nil, function(loadResponse)
 			if loadResponse.success then
 				local blacklistData = loadResponse.value
 				local blacklists = blacklistData.blacklists
-				local steamId = TGNS.GetClientSteamId(client)
 				local isBlacklisted = TGNS.Any(blacklists, function(b) return b.from == self.blacklistTypeName and b.id == steamId end)
-				--Shared.Message("IsClientBlacklisted: " .. steamId .. " from " .. self.blacklistTypeName .. " = " .. tostring(isBlacklisted))
 				callback(isBlacklisted)
 			else
 				Shared.Message("PlayerBlacklistRepository ERROR: Unable to access data.")
