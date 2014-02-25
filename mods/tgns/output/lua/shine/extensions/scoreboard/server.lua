@@ -48,7 +48,7 @@ local function GetReadyPlayerList()
 end
 
 local function SendNetworkMessage(sourcePlayer, targetPlayer)
-	TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), cr=TGNS.ClientIsInGroup(TGNS.GetClient(sourcePlayer), "captainsgame_group"), cc=TGNS.ClientIsInGroup(TGNS.GetClient(sourcePlayer), "captains_group")})
+	TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(TGNS.GetClient(sourcePlayer), "captains_group")})
 end
 
 function Plugin:AnnouncePlayerPrefix(player)

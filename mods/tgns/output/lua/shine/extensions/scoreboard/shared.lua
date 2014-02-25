@@ -4,7 +4,7 @@ Plugin.ConfigName = "scoreboard.json"
 
 Plugin.SCOREBOARD_DATA = "scoreboard_SCOREBOARD_DATA"
 
-TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", cr="boolean", cc="boolean"})
+TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 
 function Plugin:Initialise()
 	self.Enabled = true
