@@ -70,24 +70,29 @@ local function warnOfPendingCaptainsGameStart()
 			TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
 		else
 			local message
-			if timeAtWhichToForceRoundStart > now then
-				local secondsRemaining = timeAtWhichToForceRoundStart - now
-				local when = secondsRemaining > 4 and string.TimeToString(secondsRemaining) or "a few seconds"
-				message = string.format("Game will force-start in %s.", when)
-				local secondsBeforeNextWarning
-				if secondsRemaining > 88 then
-					secondsBeforeNextWarning = 30
-				elseif secondsRemaining > 43 then
-					secondsBeforeNextWarning = 15
-				else
-					secondsBeforeNextWarning = 5
+			local duration = 3
+			local r = 0
+			local g = 255
+			local b = 0
+			local secondsRemaining = timeAtWhichToForceRoundStart - now
+			if secondsRemaining >= 1 then
+				message = string.format("Game will force-start in %s.", string.DigitalTime(secondsRemaining))
+				if secondsRemaining < 30 then
+					r = 255
+					g = 255
+					b = 0
 				end
-				TGNS.ScheduleAction(secondsBeforeNextWarning, warnOfPendingCaptainsGameStart)
+				TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
 			else
-				message = "Planning time expired. Game is force-starting now."
+				--message = "Planning time expired. Game is force-starting now."
+				message = "Planning time expired.\nGame is force-starting now."
+				duration = 7
 				startGame()
+				r = 255
+				g = 0
+				b = 0
 			end
-			md:ToAllNotifyInfo(message)
+			Shine:SendText(c, Shine.BuildScreenMessage(54, 0.8, 0.7, message, duration, r, g, b, 0, 1, 0))
 		end
 	end
 end
@@ -95,6 +100,30 @@ end
 local function setTimeAtWhichToForceRoundStart()
 	timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START + 30 + (captainsGamesFinished == 0 and 60 or 0)
 	TGNS.ScheduleAction(29, warnOfPendingCaptainsGameStart)
+end
+
+local function showPickables()
+	local pickableClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
+	if #pickableClients > 0 and captainsGamesFinished == 0 and not TGNS.IsGameInProgress() then
+		TGNS.SortAscending(pickableClients, TGNS.GetClientId)
+		local pickableNames = TGNS.Select(pickableClients, function(c) return TGNS.Truncate(TGNS.GetClientName(c), 16) end)
+		local column1Names = {}
+		local column2Names = {}
+		TGNS.DoFor(pickableNames, function(n, index)
+			if index % 2 ~= 0 then
+				table.insert(column1Names, n)
+			else
+				table.insert(column2Names, n)
+			end
+		end)
+		TGNS.DoFor(TGNS.GetReadyRoomClients(), function(c)
+			local column1Message = TGNS.Join(column1Names, '\n')
+			Shine:SendText(c, Shine.BuildScreenMessage( 52, 0.80, 0.2, column1Message, 3, 0, 255, 0, 0, 1, 0 ) )
+			local column2Message = TGNS.Join(column2Names, '\n')
+			Shine:SendText(c, Shine.BuildScreenMessage( 53, 0.90, 0.2, column2Message, 3, 0, 255, 0, 0, 1, 0 ) )
+		end)
+		TGNS.ScheduleAction(1, showPickables)
+	end
 end
 
 local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
@@ -107,10 +136,10 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c)
 		TGNS.AddTempGroup(c, "captains_group")
-		TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
-		TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
+		--TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
+		--TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
 		TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
-		TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
+		--TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
 	end)
 	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	TGNS.ScheduleAction(3, function()
@@ -121,6 +150,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 	votesAllowedUntil = nil
 	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + 2
+	TGNS.ScheduleAction(2, showPickables)
 end
 
 local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
