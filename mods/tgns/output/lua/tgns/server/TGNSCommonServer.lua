@@ -6,6 +6,11 @@ local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
 
+function TGNS.GetTeamCommandStructureCommonName(teamNumber)
+	local result = teamNumber == kMarineTeamType and "Chair" or "Hive"
+	return result
+end
+
 function TGNS.GetReadableSteamIdFromNs2Id(ns2id)
 	local result = GetReadableSteamId(ns2id)
 	return result
@@ -106,6 +111,11 @@ end
 
 function TGNS.GetPlayerId(player)
 	local result = player:GetId()
+	return result
+end
+
+function TGNS.GetClientId(client)
+	local result = client:GetId()
 	return result
 end
 
@@ -270,6 +280,11 @@ end
 
 function TGNS.ToLower(s)
 	local result = string.lower(s)
+	return result
+end
+
+function TGNS.ToUpper(s)
+	local result = string.upper(s)
 	return result
 end
 
