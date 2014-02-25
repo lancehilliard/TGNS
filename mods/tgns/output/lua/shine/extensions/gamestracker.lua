@@ -56,9 +56,11 @@ function Plugin:Initialise()
 			if loadResponse.success then
 				local data = loadResponse.value
 				TGNS.DoFor(clients, function(c)
-					local gameCountIncrementer = GameCountIncrementerFactory.Create(c, data)
-					local steamId = TGNS.GetClientSteamId(c)
-					gameCountIncrementer.Increment(steamId)
+					if Shine:IsValidClient(c) then
+						local gameCountIncrementer = GameCountIncrementerFactory.Create(c, data)
+						local steamId = TGNS.GetClientSteamId(c)
+						gameCountIncrementer.Increment(steamId)
+					end
 				end)
 				dr.Save(data, monthlyNumber, function(saveResponse)
 					if not saveResponse.success then
