@@ -1,16 +1,13 @@
 local Plugin = Plugin
 
 local prefixes = {}
-local isCaptainsReady = {}
 local isCaptainsCaptain = {}
 
-local CaptainsReadyFontColor = Color(1, 1, 0, 1)
-local CaptainsCaptainFontColor = Color(0, .933, 0, 1)
+local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
-	isCaptainsReady[message.i] = message.cr
-	isCaptainsCaptain[message.i] = message.cc
+	isCaptainsCaptain[message.i] = message.c
 end)
 
 function Plugin:Initialise()
@@ -32,8 +29,6 @@ function Plugin:Initialise()
 	        local numberColor = Color(0.5, 0.5, 0.5, 1)
 	        if isCaptainsCaptain[clientIndex] == true then
 	        	numberColor = CaptainsCaptainFontColor
-	        elseif isCaptainsReady[clientIndex] == true then
-	        	numberColor = CaptainsReadyFontColor
 	        end
 	        player["Number"]:SetColor(numberColor)
 	        currentPlayerIndex = currentPlayerIndex + 1
