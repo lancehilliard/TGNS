@@ -294,8 +294,10 @@ function Plugin:ClientConnect(client)
 	local steamId = TGNS.GetClientSteamId(client)
 	pdr:Load(steamId, function(loadResponse)
 		if loadResponse.success then
-			updateTotalGamesPlayedCache(client, loadResponse.value.total)
-			balanceCache[client] = loadResponse.value
+			if Shine:IsValidClient(client) then
+				updateTotalGamesPlayedCache(client, loadResponse.value.total)
+				balanceCache[client] = loadResponse.value
+			end
 		else
 			Shared.Message("balance ERROR: unable to access data")
 		end
@@ -336,8 +338,10 @@ function Plugin:Initialise()
 					AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
 					pdr:Save(balance, function(saveResponse)
 						if saveResponse.success then
-							updateTotalGamesPlayedCache(c, balance.total)
-							balanceCache[c] = loadResponse.value
+							if Shine:IsValidClient(c) then
+								updateTotalGamesPlayedCache(c, balance.total)
+								balanceCache[c] = loadResponse.value
+							end
 						else
 							Shared.Message("balance ERROR: unable to save data")
 						end
