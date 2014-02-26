@@ -134,6 +134,18 @@ function Plugin:Initialise()
     TGNS.ScheduleAction(1, function()
     	self:CreateCommands()
     end)
+
+	TGNS.ScheduleAction(1, function()
+		local originalChangelevelFunc = Shine.Commands.sh_changelevel.Func
+		Shine.Commands.sh_changelevel.Func = function(client, mapName)
+			TGNS.ScheduleAction(1, function()
+				originalChangelevelFunc(client, mapName)
+			end)
+			local md = TGNSMessageDisplayer.Create()
+			md:ToAdminConsole(string.format("%s executed 'sh_changelevel %s'.", TGNS.GetClientNameSteamIdCombo(client), mapName))
+		end
+	end)
+
     return true
 end
 
