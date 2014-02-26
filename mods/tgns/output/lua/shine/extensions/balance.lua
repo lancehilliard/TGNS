@@ -13,14 +13,15 @@ local GAMEEND_TIME_BEFORE_BALANCE = TGNS.ENDGAME_TIME_TO_READYROOM + 10
 local firstClientProcessed = false
 local notedCommanderSteamIds = {}
 local notedPlayerSteamIds = {}
-
-local pdr = TGNSPlayerDataRepository.Create("balance", function(balance)
+local balanceDataInitializer = function(balance)
 	balance.wins = balance.wins ~= nil and balance.wins or 0
 	balance.losses = balance.losses ~= nil and balance.losses or 0
 	balance.total = balance.total ~= nil and balance.total or 0
 	balance.scoresPerMinute = balance.scoresPerMinute ~= nil and balance.scoresPerMinute or {}
 	return balance
-end)
+end
+
+local pdr = TGNSPlayerDataRepository.Create("balance", balanceDataInitializer)
 
 local md = TGNSMessageDisplayer.Create("BALANCE")
 
@@ -87,7 +88,7 @@ local function GetWinLossRatio(player, balance)
 end
 
 local function GetPlayerBalance(player)
-	local result = balanceCache[TGNS.GetClient(player)] or {}
+	local result = balanceCache[TGNS.GetClient(player)] or balanceDataInitializer({})
 	return result
 end
 
