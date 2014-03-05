@@ -135,7 +135,7 @@ function Plugin:Initialise()
     	self:CreateCommands()
     end)
 
-	TGNS.ScheduleAction(1, function()
+	TGNS.ScheduleAction(10, function()
 		local originalChangelevelFunc = Shine.Commands.sh_changelevel.Func
 		Shine.Commands.sh_changelevel.Func = function(client, mapName)
 			TGNS.ScheduleAction(1, function()
