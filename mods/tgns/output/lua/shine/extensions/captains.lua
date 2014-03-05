@@ -274,6 +274,10 @@ function Plugin:IsCaptainsModeEnabled()
 	return captainsModeEnabled
 end
 
+function Plugin:IsClientCaptain(client)
+	return Shine:IsInGroup(client, "captains_group")
+end
+
 function Plugin:CheckGameStart(gamerules)
 	//local result = true
 	if captainsModeEnabled and not bothTeamsAreReady() then
