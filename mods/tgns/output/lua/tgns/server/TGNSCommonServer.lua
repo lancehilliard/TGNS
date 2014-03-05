@@ -6,6 +6,30 @@ local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
 
+function TGNS.GetPlayerDeaths(player)
+	local result = player:GetDeaths()
+	return result
+end
+
+function TGNS.GetPlayerAssists(player)
+	local result = player:GetAssistKills()
+	return result
+end
+
+function TGNS.GetPlayerKills(player)
+	local result = player:GetKills()
+	return result
+end
+
+function TGNS.PrintTable(t, d)
+	local keys = {}
+	for key,value in pairs(t) do table.insert(keys, key) end
+	TGNS.SortAscending(keys)
+	TGNS.DoFor(keys, function(k)
+		Shared.Message(string.format("%s.%s: %s", d, k, t[k]))
+	end)
+end
+
 function TGNS.GetTeamCommandStructureCommonName(teamNumber)
 	local result = teamNumber == kMarineTeamType and "Chair" or "Hive"
 	return result
@@ -521,7 +545,7 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 	local result
 	if TGNS.IsClientSM(client) then
 		result = "S"
-	elseif TGNS.IsPrimerOnlyClient(client) then
+	elseif TGNS.IsPrimerOnlyWithGamesClient(client) then
 		result = "P"
 	else
 		result = "?"
@@ -855,7 +879,7 @@ function TGNS.IsClientSM(client)
 end
 
 function TGNS.IsSteamIdStranger(steamId)
-	local result = not TGNS.IsSteamIdSM(steamId) and not TGNS.HasSteamIdSignedPrimer(steamId)
+	local result = not TGNS.IsSteamIdSM(steamId) and not TGNS.HasSteamIdSignedPrimerWithGames(steamId)
 	return result
 end
 
@@ -869,7 +893,7 @@ function TGNS.IsClientStranger(client)
 end
 
 function TGNS.IsSteamIdPrimerOnly(steamId)
-	local result = TGNS.HasSteamIdSignedPrimer(steamId) and not TGNS.IsSteamIdSM(steamId)
+	local result = TGNS.HasSteamIdSignedPrimerWithGames(steamId) and not TGNS.IsSteamIdSM(steamId)
 	return result
 end
 
