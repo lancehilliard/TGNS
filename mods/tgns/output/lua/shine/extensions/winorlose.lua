@@ -61,6 +61,7 @@ local function onVoteSuccessful(teamNumber, players)
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotesAlertTime = 0
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = 0
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes = { }
+	TGNS.ExecuteEventHooks("WinOrLoseCalled", teamNumber)
 end
 
 local function UpdateWinOrLoseVotes()
@@ -97,6 +98,7 @@ local function UpdateWinOrLoseVotes()
 			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
 			kTimeAtWhichWinOrLoseVoteSucceeded = 0
 		end
+		TGNS.ExecuteEventHooks("WinOrLoseCountdownChanged", kCountdownTimeRemaining)
 	else
 		for i = 1, kWinOrLoseTeamCount do
 			if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and TGNS.IsGameInProgress() and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
