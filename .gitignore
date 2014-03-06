@@ -91,6 +91,7 @@
 !mods/tgns/output/lua/shine/extensions/speclimit.lua
 !mods/tgns/output/lua/shine/extensions/speclisten.lua
 !mods/tgns/output/lua/shine/extensions/stagedteamjoins.lua
+!mods/tgns/output/lua/shine/extensions/statusextended.lua
 !mods/tgns/output/lua/shine/extensions/taglines.lua
 !mods/tgns/output/lua/shine/extensions/targetedcommands.lua
 !mods/tgns/output/lua/shine/extensions/teamres.lua
