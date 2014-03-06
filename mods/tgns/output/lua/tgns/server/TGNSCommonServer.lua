@@ -21,12 +21,13 @@ function TGNS.GetPlayerKills(player)
 	return result
 end
 
-function TGNS.PrintTable(t, d)
+function TGNS.PrintTable(t, d, printAction)
+	printAction = printAction and printAction or function(x) Shared.Message(x) end
 	local keys = {}
 	for key,value in pairs(t) do table.insert(keys, key) end
 	TGNS.SortAscending(keys)
 	TGNS.DoFor(keys, function(k)
-		Shared.Message(string.format("%s.%s: %s", d, k, t[k]))
+		printAction(string.format("%s.%s: %s", d, k, t[k]))
 	end)
 end
 
@@ -545,7 +546,7 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 	local result
 	if TGNS.IsClientSM(client) then
 		result = "S"
-	elseif TGNS.IsPrimerOnlyWithGamesClient(client) then
+	elseif TGNS.HasClientSignedPrimerWithGames(client) then
 		result = "P"
 	else
 		result = "?"
