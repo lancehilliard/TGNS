@@ -19,6 +19,8 @@ end
 
 function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffensesIsCauseForBan)
 	if client ~= nil and not TGNSClientKicker.IsClientKicked(client) then
+		local targetSteamId = TGNS.GetClientSteamId(client)
+		local targetName = TGNS.GetClientName(client)
 		local player = TGNS.GetPlayer(client)
 		if player ~= nil then
 			table.insert(kickedClients, client)
@@ -27,7 +29,6 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 				onPreKick(client, player)
 			end
 			TGNS.ScheduleAction(1, AdviseKickedClients)
-			local targetName = TGNS.GetClientName(client)
 			if onPostKick ~= nil then
 				TGNS.ScheduleAction(kickDelayInSeconds + 0.5, function()
 					if Shine:IsValidClient(client) then
@@ -46,7 +47,6 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 			end
 			TGNS.ScheduleAction(kickDelayInSeconds, function()
 				if repeatOffensesIsCauseForBan then
-					local targetSteamId = TGNS.GetClientSteamId(client)
 					kickReasons[targetSteamId] = kickReasons[targetSteamId] or {}
 					table.insert(kickReasons[targetSteamId], reason)
 					if #kickReasons[targetSteamId] >= REPEAT_KICK_THRESHOLD then
@@ -58,7 +58,11 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 			end)
 			TGNS.UpdateAllScoreboards()
 		else
-			TGNS.ScheduleAction(5, function() TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick) end)
+			TGNS.ScheduleAction(5, function()
+				if Shine:IsValidClient(client) then
+					TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick)
+				end
+			end)
 		end
 	end
 end
