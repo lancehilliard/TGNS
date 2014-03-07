@@ -35,7 +35,7 @@ local function setBotConfig()
 	if not originalAutoTeamBalanceSetting then
 		originalAutoTeamBalanceSetting = Server.GetConfigSetting("auto_team_balance")
 	end
-	Server.SetConfigSetting("auto_team_balance", {enabled_after_seconds=0, enabled_on_unbalance_amount=0})
+	Server.SetConfigSetting("auto_team_balance", nil)
 
 	kHatchCooldown = 1
 	kAlienSpawnTime = 0.5
