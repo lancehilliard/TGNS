@@ -305,7 +305,11 @@ end
 function Plugin:ClientConnect(joiningClient)
     TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
     if TGNS.GetIsClientVirtual(joiningClient) then
-        TGNS.ScheduleAction(3, function() self:ClientConfirmConnect(joiningClient) end)
+        TGNS.ScheduleAction(3, function()
+            if Shine:IsValidClient(joiningClient) then
+                self:ClientConfirmConnect(joiningClient)
+            end
+        end)
     end
 end
 
@@ -339,7 +343,9 @@ end
 
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
     UpdateReservedSlotAmount()
-    tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
+    if not TGNS.GetIsClientVirtual(client) then
+	    tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
+    end
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
