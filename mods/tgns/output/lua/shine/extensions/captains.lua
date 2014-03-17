@@ -92,7 +92,7 @@ local function warnOfPendingCaptainsGameStart()
 				g = 0
 				b = 0
 			end
-			Shine:SendText(c, Shine.BuildScreenMessage(54, 0.8, 0.7, message, duration, r, g, b, 0, 1, 0))
+			Shine:SendText(c, Shine.BuildScreenMessage(54, 0.8, 0.6, message, duration, r, g, b, 0, 1, 0))
 		end
 	end
 end
@@ -136,12 +136,11 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c)
 		TGNS.AddTempGroup(c, "captains_group")
-		--TGNS.ScheduleAction(10, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
-		--TGNS.ScheduleAction(20, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
 		TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
-		--TGNS.ScheduleAction(40, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Colored scoreboard numbers denote pickable players.") end) end)
 	end)
-	md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
+	TGNS.ScheduleAction(0, function()
+		md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
+	end)
 	TGNS.ScheduleAction(3, function()
 		md:ToAllNotifyInfo(string.format("%s: Player Choice! %s: Team Choice!", TGNS.GetClientName(captainClients[1]), TGNS.GetClientName(captainClients[2])))
 	end)
@@ -151,14 +150,19 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	votesAllowedUntil = nil
 	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + 2
 	TGNS.ScheduleAction(2, showPickables)
+	Shine.Plugins.afkkick.Config.KickTime = 20
 end
 
-local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients)
+local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	local result = ""
 	local numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown((.82 * #playingClients) - 2)
+	numberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients >= 0 and numberOfNeededReadyPlayerClients or 0
 	local adjustedNumberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients <= 14 and numberOfNeededReadyPlayerClients or 14
-	if numberOfPlayingReadyPlayerClients < adjustedNumberOfNeededReadyPlayerClients or numberOfPlayingReadyCaptainClients < 2 then
-		result = string.format("%s wants Captains! So far: Players: %s/%s - Captains %s/2.", TGNS.GetClientName(headlineReadyClient), numberOfPlayingReadyPlayerClients, adjustedNumberOfNeededReadyPlayerClients, numberOfPlayingReadyCaptainClients)
+	local remaining = adjustedNumberOfNeededReadyPlayerClients - numberOfPlayingReadyPlayerClients
+	if not captainsModeEnabled and numberOfPlayingReadyCaptainClients == 1 then
+		result = string.format("%s will Captain! Who else will captain?", firstCaptainName)
+	elseif remaining > 0 then
+		result = string.format("%s wants Captains (%s & %s)! %s more needed!", TGNS.GetClientName(headlineReadyClient), firstCaptainName, secondCaptainName, remaining)
 	end
 	return result
 end
@@ -166,8 +170,10 @@ end
 local function updateCaptainsReadyProgress(readyClient)
 	local playingClients = TGNS.GetClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (TGNS.IsPlayerSpectator(p) or TGNS.IsPlayerAFK(p)) end))
 	local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
+	local firstCaptainName = #playingReadyCaptainClients > 0 and TGNS.GetClientName(playingReadyCaptainClients[1]) or "???"
+	local secondCaptainName = #playingReadyCaptainClients > 1 and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
 	local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) end)
-	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients)
+	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
 		local message = string.format("You're marked as ready to play%s a Captains Game.", TGNS.Has(playingReadyCaptainClients, readyClient) and " (and lead)" or "")
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
@@ -184,7 +190,10 @@ local function announceTimeRemaining()
 		local secondsRemaining = votesAllowedUntil - TGNS.GetSecondsSinceMapLoaded()
 		if secondsRemaining > 1 then
 			local timeLeftAdvisory = votesAllowedUntil == math.huge and "" or string.format("%s left.", string.TimeToString(secondsRemaining))
-			md:ToAllNotifyInfo(string.format("Press M > Captains if you want to play a Captains Game. %s", timeLeftAdvisory))
+			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
+			local firstCaptainName = #playingReadyCaptainClients > 0 and TGNS.GetClientName(playingReadyCaptainClients[1]) or "???"
+			local secondCaptainName = #playingReadyCaptainClients > 1 and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
+			md:ToAllNotifyInfo(string.format("Press M > Captains if you want to play Captains (%s & %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory))
 			TGNS.ScheduleAction(10 > secondsRemaining and secondsRemaining or 10, announceTimeRemaining)
 		else
 			TGNS.ScheduleAction(1, function()
@@ -238,7 +247,6 @@ local function addReadyCaptainClient(client)
 		table.insert(readyCaptainClients, client)
 		TGNS.RemoveAllMatching(readyPlayerClients, client)
 	end
-	--addReadyPlayerClient(client)
 	updateCaptainsReadyProgress(client)
 end
 
@@ -458,7 +466,14 @@ function Plugin:CreateCommands()
 			if TGNS.Has(playingReadyCaptainClients, client) then
 				md:ToPlayerNotifyError(player, "You may not undo your opt-in to be a Captain.")
 			else
-				addReadyPlayerClient(client)
+				if not captainsModeEnabled and #playingReadyCaptainClients < 2 then
+					md:ToPlayerNotifyError(player, string.format("Captains must opt-in before players. So far: %s", #playingReadyCaptainClients))
+					if #playingReadyCaptainClients == 1 then
+						md:ToPlayerNotifyError(player, string.format("%s has opted in to be a Captain. One more needed!", TGNS.GetClientName(playingReadyCaptainClients[1])))
+					end
+				else
+					addReadyPlayerClient(client)
+				end
 			end
 		end
 	end, true)
@@ -608,37 +623,10 @@ function Plugin:Initialise()
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
 	self:CreateCommands()
 
-	local AFKKick = Shine.Plugins.improvedafkhandler
-	if AFKKick and AFKKick.Enabled then
-		local PlayerAFK = AFKKick:GetPlayerAFK()
-		local oldIsImmune = PlayerAFK.IsImmune
-		-- Colon doesn't work in this instance I guess
-		PlayerAFK.IsImmune = function(self, Config, Player, Client)
-			if captainsModeEnabled and not TGNS.IsGameInProgress() then return true end
-			return oldIsImmune(self, Config, Player, Client)
-		end
-	end
-
 	-- TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
 	-- 	if captainsModeEnabled and not TGNS.IsGameInProgress() then
 	-- 		TGNS.UpdateAllScoreboards()
 	-- 	end
-	-- end)
-
-	-- TGNSScoreboardPlayerHider.RegisterHidingPredicate(function(targetPlayer, message)
-	-- 	local result = false
-	-- 	if captainsModeEnabled and not TGNS.IsGameInProgress() then
-	-- 		local targetClient = TGNS.GetClient(targetPlayer)
-	-- 		local messageClient = TGNS.GetClientById(message.clientId)
-	-- 		if TGNS.Has(captainClients, targetClient) then
-	-- 			if Shine.Plugins.lookdown and Shine.Plugins.lookdown.IsPlayerLookingDown and Shine.Plugins.lookdown:IsPlayerLookingDown(targetPlayer) then
-	-- 				if not TGNS.ClientIsInGroup(messageClient, "captainsgame_group") then
-	-- 					result = true
-	-- 				end
-	-- 			end
-	-- 		end
-	-- 	end
-	-- 	return result
 	-- end)
 
 	mayVoteYet = false
