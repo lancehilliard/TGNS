@@ -28,6 +28,7 @@ end
 local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, prefix)
 	local md = TGNSMessageDisplayer.Create(prefix)
 	pdr:Load(targetSteamId, function(loadResponse)
+		local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
 		if loadResponse.success then
 			local bkaData = loadResponse.value
 			local player = TGNS.GetPlayerMatchingSteamId(targetSteamId)
@@ -49,7 +50,6 @@ local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pref
 				TGNS.DoFor(bkaData.AKAs, function(a) md:ToClientConsole(client, string.format("     %s", a)) end)
 			end
 			md:ToClientConsole(client, " ")
-			local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
 			whoisMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s%s", TGNS.GetPlayerName(player), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
 			md:ToClientConsole(client, " ")
 			md:ToClientConsole(client, "Steam Community URL:")
