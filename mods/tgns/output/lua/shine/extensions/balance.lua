@@ -259,16 +259,16 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
 			return false
 		end
-		local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
-		local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
-		if BalanceStartedRecently() and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
-			local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
-			if playerTeamIsSizedCorrectly then
-				local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
-				md:ToPlayerNotifyError(player, message)
-				return false
-			end
-		end
+		-- local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
+		-- local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
+		-- if BalanceStartedRecently() and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
+		-- 	local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
+		-- 	if playerTeamIsSizedCorrectly then
+		-- 		local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
+		-- 		md:ToPlayerNotifyError(player, message)
+		-- 		return false
+		-- 	end
+		-- end
 		if newTeamNumber == kAlienTeamType and extraShouldBeEnforcedToMarines() then
 			md:ToPlayerNotifyError(player, "Marines get the extra player on this server. If you can quickly and")
 			md:ToPlayerNotifyError(player, "politely persuade anyone to go Marines for you, feel free. Don't harass.")
