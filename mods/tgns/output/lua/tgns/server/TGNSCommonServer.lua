@@ -25,7 +25,7 @@ function TGNS.PrintTable(t, d, printAction)
 	printAction = printAction and printAction or function(x) Shared.Message(x) end
 	local keys = {}
 	for key,value in pairs(t) do table.insert(keys, key) end
-	TGNS.SortAscending(keys)
+	TGNS.SortAscending(keys, function(k) return tostring(k) end)
 	TGNS.DoFor(keys, function(k)
 		printAction(string.format("%s.%s: %s", d, k, t[k]))
 	end)
@@ -913,7 +913,8 @@ function TGNS.PlayerAction(client, action)
 end
 
 function TGNS.GetPlayerName(player)
-	return player:GetName()
+	local result = player.GetName and player:GetName() or ""
+	return result
 end
 
 function TGNS.GetClientName(client)
