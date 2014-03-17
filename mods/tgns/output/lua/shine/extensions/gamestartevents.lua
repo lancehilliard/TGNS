@@ -2,9 +2,9 @@ local Plugin = {}
 
 function Plugin:SetGameState(gamerules, newState, oldState)
 	if oldState ~= kGameState.Started and newState == kGameState.Started then
-		TGNS.ExecuteEventHooks("GameStarted")
+		TGNS.ExecuteEventHooks("GameStarted", TGNS.GetSecondsSinceEpoch())
 	elseif oldState ~= kGameState.Countdown and newState == kGameState.Countdown then
-		TGNS.ExecuteEventHooks("GameCountdownStarted")
+		TGNS.ExecuteEventHooks("GameCountdownStarted", TGNS.GetSecondsSinceEpoch())
 	end
 end
 
