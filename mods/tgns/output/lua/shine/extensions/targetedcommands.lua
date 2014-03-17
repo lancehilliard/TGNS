@@ -18,6 +18,12 @@ local log = function(client, targetClient, commandName, reason)
 	TGNS.EnhancedLog(logMessage)
 end
 
+local function affirm(client, targetClient, md, commandName)
+	TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(targetClient, 0)
+	md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s seemingly connected a long, long time ago...", TGNS.GetClientName(targetClient)))
+	log(client, targetClient, commandName or "sh_affirm")
+end
+
 local commands = { CreateCommand(
 		"sh_affirm"
 		, "affirm"
@@ -25,9 +31,7 @@ local commands = { CreateCommand(
 		, function(self, client) return TGNS.IsClientStranger(client) end
 		, "'%s' is not a stranger."
 		, function(self, client, targetClient, reason, md)
-			TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(targetClient, 0)
-			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s seemingly connected a long, long time ago...", TGNS.GetClientName(targetClient)))
-			log(client, targetClient, self.consoleCommandName)
+			affirm(client, targetClient, md, self.consoleCommandName)
 		end
 		, false
 		, "<player> Make a stranger less vulnerable to reserved slots."
@@ -127,6 +131,10 @@ function Plugin:CreateCommands()
 		boundCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 		boundCommand:Help(command.helpText)
 	end)
+end
+
+function Plugin:Affirm(client, targetClient, md)
+	affirm(client, targetClient, md)
 end
 
 function Plugin:Initialise()
