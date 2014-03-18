@@ -316,8 +316,11 @@ end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
 	if newName ~= kDefaultPlayerName and string.len(newName) > 0 then
-		local steamId = TGNS.GetClientSteamId(TGNS.GetClient(player))
-		AddAka(steamId, newName, false)
+		local client = TGNS.GetClient(player)
+		if client then
+			local steamId = TGNS.GetClientSteamId(client)
+			AddAka(steamId, newName, false)
+		end
 	end
 end
 
