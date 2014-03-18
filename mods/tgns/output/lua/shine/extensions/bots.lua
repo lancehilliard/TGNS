@@ -223,3 +223,9 @@ function Plugin:Cleanup()
 end
 
 Shine:RegisterExtension("bots", Plugin )
+
+					-- if p:GetTeamNumber() == kTeam2Index then
+					-- 	p.client.variantData.gorgeVariant = kGorgeVariant.shadow
+					-- 	p.client.variantData.lerkVariant = kLerkVariant.shadow
+					-- 	p:Replace("fade", p:GetTeamNumber())
+					-- end
