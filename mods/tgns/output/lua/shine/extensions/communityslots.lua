@@ -358,6 +358,19 @@ function Plugin:EndGame(gamerules, winningTeam)
     end)
 end
 
+local function refreshFullSpecData()
+    if fullSpecDataRepository then
+        fullSpecDataRepository.Load(nil, function(loadResponse)
+            if loadResponse.success then
+                local fullSpecData = loadResponse.value
+                fullSpecSteamIds = fullSpecData.enrolled
+            else
+                Shared.Message("communityslots ERROR: unable to load fullSpecSteamIds")
+            end
+        end)
+    end
+end
+
 function Plugin:CreateCommands()
     local logCommand = self:BindCommand( "sh_cslog", "cslog", function(client)
         TGNS.DoFor(actionslog, function(logline, index)
@@ -395,6 +408,11 @@ function Plugin:CreateCommands()
             end
         end)
     end, true)
+
+    local fullSpecCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
+        refreshFullSpecData()
+    end)
+
     fullSpecCommand:Help("Toggle your sh_fullspec. Help: M > Info > sh_fullspec")
 end
 
@@ -562,16 +580,7 @@ function Plugin:Initialise()
         data.enrolled = data.enrolled or {}
         return data
     end)
-    TGNS.ScheduleAction(2, function()
-        fullSpecDataRepository.Load(nil, function(loadResponse)
-            if loadResponse.success then
-                local fullSpecData = loadResponse.value
-                fullSpecSteamIds = fullSpecData.enrolled
-            else
-                Shared.Message("communityslots ERROR: unable to load fullSpecSteamIds")
-            end
-        end)
-    end)
+    TGNS.ScheduleAction(2, refreshFullSpecData)
     TGNS.RegisterEventHook("TotalPlayedGamesCountUpdated", function(client, totalGamesPlayedCount)
         if not TGNS.ClientIsInGroup(client, "primerwithgames_group") and TGNS.HasClientSignedPrimerWithGames(client) then
             TGNS.AddTempGroup(client, "primerwithgames_group")
