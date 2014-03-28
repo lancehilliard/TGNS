@@ -484,7 +484,7 @@ function Plugin:CreateCommands()
 		votesAllowedUntil = math.huge
 		local player = TGNS.GetPlayer(client)
 		md:ToPlayerNotifyInfo(player, "Captains vote time restriction lifted for this map.")
-	end, true)
+	end)
 	voteAllowCommand:Help("Lift time restriction on Captains votes.")
 
 	local voteRestrictCommand = self:BindCommand("sh_roland", nil, function(client)
@@ -492,7 +492,7 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		md:ToPlayerNotifyInfo(player, "Captains votes disallowed until sh_allowcaptainsvotes.")
 		automaticVoteAllowAction = function() end
-	end, true)
+	end)
 	voteRestrictCommand:Help("Disallow Captains votes.")
 
 end
