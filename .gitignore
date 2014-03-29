@@ -54,6 +54,7 @@
 !mods/tgns/output/lua/shine/extensions/everysecond/shared.lua
 
 !mods/tgns/output/lua/shine/extensions/afkchanged.lua
+!mods/tgns/output/lua/shine/extensions/audit.lua
 !mods/tgns/output/lua/shine/extensions/autoexec.lua
 !mods/tgns/output/lua/shine/extensions/balance.lua
 !mods/tgns/output/lua/shine/extensions/betterknownas.lua
@@ -98,6 +99,7 @@
 !mods/tgns/output/lua/shine/extensions/teamroles.lua
 !mods/tgns/output/lua/shine/extensions/teamticker.lua
 !mods/tgns/output/lua/shine/extensions/tempgroups.lua
+!mods/tgns/output/lua/shine/extensions/tgnsbadges.lua
 !mods/tgns/output/lua/shine/extensions/uweranking.lua
 !mods/tgns/output/lua/shine/extensions/voicecommreminder.lua
 !mods/tgns/output/lua/shine/extensions/winorlose.lua
