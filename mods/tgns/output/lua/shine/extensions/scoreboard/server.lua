@@ -103,7 +103,6 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 end
 
 function Plugin:Initialise()
-	TGNS.DebugPrint("TEST")
     self.Enabled = true
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
 		self:AnnouncePlayerPrefix(player)
