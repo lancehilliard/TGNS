@@ -67,21 +67,32 @@ end
 function Plugin:ClientConfirmConnect(client)
 	TGNS.ScheduleAction(1, function()
 		if Shine:IsValidClient(client) then
-			local steamId = TGNS.GetClientSteamId(client)
+			local sourceSteamId = TGNS.GetClientSteamId(client)
 			table.insert(clientsReadyForScoreboardData, client)
-			local player = TGNS.GetPlayer(client)
-			-- Shared.Message(tostring(player:GetClientIndex()))
-			if player then
-				UpdatePlayerPrefixes(player)
-				self:AnnouncePlayerPrefix(player)
+			local sourcePlayer = TGNS.GetPlayer(client)
+			if sourcePlayer then
+				UpdatePlayerPrefixes(sourcePlayer)
+				self:AnnouncePlayerPrefix(sourcePlayer)
+				local approvedSentTotal = 0
+				local approvedReceivedTotal = 0
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
 					if c then
-						approvedClients[c] = approvedClients[c] or {}
-						if approvedClients[c][steamId] then
-							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=player:GetClientIndex()})
+						local targetSteamId = TGNS.GetClientSteamId(c)
+						approvedClients[targetSteamId] = approvedClients[targetSteamId] or {}
+						if approvedClients[targetSteamId][sourceSteamId] then
+							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
+							approvedReceivedTotal = approvedReceivedTotal + 1
+						end
+						approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
+						if approvedClients[sourceSteamId][targetSteamId] then
+							local targetPlayer = TGNS.GetPlayer(c)
+							TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_ALREADY_APPROVED, {c=targetPlayer:GetClientIndex()})
+							approvedSentTotal = approvedSentTotal + 1
 						end
 					end
 				end)
+				TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
+				TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_SENT_TOTAL, {t=approvedSentTotal})
 			end
 		end
 	end)
@@ -92,6 +103,7 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 end
 
 function Plugin:Initialise()
+	TGNS.DebugPrint("TEST")
     self.Enabled = true
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
 		self:AnnouncePlayerPrefix(player)
@@ -129,17 +141,17 @@ function Plugin:Initialise()
 						local sourceSteamId = TGNS.GetClientSteamId(client)
 						local targetSteamId = TGNS.GetClientSteamId(targetClient)
 						local targetClientName = TGNS.GetClientName(targetClient)
-						approvedClients[client] = approvedClients[client] or {}
-						if approvedClients[client][targetSteamId] == nil then
+						approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
+						if approvedClients[sourceSteamId][targetSteamId] == nil then
 							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds)
 							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
 								local approveResponse = json.decode(approveResponseJson) or {}
 								if approveResponse.success then
 									if Shine:IsValidClient(client) then
-										approvedClients[client][targetSteamId] = true
-										approveSentTotal[client] = TGNS.GetNumericValueOrZero(approveSentTotal[client])
-										approveSentTotal[client] = approveSentTotal[client] + 1
-										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_SENT_TOTAL, {t=approveSentTotal[client]})
+										approvedClients[sourceSteamId][targetSteamId] = true
+										approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
+										approveSentTotal[sourceSteamId] = approveSentTotal[sourceSteamId] + 1
+										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_SENT_TOTAL, {t=approveSentTotal[sourceSteamId]})
 										if Shine:IsValidClient(targetClient) then
 											if TGNS.IsClientStranger(targetClient) and Shine.Plugins.targetedcommands and Shine.Plugins.targetedcommands.Enabled and Shine.Plugins.targetedcommands.Affirm then
 												Shine.Plugins.targetedcommands:Affirm(client, targetClient, md)
@@ -157,8 +169,8 @@ function Plugin:Initialise()
 										md:ToPlayerNotifyError(player, "You have affirmed too many players in the last 24 hours.")
 										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
 									else
-										Shine:DebugPrint(string.format("scoreboard ERROR: Unable to affirm NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
-										if approvedClients[client][targetSteamId] == nil then
+										TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to affirm NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+										if approvedClients[sourceSteamId][targetSteamId] == nil then
 											md:ToPlayerNotifyError(player, string.format("There was a problem affirming %s.", targetClientName))
 											TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
 										end
