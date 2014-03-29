@@ -70,17 +70,18 @@ function Plugin:ClientConfirmConnect(client)
 			local steamId = TGNS.GetClientSteamId(client)
 			table.insert(clientsReadyForScoreboardData, client)
 			local player = TGNS.GetPlayer(client)
+			-- Shared.Message(tostring(player:GetClientIndex()))
 			if player then
 				UpdatePlayerPrefixes(player)
 				self:AnnouncePlayerPrefix(player)
-				-- TGNS.DoFor(TGNS.GetClientList(), function(c)
-				-- 	if c then
-				-- 		approvedClients[c] = approvedClients[c] or {}
-				-- 		if approvedClients[c][steamId] then
-				-- 			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=Shine.GameIDs[client]})
-				-- 		end
-				-- 	end
-				-- end)
+				TGNS.DoFor(TGNS.GetClientList(), function(c)
+					if c then
+						approvedClients[c] = approvedClients[c] or {}
+						if approvedClients[c][steamId] then
+							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=player:GetClientIndex()})
+						end
+					end
+				end)
 			end
 		end
 	end)
@@ -139,7 +140,6 @@ function Plugin:Initialise()
 										approveSentTotal[client] = TGNS.GetNumericValueOrZero(approveSentTotal[client])
 										approveSentTotal[client] = approveSentTotal[client] + 1
 										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_SENT_TOTAL, {t=approveSentTotal[client]})
-										-- md:ToPlayerNotifyInfo(player, string.format("Thanks for taking the time to affirm %s!", TGNS.GetClientName(targetClient)))
 										if Shine:IsValidClient(targetClient) then
 											if TGNS.IsClientStranger(targetClient) and Shine.Plugins.targetedcommands and Shine.Plugins.targetedcommands.Enabled and Shine.Plugins.targetedcommands.Affirm then
 												Shine.Plugins.targetedcommands:Affirm(client, targetClient, md)

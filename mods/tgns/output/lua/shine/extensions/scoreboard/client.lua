@@ -33,6 +33,7 @@ function Plugin:Initialise()
 		for index, player in pairs(playerList) do
 	        local playerRecord = teamScores[currentPlayerIndex]
 	        local clientIndex = playerRecord.ClientIndex
+	        -- Shared.Message(string.format("%s: %s", playerRecord.Name, clientIndex))
 	        local prefix = prefixes[clientIndex]
 	        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
 	        local numberColor = Color(0.5, 0.5, 0.5, 1)
@@ -158,7 +159,7 @@ function Plugin:Initialise()
 		isApproved[message.c] = false
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, function(message)
-		Shared.Message(tostring(message.c))
+		-- Shared.Message(tostring(message.c))
 		isApproved[message.c] = true
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
