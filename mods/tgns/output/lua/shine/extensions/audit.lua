@@ -12,6 +12,7 @@ end
 
 local function audit(statementId, data, callback)
 	local updateUrl = string.format("%s&v=%s&g=%s&s=%s&n=%s", TGNS.Config.AuditEndpointBaseUrl, TGNS.UrlEncode(json.encode(data)), TGNS.UrlEncode(Shine.GetGamemode()), statementId, TGNS.UrlEncode(TGNS.GetSimpleServerName()))
+	TGNS.DebugPrint(string.format("Auditing URL: %s", updateUrl))
 	TGNS.GetHttpAsync(updateUrl, callback)
 end
 
@@ -155,8 +156,8 @@ function Plugin:Initialise()
 					    		audit(718, playerData, function(playerDataAuditResponseJson)
 					    			local playerDataAuditResponse = json.decode(playerDataAuditResponseJson) or {}
 					    			if not playerDataAuditResponse.success then
-					    				Shine:DebugPrint(string.format("audit ERROR: Unable to audit playerData. msg: %s | stacktrace: %s", playerDataAuditResponse.msg, playerDataAuditResponse.stacktrace))
-					    				TGNS.PrintTable(playerData, "playerData", function(x) Shine:DebugPrint(x) end)
+					    				TGNS.DebugPrint(string.format("audit ERROR: Unable to audit playerData. msg: %s | stacktrace: %s", playerDataAuditResponse.msg, playerDataAuditResponse.stacktrace))
+					    				TGNS.PrintTable(playerData, "playerData", function(x) TGNS.DebugPrint(x) end)
 					    			end
 					    		end)
 		    				end
@@ -164,8 +165,8 @@ function Plugin:Initialise()
 		    		end
 		    	end)
 			else
-				Shine:DebugPrint(string.format("audit ERROR: Unable to audit gameData. msg: %s | stacktrace: %s", gameDataAuditResponse.msg, gameDataAuditResponse.stacktrace))
-				TGNS.PrintTable(gameData, "gameData", function(x) Shine:DebugPrint(x) end)
+				TGNS.DebugPrint(string.format("audit ERROR: Unable to audit gameData. msg: %s | stacktrace: %s", gameDataAuditResponse.msg, gameDataAuditResponse.stacktrace))
+				TGNS.PrintTable(gameData, "gameData", function(x) TGNS.DebugPrint(x) end)
 			end
 		end)
     end)
