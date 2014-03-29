@@ -22,12 +22,12 @@ local function assignBadge(client)
 					local badgeName = string.format("tgns%s", TGNS.GetFirst(scoreboardBadgesResponse.result))
 					if kBadges[badgeName] then
 						badgeNames[client] = badgeName
-						Shine:DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
+						TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
 						TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
 					end
 				end
 			else
-				Shine:DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
+				TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
 			end
 		end
 	end)
@@ -44,7 +44,7 @@ local function tellMostRecentBadge(client)
 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Your most recent TGNS Badge: %s", mostRecentBadgeResponse.result.DisplayName))
 			end
 		else
-			Shine:DebugPrint(string.format("tgnsbadges ERROR: Unable to access mostrecent badge data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, mostRecentBadgeResponse.msg, mostRecentBadgeResponseJson, mostRecentBadgeResponse.stacktrace))
+			TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access mostrecent badge data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, mostRecentBadgeResponse.msg, mostRecentBadgeResponseJson, mostRecentBadgeResponse.stacktrace))
 		end
 	end)
 end
