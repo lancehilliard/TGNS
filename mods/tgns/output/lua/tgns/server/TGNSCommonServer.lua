@@ -6,6 +6,11 @@ local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
 
+function TGNS.DebugPrint(message)
+	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
+	Shine:DebugPrint(string.format("%s %s", stamp, message))
+end
+
 function TGNS.GetPlayerDeaths(player)
 	local result = player:GetDeaths()
 	return result
@@ -677,7 +682,7 @@ local function ProcessScheduledActions()
 				if scheduledActionsErrorCount <= 1 then
 					local errorTemplate = "ScheduledAction Error (#%s @ %s): %s"
 					--TGNS.EnhancedLog(string.format(errorTemplate, scheduledActionsErrorCount, Shared.GetTime(), result))
-					Shine:DebugPrint(errorTemplate, true, scheduledActionsErrorCount, Shared.GetTime(), result)
+					TGNS.DebugPrint(errorTemplate, true, scheduledActionsErrorCount, Shared.GetTime(), result)
 					scheduledActionsErrorCount = scheduledActionsErrorCount + 1
 					scheduledActionsErrorCounts[scheduledAction.what] = scheduledActionsErrorCount
 				else
