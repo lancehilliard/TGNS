@@ -17,6 +17,16 @@ local function GetTaglineMessage(...)
 	return result
 end
 
+local function getEscapedTaglineMessage(message)
+	local result = TGNS.Replace(message, '"', '\"')
+	return result
+end
+
+local function getUnescapedTaglineMessage(message)
+	local result = TGNS.Replace(message, '\"', '"')
+	return result
+end
+
 local function ShowCurrentTagline(client)
 	local steamId = client:GetUserId()
 	pdr:Load(steamId, function(loadResponse)
@@ -27,8 +37,9 @@ local function ShowCurrentTagline(client)
 				taglineMd:ToClientConsole(client, "     You don't currently have a tagline saved.")
 				taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You don't currently have a tagline saved.")
 			else
-				taglineMd:ToClientConsole(client, "     " .. tagline.message)
-				taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Your current tagline: " .. tagline.message)
+				local taglineMessage = getUnescapedTaglineMessage(tagline.message)
+				taglineMd:ToClientConsole(client, "     " .. taglineMessage)
+				taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Your current tagline: " .. taglineMessage)
 			end
 		else
 			Shared.Message("taglines ERROR: Unable to access data.")
@@ -61,7 +72,7 @@ function Plugin:CreateCommands()
 					if taglineMessage == "remove" then
 						taglineMessage = ""
 					end
-					tagline.message = taglineMessage
+					tagline.message = getEscapedTaglineMessage(taglineMessage)
 					pdr:Save(tagline, function(saveResponse)
 						if saveResponse.success then
 							ShowCurrentTagline(client)
@@ -97,7 +108,7 @@ function Plugin:Initialise()
 						if loadResponse.success then
 							local tagline = loadResponse.value
 							if TGNS.HasNonEmptyValue(tagline) then
-								tgnsMd:ToAllNotifyInfo(string.format("-- %s", tagline.message))
+								tgnsMd:ToAllNotifyInfo(string.format("-- %s", getUnescapedTaglineMessage(tagline.message)))
 							end
 						else
 							Shared.Message("taglines ERROR: Unable to access data.")
