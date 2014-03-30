@@ -3,9 +3,13 @@ local Plugin = Plugin
 local prefixes = {}
 local isCaptainsCaptain = {}
 local isApproved = {}
+local isQuerying = {}
+local isQueryingBadge = {}
 local approveReceivedTotal = 0
 local approveSentTotal = 0
 local APPROVE_TEXTURE_DISABLED = "ui/approve/chevron-disabled.dds"
+local lastUpdatedPingsWhen = {}
+local pings = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -42,12 +46,18 @@ function Plugin:Initialise()
 	        end
 	        player["Number"]:SetColor(numberColor)
 
+			local playerIsBot = playerRecord.Ping == 0 or string.sub(playerRecord.Name,1,5)=="[BOT]"
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        if playerApproveIcon then
-				local playerIsBot = playerRecord.Ping == 0 or string.sub(playerRecord.Name,1,5)=="[BOT]"
 	        	local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot)
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
+	        end
+	        local playerQueryIcon = player["PlayerQueryIcon"]
+	        if playerQueryIcon then
+	        	local playerQueryIconShouldDisplay = false -- (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot)
+	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
+		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
 	        end
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
@@ -56,6 +66,25 @@ function Plugin:Initialise()
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
 	        end
 
+	        -- if not playerIsBot then
+	        -- 	local lastUpdatedClientPingsWhen = lastUpdatedPingsWhen[clientIndex] or 0
+	        -- 	if lastUpdatedClientPingsWhen < Shared.GetTime() - kUpdatePingsIndividual then
+			      --   math.randomseed(clientIndex + Shared.GetTime())
+			      --   pings[clientIndex] = math.floor(math.random(24, 49))
+	        -- 		lastUpdatedPingsWhen[clientIndex] = Shared.GetTime()
+	        -- 	end
+	        -- 	local ping = pings[clientIndex]
+		       --  player["Ping"]:SetText(tostring(ping))
+		       --  if ping < GUIScoreboard.kLowPingThreshold then
+		       --      player["Ping"]:SetColor(GUIScoreboard.kLowPingColor)
+		       --  elseif ping < GUIScoreboard.kMedPingThreshold then
+		       --      player["Ping"]:SetColor(GUIScoreboard.kMedPingColor)
+		       --  elseif ping < GUIScoreboard.kHighPingThreshold then
+		       --      player["Ping"]:SetColor(GUIScoreboard.kHighPingColor)
+		       --  else
+		       --      player["Ping"]:SetColor(GUIScoreboard.kInsanePingColor)
+		       --  end
+	        -- end
 
 		    playerApproveReceiveTotalItemPosition = player["Status"]:GetPosition()
 	        currentPlayerIndex = currentPlayerIndex + 1
@@ -108,6 +137,18 @@ function Plugin:Initialise()
 		    output.PlayerApproveIcon = playerApproveIcon
 		    output.Background:AddChild(playerApproveIcon)
 		end
+		if not output.PlayerQueryIcon then
+		    local playerQueryIcon = GUIManager:CreateGraphicItem()
+		    local playerQueryIconPosition = output.Status:GetPosition()
+		    playerQueryIconPosition.x = playerQueryIconPosition.x - 45
+		    playerQueryIconPosition.y = playerQueryIconPosition.y - 10
+		    playerQueryIcon:SetSize(Vector(20, 20, 0))
+		    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		    playerQueryIcon:SetPosition(playerQueryIconPosition)
+		    playerQueryIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
+		    output.PlayerQueryIcon = playerQueryIcon
+		    output.Background:AddChild(playerQueryIcon)
+		end
 		if not output.PlayerApproveStatusItem then
 		    local color = GUIScoreboard.kSpectatorColor
 		    if teamNumber == kTeam1Index then
@@ -142,13 +183,27 @@ function Plugin:Initialise()
 		        for p = 1, #playerList do
 
 		            local playerItem = playerList[p]
+	                local clientIndex = playerItem["ClientIndex"]
 		            local playerApproveIcon = playerItem["PlayerApproveIcon"]
-		            if playerApproveIcon and playerApproveIcon:GetIsVisible() and GUIItemContainsPoint(playerApproveIcon, mouseX, mouseY) then
-		                local clientIndex = playerItem["ClientIndex"]
+		            if playerApproveIcon and playerApproveIcon:GetIsVisible() and GUIItemContainsPoint(playerApproveIcon, mouseX, mouseY) and not isApproved[clientIndex] then
 		                isApproved[clientIndex] = true
 		                TGNS.SendNetworkMessage(Plugin.APPROVE_REQUESTED, {c=clientIndex})
 		            end
-
+		            local playerQueryIcon = playerItem["PlayerQueryIcon"]
+		            if playerQueryIcon and playerQueryIcon:GetIsVisible() and GUIItemContainsPoint(playerQueryIcon, mouseX, mouseY) and not isQuerying[clientIndex] then
+		                isQuerying[clientIndex] = true
+		                TGNS.SendNetworkMessage(Plugin.QUERY_REQUESTED, {c=clientIndex})
+		            end
+		            local badgeIcons = playerItem["BadgeItems"]
+		            if badgeIcons then
+		                for i = 1, #badgeIcons do
+		                	local badgeIcon = badgeIcons[i]
+				            if badgeIcon and badgeIcon:GetIsVisible() and GUIItemContainsPoint(badgeIcon, mouseX, mouseY) and not isQueryingBadge[clientIndex] then
+				                isQueryingBadge[clientIndex] = true
+				                TGNS.SendNetworkMessage(Plugin.BADGE_QUERY_REQUESTED, {c=clientIndex})
+				            end
+					    end
+		            end
 		        end
 
 		    end
@@ -164,6 +219,12 @@ function Plugin:Initialise()
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
 		isApproved = {}
+	end)
+	TGNS.HookNetworkMessage(Plugin.QUERY_ALLOWED, function(message)
+		isQuerying[message.c] = false
+	end)
+	TGNS.HookNetworkMessage(Plugin.BADGE_QUERY_ALLOWED, function(message)
+		isQueryingBadge[message.c] = false
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RECEIVED_TOTAL, function(message)
 		approveReceivedTotal = message.t

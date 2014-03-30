@@ -1,4 +1,5 @@
 local badgeNames = {}
+local badges = {}
 local md = TGNSMessageDisplayer.Create("BADGES")
 local badgesModIsLoaded = false
 
@@ -19,9 +20,11 @@ local function assignBadge(client)
 			local scoreboardBadgesResponse = json.decode(scoreboardBadgesResponseJson) or {}
 			if scoreboardBadgesResponse.success then
 				if #scoreboardBadgesResponse.result > 0 then
-					local badgeName = string.format("tgns%s", TGNS.GetFirst(scoreboardBadgesResponse.result))
+					local badge = TGNS.GetFirst(scoreboardBadgesResponse.result)
+					local badgeName = string.format("tgns%s", badge.ID)
 					if kBadges[badgeName] then
 						badgeNames[client] = badgeName
+						badges[steamId] = badge
 						TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
 						TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
 					end
@@ -49,11 +52,16 @@ local function tellMostRecentBadge(client)
 	end)
 end
 
+function Plugin:GetCurrentBadgeInfo(steamId)
+	local result = badges[steamId]
+	return result
+end
+
 function Plugin:ClientConnect(client)
 	if badgesModIsLoaded then
-		TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
 		assignBadge(client)
-		TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
+		TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
+		-- TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
 	end
 end
 
