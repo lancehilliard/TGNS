@@ -25,7 +25,9 @@ local function getSteamIdProfileUrl(steamId)
 	return result
 end
 
-local function ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, prefix)
+local Plugin = {}
+
+function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, prefix)
 	local md = TGNSMessageDisplayer.Create(prefix)
 	pdr:Load(targetSteamId, function(loadResponse)
 		local whoisMd = TGNSMessageDisplayer.Create("WHOIS")
@@ -77,7 +79,7 @@ local function ShowUsage(client, targetSteamId)
 	md:ToClientConsole(client, " * <bka> of 'clear' removes enforced BKA name")
 	md:ToClientConsole(client, " * <aka> of 'clear' removes all AKA names")
 	if targetSteamId ~= nil then
-		ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
+		Shine.Plugins.betterknownas:ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 	end
 	md:ToClientConsole(client, " ")
 end
@@ -112,7 +114,7 @@ local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bka
 	bkaData.BKA = newBkaName
 	pdr:Save(bkaData)
 	bkas[targetClient] = newBkaName
-	ShowCurrentBka(actingClient, TGNS.GetClientSteamId(targetClient), bkaHeader, akaHeader, messagePrefix)
+	Shine.Plugins.betterknownas:ShowCurrentBka(actingClient, TGNS.GetClientSteamId(targetClient), bkaHeader, akaHeader, messagePrefix)
 	TGNS.ExecuteEventHooks("BkaChanged", targetClient)
 end
 
@@ -128,8 +130,6 @@ local function ShowWhoisUsage(client)
 	local md = TGNSMessageDisplayer.Create("WHOIS")
 	md:ToClientConsole(client, "Usage: sh_whois <player>")
 end
-
-local Plugin = {}
 
 function Plugin:IsPlayingWithoutBkaName(player)
 	local client = TGNS.GetClient(player)
@@ -187,7 +187,7 @@ function Plugin:CreateCommands()
 			if targetPlayer ~= nil then
 				local targetClient = TGNS.GetClient(targetPlayer)
 				local targetSteamId = TGNS.GetClientSteamId(targetClient)
-				ShowCurrentBka(client, targetSteamId, "Better Known As", "Aliases", "WHOIS")
+				self:ShowCurrentBka(client, targetSteamId, "Better Known As", "Aliases", "WHOIS")
 				local logMessage = string.format("%s executed whois against %s.", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetClientNameSteamIdCombo(targetClient))
 				TGNS.EnhancedLog(logMessage)
 			else
@@ -290,7 +290,7 @@ function Plugin:CreateCommands()
 				if newBkaName ~= nil and newBkaName ~= "" then
 					AddAka(targetSteamId, newBkaName, true, function(success)
 						if success then
-							ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
+							self:ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 						else
 							md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to add AKA.")
 						end
