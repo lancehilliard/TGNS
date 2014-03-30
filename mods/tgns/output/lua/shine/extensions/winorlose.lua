@@ -46,7 +46,7 @@ local function onVoteSuccessful(teamNumber, players)
 	end)
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
-	numberOfSecondsToDeductFromCountdownTimeRemaining = 3
+	numberOfSecondsToDeductFromCountdownTimeRemaining = 4
 	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
 	TGNS.DoFor(players, function(p)
 		pcall(function()
