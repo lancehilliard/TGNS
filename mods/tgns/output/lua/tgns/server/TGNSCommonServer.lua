@@ -857,7 +857,7 @@ function TGNS.HasClientSignedPrimer(client)
 end
 
 function TGNS.IsSteamIdAdmin(steamId)
-	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "admin_group")
+	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "fulladmin_group")
 	return result
 end
 
