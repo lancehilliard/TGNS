@@ -74,6 +74,7 @@ function Plugin:Initialise()
 	        	local playerApproveStatusItemShouldDisplay = clientIndex == Client.GetLocalClientIndex() and showOptionals
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
+	        	playerApproveStatusItem:SetColor(Color(255, 255, 255, 1))
 	        end
 	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
 	        	player["Status"]:SetText("Spectator")
