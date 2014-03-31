@@ -8,15 +8,18 @@ function Plugin:Initialise()
 end
 
 function Plugin:OnProcessMove(player, input)
-	local playerIsLookingDown = not TGNS.IsPlayerSpectator(player) and (input.pitch < 1.6 and input.pitch > 1.2)
-	if lastKnownStatuses[player] ~= playerIsLookingDown then
-		TGNS.ExecuteEventHooks("LookDownChanged", player, playerIsLookingDown)
-		lastKnownStatuses[player] = playerIsLookingDown
+	if player then
+		local clientIndex = player:GetClientIndex()
+		local playerIsLookingDown = not TGNS.IsPlayerSpectator(player) and (input.pitch < 1.6 and input.pitch > 1.2)
+		if lastKnownStatuses[clientIndex] ~= playerIsLookingDown then
+			TGNS.ExecuteEventHooks("LookDownChanged", player, playerIsLookingDown)
+			lastKnownStatuses[clientIndex] = playerIsLookingDown
+		end
 	end
 end
 
 function Plugin:IsPlayerLookingDown(player)
-	local result = lastKnownStatuses[player] == true
+	local result = player and lastKnownStatuses[player:GetClientIndex()] == true
 	return result
 end
 

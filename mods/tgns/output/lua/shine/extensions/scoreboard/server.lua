@@ -67,10 +67,11 @@ end
 function Plugin:ClientConfirmConnect(client)
 	TGNS.ScheduleAction(1, function()
 		if Shine:IsValidClient(client) then
+			local sourcePlayer = TGNS.GetPlayer(client)
 			local sourceSteamId = TGNS.GetClientSteamId(client)
 			table.insert(clientsReadyForScoreboardData, client)
-			local sourcePlayer = TGNS.GetPlayer(client)
 			if sourcePlayer then
+				TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.TOGGLE_OPTIONALS, {t=not TGNS.IsClientStranger(client)})
 				UpdatePlayerPrefixes(sourcePlayer)
 				self:AnnouncePlayerPrefix(sourcePlayer)
 				local approvedSentTotal = 0
@@ -222,6 +223,7 @@ function Plugin:Initialise()
 		end
 	end)
 	TGNS.HookNetworkMessage(self.BADGE_QUERY_REQUESTED, function(client, message)
+		Shared.Message(tostring(targetClientIndex))
 		local player = TGNS.GetPlayer(client)
 		local targetClientIndex = message.c
 		local targetClient = TGNS.GetClientById(targetClientIndex)
@@ -247,6 +249,10 @@ function Plugin:Initialise()
 		else
 			md:ToPlayerNotifyError(player, "There was a problem querying.")
 		end
+	end)
+	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
+		local isLookingUp = not isLookingDown
+		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
 	end)
 	return true
 end

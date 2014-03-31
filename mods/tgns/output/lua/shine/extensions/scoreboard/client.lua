@@ -8,8 +8,11 @@ local isQueryingBadge = {}
 local approveReceivedTotal = 0
 local approveSentTotal = 0
 local APPROVE_TEXTURE_DISABLED = "ui/approve/chevron-disabled.dds"
+local QUERY_TEXTURE_DISABLED = "ui/query/questionmark-disabled.dds"
 local lastUpdatedPingsWhen = {}
 local pings = {}
+local showCustomNumbersColumn = true
+local showOptionals = false
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -20,6 +23,11 @@ end)
 
 local function getTeamApproveTexture(teamNumber)
 	local result = string.format("ui/approve/chevron-team%s.dds", teamNumber)
+	return result
+end
+
+local function getTeamQueryTexture(teamNumber)
+	local result = string.format("ui/query/questionmark-team%s.dds", teamNumber)
 	return result
 end
 
@@ -38,32 +46,37 @@ function Plugin:Initialise()
 	        local playerRecord = teamScores[currentPlayerIndex]
 	        local clientIndex = playerRecord.ClientIndex
 	        -- Shared.Message(string.format("%s: %s", playerRecord.Name, clientIndex))
-	        local prefix = prefixes[clientIndex]
-	        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
-	        local numberColor = Color(0.5, 0.5, 0.5, 1)
-	        if isCaptainsCaptain[clientIndex] == true then
-	        	numberColor = CaptainsCaptainFontColor
+	        if showCustomNumbersColumn then
+		        local prefix = prefixes[clientIndex]
+		        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
+		        local numberColor = Color(0.5, 0.5, 0.5, 1)
+		        if isCaptainsCaptain[clientIndex] == true then
+		        	numberColor = CaptainsCaptainFontColor
+		        end
+		        player["Number"]:SetColor(numberColor)
 	        end
-	        player["Number"]:SetColor(numberColor)
 
 			local playerIsBot = playerRecord.Ping == 0 or string.sub(playerRecord.Name,1,5)=="[BOT]"
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        if playerApproveIcon then
-	        	local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot)
+	        	local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
-	        	local playerQueryIconShouldDisplay = false -- (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot)
+	        	local playerQueryIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
-		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
+		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and QUERY_TEXTURE_DISABLED or getTeamQueryTexture(teamNumber))
 	        end
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
-	        	local playerApproveStatusItemShouldDisplay = clientIndex == Client.GetLocalClientIndex()
+	        	local playerApproveStatusItemShouldDisplay = clientIndex == Client.GetLocalClientIndex() and showOptionals
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
+	        end
+	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
+	        	player["Status"]:SetText("Spectator")
 	        end
 
 	        -- if not playerIsBot then
@@ -145,7 +158,7 @@ function Plugin:Initialise()
 		    playerQueryIcon:SetSize(Vector(20, 20, 0))
 		    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 		    playerQueryIcon:SetPosition(playerQueryIconPosition)
-		    playerQueryIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
+		    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
 		    output.PlayerQueryIcon = playerQueryIcon
 		    output.Background:AddChild(playerQueryIcon)
 		end
@@ -231,6 +244,12 @@ function Plugin:Initialise()
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_SENT_TOTAL, function(message)
 		approveSentTotal = message.t
+	end)
+	TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
+		showCustomNumbersColumn = message.t
+	end)
+	TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
+		showOptionals = message.t
 	end)
 	return true
 end
