@@ -40,7 +40,6 @@ local function tellMostRecentBadge(client)
 	local steamId = TGNS.GetClientSteamId(client)
 	local url = string.format("%s&i=%s", TGNS.Config.MostRecentBadgeEndpointBaseUrl, steamId)
 	TGNS.GetHttpAsync(url, function(mostRecentBadgeResponseJson)
-		Shared.Message(tostring(mostRecentBadgeResponseJson))
 		local mostRecentBadgeResponse = json.decode(mostRecentBadgeResponseJson) or {}
 		if mostRecentBadgeResponse.success then
 			if TGNS.HasNonEmptyValue(mostRecentBadgeResponse.result.DisplayName) and TGNS.HasNonEmptyValue(mostRecentBadgeResponse.result.ID) and kBadges[string.format("tgns%s",mostRecentBadgeResponse.result.ID)] and Shine:IsValidClient(client) then
