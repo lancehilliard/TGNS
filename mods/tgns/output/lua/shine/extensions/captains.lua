@@ -18,6 +18,7 @@ local automaticVoteAllowAction = function()
 	mayVoteYet = true
 end
 local MAX_NON_CAPTAIN_PLAYERS = 14
+local lastVoiceWarningTimes = {}
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -92,7 +93,7 @@ local function warnOfPendingCaptainsGameStart()
 				g = 0
 				b = 0
 			end
-			Shine:SendText(c, Shine.BuildScreenMessage(54, 0.8, 0.6, message, duration, r, g, b, 0, 1, 0))
+			Shine:SendText(c, Shine.BuildScreenMessage(51, 0.5, 0.85, message, duration, r, g, b, 1, 1, 0))
 		end
 	end
 end
@@ -102,27 +103,41 @@ local function setTimeAtWhichToForceRoundStart()
 	TGNS.ScheduleAction(29, warnOfPendingCaptainsGameStart)
 end
 
+local function showRoster(clients, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText)
+	local columnsY = titleY + 0.03
+	TGNS.SortAscending(clients, TGNS.GetClientId)
+	local names = TGNS.Select(clients, function(c) return TGNS.Truncate(TGNS.GetClientName(c), 16) end)
+	local column1Names = {}
+	local column2Names = {}
+	TGNS.DoFor(names, function(n, index)
+		if index % 2 ~= 0 then
+			table.insert(column1Names, n)
+		else
+			table.insert(column2Names, n)
+		end
+	end)
+	if #column1Names == 0 then
+		table.insert(column1Names, "(None)")
+	end
+	TGNS.DoFor(renderClients, function(c)
+		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.80, titleY, titleText, 3, 0, 255, 0, 0, 2, 0 ) )
+		local column1Message = TGNS.Join(column1Names, '\n')
+		Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.80, columnsY, column1Message, 3, 0, 255, 0, 0, 1, 0 ) )
+		local column2Message = TGNS.Join(column2Names, '\n')
+		Shine:SendText(c, Shine.BuildScreenMessage( column2MessageId, 0.90, columnsY, column2Message, 3, 0, 255, 0, 0, 1, 0 ) )
+	end)
+end
+
 local function showPickables()
-	local pickableClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
-	if #pickableClients > 0 and captainsGamesFinished == 0 and not TGNS.IsGameInProgress() then
-		TGNS.SortAscending(pickableClients, TGNS.GetClientId)
-		local pickableNames = TGNS.Select(pickableClients, function(c) return TGNS.Truncate(TGNS.GetClientName(c), 16) end)
-		local column1Names = {}
-		local column2Names = {}
-		TGNS.DoFor(pickableNames, function(n, index)
-			if index % 2 ~= 0 then
-				table.insert(column1Names, n)
-			else
-				table.insert(column2Names, n)
-			end
-		end)
-		TGNS.DoFor(TGNS.GetReadyRoomClients(), function(c)
-			local column1Message = TGNS.Join(column1Names, '\n')
-			Shine:SendText(c, Shine.BuildScreenMessage( 52, 0.80, 0.2, column1Message, 3, 0, 255, 0, 0, 1, 0 ) )
-			local column2Message = TGNS.Join(column2Names, '\n')
-			Shine:SendText(c, Shine.BuildScreenMessage( 53, 0.90, 0.2, column2Message, 3, 0, 255, 0, 0, 1, 0 ) )
-		end)
-		TGNS.ScheduleAction(1, showPickables)
+	if not TGNS.IsGameInProgress() then
+		local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
+		if captainsGamesFinished == 0 then
+			local readyRoomClients = TGNS.GetReadyRoomClients()
+			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") end)
+			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.17, "Opted In")
+			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.5, "Not Opted In")
+			TGNS.ScheduleAction(1, showPickables)
+		end
 	end
 end
 
@@ -632,6 +647,24 @@ function Plugin:Initialise()
 	mayVoteYet = false
 	TGNS.ScheduleAction(115, function() automaticVoteAllowAction() end)
 
+	local originalGetCanPlayerHearPlayer
+	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
+		local result
+		local shouldOverrideVoicecomm = captainsModeEnabled and captainsGamesFinished == 0 and TGNS.IsPlayerReadyRoom(speakerPlayer) and TGNS.IsPlayerReadyRoom(listenerPlayer)
+		if shouldOverrideVoicecomm then
+			local speakerClient = TGNS.GetClient(speakerPlayer)
+			result = TGNS.IsClientAdmin(speakerClient) or TGNS.IsClientGuardian(speakerClient) or TGNS.ClientIsInGroup(speakerClient, "captains_group")
+			if result ~= true then
+				if lastVoiceWarningTimes[speakerClient] == nil or lastVoiceWarningTimes[speakerClient] < Shared.GetTime() - 2 then
+					Shine:SendText(speakerClient, Shine.BuildScreenMessage(50, 0.2, 0.25, "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", 3, 0, 255, 0, 0, 4, 0 ) )
+					lastVoiceWarningTimes[speakerClient] = Shared.GetTime()
+				end
+			end
+		else
+			result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
+		end
+		return result
+	end)
     return true
 end
 
