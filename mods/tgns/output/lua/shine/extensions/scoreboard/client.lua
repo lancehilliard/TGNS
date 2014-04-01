@@ -13,6 +13,8 @@ local lastUpdatedPingsWhen = {}
 local pings = {}
 local showCustomNumbersColumn = true
 local showOptionals = false
+-- locations
+local locationNames = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -69,13 +71,31 @@ function Plugin:Initialise()
 	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
 		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and QUERY_TEXTURE_DISABLED or getTeamQueryTexture(teamNumber))
 	        end
+		    local color = GUIScoreboard.kSpectatorColor
+		    if teamNumber == kTeam1Index then
+		        color = GUIScoreboard.kBlueColor
+		    elseif teamNumber == kTeam2Index then
+		        color = GUIScoreboard.kRedColor
+		    end
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
 	        	local playerApproveStatusItemShouldDisplay = clientIndex == Client.GetLocalClientIndex() and showOptionals
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
-	        	playerApproveStatusItem:SetColor(Color(255, 255, 255, 1))
+	        	playerApproveStatusItem:SetColor(color)
 	        end
+
+
+	        -- locations
+	        local playerLocationNameItem = player["PlayerLocationNameItem"]
+	        if playerLocationNameItem then
+	        	local playerLocationNameItemShouldDisplay = false -- teamNumber == Client.GetLocalClientTeamNumber()
+	        	playerLocationNameItem:SetIsVisible(playerLocationNameItemShouldDisplay)
+	        	playerLocationNameItem:SetText(string.format("%s", locationNames[clientIndex] and locationNames[clientIndex] or ""))
+	        	playerLocationNameItem:SetColor(color)
+	        end
+
+
 	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
 	        	player["Status"]:SetText("Spectator")
 	        end
@@ -103,37 +123,6 @@ function Plugin:Initialise()
 		    playerApproveReceiveTotalItemPosition = player["Status"]:GetPosition()
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
-
-	    -- local color = GUIScoreboard.kSpectatorColor
-	    -- if teamNumber == kTeam1Index then
-	    --     color = GUIScoreboard.kBlueColor
-	    -- elseif teamNumber == kTeam2Index then
-	    --     color = GUIScoreboard.kRedColor
-	    -- end
-
-		-- if teamNumber == Client.GetLocalClientTeamNumber() then
-		-- 	if playerApproveReceiveTotalItemPosition then
-		-- 		local playerApproveReceiveTotalItem = updateTeam["GUIs"]["Background"]["PlayerApproveReceiveTotalItem"]
-		-- 		if not playerApproveReceiveTotalItem then
-		-- 			playerApproveReceiveTotalItem = GUIManager:CreateTextItem()
-		-- 			playerApproveReceiveTotalItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-		-- 			playerApproveReceiveTotalItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-		-- 			playerApproveReceiveTotalItem:SetTextAlignmentX(GUIItem.Align_Min)
-		-- 			playerApproveReceiveTotalItem:SetTextAlignmentY(GUIItem.Align_Min)
-		-- 			playerApproveReceiveTotalItemPosition.x = playerApproveReceiveTotalItemPosition.x - 14
-		-- 			playerApproveReceiveTotalItemPosition.y = GUIScoreboard.kTeamNameFontSize + 7
-		-- 			playerApproveReceiveTotalItem:SetPosition(playerApproveReceiveTotalItemPosition)
-		-- 			playerApproveReceiveTotalItem:SetColor(color)
-		-- 			updateTeam["GUIs"]["Background"].PlayerApproveReceiveTotalItem = playerApproveReceiveTotalItem
-		-- 			updateTeam["GUIs"]["Background"]:AddChild(playerApproveReceiveTotalItem)
-		-- 		end
-		-- 		playerApproveReceiveTotalItem:SetText(tostring(approveReceivedTotal) .. "|" .. tostring(approveSentTotal))
-		-- 	end
-		-- elseif updateTeam["GUIs"]["Background"].PlayerApproveReceiveTotalItem then
-		-- 	GUI.DestroyItem(updateTeam["GUIs"]["Background"]["PlayerApproveReceiveTotalItem"])
-		-- 	updateTeam["GUIs"]["Background"]["PlayerApproveReceiveTotalItem"] = nil
-		-- end
-
 	end
 
 	local originalGUIScoreboardCreatePlayerItem = GUIScoreboard.CreatePlayerItem
@@ -164,12 +153,6 @@ function Plugin:Initialise()
 		    output.Background:AddChild(playerQueryIcon)
 		end
 		if not output.PlayerApproveStatusItem then
-		    local color = GUIScoreboard.kSpectatorColor
-		    if teamNumber == kTeam1Index then
-		        color = GUIScoreboard.kBlueColor
-		    elseif teamNumber == kTeam2Index then
-		        color = GUIScoreboard.kRedColor
-		    end
 			local playerApproveStatusItem = GUIManager:CreateTextItem()
 			playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
 			playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
@@ -179,10 +162,28 @@ function Plugin:Initialise()
 		    playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
 		    playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
 			playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
-			playerApproveStatusItem:SetColor(color)
 			output.PlayerApproveStatusItem = playerApproveStatusItem
 			output.Background:AddChild(playerApproveStatusItem)
 		end
+
+
+		-- locations
+		if not output.PlayerLocationNameItem then
+			local playerLocationNameItem = GUIManager:CreateTextItem()
+			playerLocationNameItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+			playerLocationNameItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+			playerLocationNameItem:SetTextAlignmentX(GUIItem.Align_Max)
+			playerLocationNameItem:SetTextAlignmentY(GUIItem.Align_Min)
+			local playerLocationNameItemPosition = output.Status:GetPosition()
+		    playerLocationNameItemPosition.x = playerLocationNameItemPosition.x - 45
+		    playerLocationNameItemPosition.y = playerLocationNameItemPosition.y + 8
+			playerLocationNameItem:SetPosition(playerLocationNameItemPosition)
+			output.PlayerLocationNameItem = playerLocationNameItem
+			output.Background:AddChild(playerLocationNameItem)
+		end
+
+
+
 	    return output
 	end
 
@@ -252,6 +253,17 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
 		showOptionals = message.t
 	end)
+
+
+	-- locations
+	TGNS.HookNetworkMessage(Plugin.LOCATION_CHANGED, function(message)
+		local clientIndex = message.c
+		local locationName = message.n
+		locationNames[clientIndex] = locationName
+	end)
+
+
+
 	return true
 end
 

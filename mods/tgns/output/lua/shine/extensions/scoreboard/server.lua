@@ -202,19 +202,26 @@ function Plugin:Initialise()
 		local md = TGNSMessageDisplayer.Create("QUERY")
 		if targetClient and Shine:IsValidClient(targetClient) then
 			--if client ~= targetClient then
-				if not TGNS.GetIsClientVirtual(targetClient) then
-					local sourceSteamId = TGNS.GetClientSteamId(client)
-					local targetSteamId = TGNS.GetClientSteamId(targetClient)
-					local targetClientName = TGNS.GetClientName(targetClient)
-					Shine.Plugins.betterknownas:ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
+				--if not TGNS.GetIsClientVirtual(targetClient) then
 					TGNS.ScheduleAction(5, function()
 						if Shine:IsValidClient(client) then
 							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.QUERY_ALLOWED, {c=targetClientIndex})
 						end
 					end)
-				else
-					md:ToPlayerNotifyError(player, "The bots don't take kindly to being queried.")
-				end
+					local sourceSteamId = TGNS.GetClientSteamId(client)
+					local targetSteamId = TGNS.GetClientSteamId(targetClient)
+					local targetClientName = TGNS.GetClientName(targetClient)
+					Shine.Plugins.betterknownas:ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
+					if Balance then
+						local totalGamesCount = Balance.GetTotalGamesPlayedBySteamId(targetSteamId)
+						if totalGamesCount > 0 and totalGamesCount < 50 then
+							local targetPlayer = TGNS.GetPlayer(targetClient)
+							md:ToPlayerNotifyInfo(player, string.format("%s has played %s games so far on TGNS.", targetClientName, totalGamesCount))
+						end
+					end
+				--else
+					--md:ToPlayerNotifyError(player, "The bots don't take kindly to being queried.")
+				--end
 			--else
 			--	md:ToPlayerNotifyError(player, "You know all there is to know about yourself.")
 			--end
@@ -254,6 +261,21 @@ function Plugin:Initialise()
 		local isLookingUp = not isLookingDown
 		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
 	end)
+	-- locations
+ 	TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			local locationNameToSend = (TGNS.IsPlayerReadyRoom(player) or (not TGNS.PlayersAreTeammates(player, p))) and "" or TGNS.Truncate(locationName, 4)
+			TGNS.SendNetworkMessageToPlayer(p, self.LOCATION_CHANGED, {c=player:GetClientIndex(), n=locationNameToSend})
+		end)
+ 	end)
+
+
+
+
+	-- TGNS.ScheduleAction(2, function()
+	-- 	CHUDStatsVisible = false
+	-- end)
+
 	return true
 end
 
