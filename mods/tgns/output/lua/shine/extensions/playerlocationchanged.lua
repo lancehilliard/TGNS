@@ -1,23 +1,23 @@
--- local lastKnownLocations = {}
+local lastKnownLocationNames = {}
 
--- local Plugin = {}
+local Plugin = {}
 
--- function Plugin:OnProcessMove(player, input)
--- 	local location = player:GetLocationName()
--- 	if location ~= lastKnownLocations[player] then
--- 		lastKnownLocations[player] = location
--- 		TGNS.ExecuteEventHooks("PlayerLocationChanged", player, location)
--- 	end
--- end
+function Plugin:OnProcessMove(player, input)
+	local locationName = player:GetLocationName()
+	if locationName ~= lastKnownLocationNames[player] then
+		lastKnownLocationNames[player] = locationName
+		TGNS.ExecuteEventHooks("PlayerLocationChanged", player, locationName)
+	end
+end
 
--- function Plugin:Initialise()
---     self.Enabled = true
---     return true
--- end
+function Plugin:Initialise()
+    self.Enabled = true
+    return true
+end
 
--- function Plugin:Cleanup()
---     --Cleanup your extra stuff like timers, data etc.
---     self.BaseClass.Cleanup( self )
--- end
+function Plugin:Cleanup()
+    --Cleanup your extra stuff like timers, data etc.
+    self.BaseClass.Cleanup( self )
+end
 
--- Shine:RegisterExtension("playerlocationchanged", Plugin )
+Shine:RegisterExtension("playerlocationchanged", Plugin )
