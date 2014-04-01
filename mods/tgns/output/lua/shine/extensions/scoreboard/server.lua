@@ -264,18 +264,10 @@ function Plugin:Initialise()
 	-- locations
  	TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-			local locationNameToSend = (TGNS.IsPlayerReadyRoom(player) or (not TGNS.PlayersAreTeammates(player, p))) and "" or TGNS.Truncate(locationName, 4)
+			local locationNameToSend = (TGNS.IsPlayerSpectator(p) or TGNS.PlayersAreTeammates(player, p)) and TGNS.Truncate(locationName, 4) or ""
 			TGNS.SendNetworkMessageToPlayer(p, self.LOCATION_CHANGED, {c=player:GetClientIndex(), n=locationNameToSend})
 		end)
  	end)
-
-
-
-
-	-- TGNS.ScheduleAction(2, function()
-	-- 	CHUDStatsVisible = false
-	-- end)
-
 	return true
 end
 

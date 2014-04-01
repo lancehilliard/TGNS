@@ -89,7 +89,7 @@ function Plugin:Initialise()
 	        -- locations
 	        local playerLocationNameItem = player["PlayerLocationNameItem"]
 	        if playerLocationNameItem then
-	        	local playerLocationNameItemShouldDisplay = false -- teamNumber == Client.GetLocalClientTeamNumber()
+	        	local playerLocationNameItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or PlayerUI_GetIsSpecating())
 	        	playerLocationNameItem:SetIsVisible(playerLocationNameItemShouldDisplay)
 	        	playerLocationNameItem:SetText(string.format("%s", locationNames[clientIndex] and locationNames[clientIndex] or ""))
 	        	playerLocationNameItem:SetColor(color)
@@ -104,7 +104,8 @@ function Plugin:Initialise()
 	        -- 	local lastUpdatedClientPingsWhen = lastUpdatedPingsWhen[clientIndex] or 0
 	        -- 	if lastUpdatedClientPingsWhen < Shared.GetTime() - kUpdatePingsIndividual then
 			      --   math.randomseed(clientIndex + Shared.GetTime())
-			      --   pings[clientIndex] = math.floor(math.random(24, 49))
+			      --   local ping = playerRecord.Ping * 0.5 -- math.random(24, 49)
+			      --   pings[clientIndex] = math.floor(ping)
 	        -- 		lastUpdatedPingsWhen[clientIndex] = Shared.GetTime()
 	        -- 	end
 	        -- 	local ping = pings[clientIndex]
@@ -263,6 +264,10 @@ function Plugin:Initialise()
 	end)
 
 
+	local originalCHUDGUI_DeathStatsUpdate = CHUDGUI_DeathStats.Update
+	CHUDGUI_DeathStats.Update = function(self, deltaTime) end
+	local originalShowClientStats = ShowClientStats
+	ShowClientStats = function(endRound) end
 
 	return true
 end
