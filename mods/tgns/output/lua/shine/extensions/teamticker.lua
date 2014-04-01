@@ -5,8 +5,8 @@
 -- function Plugin:Initialise()
 --     self.Enabled = true
 --     md = TGNSMessageDisplayer.Create("TEAM")
--- 	TGNS.RegisterEventHook("PlayerLocationChanged", function(player, location)
--- 		md:ToTeamTickerInfo(TGNS.GetPlayerTeamNumber(player), string.format("%s -> %s", TGNS.GetPlayerName(player), location))
+-- 	TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
+-- 		md:ToTeamTickerInfo(TGNS.GetPlayerTeamNumber(player), string.format("%s -> %s", TGNS.GetPlayerName(player), locationName))
 -- 	end)
 
 --     return true
