@@ -25,7 +25,7 @@ local function assignBadge(client)
 					if kBadges[badgeName] then
 						badgeNames[client] = badgeName
 						badges[steamId] = badge
-						TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
+						-- TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
 						TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
 					end
 				end
