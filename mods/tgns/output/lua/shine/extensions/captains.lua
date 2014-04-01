@@ -133,7 +133,7 @@ local function showPickables()
 		local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 		if captainsGamesFinished == 0 then
 			local readyRoomClients = TGNS.GetReadyRoomClients()
-			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") end)
+			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
 			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.17, "Opted In")
 			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.5, "Not Opted In")
 			TGNS.ScheduleAction(1, showPickables)
