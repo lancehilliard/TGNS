@@ -53,7 +53,7 @@ function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pre
 				TGNS.DoFor(bkaData.AKAs, function(a) md:ToClientConsole(client, string.format("     %s", a)) end)
 			end
 			md:ToClientConsole(client, " ")
-			whoisMd:ToPlayerNotifyInfo(player, string.format("%s: %s%s", TGNS.GetPlayerName(targetPlayer), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
+			whoisMd:ToPlayerNotifyInfo(player, string.format("%s (#%s): %s%s", TGNS.GetPlayerName(targetPlayer), TGNS.GetPlayerGameId(targetPlayer), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
 			md:ToClientConsole(client, " ")
 			md:ToClientConsole(client, "Steam Community URL:")
 			md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId) or "<unknown>")
