@@ -236,16 +236,16 @@ local function svBalance(client)
 	end
 end
 
-local function extraShouldBeEnforcedToMarines()
-	local playerList = TGNS.GetPlayerList()
-	local numberOfReadyRoomClients = #TGNS.GetReadyRoomClients(playerList)
-	local numberOfMarineClients = GetGamerules():GetTeam(kTeam1Index):GetNumPlayers()
-	local numberOfAlienClients = GetGamerules():GetTeam(kTeam2Index):GetNumPlayers()
-	local captainsModeEnabled = (Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled())
-	local atLeastOneBotFound = TGNS.Any(TGNS.GetClientList(), TGNS.GetIsClientVirtual)
-	local result = numberOfAlienClients > 0 and numberOfReadyRoomClients < 6 and numberOfMarineClients == numberOfAlienClients and not captainsModeEnabled and not atLeastOneBotFound
-	return result
-end
+-- local function extraShouldBeEnforcedToMarines()
+-- 	local playerList = TGNS.GetPlayerList()
+-- 	local numberOfReadyRoomClients = #TGNS.GetReadyRoomClients(playerList)
+-- 	local numberOfMarineClients = GetGamerules():GetTeam(kTeam1Index):GetNumPlayers()
+-- 	local numberOfAlienClients = GetGamerules():GetTeam(kTeam2Index):GetNumPlayers()
+-- 	local captainsModeEnabled = (Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled())
+-- 	local atLeastOneBotFound = TGNS.Any(TGNS.GetClientList(), TGNS.GetIsClientVirtual)
+-- 	local result = numberOfAlienClients > 0 and numberOfReadyRoomClients < 6 and numberOfMarineClients == numberOfAlienClients and not captainsModeEnabled and not atLeastOneBotFound
+-- 	return result
+-- end
 
 local Plugin = {}
 
@@ -269,13 +269,15 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 		-- 		return false
 		-- 	end
 		-- end
-		if newTeamNumber == kAlienTeamType and extraShouldBeEnforcedToMarines() then
-			md:ToPlayerNotifyError(player, "Marines get the extra player on this server. If you can quickly and")
-			md:ToPlayerNotifyError(player, "politely persuade anyone to go Marines for you, feel free. Don't harass.")
-			TGNS.RespawnPlayer(player)
-			return false
-			--return true, kMarineTeamType
-		end
+
+
+		-- if newTeamNumber == kAlienTeamType and extraShouldBeEnforcedToMarines() then
+		-- 	md:ToPlayerNotifyError(player, "Marines get the extra player on this server. If you can quickly and")
+		-- 	md:ToPlayerNotifyError(player, "politely persuade anyone to go Marines for you, feel free. Don't harass.")
+		-- 	TGNS.RespawnPlayer(player)
+		-- 	return false
+		-- 	--return true, kMarineTeamType
+		-- end
 	end
 end
 
