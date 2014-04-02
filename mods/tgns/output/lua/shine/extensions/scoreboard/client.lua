@@ -13,7 +13,6 @@ local lastUpdatedPingsWhen = {}
 local pings = {}
 local showCustomNumbersColumn = true
 local showOptionals = false
--- locations
 local locationNames = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
@@ -85,8 +84,6 @@ function Plugin:Initialise()
 	        	playerApproveStatusItem:SetColor(color)
 	        end
 
-
-	        -- locations
 	        local playerLocationNameItem = player["PlayerLocationNameItem"]
 	        if playerLocationNameItem then
 	        	local playerLocationNameItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or PlayerUI_GetIsSpecating())
@@ -166,9 +163,6 @@ function Plugin:Initialise()
 			output.PlayerApproveStatusItem = playerApproveStatusItem
 			output.Background:AddChild(playerApproveStatusItem)
 		end
-
-
-		-- locations
 		if not output.PlayerLocationNameItem then
 			local playerLocationNameItem = GUIManager:CreateTextItem()
 			playerLocationNameItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
@@ -254,9 +248,6 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
 		showOptionals = message.t
 	end)
-
-
-	-- locations
 	TGNS.HookNetworkMessage(Plugin.LOCATION_CHANGED, function(message)
 		local clientIndex = message.c
 		local locationName = message.n

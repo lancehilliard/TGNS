@@ -261,7 +261,6 @@ function Plugin:Initialise()
 		local isLookingUp = not isLookingDown
 		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
 	end)
-	-- locations
  	TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			local locationNameToSend = (TGNS.IsPlayerSpectator(p) or TGNS.PlayersAreTeammates(player, p)) and TGNS.Truncate(locationName, 4) or ""
