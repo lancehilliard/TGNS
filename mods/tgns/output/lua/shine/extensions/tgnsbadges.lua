@@ -74,10 +74,6 @@ function Plugin:EndGame(gamerules, winningTeam)
 	end
 end
 
-function Plugin:ClientConfirmConnect(client)
-	tellMostRecentBadge(client)
-end
-
 function Plugin:Initialise()
     self.Enabled = true
     TGNS.ScheduleAction(2, function()
