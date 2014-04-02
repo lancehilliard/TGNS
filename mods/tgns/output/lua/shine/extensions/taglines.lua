@@ -107,7 +107,7 @@ function Plugin:Initialise()
 						tgnsMd:ToAllNotifyInfo(message)
 						if loadResponse.success then
 							local tagline = loadResponse.value
-							if TGNS.HasNonEmptyValue(tagline) then
+							if TGNS.HasNonEmptyValue(tagline.message) then
 								tgnsMd:ToAllNotifyInfo(string.format("-- %s", getUnescapedTaglineMessage(tagline.message)))
 							end
 						else
