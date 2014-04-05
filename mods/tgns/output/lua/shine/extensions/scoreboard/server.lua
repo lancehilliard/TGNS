@@ -279,6 +279,10 @@ function Plugin:Initialise()
 			TGNS.SendNetworkMessageToPlayer(p, self.LOCATION_CHANGED, {c=player:GetClientIndex(), n=locationNameToSend})
 		end)
  	end)
+ 	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)
+ 		local md = TGNSMessageDisplayer.Create()
+ 		md:ToAllConsole(string.format("Gametime: %s", string.DigitalTime(gameDurationInSeconds)))
+ 	end)
 	return true
 end
 
