@@ -270,7 +270,7 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 			TGNS.DestroyAllEntities("CommandStructure", victimEntity:GetTeamNumber())
 		else
 			if kCountdownTimeRemaining < 57 then
-				if victimEntity and attackerEntity and victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) then
+				if victimEntity and attackerEntity and victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) and not TGNS.IsPlayerHallucination(victimEntity) then
 					local commandStructureDescription = TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 					if kCountdownTimeRemaining > 22 then
 						if TGNS.GetPlayerTeamNumber(attackerEntity) ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and TGNS.GetPlayerTeamNumber(victimEntity) == teamNumberWhichWillWinIfWinLoseCountdownExpires then
