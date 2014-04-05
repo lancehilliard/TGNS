@@ -6,6 +6,11 @@ local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
 
+function TGNS.IsPlayerHallucination(player)
+	local result = player and (player.isHallucination or player:isa("Hallucination"))
+	return result
+end
+
 function TGNS.DebugPrint(message)
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
 	Shine:DebugPrint(string.format("%s %s", stamp, message))
