@@ -120,7 +120,7 @@ local function showRoster(clients, renderClients, titleMessageId, column1Message
 		table.insert(column1Names, "(None)")
 	end
 	TGNS.DoFor(renderClients, function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.80, titleY, titleText, 3, 0, 255, 0, 0, 2, 0 ) )
+		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.80, titleY, string.format("%s (%s)", titleText, #clients), 3, 0, 255, 0, 0, 2, 0 ) )
 		local column1Message = TGNS.Join(column1Names, '\n')
 		Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.80, columnsY, column1Message, 3, 0, 255, 0, 0, 1, 0 ) )
 		local column2Message = TGNS.Join(column2Names, '\n')
