@@ -24,7 +24,7 @@ local function processNewMessageData()
 				data[thisServerSimpleName] = {}
 				dr.Save(data, nil, function(saveResponse)
 					if not saveResponse.success then
-						Shared.Message("broadcast ERROR: unable to save data.")
+						TGNS.DebugPrint(string.format("Broadcast ERROR: Unable to clear data. msg: %s | stacktrace: %s", saveResponse.msg, saveResponse.stacktrace))
 					end
 				end)
 			end
@@ -52,12 +52,12 @@ function Plugin:Broadcast(client, message)
 					md:ToAllNotifyInfo(string.format("%s: %s", senderName, message))
 				else
 					md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to send broadcast message.")
-					Shared.Message("broadcast ERROR: unable to save data.")
+					TGNS.DebugPrint(string.format("Broadcast ERROR: Unable to save data. msg: %s | stacktrace: %s", saveResponse.msg, saveResponse.stacktrace))
 				end
 			end)
 		else
 			md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access broadcast data.")
-			Shared.Message("broadcast ERROR: unable to access data.")
+			TGNS.DebugPrint(string.format("Broadcast ERROR: Unable to access data. msg: %s | stacktrace: %s", loadResponse.msg, loadResponse.stacktrace))
 		end
 	end)
 end
@@ -78,9 +78,9 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
-	thisServerSimpleName = TGNS.GetSimpleServerName()
 	self:CreateCommands()
 	TGNS.ScheduleAction(60, function() TGNS.ScheduleActionInterval(10, processNewMessageData) end)
+	TGNS.ScheduleAction(10, function() thisServerSimpleName = TGNS.GetSimpleServerName() end)
     return true
 end
 
