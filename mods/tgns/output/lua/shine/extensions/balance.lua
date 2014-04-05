@@ -207,6 +207,36 @@ local function SendNextPlayer()
 	TGNS.ScheduleAction(1, PrintBalanceLog)
 end
 
+-- local function pickTeamForExtraPlayer(player)
+-- 	local result
+-- 	local client = TGNS.GetClient(player)
+-- 	if client then
+-- 		local playerList = TGNS.GetPlayerList()
+-- 		local marinePlayers = TGNS.GetMarinePlayers(playerList)
+-- 		local alienPlayers = TGNS.GetAlienPlayers(playerList)
+-- 		local marinesCurrentGameSpms = TGNS.Select(marinePlayers, TGNS.GetPlayerScorePerMinute)
+-- 		local aliensCurrentGameSpms = TGNS.Select(alienPlayers, TGNS.GetPlayerScorePerMinute)
+-- 		local marinesCurrentGameAverageSpm = TGNSAverageCalculator.CalculateFor(marinesCurrentGameSpms)
+-- 		local aliensCurrentGameAverageSpm = TGNSAverageCalculator.CalculateFor(aliensCurrentGameSpms)
+
+-- 		local marineClients = TGNS.GetClients(marinePlayers)
+-- 		local alienClients = TGNS.GetClients(alienPlayers)
+-- 		local marinesHistoricalAverageSpm = GetScorePerMinuteAverage(marineClients)
+-- 		local aliensHistoricalAverageSpm = GetScorePerMinuteAverage(alienClients)
+
+-- 		local marinesCertainlyNeedExtraPlayer = (marinesCurrentGameAverageSpm < aliensCurrentGameAverageSpm) and (marinesHistoricalAverageSpm < aliensHistoricalAverageSpm)
+-- 		local aliensCertainlyNeedExtraPlayer = (marinesCurrentGameAverageSpm < aliensCurrentGameAverageSpm) and (marinesHistoricalAverageSpm < aliensHistoricalAverageSpm)
+
+-- 		if marinesCertainlyNeedExtraPlayer then
+-- 			result = kMarineTeamType
+-- 		elseif aliensCertainlyNeedExtraPlayer then
+-- 			result = kAlienTeamType
+-- 		end
+
+-- 	end
+-- 	return result
+-- end
+
 local function BeginBalance()
 	balanceLog = {}
 	SendNextPlayer()
