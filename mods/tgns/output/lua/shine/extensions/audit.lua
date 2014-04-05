@@ -12,7 +12,7 @@ end
 
 local function audit(statementId, data, callback)
 	local updateUrl = string.format("%s&v=%s&g=%s&s=%s&n=%s", TGNS.Config.AuditEndpointBaseUrl, TGNS.UrlEncode(json.encode(data)), TGNS.UrlEncode(Shine.GetGamemode()), statementId, TGNS.UrlEncode(TGNS.GetSimpleServerName()))
-	TGNS.DebugPrint(string.format("Auditing URL: %s", updateUrl))
+	-- TGNS.DebugPrint(string.format("Auditing URL: %s", updateUrl))
 	TGNS.GetHttpAsync(updateUrl, callback)
 end
 
