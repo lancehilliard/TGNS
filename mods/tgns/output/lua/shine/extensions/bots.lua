@@ -163,7 +163,9 @@ function Plugin:CreateCommands()
 					TGNS.ExecuteServerCommand(command)
 				end)
 			else
-				removeBots(players, math.abs(countModifier))
+				local numberOfBotsToRemove = math.abs(countModifier)
+				numberOfBotsToRemove = numberOfBotsToRemove < getTotalNumberOfBots() and numberOfBotsToRemove or getTotalNumberOfBots() - 1
+				removeBots(players, numberOfBotsToRemove)
 			end
 		end
 	end)
