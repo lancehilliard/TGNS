@@ -665,6 +665,18 @@ function Plugin:Initialise()
 		end
 		return result
 	end)
+
+	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
+		if captainsModeEnabled then
+			local chairLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kMarineTeamType)):GetLocationName()
+			local hiveLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kAlienTeamType)):GetLocationName()
+			local spawnSelectionOverrides = {}
+			local spawnSelectionOverride = {chairLocationName, hiveLocationName}
+			table.insert(spawnSelectionOverrides, spawnSelectionOverride)
+			Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverrides)
+		end
+	end)
+
     return true
 end
 
