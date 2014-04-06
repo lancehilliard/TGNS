@@ -19,6 +19,7 @@ local automaticVoteAllowAction = function()
 end
 local MAX_NON_CAPTAIN_PLAYERS = 14
 local lastVoiceWarningTimes = {}
+local plans = {}
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -85,7 +86,6 @@ local function warnOfPendingCaptainsGameStart()
 				end
 				TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
 			else
-				--message = "Planning time expired. Game is force-starting now."
 				message = "Planning time expired.\nGame is force-starting now."
 				duration = 7
 				startGame()
@@ -104,7 +104,7 @@ local function setTimeAtWhichToForceRoundStart()
 end
 
 local function showRoster(clients, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText)
-	local columnsY = titleY + 0.03
+	local columnsY = titleY + 0.05
 	TGNS.SortAscending(clients, TGNS.GetClientId)
 	local names = TGNS.Select(clients, function(c) return TGNS.Truncate(TGNS.GetClientName(c), 16) end)
 	local column1Names = {}
@@ -130,12 +130,19 @@ end
 
 local function showPickables()
 	if not TGNS.IsGameInProgress() then
-		local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 		if captainsGamesFinished == 0 then
 			local readyRoomClients = TGNS.GetReadyRoomClients()
+			local firstCaptainName = (#captainClients > 0 and Shine:IsValidClient(captainClients[1])) and TGNS.GetClientName(captainClients[1]) or nil
+			local secondCaptainName = (#captainClients > 1 and Shine:IsValidClient(captainClients[2])) and TGNS.GetClientName(captainClients[2]) or nil
+			if firstCaptainName and secondCaptainName then
+				TGNS.DoFor(readyRoomClients, function(c)
+					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team Choice\n%s: Player Choice", firstCaptainName, secondCaptainName), 3, 0, 255, 0, 0, 2, 0))
+				end)
+			end
+			local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
-			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.17, "Opted In")
-			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.5, "Not Opted In")
+			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.25, "Opted In")
+			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.55, "Not Opted In")
 			TGNS.ScheduleAction(1, showPickables)
 		end
 	end
@@ -155,9 +162,6 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	end)
 	TGNS.ScheduleAction(0, function()
 		md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
-	end)
-	TGNS.ScheduleAction(3, function()
-		md:ToAllNotifyInfo(string.format("%s: Player Choice! %s: Team Choice!", TGNS.GetClientName(captainClients[1]), TGNS.GetClientName(captainClients[2])))
 	end)
 	setCaptainsGameConfig()
 	TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
@@ -355,6 +359,24 @@ function Plugin:EndGame(gamerules, winningTeam)
 	end)
 end
 
+local function displayPlansToAll()
+	TGNS.DoFor(TGNS.GetPlayerList(), function(targetPlayer)
+		local targetPlayerIsReadyRoom = TGNS.IsPlayerReadyRoom(targetPlayer)
+		local targetPlayerIsSpectator = TGNS.IsPlayerSpectator(targetPlayer)
+		--Shared.Message(string.format("%s: %s %s", TGNS.GetPlayerName(targetPlayer), targetPlayerIsReadyRoom, targetPlayerIsSpectator))
+		TGNS.DoFor(TGNS.GetPlayerList(), function(sourcePlayer)
+			local planToSend = ""
+			local sourceClient = TGNS.GetClient(sourcePlayer)
+			local playersAreTeammates = TGNS.PlayersAreTeammates(targetPlayer, sourcePlayer)
+			if sourceClient and (playersAreTeammates or targetPlayerIsSpectator) and not targetPlayerIsReadyRoom then
+				planToSend = plans[sourceClient] or ""
+			end
+			--Shared.Message(string.format("-- %s: '%s'", TGNS.GetPlayerName(sourcePlayer), planToSend))
+			TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.PLAYER_NOTE, {c=sourcePlayer:GetClientIndex(), n=TGNS.Truncate(planToSend, 8)})
+		end)
+	end)
+end
+
 function Plugin:CreateCommands()
 	local captainsCommand = self:BindCommand("sh_captains", "captains", function(client, captain1Predicate, captain2Predicate)
 		local player = TGNS.GetPlayer(client)
@@ -394,6 +416,26 @@ function Plugin:CreateCommands()
 	captainsCommand:AddParam{ Type = "string", Optional = true }
 	captainsCommand:AddParam{ Type = "string", Optional = true }
 	captainsCommand:Help("<captain1player> <captain2player> Designate two captains and activate Captains Game.")
+
+	local planCommand = self:BindCommand("sh_plan", "plan", function(client, plan)
+		local player = TGNS.GetPlayer(client)
+		if captainsModeEnabled and captainsGamesFinished < 2 then
+			if TGNS.PlayerIsOnPlayingTeam(player) then
+				if not TGNS.IsGameInProgress() then
+					plans[client] = plan
+					displayPlansToAll()
+				else
+					md:ToPlayerNotifyError(player, "Planning notes are not displayed during gameplay.")
+				end
+			else
+				md:ToPlayerNotifyError(player, "You must be on a team to plan.")
+			end
+		else
+			md:ToPlayerNotifyError(player, "No Captains Game is being planned or played now.")
+		end
+	end, true)
+	planCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+	planCommand:Help("<plan> Announce your Captains Game plan.")
 
 	local pickCommand = self:BindCommand( "sh_pick", "pick", function(client, playerPredicate, teamNumberCandidate)
 		local player = TGNS.GetPlayer(client)
@@ -621,6 +663,10 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			md:ToPlayerNotifyInfo(player, getCaptainsGameStateDescription())
 		end
     end
+    if captainsModeEnabled and not TGNS.IsGameInProgress() then
+    	plans[client] = nil
+	    displayPlansToAll()
+    end
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -666,6 +712,8 @@ function Plugin:Initialise()
 			local spawnSelectionOverride = {chairLocationName, hiveLocationName}
 			table.insert(spawnSelectionOverrides, spawnSelectionOverride)
 			Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverrides)
+			plans = {}
+			displayPlansToAll()
 		end
 	end)
 
