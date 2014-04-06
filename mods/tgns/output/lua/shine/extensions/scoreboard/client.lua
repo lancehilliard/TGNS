@@ -14,6 +14,7 @@ local pings = {}
 local showCustomNumbersColumn = true
 local showOptionals = false
 local locationNames = {}
+local hasJetPacks = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -95,6 +96,8 @@ function Plugin:Initialise()
 
 	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
 	        	player["Status"]:SetText("Spectator")
+	        elseif teamNumber == 1 and (Client.GetLocalClientTeamNumber() == 1 or Client.GetLocalClientTeamNumber() == 3) and hasJetPacks[clientIndex] and playerRecord.Status ~= "Exo" then
+	        	player["Status"]:SetText(string.format("%s/JP", playerRecord.Status == "Flamethrower" and "Flame" or playerRecord.Status))
 	        end
 
 	        -- if not playerIsBot then
@@ -255,10 +258,21 @@ function Plugin:Initialise()
 	end)
 
 
-	local originalCHUDGUI_DeathStatsUpdate = CHUDGUI_DeathStats.Update
-	CHUDGUI_DeathStats.Update = function(self, deltaTime) end
-	local originalShowClientStats = ShowClientStats
-	ShowClientStats = function(endRound) end
+	if CHUDGUI_DeathStats then
+		local originalCHUDGUI_DeathStatsUpdate = CHUDGUI_DeathStats.Update
+		CHUDGUI_DeathStats.Update = function(self, deltaTime) end
+	end
+	if ShowClientStats then
+		local originalShowClientStats = ShowClientStats
+		ShowClientStats = function(endRound) end
+	end
+
+	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK, function(message)
+		hasJetPacks[message.c] = message.h
+	end)
+	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK_RESET, function(message)
+		hasJetPacks = {}
+	end)
 
 	return true
 end

@@ -16,6 +16,8 @@ Plugin.BADGE_QUERY_ALLOWED = "scoreboard_BADGE_QUERY_ALLOWED"
 Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN = "scoreboard_TOGGLE_CUSTOM_NUMBERS_COLUMN"
 Plugin.TOGGLE_OPTIONALS = "scoreboard_TOGGLE_OPTIONALS"
 Plugin.LOCATION_CHANGED = "scoreboard_LOCATION_CHANGED"
+Plugin.HAS_JETPACK = "scoreboard_HAS_JETPACK"
+Plugin.HAS_JETPACK_RESET = "scoreboard_HAS_JETPACK_RESET"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -31,6 +33,8 @@ TGNS.RegisterNetworkMessage(Plugin.BADGE_QUERY_ALLOWED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.TOGGLE_OPTIONALS, {t="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.LOCATION_CHANGED, {c="integer", n="string(10)"})
+TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK, {c="integer", h="boolean"})
+TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK_RESET, {})
 
 function Plugin:Initialise()
 	self.Enabled = true

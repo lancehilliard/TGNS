@@ -103,6 +103,31 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 	self:AnnouncePlayerPrefix(player)
 end
 
+function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
+	if victimEntity and victimEntity:isa("JetpackMarine") then
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK, {c=victimEntity:GetClientIndex(),h=false})
+		end)
+	end
+end
+
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	if newTeamNumber == kMarineTeamType then
+		local updateJetpackStatus = function(p)
+			TGNS.SendNetworkMessageToPlayer(player, self.HAS_JETPACK, {c=p:GetClientIndex(),h=p:isa("JetpackMarine")})
+		end
+		local playerList = TGNS.GetPlayerList()
+		TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
+		TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
+	end
+end
+
+function Plugin:EndGame(gamerules, winningTeam)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK_RESET, {})
+	end)
+end
+
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
@@ -273,16 +298,28 @@ function Plugin:Initialise()
 		local isLookingUp = not isLookingDown
 		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
 	end)
- 	TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
-		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-			local locationNameToSend = (TGNS.IsPlayerSpectator(p) or TGNS.PlayersAreTeammates(player, p)) and TGNS.Truncate(locationName, 4) or ""
-			TGNS.SendNetworkMessageToPlayer(p, self.LOCATION_CHANGED, {c=player:GetClientIndex(), n=locationNameToSend})
-		end)
- 	end)
+ 	-- TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
+		-- TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		-- 	local locationNameToSend = (TGNS.IsPlayerSpectator(p) or TGNS.PlayersAreTeammates(player, p)) and TGNS.Truncate(locationName, 4) or ""
+		-- 	TGNS.SendNetworkMessageToPlayer(p, self.LOCATION_CHANGED, {c=player:GetClientIndex(), n=locationNameToSend})
+		-- end)
+ 	-- end)
  	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)
  		local md = TGNSMessageDisplayer.Create()
  		md:ToAllConsole(string.format("Gametime: %s", string.DigitalTime(gameDurationInSeconds)))
  	end)
+
+
+ 	originalMarineGiveJetpack = Marine.GiveJetpack
+ 	Marine.GiveJetpack = function(marineSelf)
+ 		originalMarineGiveJetpack(marineSelf)
+ 		local updateJetpackStatus = function(p)
+			TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK, {c=marineSelf:GetClientIndex(),h=true})
+		end
+		local playerList = TGNS.GetPlayerList()
+		TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
+		TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
+ 	end
 	return true
 end
 
