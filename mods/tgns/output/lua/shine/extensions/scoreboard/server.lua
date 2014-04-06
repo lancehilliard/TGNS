@@ -301,7 +301,7 @@ function Plugin:Initialise()
  	-- TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
 		-- TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		-- 	local locationNameToSend = (TGNS.IsPlayerSpectator(p) or TGNS.PlayersAreTeammates(player, p)) and TGNS.Truncate(locationName, 4) or ""
-		-- 	TGNS.SendNetworkMessageToPlayer(p, self.LOCATION_CHANGED, {c=player:GetClientIndex(), n=locationNameToSend})
+		-- 	TGNS.SendNetworkMessageToPlayer(p, self.PLAYER_NOTE, {c=player:GetClientIndex(), n=locationNameToSend})
 		-- end)
  	-- end)
  	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)

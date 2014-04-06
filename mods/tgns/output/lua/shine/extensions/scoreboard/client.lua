@@ -13,7 +13,7 @@ local lastUpdatedPingsWhen = {}
 local pings = {}
 local showCustomNumbersColumn = true
 local showOptionals = false
-local locationNames = {}
+local notes = {}
 local hasJetPacks = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
@@ -85,12 +85,12 @@ function Plugin:Initialise()
 	        	playerApproveStatusItem:SetColor(color)
 	        end
 
-	        local playerLocationNameItem = player["PlayerLocationNameItem"]
-	        if playerLocationNameItem then
-	        	local playerLocationNameItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or PlayerUI_GetIsSpecating())
-	        	playerLocationNameItem:SetIsVisible(playerLocationNameItemShouldDisplay)
-	        	playerLocationNameItem:SetText(string.format("%s", locationNames[clientIndex] and locationNames[clientIndex] or ""))
-	        	playerLocationNameItem:SetColor(color)
+	        local playerNoteItem = player["PlayerNoteItem"]
+	        if playerNoteItem then
+	        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or PlayerUI_GetIsSpecating())
+	        	playerNoteItem:SetIsVisible(playerNoteItemShouldDisplay)
+	        	playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
+	        	playerNoteItem:SetColor(color)
 	        end
 
 
@@ -166,18 +166,18 @@ function Plugin:Initialise()
 			output.PlayerApproveStatusItem = playerApproveStatusItem
 			output.Background:AddChild(playerApproveStatusItem)
 		end
-		if not output.PlayerLocationNameItem then
-			local playerLocationNameItem = GUIManager:CreateTextItem()
-			playerLocationNameItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-			playerLocationNameItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			playerLocationNameItem:SetTextAlignmentX(GUIItem.Align_Max)
-			playerLocationNameItem:SetTextAlignmentY(GUIItem.Align_Min)
-			local playerLocationNameItemPosition = output.Status:GetPosition()
-		    playerLocationNameItemPosition.x = playerLocationNameItemPosition.x - 45
-		    playerLocationNameItemPosition.y = playerLocationNameItemPosition.y + 8
-			playerLocationNameItem:SetPosition(playerLocationNameItemPosition)
-			output.PlayerLocationNameItem = playerLocationNameItem
-			output.Background:AddChild(playerLocationNameItem)
+		if not output.PlayerNoteItem then
+			local playerNoteItem = GUIManager:CreateTextItem()
+			playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+			playerNoteItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+			playerNoteItem:SetTextAlignmentX(GUIItem.Align_Max)
+			playerNoteItem:SetTextAlignmentY(GUIItem.Align_Min)
+			local playerNoteItemPosition = output.Status:GetPosition()
+		    playerNoteItemPosition.x = playerNoteItemPosition.x - 45
+		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
+			playerNoteItem:SetPosition(playerNoteItemPosition)
+			output.PlayerNoteItem = playerNoteItem
+			output.Background:AddChild(playerNoteItem)
 		end
 
 
@@ -251,10 +251,10 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
 		showOptionals = message.t
 	end)
-	TGNS.HookNetworkMessage(Plugin.LOCATION_CHANGED, function(message)
+	TGNS.HookNetworkMessage(Plugin.PLAYER_NOTE, function(message)
 		local clientIndex = message.c
-		local locationName = message.n
-		locationNames[clientIndex] = locationName
+		local note = message.n
+		notes[clientIndex] = note
 	end)
 
 
