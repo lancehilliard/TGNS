@@ -311,12 +311,6 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	end
 end
 
-function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
-	if BalanceStartedRecently() then
-		TGNS.UpdateAllScoreboards()
-	end
-end
-
 local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
 	local steamId = TGNS.GetClientSteamId(client)
 	totalGamesPlayedCache[steamId] = totalGamesPlayed

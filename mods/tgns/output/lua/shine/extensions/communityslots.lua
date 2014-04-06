@@ -584,7 +584,6 @@ function Plugin:Initialise()
     TGNS.RegisterEventHook("TotalPlayedGamesCountUpdated", function(client, totalGamesPlayedCount)
         if not TGNS.ClientIsInGroup(client, "primerwithgames_group") and TGNS.HasClientSignedPrimerWithGames(client) then
             TGNS.AddTempGroup(client, "primerwithgames_group")
-            TGNS.UpdateAllScoreboards()
         end
     end)
     TGNS.ScheduleActionInterval(15, function()

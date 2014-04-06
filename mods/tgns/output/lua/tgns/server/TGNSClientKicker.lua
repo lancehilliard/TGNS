@@ -54,9 +54,7 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 					end
 				end
 				TGNS.DisconnectClient(client, reason)
-				TGNS.UpdateAllScoreboards()
 			end)
-			TGNS.UpdateAllScoreboards()
 		else
 			TGNS.ScheduleAction(5, function()
 				if Shine:IsValidClient(client) then

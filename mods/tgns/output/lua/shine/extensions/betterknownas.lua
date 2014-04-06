@@ -172,10 +172,6 @@ function Plugin:GetSteamProfileUrl(client)
 	return result
 end
 
-function Plugin:ClientConfirmConnect(client)
-	TGNS.UpdateAllScoreboards()
-end
-
 function Plugin:CreateCommands()
 	local whoisCommand = self:BindCommand( "sh_whois", "whois", function(client, playerPredicate)
 		local md = TGNSMessageDisplayer.Create("WHOIS")

@@ -253,7 +253,6 @@ local function addReadyPlayerClient(client)
 			end
 		end
 	end
-	TGNS.UpdateAllScoreboards()
 end
 
 local function addReadyCaptainClient(client)
@@ -622,7 +621,6 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			md:ToPlayerNotifyInfo(player, getCaptainsGameStateDescription())
 		end
     end
-    TGNS.UpdateAllScoreboards()
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -637,12 +635,6 @@ function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
 	self:CreateCommands()
-
-	-- TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
-	-- 	if captainsModeEnabled and not TGNS.IsGameInProgress() then
-	-- 		TGNS.UpdateAllScoreboards()
-	-- 	end
-	-- end)
 
 	mayVoteYet = false
 	TGNS.ScheduleAction(115, function() automaticVoteAllowAction() end)

@@ -1091,16 +1091,6 @@ function TGNS.GetLastMatchingClient(playerList, predicate)
 	return result
 end
 
-function TGNS.AnnouncePlayerAsHavingNewScoreboardData(player)
-	if player.SetScoreboardChanged then
-		player:SetScoreboardChanged(true)
-	end
-end
-
-function TGNS.UpdateAllScoreboards()
-	TGNS.DoFor(TGNS.GetPlayerList(), TGNS.AnnouncePlayerAsHavingNewScoreboardData)
-end
-
 function TGNS.GetTeamClients(teamNumber, playerList)
 	local predicate = function(client, player) return player:GetTeamNumber() == teamNumber end
 	local result = TGNS.GetMatchingClients(playerList, predicate)

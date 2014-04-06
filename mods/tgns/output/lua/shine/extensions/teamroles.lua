@@ -102,7 +102,6 @@ local function AddToClient(client, role)
 	local player = TGNS.GetPlayer(client)
 	md:ToPlayerNotifyInfo(player, string.format("You are a %s. Apply exemplarily.", role.displayName))
 	md:ToPlayerNotifyInfo(player, role.chargeStatement)
-	TGNS.UpdateAllScoreboards()
 end
 
 local function RemoveFromClient(client, role)
@@ -110,7 +109,6 @@ local function RemoveFromClient(client, role)
 		TGNS.PlayerAction(client, function(p) md:ToPlayerNotifyInfo(p, string.format("You are no longer a %s.", role.displayName)) end)
 	end
 	TGNS.RemoveTempGroup(client, role.groupName)
-	TGNS.UpdateAllScoreboards()
 end
 
 local function EnsureAmongPlayers(players, role)
