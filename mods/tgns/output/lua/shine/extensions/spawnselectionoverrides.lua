@@ -1,10 +1,15 @@
 local md
 local originalResetGame
 local originalSpawnSelectionOverrides
+local forcedSpawnSelectionOverrides
 
 local Plugin = {}
 Plugin.HasConfig = true
 Plugin.ConfigName = "spawnselectionoverrides.json"
+
+function Plugin:ForceOverrides(spawnSelectionOverrides)
+	forcedSpawnSelectionOverrides = spawnSelectionOverrides
+end
 
 function Plugin:Initialise()
     self.Enabled = true
@@ -14,7 +19,7 @@ function Plugin:Initialise()
 		local success, result = xpcall(function()
 			if self.Config.enableForBuildNumber == Shared.GetBuildNumber() then
 				if #TGNS.GetPlayerList() > 0 then
-				    local spawnSelections = self.Config.spawnSelections[TGNS.GetCurrentMapName()]
+				    local spawnSelections = forcedSpawnSelectionOverrides or self.Config.spawnSelections[TGNS.GetCurrentMapName()]
 					if spawnSelections then
 						local spawnSelectionOverrides = {}
 						TGNS.DoFor(spawnSelections, function(s)
@@ -35,7 +40,7 @@ function Plugin:Initialise()
 						end
 						if #spawnSelectionOverrides >= 1 then
 							Server.spawnSelectionOverrides = spawnSelectionOverrides
-							if #spawnSelectionOverrides == 1 then
+							if #spawnSelectionOverrides == 1 and not forcedSpawnSelectionOverrides then
 								md:ToAdminNotifyInfo(string.format("NOTICE: %s only has 1 usable spawnSelectionOverride.", TGNS.GetCurrentMapName()))
 							end
 						else
