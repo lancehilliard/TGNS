@@ -325,8 +325,7 @@ function Plugin:ClientConfirmConnect(client)
     if not TGNS.GetIsClientVirtual(client) then
         TGNS.ScheduleAction(2, function()
             if Shine:IsValidClient(client) then
-                local player = TGNS.GetPlayer(client)
-                tgnsMd:ToPlayerNotifyInfo(player, chatMessage)
+                tgnsMd:ToClientConsole(client, chatMessage)
             end
         end)
     end
@@ -334,8 +333,7 @@ function Plugin:ClientConfirmConnect(client)
     if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
         TGNS.ScheduleAction(1, function()
             if Shine:IsValidClient(client) then
-                local player = TGNS.GetPlayer(client)
-                tgnsMd:ToPlayerNotifyInfo(player, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
+                tgnsMd:ToClientConsole(client, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
             end
         end)
     end
@@ -397,8 +395,8 @@ function Plugin:CreateCommands()
                 fullSpecSteamIds = fullSpecData.enrolled
                 fullSpecDataRepository.Save(fullSpecData, nil, function(saveResponse)
                     if saveResponse.success then
-                        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
-                        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Execute the command again to toggle. Help: M > Info > sh_fullspec")
+                        tgnsMd:ToClientConsole(client, string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
+                        tgnsMd:ToClientConsole(client, "Execute the command again to toggle. Help: M > Info > sh_fullspec")
                     else
                         tgnsMd:ToPlayerNotifyError("Unable to save sh_fullspec data.")
                     end
@@ -408,12 +406,11 @@ function Plugin:CreateCommands()
             end
         end)
     end, true)
+    fullSpecCommand:Help("Toggle your sh_fullspec. Help: M > Info > sh_fullspec")
 
-    local fullSpecCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
+    local fullSpecRefreshCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
         refreshFullSpecData()
     end)
-
-    fullSpecCommand:Help("Toggle your sh_fullspec. Help: M > Info > sh_fullspec")
 end
 
 //local function PrintPlayerSlotsStatuses(client)
@@ -500,7 +497,7 @@ local function sweep()
                     if secondsRemaining > 0 then
                         // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
                         if secondsRemaining < 40 then
-                            tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
+                            tgnsMd:ToPlayerNotifyError(TGNS.GetPlayer(c), string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
                             AnnounceOtherServerOptionsToBumpedClient(c)
                         end
                     else
