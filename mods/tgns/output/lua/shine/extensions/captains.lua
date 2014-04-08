@@ -158,7 +158,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	captainsGamesFinished = 0
 	TGNS.DoFor(captainClients, function(c)
 		TGNS.AddTempGroup(c, "captains_group")
-		TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
+		-- TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
 	end)
 	TGNS.ScheduleAction(0, function()
 		md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
