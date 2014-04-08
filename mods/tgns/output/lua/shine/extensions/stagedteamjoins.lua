@@ -20,15 +20,15 @@ end
 
 function Plugin:EndGame(gamerules, winningTeam)
 	allMayJoinAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_ALLJOIN
-	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 2.5, function()
-		if atLeastOneSupportingMemberIsPresent() then
-			if not Shine.Plugins.mapvote or not Shine.Plugins.mapvote:VoteStarted() then
-				if not Shine.Plugins.captains or not Shine.Plugins.captains:IsCaptainsModeEnabled() then
-					md:ToAllNotifyInfo("Supporting Members get just a few seconds to join their team of choice.")
-				end
-			end
-		end
-	end)
+	-- TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 2.5, function()
+	-- 	if atLeastOneSupportingMemberIsPresent() then
+	-- 		if not Shine.Plugins.mapvote or not Shine.Plugins.mapvote:VoteStarted() then
+	-- 			if not Shine.Plugins.captains or not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+	-- 				md:ToAllNotifyInfo("Supporting Members get just a few seconds to join their team of choice.")
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end)
 end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
