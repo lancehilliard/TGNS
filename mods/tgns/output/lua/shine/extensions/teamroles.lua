@@ -12,7 +12,7 @@ local function getPdr(persistedDataName)
 	return result
 end
 
-local function CreateRole(displayName, candidatesDescription, groupName, messagePrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery, chargeStatement)
+local function CreateRole(displayName, candidatesDescription, groupName, messagePrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery)
 	local result = {}
 	pdrCache[persistedDataName] = {}
 	pbrCache[persistedDataName] = {}
@@ -24,7 +24,6 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 	result.groupName = groupName
 	result.messagePrefix = messagePrefix
 	result.optInConsoleCommandName = optInConsoleCommandName
-	result.chargeStatement = chargeStatement
 	result.IsClientOneOf = isClientOneOfQuery
 	result.IsClientBlockerOf = isClientBlockerQuery
 	function result:IsTeamEligible(teamPlayers) return TGNS.GetLastMatchingClient(teamPlayers, self.IsClientBlockerOf) == nil end
@@ -64,8 +63,7 @@ local roles = {
 	//	, "tempadmin"
 	//	, TGNS.IsClientTempAdmin
 	//	, TGNS.IsClientAdmin
-	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimerWithGames(client) end
-	//  , "As Temp Admin, your responsibility now is to enforce the rules."),
+	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimerWithGames(client) end),
 	CreateRole("Guardian"
 		, "TGNS Primer signers who've played >=40 full rounds on this server"
 		, "guardian_group"
@@ -77,8 +75,7 @@ local roles = {
 		, function(client)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
 			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
-		end
-		, "As Guardian, your responsibility now is to enforce the rules.")
+		end)
 }
 
 
@@ -101,7 +98,6 @@ local function AddToClient(client, role)
 	TGNS.AddTempGroup(client, role.groupName)
 	local player = TGNS.GetPlayer(client)
 	md:ToPlayerNotifyInfo(player, string.format("You are a %s. Apply exemplarily.", role.displayName))
-	md:ToPlayerNotifyInfo(player, role.chargeStatement)
 end
 
 local function RemoveFromClient(client, role)
