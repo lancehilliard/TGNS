@@ -75,6 +75,25 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	end
 end
 
+function Plugin:ClientConfirmConnect(client)
+	if TGNS.IsClientStranger(client) then
+		TGNS.ScheduleAction(300, function()
+			if Shine:IsValidClient(client) then
+				TGNS.ScheduleActionInterval(600, function()
+					if Shine:IsValidClient(client) then
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Teamwork, communication, and hearing voicecomm are required here.")
+					end
+				end)
+			end
+		end)
+		TGNS.ScheduleActionInterval(600, function()
+			if Shine:IsValidClient(client) then
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Hit 'M > Info > TGNS Primer' to read our rules. Enjoy your stay!")
+			end
+		end)
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
     return true
