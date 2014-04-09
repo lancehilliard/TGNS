@@ -18,6 +18,7 @@ Plugin.TOGGLE_OPTIONALS = "scoreboard_TOGGLE_OPTIONALS"
 Plugin.PLAYER_NOTE = "scoreboard_PLAYER_NOTE"
 Plugin.HAS_JETPACK = "scoreboard_HAS_JETPACK"
 Plugin.HAS_JETPACK_RESET = "scoreboard_HAS_JETPACK_RESET"
+Plugin.SHOW_TEAM_MESSAGES = "scoreboard_SHOW_TEAM_MESSAGES"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -35,6 +36,7 @@ TGNS.RegisterNetworkMessage(Plugin.TOGGLE_OPTIONALS, {t="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.PLAYER_NOTE, {c="integer", n="string(10)"})
 TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK, {c="integer", h="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK_RESET, {})
+TGNS.RegisterNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, {s="boolean"})
 
 function Plugin:Initialise()
 	self.Enabled = true

@@ -15,6 +15,7 @@ local showCustomNumbersColumn = true
 local showOptionals = false
 local notes = {}
 local hasJetPacks = {}
+local showTeamMessages = true
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -273,6 +274,25 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK_RESET, function(message)
 		hasJetPacks = {}
 	end)
+	TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
+		showTeamMessages = message.s
+	end)
+
+	local originalGUIMarineTeamMessageSetTeamMessage = GUIMarineTeamMessage.SetTeamMessage
+	GUIMarineTeamMessage.SetTeamMessage = function(self, message)
+		if showTeamMessages then
+			originalGUIMarineTeamMessageSetTeamMessage(self, message)
+		end
+		-- Shared.Message("TEAM MESSAGE: " .. tostring(message))
+	end
+
+	local originalGUIAlienTeamMessageSetTeamMessage = GUIAlienTeamMessage.SetTeamMessage
+	GUIAlienTeamMessage.SetTeamMessage = function(self, message)
+		if showTeamMessages then
+			originalGUIAlienTeamMessageSetTeamMessage(self, message)
+		end
+		-- Shared.Message("TEAM MESSAGE: " .. tostring(message))
+	end
 
 	return true
 end
