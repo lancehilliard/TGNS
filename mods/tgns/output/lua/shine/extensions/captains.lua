@@ -20,6 +20,7 @@ end
 local MAX_NON_CAPTAIN_PLAYERS = 14
 local lastVoiceWarningTimes = {}
 local plans = {}
+local highVolumeMessagesLastShownTime
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -196,7 +197,10 @@ local function updateCaptainsReadyProgress(readyClient)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
 		local message = string.format("You're marked as ready to play%s a Captains Game.", TGNS.Has(playingReadyCaptainClients, readyClient) and " (and lead)" or "")
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
-		md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
+		if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 then
+			md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
+			highVolumeMessagesLastShownTime = Shared.GetTime()
+		end
 	else
 		if not captainsModeEnabled then
 			enableCaptainsMode(string.format("%s and %s", TGNS.GetClientName(playingReadyCaptainClients[1]), TGNS.GetClientName(playingReadyCaptainClients[2])), playingReadyCaptainClients[1], playingReadyCaptainClients[2])
@@ -235,7 +239,7 @@ local function addReadyPlayerClient(client)
 	else
 		local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
 		if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
-			table.insert(readyPlayerClients, client)
+			table.insertunique(readyPlayerClients, client)
 			TGNS.RemoveAllMatching(readyCaptainClients, client)
 			updateCaptainsReadyProgress(client)
 		else
@@ -262,7 +266,7 @@ end
 local function addReadyCaptainClient(client)
 	readyCaptainClients = readyCaptainClients or {}
 	if not TGNS.Has(readyCaptainClients, client) then
-		table.insert(readyCaptainClients, client)
+		table.insertunique(readyCaptainClients, client)
 		TGNS.RemoveAllMatching(readyPlayerClients, client)
 	end
 	updateCaptainsReadyProgress(client)
@@ -611,7 +615,7 @@ function Plugin:PlayerSay(client, networkMessage)
 							end
 						end)
 						if not gameStarted then
-							md:ToAllNotifyInfo("Both teams are ready? Captains: \"unready\" or prepare to play!")
+							md:ToAllNotifyInfo("Are both teams ready? Captains: \"unready\" or prepare to play!")
 						end
 					end
 				end
