@@ -8,6 +8,13 @@ TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 20
 
 TGNS.ENDGAME_TIME_TO_READYROOM = 8
 
+TGNS.MARINE_COLOR_R = 0.302
+TGNS.MARINE_COLOR_G = 219.045
+TGNS.MARINE_COLOR_B = 255
+TGNS.ALIEN_COLOR_R = 255
+TGNS.ALIEN_COLOR_G = 201.96
+TGNS.ALIEN_COLOR_B = 57.885
+
 function TGNS.GetRandomizedElements(elements)
 	local result = {}
 	TGNS.DoFor(elements, function(e) table.insert(result, e) end)
