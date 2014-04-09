@@ -9,8 +9,18 @@ local md
 local lastVoteStartTimes = {}
 local numberOfSecondsToDeductFromCountdownTimeRemaining
 local mayVoteAt = 0
+local lastNoAttackNoticeTimes = {}
+local lastBannerDisplayCountdownRemaining
 
 local originalGetCanAttack
+
+local function removeBanners()
+	Shine:RemoveText(nil, { ID = 70 } )
+	Shine:RemoveText(nil, { ID = 71 } )
+	Shine:RemoveText(nil, { ID = 72 } )
+	Shine:RemoveText(nil, { ID = 73 } )
+	Shine:RemoveText(nil, { ID = 74 } )
+end
 
 local function SetupWinOrLoseVars()
 	for i = 1, kWinOrLoseTeamCount do
@@ -36,39 +46,46 @@ local function getNumberOfRequiredVotes(votersCount)
 	return result
 end
 
-local function onVoteSuccessful(teamNumber, players)
+-- local function stopTeamPlayersFromAttacking(teamNumber)
+-- 	TGNS.DoFor(TGNS.GetPlayers(TGNS.GetTeamClients(teamNumber)), function(p)
+-- 		pcall(function()
+-- 			p:SelectNextWeapon()
+-- 			p:SelectPrevWeapon()
+-- 		end)
+-- 	end)
+-- end
+
+local function onVoteSuccessful(teamNumber)
 	local teamName = TGNS.GetTeamName(teamNumber)
 	local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
 	md:ToAllNotifyInfo(chatMessage)
 
-	TGNS.DoFor(TGNS.GetTeamClients(TGNS.GetOtherPlayingTeamNumber(teamNumber), TGNS.GetPlayerList()), function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage(2389, 0.5, 0.7, string.format("WinOrLose! Kill the %s!", TGNS.GetTeamCommandStructureCommonName(teamNumber)), 10, 255, 0, 0, 1, 3, 0 ) )
-	end)
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
 	numberOfSecondsToDeductFromCountdownTimeRemaining = 4
 	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
-	TGNS.DoFor(players, function(p)
-		pcall(function()
-			p:SelectNextWeapon()
-			p:SelectPrevWeapon()
-		end)
-	end)
+
+	--stopTeamPlayersFromAttacking(teamNumberWhichWillWinIfWinLoseCountdownExpires)
+
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotesAlertTime = 0
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = 0
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes = { }
 	TGNS.ExecuteEventHooks("WinOrLoseCalled", teamNumber)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SHOW_TEAM_MESSAGES, {s=false})
+	end)
 end
 
 local function UpdateWinOrLoseVotes()
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 		if kCountdownTimeRemaining > 0 then
-			if (math.fmod(kCountdownTimeRemaining, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) == 0 or kCountdownTimeRemaining <= 5) then
+			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 5) then
 				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
-				local chatMessage = string.format("%s can't attack. Game ends in %s secs.", teamName, kCountdownTimeRemaining)
+				local chatMessage = string.format("%s can't attack. Game ends in %s seconds.", teamName, kCountdownTimeRemaining)
 				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
+				local bannerLocationName = ""
 				if commandStructureToKeep ~= nil then
 					if teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType then
 						commandStructureToKeep.GetCanBeNanoShieldedOverride = function(self, resultTable)
@@ -80,16 +97,37 @@ local function UpdateWinOrLoseVotes()
 					end
 					local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
 					TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
-					chatMessage = string.format("%s Hurry to %s!", chatMessage, locationNameOfCommandStructureToKeep)
+					bannerLocationName = string.format(" in %s", locationNameOfCommandStructureToKeep)
 				end
-				md:ToAllNotifyInfo(chatMessage)
+
+				local teamNameWhichMustWinOrLose = TGNS.GetTeamName(TGNS.GetOtherPlayingTeamNumber(teamNumberWhichWillWinIfWinLoseCountdownExpires))
+				TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
+					local teamNumber = TGNS.PlayerAction(c, TGNS.GetPlayerTeamNumber)
+					local playerIsMarine = teamNumber == kMarineTeamType
+					local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
+					local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
+					local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+					local winningTeamText = string.format("WinOrLose! Kill the %s%s!", TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
+					local losingTeamText = string.format("Your team has surrendered. %s must WinOrLose!", teamNameWhichMustWinOrLose)
+					local bannerText = teamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires and losingTeamText or winningTeamText
+					Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, 0.2, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
+					Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, 0.24, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
+				end)
+				local spectatorsText = string.format("WinOrLose! %s have %s seconds to kill the %s%s!", teamNameWhichMustWinOrLose, kCountdownTimeRemaining, TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
+				TGNS.DoFor(TGNS.GetSpectatorClients(TGNS.GetPlayerList()), function(c)
+					Shine:SendText(c, Shine.BuildScreenMessage(74, 0.5, 0.85, spectatorsText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, 255, 255, 255, 1, 1, 0))
+				end)
 				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
 					TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				end)
+				lastBannerDisplayCountdownRemaining = kCountdownTimeRemaining
 			end
 			kCountdownTimeRemaining = kCountdownTimeRemaining - 1
 		else
-			md:ToAllNotifyInfo("WinOrLose! On to the next game!")
+			removeBanners()
+			Shine:SendText(nil, Shine.BuildScreenMessage(75, 0.5, 0.2, "WinOrLose, on to the next game!", 7, 255, 255, 255, 1, 3, 0 ) )
+			-- Shine:SendText(nil, Shine.BuildScreenMessage(72, 0.5, 0.24, "", 1, 255, 255, 255, 1, 1, 0))
+			-- Shine:SendText(nil, Shine.BuildScreenMessage(74, 0.5, 0.85, "", 1, 255, 255, 255, 1, 1, 0))
 			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
 			kTimeAtWhichWinOrLoseVoteSucceeded = 0
 		end
@@ -122,7 +160,7 @@ local function UpdateWinOrLoseVotes()
 					end
 				end
 				if totalvotes >= getNumberOfRequiredVotes(#playerRecords) then
-					onVoteSuccessful(i, playerRecords)
+					onVoteSuccessful(i)
 				else
 					local chatMessage
 					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
@@ -165,6 +203,7 @@ local function ClearWinOrLoseVotes()
 	end
 	kTimeAtWhichWinOrLoseVoteSucceeded = 0
 	lastVoteStartTimes = {}
+	lastBannerDisplayCountdownRemaining = nil
 end
 
 local function OnCommandWinOrLose(client)
@@ -228,17 +267,38 @@ function Plugin:CreateCommands()
 end
 
 function Plugin:CallWinOrLose(teamNumber)
-	onVoteSuccessful(teamNumber, TGNS.GetPlayers(TGNS.GetTeamClients(teamNumber)))
+	onVoteSuccessful(teamNumber)
+end
+
+function Plugin:TakeDamage( Ent, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
+	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 and kCountdownTimeRemaining > 0 and Attacker and Attacker:isa("Player") and Attacker:GetTeamNumber() == kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() and Ent and Ent:GetTeamNumber() ~= Attacker:GetTeamNumber() then
+		--Shared.Message("YES WINORLOSE")
+		Damage = 0
+		HealthUsed = 0
+		ArmourUsed = 0
+		local client = TGNS.GetClient(Attacker)
+		if lastNoAttackNoticeTimes[client] == nil or lastNoAttackNoticeTimes[client] < Shared.GetTime() - 1 then
+			local playerIsMarine = Attacker:GetTeamNumber() == kMarineTeamType
+			local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
+			local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+			local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
+			Shine:SendText(client, Shine.BuildScreenMessage(70, 0.5, 0.4, "You cannot do damage.", 6, r, g, b, 1, 3, 0 ) )
+			lastNoAttackNoticeTimes[client] = Shared.GetTime()
+		end
+	else
+		--Shared.Message("NO WINORLOSE")
+	end
+	return Damage, ArmourUsed, HealthUsed
 end
 
 function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("WINORLOSE")
-	originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack", function(self)
-		local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
-		local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam
-		return canAttack
-	end)
+	-- originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack", function(self)
+	-- 	local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
+	-- 	local canAttack = originalGetCanAttack(self) and not winOrLoseChallengeIsInProgressByMyTeam
+	-- 	return canAttack
+	-- end)
 	TGNS.RegisterEventHook("GameStarted", function()
 		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + 5
 	end)
@@ -250,6 +310,10 @@ end
 
 function Plugin:EndGame(gamerules, winningTeam)
 	ClearWinOrLoseVotes()
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SHOW_TEAM_MESSAGES, {s=true})
+	end)
+	removeBanners()
 end
 
 function Plugin:CastVoteByPlayer(gamerules, voteTechId, player)
@@ -269,19 +333,43 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 		if TGNS.EntityIsCommandStructure(victimEntity) and victimEntity:GetTeamNumber() == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 			TGNS.DestroyAllEntities("CommandStructure", victimEntity:GetTeamNumber())
 		else
-			if kCountdownTimeRemaining < 57 then
+			if kCountdownTimeRemaining > 0 and victimEntity and victimEntity:isa("Player") and victimEntity:GetTeamNumber() == teamNumberWhichWillWinIfWinLoseCountdownExpires then
+				Shine:SendText(victimEntity, Shine.BuildScreenMessage(70, 0.5, 0.4, "", 6, 255, 255, 255, 1, 3, 0 ) )
+			end
+			if kCountdownTimeRemaining < Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds - 2 then
 				if victimEntity and attackerEntity and victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) and not TGNS.IsPlayerHallucination(victimEntity) then
 					local commandStructureDescription = TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
+					local attackerTeamNumber = TGNS.GetPlayerTeamNumber(attackerEntity)
+					local attackerIsMarine = attackerTeamNumber == kMarineTeamType
+					local attackerRed = attackerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
+					local attackerGreen = attackerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+					local attackerBlue = attackerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
+					local victimTeamNumber = TGNS.GetPlayerTeamNumber(victimEntity)
+					local victimIsMarine = victimTeamNumber == kMarineTeamType
+					local victimRed = victimIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
+					local victimGreen = victimIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+					local victimBlue = victimIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
 					if kCountdownTimeRemaining > 22 then
-						if TGNS.GetPlayerTeamNumber(attackerEntity) ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and TGNS.GetPlayerTeamNumber(victimEntity) == teamNumberWhichWillWinIfWinLoseCountdownExpires then
+						if attackerTeamNumber ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and victimTeamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining + 1
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 8 and 8 or numberOfSecondsToDeductFromCountdownTimeRemaining
 							kCountdownTimeRemaining = kCountdownTimeRemaining - numberOfSecondsToDeductFromCountdownTimeRemaining
-							md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(attackerEntity), string.format("%s killed a player. Timer reduced to %s! Kill the %s!", TGNS.GetPlayerName(attackerEntity), kCountdownTimeRemaining, TGNS.ToUpper(commandStructureDescription)))
-							md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(victimEntity), string.format("%s did not die in vain! Timer reduced!", TGNS.GetPlayerName(victimEntity)))
+							local attackerTeamNumber = TGNS.GetPlayerTeamNumber(attackerEntity)
+							local attackerIsMarine = attackerTeamNumber == kMarineTeamType
+							local attackerRed = attackerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
+							local attackerGreen = attackerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+							local attackerBlue = attackerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
+							TGNS.DoFor(TGNS.GetTeamClients(attackerTeamNumber, TGNS.GetPlayerList()), function(c)
+								Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.4, string.format("%s killed a player. Timer reduced to %s!", TGNS.GetPlayerName(attackerEntity), kCountdownTimeRemaining), 3, attackerRed, attackerGreen, attackerBlue, 1, 2, 0 ) )
+							end)
+							TGNS.DoFor(TGNS.GetTeamClients(victimTeamNumber, TGNS.GetPlayerList()), function(c)
+								Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.7, string.format("%s did not die in vain! Timer reduced!", TGNS.GetPlayerName(victimEntity)), 6, victimRed, victimGreen, victimBlue, 1, 3, 0 ) )
+							end)
 						end
 					else
-						md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(victimEntity), string.format("%s has fallen, yet the %s still stands!", TGNS.GetPlayerName(victimEntity), TGNS.ToLower(commandStructureDescription)))
+						TGNS.DoFor(TGNS.GetTeamClients(victimTeamNumber, TGNS.GetPlayerList()), function(c)
+							Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.7, string.format("%s has fallen, yet the %s still stands!", TGNS.GetPlayerName(victimEntity), TGNS.ToLower(commandStructureDescription)), 6, victimRed, victimGreen, victimBlue, 1, 3, 0 ) )
+						end)
 					end
 				end
 			end
