@@ -106,7 +106,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
 			if #alienHumanClients >= 1 and newTeamNumber ~= kMarineTeamType then
 			--if newTeamNumber ~= kMarineTeamType then
-				md:ToPlayerNotifyInfo(player, "Only one human player is allowed on the bot team.")
+				md:ToPlayerNotifyError(player, "Only one human player is allowed on the bot team.")
 				return false
 			end
 		end
