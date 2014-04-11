@@ -66,7 +66,7 @@ end
 
 function Plugin:EndGame(gamerules, winningTeam)
 	if badgesModIsLoaded then
-		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 48, function()
+		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 51, function()
 			if Shine.Plugins.mapvote:VoteStarted() then
 				TGNS.DoFor(TGNS.GetClientList(), tellMostRecentBadge)
 			end
