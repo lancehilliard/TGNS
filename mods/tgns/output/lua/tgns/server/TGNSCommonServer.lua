@@ -792,7 +792,7 @@ function TGNS.IsTeamNumberSpectator(teamNumber)
 end
 
 function TGNS.IsPlayerSpectator(player)
-	local result = player:isa("Spectator") and TGNS.IsTeamNumberSpectator(player:GetTeamNumber())
+	local result = TGNS.IsTeamNumberSpectator(player:GetTeamNumber()) -- player:isa("Spectator")
 	return result
 end
 
