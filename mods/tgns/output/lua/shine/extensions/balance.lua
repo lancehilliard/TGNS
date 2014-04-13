@@ -11,8 +11,10 @@ local mayBalanceAt = 0
 local FIRSTCLIENT_TIME_BEFORE_BALANCE = 30
 local GAMEEND_TIME_BEFORE_BALANCE = TGNS.ENDGAME_TIME_TO_READYROOM + 10
 local firstClientProcessed = false
-local notedCommanderSteamIds = {}
-local notedPlayerSteamIds = {}
+local commanderSteamIds = {}
+local bestPlayerSteamIds = {}
+local betterPlayerSteamIds = {}
+local goodPlayerSteamIds = {}
 local balanceDataInitializer = function(balance)
 	balance.wins = balance.wins ~= nil and balance.wins or 0
 	balance.losses = balance.losses ~= nil and balance.losses or 0
@@ -20,6 +22,7 @@ local balanceDataInitializer = function(balance)
 	balance.scoresPerMinute = balance.scoresPerMinute ~= nil and balance.scoresPerMinute or {}
 	return balance
 end
+local npdr
 
 local pdr = TGNSPlayerDataRepository.Create("balance", balanceDataInitializer)
 
@@ -159,18 +162,22 @@ local function SendNextPlayer()
 	else
 		sortedPlayersGetter = function(playerList)
 			local result = {}
-			local notedCommanders = TGNS.Where(playerList, function(p) return TGNS.Has(notedCommanderSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
-			local notedPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and TGNS.Has(notedPlayerSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
-			local rookiePlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and not TGNS.Has(notedPlayers, p) and TGNS.PlayerIsRookie(p) end)
-			local nonRookieStrangers = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and not TGNS.Has(notedPlayers, p) and not TGNS.Has(rookiePlayers, p) and TGNS.ClientAction(p, TGNS.IsClientStranger) end)
-			local nonRookieRegulars = TGNS.Where(playerList, function(p) return not TGNS.Has(notedCommanders, p) and not TGNS.Has(notedPlayers, p) and not TGNS.Has(rookiePlayers, p) and not TGNS.Has(nonRookieStrangers, p) end)
+			local commanders = TGNS.Take(TGNS.GetRandomizedElements(TGNS.Where(playerList, function(p) return TGNS.Has(commanderSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)), 2)
+			local bestPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and TGNS.Has(bestPlayerSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
+			local betterPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and TGNS.Has(betterPlayerSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
+			local goodPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and not TGNS.Has(betterPlayers, p) and TGNS.Has(goodPlayerSteamIds, TGNS.GetClientSteamId(TGNS.GetClient(p))) end)
+			local rookiePlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and not TGNS.Has(betterPlayers, p) and not TGNS.Has(goodPlayers, p) and TGNS.PlayerIsRookie(p) end)
+			local nonRookieStrangers = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and not TGNS.Has(betterPlayers, p) and not TGNS.Has(goodPlayers, p) and not TGNS.Has(rookiePlayers, p) and TGNS.ClientAction(p, TGNS.IsClientStranger) end)
+			local nonRookieRegulars = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and not TGNS.Has(betterPlayers, p) and not TGNS.Has(goodPlayers, p) and not TGNS.Has(rookiePlayers, p) and not TGNS.Has(nonRookieStrangers, p) end)
 			local sortAction = math.random() < 0.5 and TGNS.SortDescending or TGNS.SortAscending
-			sortAction(notedCommanders, GetPlayerScorePerMinuteAverage)
-			sortAction(notedPlayers, GetPlayerScorePerMinuteAverage)
+			sortAction(commanders, GetPlayerScorePerMinuteAverage)
+			sortAction(bestPlayers, GetPlayerScorePerMinuteAverage)
+			sortAction(betterPlayers, GetPlayerScorePerMinuteAverage)
+			sortAction(goodPlayers, GetPlayerScorePerMinuteAverage)
 			sortAction(rookiePlayers, GetPlayerScorePerMinuteAverage)
 			sortAction(nonRookieStrangers, GetPlayerScorePerMinuteAverage)
 			sortAction(nonRookieRegulars, GetPlayerScorePerMinuteAverage)
-			local playerGroups = TGNS.GetRandomizedElements({ notedCommanders, notedPlayers, rookiePlayers, nonRookieStrangers, nonRookieRegulars })
+			local playerGroups = TGNS.GetRandomizedElements({ commanders, bestPlayers, betterPlayers, goodPlayers, rookiePlayers, nonRookieStrangers, nonRookieRegulars })
 			local addPlayerToResult = function(p) table.insert(result, p) end
 			TGNS.DoFor(playerGroups, function(g) TGNS.DoFor(g, addPlayerToResult) end)
 			return result
@@ -195,6 +202,9 @@ local function SendNextPlayer()
 			numberOfAliens = numberOfAliens + 1
 		end
 	end)
+
+
+
 	md:ToAdminConsole("Balance finished.")
 	balanceInProgress = false
 	local playerList = TGNS.GetPlayerList()
@@ -343,11 +353,75 @@ function Plugin:ClientConfirmConnect(client)
 	end
 end
 
+local function toggleBucketClient(sourceClient, targetClient, bucketName)
+	TGNS.ScheduleAction(0, function() md:ToClientConsole(sourceClient, "Adjusting buckets. Wait for confirmation message.") end)
+    npdr.Load(nil, function(loadResponse)
+        if loadResponse.success then
+            notedPlayersData = loadResponse.value
+			local targetSteamId = TGNS.GetClientSteamId(targetClient)
+			local targetName = TGNS.GetClientName(targetClient)
+			notedPlayersData[bucketName] = notedPlayersData[bucketName] or {}
+            local playerAlreadyAdded = TGNS.Any(notedPlayersData[bucketName], function(x) return x.id == targetSteamId end)
+            local message
+            if playerAlreadyAdded then
+            	notedPlayersData[bucketName] = TGNS.Where(notedPlayersData[bucketName], function(x) return x.id ~= targetSteamId end)
+	            message = string.format("%s removed from %s bucket.", targetName, bucketName)
+	        else
+	        	table.insert(notedPlayersData[bucketName], {name=targetName,id=targetSteamId})
+	        	message = string.format("%s added to %s bucket.", targetName, bucketName)
+            end
+            npdr.Save(notedPlayersData, nil, function(saveResponse)
+            	if saveResponse.success then
+		            commanderSteamIds = TGNS.Select(notedPlayersData.Commanders, function(x) return x.id end)
+		            bestPlayerSteamIds = TGNS.Select(notedPlayersData.BestPlayers, function(x) return x.id end)
+		            betterPlayerSteamIds = TGNS.Select(notedPlayersData.BetterPlayers, function(x) return x.id end)
+		            goodPlayerSteamIds = TGNS.Select(notedPlayersData.GoodPlayers, function(x) return x.id end)
+            	else
+            		message = "Error saving bucket data."
+            		Shared.Message("balance ERROR: unable to save notedplayers data.")
+            	end
+            	md:ToClientConsole(sourceClient, message)
+            end)
+        else
+        	md:ToClientConsole(sourceClient, "Error accessing bucket data.")
+            Shared.Message("balance ERROR: unable to access notedplayers data.")
+        end
+    end)
+end
+
+local function toggleBucketPlayer(client, playerPredicate, bucketName)
+	if playerPredicate == nil or playerPredicate == "" then
+		md:ToClientConsole(client, "You must specify a player.")
+	else
+		local targetPlayer = TGNS.GetPlayerMatching(playerPredicate, nil)
+		if targetPlayer ~= nil then
+			local targetClient = TGNS.GetClient(targetPlayer)
+			toggleBucketClient(client, targetClient, bucketName)
+		else
+			md:ToClientConsole(client, string.format("'%s' does not uniquely match a player.", playerPredicate))
+		end
+	end
+end
+
 function Plugin:CreateCommands()
-	local balanceCommand = self:BindCommand("sh_balance", "balance", function(client)
-		svBalance(client)
-	end)
+	local balanceCommand = self:BindCommand("sh_balance", "balance", svBalance)
 	balanceCommand:Help("Balance players across teams.")
+
+	local commandersCommand = self:BindCommand("sh_comm", "comm", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "Commanders") end)
+	commandersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+	commandersCommand:Help("<player> Toggle player in Comm bucket")
+
+	local bestPlayersCommand = self:BindCommand("sh_best", "best", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BestPlayers") end)
+	bestPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+	bestPlayersCommand:Help("<player> Toggle player in Best bucket")
+
+	local betterPlayersCommand = self:BindCommand("sh_better", "better", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BetterPlayers") end)
+	betterPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+	betterPlayersCommand:Help("<player> Toggle player in Better bucket")
+
+	local goodPlayersCommand = self:BindCommand("sh_good", "good", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "GoodPlayers") end)
+	goodPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+	goodPlayersCommand:Help("<player> Toggle player in Good bucket")
 end
 
 function Plugin:Initialise()
@@ -379,17 +453,22 @@ function Plugin:Initialise()
 			end)
 		end)
 	end)
+	npdr = TGNSDataRepository.Create("notedplayers", function(data)
+        data.Commanders = data.Commanders or {}
+        data.BestPlayers = data.BestPlayers or {}
+        data.BetterPlayers = data.BetterPlayers or {}
+        data.GoodPlayers = data.GoodPlayers or {}
+        return data
+    end)
+
 	TGNS.ScheduleAction(3, function()
-		local npdr = TGNSDataRepository.Create("notedplayers", function(data)
-	        data.NotedCommanders = data.NotedCommanders or {}
-	        data.NotedPlayers = data.NotedPlayers or {}
-	        return data
-	    end)
 	    npdr.Load(nil, function(loadResponse)
 	        if loadResponse.success then
 	            notedPlayersData = loadResponse.value
-	            notedCommanderSteamIds = TGNS.Select(notedPlayersData.NotedCommanders, function(x) return x.id end)
-	            notedPlayerSteamIds = TGNS.Select(notedPlayersData.NotedPlayers, function(x) return x.id end)
+	            commanderSteamIds = TGNS.Select(notedPlayersData.Commanders, function(x) return x.id end)
+	            bestPlayerSteamIds = TGNS.Select(notedPlayersData.BestPlayers, function(x) return x.id end)
+	            betterPlayerSteamIds = TGNS.Select(notedPlayersData.BetterPlayers, function(x) return x.id end)
+	            goodPlayerSteamIds = TGNS.Select(notedPlayersData.GoodPlayers, function(x) return x.id end)
 	        else
 	            Shared.Message("balance ERROR: unable to access notedplayers data.")
 	        end
