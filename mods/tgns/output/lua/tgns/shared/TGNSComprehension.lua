@@ -27,6 +27,11 @@ function TGNS.SingleOrNil(elements, predicate)
 	return result
 end
 
+function TGNS.Count(elements, predicate)
+	local result = #TGNS.Where(elements, predicate or function() return true end)
+	return result
+end
+
 function TGNS.Skip(elements, count)
 	local result = {}
 	TGNS.DoFor(elements, function(element, i)
