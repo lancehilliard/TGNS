@@ -133,14 +133,35 @@ function TGNS.GetVoteableMapNames()
 	return result
 end
 
-function TGNS.GetMapCycleMapNames()
+function TGNS.SelectMapCycleMapNames(predicate)
 	local result = {}
 	local mapCycle = (MapCycle_GetMapCycle and MapCycle_GetMapCycle()) or TGNSJsonFileTranscoder.DecodeFromFile("config://MapCycle.json")
 	TGNS.DoFor(mapCycle.maps, function(m, i)
-		local mapName = type(m) == "table" and m.map or m
-		table.insert(result, mapName)
+		if predicate == nil or predicate(m) then
+			local mapName = type(m) == "table" and m.map or m
+			table.insert(result, mapName)
+		end
 	end)
 	TGNS.SortAscending(result)
+	return result
+end
+
+function TGNS.GetMapCycleModMapNames()
+	local result = TGNS.SelectMapCycleMapNames(function(m)
+		return m.mods and #m.mods > 0
+	end)
+	return result
+end
+
+function TGNS.GetMapCycleStockMapNames()
+	local result = TGNS.SelectMapCycleMapNames(function(m)
+		return m.mods == nil or #m.mods == 0
+	end)
+	return result
+end
+
+function TGNS.GetMapCycleMapNames()
+	local result = TGNS.SelectMapCycleMapNames()
 	return result
 end
 
@@ -1335,3 +1356,8 @@ end
  TGNS.ScheduleAction(1, function()
  	TGNS.Config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
  end)
+
+-- TGNS.ScheduleAction(2, function() Shared.Message(string.format("All: %s", TGNS.Join(TGNS.GetMapCycleMapNames(), ","))) end)
+-- TGNS.ScheduleAction(3, function() Shared.Message(string.format("Voteable: %s", TGNS.Join(TGNS.GetVoteableMapNames(), ","))) end)
+-- TGNS.ScheduleAction(4, function() Shared.Message(string.format("Mod: %s", TGNS.Join(TGNS.GetMapCycleModMapNames(), ","))) end)
+-- TGNS.ScheduleAction(5, function() Shared.Message(string.format("Stock: %s", TGNS.Join(TGNS.GetMapCycleStockMapNames(), ","))) end)
