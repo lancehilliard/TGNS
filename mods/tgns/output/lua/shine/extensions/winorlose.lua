@@ -82,6 +82,10 @@ local function UpdateWinOrLoseVotes()
 		if kCountdownTimeRemaining > 0 then
 			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 5) then
 				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
+				TGNS.DoFor(commandStructures, function(s)
+					s.GetCanBeHealedOverride = function(self) return false, false end
+					s.GetCanBeWeldedOverride = function(self, doer) return false, false end
+				end)
 				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				local chatMessage = string.format("%s can't attack. Game ends in %s seconds.", teamName, kCountdownTimeRemaining)
 				local commandStructureToKeep = GetCommandStructureToKeep(commandStructures)
