@@ -195,9 +195,10 @@ local function updateCaptainsReadyProgress(readyClient)
 	local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) end)
 	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
-		local message = string.format("You're marked as ready to play%s a Captains Game.", TGNS.Has(playingReadyCaptainClients, readyClient) and " (and lead)" or "")
+		local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, readyClient)
+		local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and lead)" or "")
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
-		if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 then
+		if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 or readyClientIsCaptain then
 			md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
 			highVolumeMessagesLastShownTime = Shared.GetTime()
 		end
