@@ -81,23 +81,6 @@ local commands = { CreateCommand(
 		, true
 		, "<player> <reason> Kick player."
 	)
-	, CreateCommand(
-		"sh_ban"
-		, "ban"
-		, "BAN"
-		, nil
-		, nil
-		, function(self, client, targetClient, reason, md)
-			TGNS.Ban(client, targetClient, 0, reason)
-			TGNSClientKicker.Kick(targetClient, reason, nil, nil, false)
-			local message = string.format("%s ban %s for %s.", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), reason)
-			md:ToAdminNotifyInfo(message)
-			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
-			log(client, targetClient, self.consoleCommandName, reason)
-		end
-		, true
-		, "<ban> <reason> Ban player."
-	)
 }
 
 local Plugin = {}
