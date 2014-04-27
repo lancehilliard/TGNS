@@ -144,6 +144,10 @@ local function showPickables()
 			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
 			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.25, "Opted In")
 			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.55, "Not Opted In")
+			if #notOptedInClients > 0 then
+				Shine:SendText(c, Shine.BuildScreenMessage(59, 0.80, 0.75, "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'", 3, 0, 255, 0, 0, 1, 0 ) )
+			end
+
 			TGNS.ScheduleAction(1, showPickables)
 		end
 	end
