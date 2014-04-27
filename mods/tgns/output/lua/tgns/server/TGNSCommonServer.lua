@@ -708,7 +708,7 @@ local function ProcessScheduledActions()
 				if scheduledActionsErrorCount <= 1 then
 					local errorTemplate = "ScheduledAction Error (#%s @ %s): %s"
 					--TGNS.EnhancedLog(string.format(errorTemplate, scheduledActionsErrorCount, Shared.GetTime(), result))
-					TGNS.DebugPrint(errorTemplate, true, scheduledActionsErrorCount, Shared.GetTime(), result)
+					TGNS.DebugPrint(string.format(errorTemplate, scheduledActionsErrorCount, Shared.GetTime(), result))
 					scheduledActionsErrorCount = scheduledActionsErrorCount + 1
 					scheduledActionsErrorCounts[scheduledAction.what] = scheduledActionsErrorCount
 				else
@@ -723,6 +723,14 @@ local function ProcessScheduledRequests()
 	local unsentScheduledRequests = TGNS.Take(TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end), 10)
 	TGNS.DoFor(unsentScheduledRequests, function(r)
 		r.sent = true
+		-- local documentBaseIndex = TGNS.IndexOf(r.url, "4155") + 4
+		-- local queryStringBaseIndex = TGNS.IndexOf(r.url, "?") + 1
+		-- local partialUrl = TGNS.Substring(r.url, documentBaseIndex, queryStringBaseIndex - documentBaseIndex)
+		-- local partialQuery = TGNS.Substring(r.url, queryStringBaseIndex + 27)
+		-- local ampersandIndex = TGNS.IndexOf(partialQuery, "&")
+		-- partialQuery = TGNS.Substring(partialQuery, ampersandIndex + 1)
+		-- local debugUrl = string.format("%s%s", partialUrl, partialQuery)
+		-- PROFILE(debugUrl)
 		Shared.SendHTTPRequest(r.url, "GET", function(response)
 			TGNS.RemoveAllMatching(scheduledRequests, r)
 			r.callback(response)
