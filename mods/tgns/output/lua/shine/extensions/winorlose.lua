@@ -281,7 +281,7 @@ function Plugin:TakeDamage( Ent, Damage, Attacker, Inflictor, Point, Direction, 
 		HealthUsed = 0
 		ArmourUsed = 0
 		local client = TGNS.GetClient(Attacker)
-		if lastNoAttackNoticeTimes[client] == nil or lastNoAttackNoticeTimes[client] < Shared.GetTime() - 1 then
+		if client and lastNoAttackNoticeTimes[client] == nil or lastNoAttackNoticeTimes[client] < Shared.GetTime() - 1 then
 			local playerIsMarine = Attacker:GetTeamNumber() == kMarineTeamType
 			local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
 			local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
