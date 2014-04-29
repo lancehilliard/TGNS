@@ -11,6 +11,8 @@ local function processResponse(steamId, response)
 			local decodedResponse = json.decode(response)
 			if decodedResponse then
 				decodedResponses[steamId] = TGNS.GetFirst(decodedResponse)
+			else
+				table.insert(steamIdsWhichWeKnowHaveNoRecord, steamId)
 			end
 		end
 	end
@@ -22,7 +24,7 @@ local function getRequestedRecords()
 		local ns2statsMightReturnRecordForThePlayer = not TGNS.Has(steamIdsWhichWeKnowHaveNoRecord, steamId)
 		local weHaveYetToFetchPlayerRecordSuccessfully = not decodedResponses[steamId]
 		if playerIsOnTheServer and ns2statsMightReturnRecordForThePlayer and weHaveYetToFetchPlayerRecordSuccessfully then
-			local fetchUrl = string.format("http://ns2stats.org/api/player?ns2_id=%s", steamId)
+			local fetchUrl = string.format("http://ns2stats.com/api/player?ns2_id=%s", steamId)
 			TGNS.GetHttpAsync(fetchUrl, function(response) processResponse(steamId, response) end)
 		end
 	end)
@@ -45,7 +47,7 @@ TGNSNs2StatsProxy.GetPlayerRecord = function(steamId)
 		result.GetCumulativeScore = function()
 			return decodedResponseForPlayer.score
 		end
-		
+
 		result.GetTimePlayedInSeconds = function()
 			return decodedResponseForPlayer.time_played
 		end
