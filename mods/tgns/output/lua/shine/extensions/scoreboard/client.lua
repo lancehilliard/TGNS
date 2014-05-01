@@ -259,14 +259,14 @@ function Plugin:Initialise()
 	end)
 
 
-	if CHUDGUI_DeathStats then
-		local originalCHUDGUI_DeathStatsUpdate = CHUDGUI_DeathStats.Update
-		CHUDGUI_DeathStats.Update = function(self, deltaTime) end
-	end
-	if ShowClientStats then
-		local originalShowClientStats = ShowClientStats
-		ShowClientStats = function(endRound) end
-	end
+	-- if CHUDGUI_DeathStats then
+	-- 	local originalCHUDGUI_DeathStatsUpdate = CHUDGUI_DeathStats.Update
+	-- 	CHUDGUI_DeathStats.Update = function(self, deltaTime) end
+	-- end
+	-- if ShowClientStats then
+	-- 	local originalShowClientStats = ShowClientStats
+	-- 	ShowClientStats = function(endRound) end
+	-- end
 
 	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK, function(message)
 		hasJetPacks[message.c] = message.h
@@ -278,20 +278,26 @@ function Plugin:Initialise()
 		showTeamMessages = message.s
 	end)
 
-	local originalGUIMarineTeamMessageSetTeamMessage = GUIMarineTeamMessage.SetTeamMessage
-	GUIMarineTeamMessage.SetTeamMessage = function(self, message)
-		if showTeamMessages then
-			originalGUIMarineTeamMessageSetTeamMessage(self, message)
-		end
-		-- Shared.Message("TEAM MESSAGE: " .. tostring(message))
+	if GUIMarineTeamMessage == nil or GUIAlienTeamMessage == nil then
+		Script.Load("lua/GUIMarineTeamMessage.lua")
 	end
 
-	local originalGUIAlienTeamMessageSetTeamMessage = GUIAlienTeamMessage.SetTeamMessage
-	GUIAlienTeamMessage.SetTeamMessage = function(self, message)
-		if showTeamMessages then
-			originalGUIAlienTeamMessageSetTeamMessage(self, message)
+	if GUIMarineTeamMessage and GUIMarineTeamMessage.SetTeamMessage then
+		local originalGUIMarineTeamMessageSetTeamMessage = GUIMarineTeamMessage.SetTeamMessage
+		GUIMarineTeamMessage.SetTeamMessage = function(self, message)
+			if showTeamMessages then
+				originalGUIMarineTeamMessageSetTeamMessage(self, message)
+			end
 		end
-		-- Shared.Message("TEAM MESSAGE: " .. tostring(message))
+	end
+
+	if GUIAlienTeamMessage and GUIAlienTeamMessage.SetTeamMessage then
+		local originalGUIAlienTeamMessageSetTeamMessage = GUIAlienTeamMessage.SetTeamMessage
+		GUIAlienTeamMessage.SetTeamMessage = function(self, message)
+			if showTeamMessages then
+				originalGUIAlienTeamMessageSetTeamMessage(self, message)
+			end
+		end
 	end
 
 	return true
