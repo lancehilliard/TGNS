@@ -177,7 +177,7 @@ local function SendNextPlayer()
 			sortAction(rookiePlayers, GetPlayerScorePerMinuteAverage)
 			sortAction(nonRookieStrangers, GetPlayerScorePerMinuteAverage)
 			sortAction(nonRookieRegulars, GetPlayerScorePerMinuteAverage)
-			local playerGroups = TGNS.GetRandomizedElements({ commanders, bestPlayers, betterPlayers, goodPlayers, rookiePlayers, nonRookieStrangers, nonRookieRegulars })
+			local playerGroups = { commanders, bestPlayers, betterPlayers, goodPlayers, rookiePlayers, nonRookieStrangers, nonRookieRegulars }
 			local addPlayerToResult = function(p) table.insert(result, p) end
 			TGNS.DoFor(playerGroups, function(g) TGNS.DoFor(g, addPlayerToResult) end)
 			return result
