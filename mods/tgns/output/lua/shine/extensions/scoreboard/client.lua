@@ -97,8 +97,8 @@ function Plugin:Initialise()
 
 	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
 	        	player["Status"]:SetText("Spectator")
-	        elseif teamNumber == 1 and (Client.GetLocalClientTeamNumber() == 1 or Client.GetLocalClientTeamNumber() == 3) and hasJetPacks[clientIndex] and playerRecord.Status ~= "Exo" then
-	        	player["Status"]:SetText(string.format("%s/JP", playerRecord.Status == "Flamethrower" and "Flame" or playerRecord.Status))
+	        -- elseif teamNumber == 1 and (Client.GetLocalClientTeamNumber() == 1 or Client.GetLocalClientTeamNumber() == 3) and hasJetPacks[clientIndex] and playerRecord.Status ~= "Exo" then
+	        -- 	player["Status"]:SetText(string.format("%s/JP", playerRecord.Status == "Flamethrower" and "Flame" or playerRecord.Status))
 	        end
 
 	        -- if not playerIsBot then
