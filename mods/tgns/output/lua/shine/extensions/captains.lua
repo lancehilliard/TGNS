@@ -145,7 +145,9 @@ local function showPickables()
 			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.25, "Opted In")
 			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.55, "Not Opted In")
 			if #notOptedInClients > 0 then
-				Shine:SendText(c, Shine.BuildScreenMessage(59, 0.80, 0.75, "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'", 3, 0, 255, 0, 0, 1, 0 ) )
+				TGNS.DoFor(readyRoomClients, function(c)
+					Shine:SendText(c, Shine.BuildScreenMessage(59, 0.80, 0.75, "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'", 3, 0, 255, 0, 0, 1, 0 ) )
+				end)
 			end
 
 			TGNS.ScheduleAction(1, showPickables)
