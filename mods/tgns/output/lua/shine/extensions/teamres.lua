@@ -92,23 +92,24 @@ function Plugin:EndGame()
 	ResetAbandonedResources()
 end
 
+function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
+	local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
+	local joiningClient = TGNS.GetClient(player)
+	local playerIsDroppingToReadyRoom = TGNS.IsGameplayTeamNumber(playerTeamNumber) and newTeamNumber == kTeamReadyRoom
+	local playerIsJoiningTeam = TGNS.IsGameplayTeamNumber(newTeamNumber)
+	if playerIsDroppingToReadyRoom then
+		AbandonResources(joiningClient)
+	elseif playerIsJoiningTeam then
+		TGNS.ScheduleAction(2, function()
+			if Shine:IsValidClient(joiningClient) then
+				DistributeAbandonedResources(joiningClient, newTeamNumber)
+			end
+		end)
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
-	Shine.Hook.Add("JoinTeam", "TeamResJoinTeam", function(self, player, newTeamNumber, force, shineForce)
-		local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
-		local joiningClient = TGNS.GetClient(player)
-		local playerIsDroppingToReadyRoom = TGNS.IsGameplayTeamNumber(playerTeamNumber) and newTeamNumber == kTeamReadyRoom
-		local playerIsJoiningTeam = TGNS.IsGameplayTeamNumber(newTeamNumber)
-		if playerIsDroppingToReadyRoom then
-			AbandonResources(joiningClient)
-		elseif playerIsJoiningTeam then
-			TGNS.ScheduleAction(2, function()
-				if Shine:IsValidClient(joiningClient) then
-					DistributeAbandonedResources(joiningClient, newTeamNumber)
-				end
-			end)
-		end
-	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
     return true
 end
 
