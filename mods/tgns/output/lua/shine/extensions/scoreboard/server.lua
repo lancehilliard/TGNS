@@ -70,9 +70,9 @@ local function initScoreboardDecorations(client)
 		local sourceSteamId = TGNS.GetClientSteamId(client)
 		table.insert(clientsReadyForScoreboardData, client)
 		if sourcePlayer then
-			TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.TOGGLE_OPTIONALS, {t=not TGNS.IsClientStranger(client)})
+			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.TOGGLE_OPTIONALS, {t=not TGNS.IsClientStranger(client)})
 			UpdatePlayerPrefixes(sourcePlayer)
-			self:AnnouncePlayerPrefix(sourcePlayer)
+			Shine.Plugins.scoreboard:AnnouncePlayerPrefix(sourcePlayer)
 			local approvedSentTotal = 0
 			local approvedReceivedTotal = 0
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
@@ -80,19 +80,19 @@ local function initScoreboardDecorations(client)
 					local targetSteamId = TGNS.GetClientSteamId(c)
 					approvedClients[targetSteamId] = approvedClients[targetSteamId] or {}
 					if approvedClients[targetSteamId][sourceSteamId] then
-						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
+						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.scoreboard.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
 						approvedReceivedTotal = approvedReceivedTotal + 1
 					end
 					approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
 					if approvedClients[sourceSteamId][targetSteamId] then
 						local targetPlayer = TGNS.GetPlayer(c)
-						TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_ALREADY_APPROVED, {c=targetPlayer:GetClientIndex()})
+						TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_ALREADY_APPROVED, {c=targetPlayer:GetClientIndex()})
 						approvedSentTotal = approvedSentTotal + 1
 					end
 				end
 			end)
-			TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
-			TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_SENT_TOTAL, {t=approvedSentTotal})
+			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
+			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_SENT_TOTAL, {t=approvedSentTotal})
 		end
 	end
 end
