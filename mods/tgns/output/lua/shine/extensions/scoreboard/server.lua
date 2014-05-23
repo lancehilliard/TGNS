@@ -64,38 +64,42 @@ local function UpdatePlayerPrefixes(player)
 	end)
 end
 
+local function initScoreboardDecorations(client)
+	if Shine:IsValidClient(client) then
+		local sourcePlayer = TGNS.GetPlayer(client)
+		local sourceSteamId = TGNS.GetClientSteamId(client)
+		table.insert(clientsReadyForScoreboardData, client)
+		if sourcePlayer then
+			TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.TOGGLE_OPTIONALS, {t=not TGNS.IsClientStranger(client)})
+			UpdatePlayerPrefixes(sourcePlayer)
+			self:AnnouncePlayerPrefix(sourcePlayer)
+			local approvedSentTotal = 0
+			local approvedReceivedTotal = 0
+			TGNS.DoFor(TGNS.GetClientList(), function(c)
+				if c then
+					local targetSteamId = TGNS.GetClientSteamId(c)
+					approvedClients[targetSteamId] = approvedClients[targetSteamId] or {}
+					if approvedClients[targetSteamId][sourceSteamId] then
+						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
+						approvedReceivedTotal = approvedReceivedTotal + 1
+					end
+					approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
+					if approvedClients[sourceSteamId][targetSteamId] then
+						local targetPlayer = TGNS.GetPlayer(c)
+						TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_ALREADY_APPROVED, {c=targetPlayer:GetClientIndex()})
+						approvedSentTotal = approvedSentTotal + 1
+					end
+				end
+			end)
+			TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
+			TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_SENT_TOTAL, {t=approvedSentTotal})
+		end
+	end
+end
+
 function Plugin:ClientConfirmConnect(client)
 	TGNS.ScheduleAction(1, function()
-		if Shine:IsValidClient(client) then
-			local sourcePlayer = TGNS.GetPlayer(client)
-			local sourceSteamId = TGNS.GetClientSteamId(client)
-			table.insert(clientsReadyForScoreboardData, client)
-			if sourcePlayer then
-				TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.TOGGLE_OPTIONALS, {t=not TGNS.IsClientStranger(client)})
-				UpdatePlayerPrefixes(sourcePlayer)
-				self:AnnouncePlayerPrefix(sourcePlayer)
-				local approvedSentTotal = 0
-				local approvedReceivedTotal = 0
-				TGNS.DoFor(TGNS.GetClientList(), function(c)
-					if c then
-						local targetSteamId = TGNS.GetClientSteamId(c)
-						approvedClients[targetSteamId] = approvedClients[targetSteamId] or {}
-						if approvedClients[targetSteamId][sourceSteamId] then
-							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
-							approvedReceivedTotal = approvedReceivedTotal + 1
-						end
-						approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
-						if approvedClients[sourceSteamId][targetSteamId] then
-							local targetPlayer = TGNS.GetPlayer(c)
-							TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_ALREADY_APPROVED, {c=targetPlayer:GetClientIndex()})
-							approvedSentTotal = approvedSentTotal + 1
-						end
-					end
-				end)
-				TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
-				TGNS.SendNetworkMessageToPlayer(sourcePlayer, self.APPROVE_SENT_TOTAL, {t=approvedSentTotal})
-			end
-		end
+		initScoreboardDecorations(client)
 	end)
 end
 
@@ -120,6 +124,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
 		TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
 	end
+	initScoreboardDecorations(TGNS.GetClient(player))
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
