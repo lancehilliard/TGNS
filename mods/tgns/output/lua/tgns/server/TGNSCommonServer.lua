@@ -977,7 +977,7 @@ function TGNS.ClientAction(player, action)
 end
 
 function TGNS.GetClientSteamId(client)
-	result = client:GetUserId()
+	local result = client:GetUserId()
 	return result
 end
 
