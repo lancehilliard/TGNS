@@ -502,6 +502,8 @@ function Plugin:CreateCommands()
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		elseif votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
 			md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
+		elseif TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 15 and votesAllowedUntil ~= math.huge then
+			md:ToPlayerNotifyError(player, "Game duration > 0:15. It's too late to opt-in as a Captain.")
 		else
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			if #playingReadyCaptainClients < 2 then
@@ -528,6 +530,8 @@ function Plugin:CreateCommands()
 			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
 		elseif not captainsModeEnabled and votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
 			md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
+		elseif TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 30 and (readyPlayerClients == nil or #readyPlayerClients == 0) and votesAllowedUntil ~= math.huge then
+			md:ToPlayerNotifyError(player, "Game duration > 0:30. It's too late to start opting in players.")
 		else
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			if TGNS.Has(playingReadyCaptainClients, client) then
