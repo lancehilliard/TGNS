@@ -362,6 +362,8 @@ function Plugin:EndGame(gamerules, winningTeam)
 				md:ToAllNotifyInfo("from ~7PM 'til. Read more in our forums: TacticalGamer.com/natural-selection")
 			end
 		end)
+		readyCaptainClients = {}
+		readyPlayerClients = {}
 	end
 	gamesFinished = gamesFinished + 1
 
