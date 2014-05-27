@@ -59,7 +59,7 @@ function Plugin:Initialise()
 		        player["Number"]:SetColor(numberColor)
 	        end
 
-			local playerIsBot = playerRecord.Ping == 0 or string.sub(playerRecord.Name,1,5)=="[BOT]"
+			local playerIsBot = playerRecord.Ping == 0 -- or string.sub(playerRecord.Name,1,5)=="[BOT]"
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        if playerApproveIcon then
 	        	local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
