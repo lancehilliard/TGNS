@@ -494,7 +494,7 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		if captainsModeEnabled then
 			md:ToPlayerNotifyError(player, "Captains Game is already active.")
-		elseif mayVoteYet ~= true then
+		elseif mayVoteYet ~= true and not TGNS.IsGameInProgress() then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 		elseif TGNS.IsPlayerSpectator(player) then
 			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
@@ -522,7 +522,7 @@ function Plugin:CreateCommands()
 
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
 		local player = TGNS.GetPlayer(client)
-		if mayVoteYet ~= true and votesAllowedUntil ~= math.huge then
+		if mayVoteYet ~= true and votesAllowedUntil ~= math.huge and not TGNS.IsGameInProgress() then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
