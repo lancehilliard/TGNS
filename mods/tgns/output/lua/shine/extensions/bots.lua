@@ -5,6 +5,7 @@ local originalForceEvenTeamsOnJoinSetting = true
 local originalAutoTeamBalanceSetting = { enabled_after_seconds = 10, enabled_on_unbalance_amount = 2 }
 local originalHatchCooldown = kHatchCooldown
 local originalAlienSpawnTime = kAlienSpawnTime
+local originalkEggGenerationRate = kEggGenerationRate
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -39,6 +40,7 @@ local function setBotConfig()
 
 	kHatchCooldown = 1
 	kAlienSpawnTime = 0.5
+	kEggGenerationRate = 0
 
 	TGNS.ScheduleAction(2, function()
 		alltalk = true
@@ -59,6 +61,7 @@ local function setOriginalConfig()
 	end
 	kHatchCooldown = originalHatchCooldown
 	kAlienSpawnTime = originalAlienSpawnTime
+	kEggGenerationRate = originalkEggGenerationRate
 
 	if alltalk then
 		alltalk = false
