@@ -11,6 +11,7 @@ local md
 local botAdvisory
 local alltalk = false
 local originalGetCanPlayerHearPlayer
+local spawnReprieveAction = function() end
 
 local Plugin = {}
 
@@ -47,9 +48,22 @@ local function setBotConfig()
 		md:ToAllNotifyInfo("All talk enabled during bots play.")
 	end)
 
+	spawnReprieveAction = function()
+		TGNS.ScheduleAction(5, function()
+			if kEggGenerationRate == 0 then
+				kEggGenerationRate = originalkEggGenerationRate
+				TGNS.ScheduleAction(20, function()
+					if getTotalNumberOfBots() > 0 then
+						kEggGenerationRate = 0
+					end
+				end)
+			end
+		end)
+	end
 end
 
 local function setOriginalConfig()
+	spawnReprieveAction = function() end
 	if originalEndRoundOnTeamUnbalanceSetting then
 		Server.SetConfigSetting("end_round_on_team_unbalance", originalEndRoundOnTeamUnbalanceSetting)
 	end
@@ -69,7 +83,6 @@ local function setOriginalConfig()
 			md:ToAllNotifyInfo("All talk disabled.")
 		end)
 	end
-
 end
 
 local function removeBots(players, count)
@@ -218,6 +231,8 @@ function Plugin:Initialise()
 		local result = alltalk or originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
 		return result
 	end)
+
+	TGNS.ScheduleActionInterval(120, spawnReprieveAction)
 
     return true
 end
