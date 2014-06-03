@@ -144,12 +144,10 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("BkaChanged", function(client)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
-	local startTimeSeconds
 	approvedClients = {}
 	local approveReceivedTotal = {}
 	local approveSentTotal = {}
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
-		startTimeSeconds = secondsSinceEpoch
 		approvedClients = {}
 		approveSentTotal = {}
 		approveReceivedTotal = {}
@@ -164,65 +162,60 @@ function Plugin:Initialise()
 		local targetClientIndex = message.c
 		local player = TGNS.GetPlayer(client)
 		if player then
-			if startTimeSeconds ~= nil then
-				local targetClient = TGNS.GetClientById(targetClientIndex)
-				if targetClient and Shine:IsValidClient(targetClient) then
-					if client ~= targetClient then
-						if not TGNS.GetIsClientVirtual(targetClient) then
-							local sourceSteamId = TGNS.GetClientSteamId(client)
-							local targetSteamId = TGNS.GetClientSteamId(targetClient)
-							local targetClientName = TGNS.GetClientName(targetClient)
-							approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
-							if approvedClients[sourceSteamId][targetSteamId] == nil then
-								local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds)
-								TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
-									local approveResponse = json.decode(approveResponseJson) or {}
-									if approveResponse.success then
-										if Shine:IsValidClient(client) then
-											approvedClients[sourceSteamId][targetSteamId] = true
-											approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
-											approveSentTotal[sourceSteamId] = approveSentTotal[sourceSteamId] + 1
-											TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_SENT_TOTAL, {t=approveSentTotal[sourceSteamId]})
-											if Shine:IsValidClient(targetClient) then
-												if TGNS.IsClientStranger(targetClient) and Shine.Plugins.targetedcommands and Shine.Plugins.targetedcommands.Enabled and Shine.Plugins.targetedcommands.Affirm then
-													Shine.Plugins.targetedcommands:Affirm(client, targetClient, md)
-												end
-												approveReceivedTotal[targetSteamId] = TGNS.GetNumericValueOrZero(approveReceivedTotal[targetSteamId])
-												approveReceivedTotal[targetSteamId] = approveReceivedTotal[targetSteamId] + 1
-												TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(targetClient), self.APPROVE_RECEIVED_TOTAL, {t=approveReceivedTotal[targetSteamId]})
+			local targetClient = TGNS.GetClientById(targetClientIndex)
+			if targetClient and Shine:IsValidClient(targetClient) then
+				if client ~= targetClient then
+					if not TGNS.GetIsClientVirtual(targetClient) then
+						local sourceSteamId = TGNS.GetClientSteamId(client)
+						local targetSteamId = TGNS.GetClientSteamId(targetClient)
+						local targetClientName = TGNS.GetClientName(targetClient)
+						approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
+						if approvedClients[sourceSteamId][targetSteamId] == nil then
+							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds)
+							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
+								local approveResponse = json.decode(approveResponseJson) or {}
+								if approveResponse.success then
+									if Shine:IsValidClient(client) then
+										approvedClients[sourceSteamId][targetSteamId] = true
+										approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
+										approveSentTotal[sourceSteamId] = approveSentTotal[sourceSteamId] + 1
+										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_SENT_TOTAL, {t=approveSentTotal[sourceSteamId]})
+										if Shine:IsValidClient(targetClient) then
+											if TGNS.IsClientStranger(targetClient) and Shine.Plugins.targetedcommands and Shine.Plugins.targetedcommands.Enabled and Shine.Plugins.targetedcommands.Affirm then
+												Shine.Plugins.targetedcommands:Affirm(client, targetClient, md)
 											end
-										end
-									else
-										if approveResponse.msg == "Too many recent approvals for this player." then
-											md:ToPlayerNotifyError(player, string.format("You must Approve some other players before %s.", targetClientName))
-											TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-										elseif approveResponse.msg == "Too many recent approvals." then
-											md:ToPlayerNotifyError(player, "You have Approved too many players in the last 24 hours.")
-											TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-										else
-											TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to approve NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
-											if approvedClients[sourceSteamId][targetSteamId] == nil then
-												md:ToPlayerNotifyError(player, string.format("There was a problem approving %s.", targetClientName))
-												TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-											end
+											approveReceivedTotal[targetSteamId] = TGNS.GetNumericValueOrZero(approveReceivedTotal[targetSteamId])
+											approveReceivedTotal[targetSteamId] = approveReceivedTotal[targetSteamId] + 1
+											TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(targetClient), self.APPROVE_RECEIVED_TOTAL, {t=approveReceivedTotal[targetSteamId]})
 										end
 									end
-								end)
-							else
-								md:ToPlayerNotifyError(player, string.format("You may Approve %s only once per game.", targetClientName))
-							end
+								else
+									if approveResponse.msg == "Too many recent approvals for this player." then
+										md:ToPlayerNotifyError(player, string.format("You must Approve some other players before %s.", targetClientName))
+										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+									elseif approveResponse.msg == "Too many recent approvals." then
+										md:ToPlayerNotifyError(player, "You have Approved too many players in the last 24 hours.")
+										TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+									else
+										TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to approve NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+										if approvedClients[sourceSteamId][targetSteamId] == nil then
+											md:ToPlayerNotifyError(player, string.format("There was a problem approving %s.", targetClientName))
+											TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+										end
+									end
+								end
+							end)
 						else
-							md:ToPlayerNotifyError(player, "Don't encourage the bots.")
+							md:ToPlayerNotifyError(player, string.format("You may Approve %s only once per game.", targetClientName))
 						end
 					else
-						md:ToPlayerNotifyError(player, "Your modesty knows no bounds.")
+						md:ToPlayerNotifyError(player, "Don't encourage the bots.")
 					end
 				else
-					md:ToPlayerNotifyError(player, "There was a problem approving.")
-					TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+					md:ToPlayerNotifyError(player, "Your modesty knows no bounds.")
 				end
 			else
-				md:ToPlayerNotifyError(player, "You may Approve only after a game has started.")
+				md:ToPlayerNotifyError(player, "There was a problem approving.")
 				TGNS.SendNetworkMessageToPlayer(player, self.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
 			end
 		else
