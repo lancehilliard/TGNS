@@ -295,7 +295,7 @@ end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	if not (force or shineForce) then
-		if balanceInProgress then
+		if balanceInProgress and not TGNS.IsTeamNumberSpectator(newTeamNumber) then
 			md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
 			return false
 		end
