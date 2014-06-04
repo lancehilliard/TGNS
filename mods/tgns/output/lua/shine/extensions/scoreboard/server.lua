@@ -144,10 +144,12 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("BkaChanged", function(client)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
+	local startTimeSeconds
 	approvedClients = {}
 	local approveReceivedTotal = {}
 	local approveSentTotal = {}
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
+		startTimeSeconds = secondsSinceEpoch
 		approvedClients = {}
 		approveSentTotal = {}
 		approveReceivedTotal = {}
@@ -171,7 +173,7 @@ function Plugin:Initialise()
 						local targetClientName = TGNS.GetClientName(targetClient)
 						approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
 						if approvedClients[sourceSteamId][targetSteamId] == nil then
-							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds)
+							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds or TGNS.GetSecondsSinceEpoch())
 							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
 								local approveResponse = json.decode(approveResponseJson) or {}
 								if approveResponse.success then
