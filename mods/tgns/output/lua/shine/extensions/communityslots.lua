@@ -445,6 +445,9 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
                     -- cancel = true
                     -- TGNS.SendToTeam(player, victimTeamNumber)
                     tgnsMd:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve 8v8.", TGNS.GetTeamName(victimTeamNumber)))
+                    if Shine.Plugins.teamres and Shine.Plugins.teamres.Enabled then
+                        Shine.Plugins.teamres:JoinTeam(gamesrules, player, victimTeamNumber, force, shineForce)
+                    end
                     return true, victimTeamNumber
                 end
             end
