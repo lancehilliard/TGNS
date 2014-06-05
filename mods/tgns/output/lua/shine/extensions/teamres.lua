@@ -1,5 +1,5 @@
 local abandonedResources
-local lastKnownGameplayTeamNumber
+-- local lastKnownGameplayTeamNumber
 local md = TGNSMessageDisplayer.Create("TEAMRES")
 
 local function debugLog(message)
@@ -13,7 +13,7 @@ local function ResetAbandonedResources()
       [1] = {},
       [2] = {}
     }
-	lastKnownGameplayTeamNumber = {}
+--	lastKnownGameplayTeamNumber = {}
 end
 ResetAbandonedResources()
 
@@ -32,9 +32,9 @@ local function AbandonResources(client)
 		local playerDescription = string.format("%s (%s,%s)", TGNS.GetPlayerName(player), TGNS.GetPlayerClassName(player), totalCostInResources)
 		-- debugLog(string.format("AbandonResources: player team number: %s", playerTeamNumber))
 		if TGNS.IsGameplayTeamNumber(playerTeamNumber) then
-			debugLog(string.format("AbandonResources: abandoning resources for %s?", playerDescription))
+			-- debugLog(string.format("AbandonResources: abandoning resources for %s?", playerDescription))
 			if abandonedResources[playerTeamNumber][client] == nil then
-				debugLog(string.format("AbandonResources: abandoning resources for %s? YES", playerDescription))
+				-- debugLog(string.format("AbandonResources: abandoning resources for %s? YES", playerDescription))
 				-- debugLog(string.format("AbandonResources: player total cost: %s. Retaining resources...", totalCostInResources))
 				abandonedResources[playerTeamNumber][client] = totalCostInResources
 				-- debugLog(string.format("AbandonResources: setting player resources to 0..."))
@@ -49,7 +49,7 @@ local function AbandonResources(client)
 					abandonedResources[playerTeamNumber][client] = 100
 				end
 			else
-				debugLog(string.format("AbandonResources: abandoning resources for %s? NO", playerDescription))
+				-- debugLog(string.format("AbandonResources: abandoning resources for %s? NO", playerDescription))
 			end
 		end
 	end
@@ -68,42 +68,43 @@ end
 local function DistributeAbandonedResources(client, teamNumber)
 	local player = TGNS.GetPlayer(client)
 	local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
-	debugLog(string.format("DistributeAbandonedResources: player team number: %s", playerTeamNumber))
+	-- debugLog(string.format("DistributeAbandonedResources: player team number: %s", playerTeamNumber))
 	if TGNS.IsGameplayTeamNumber(playerTeamNumber) and playerTeamNumber == teamNumber then
-		debugLog(string.format("DistributeAbandonedResources: player is on gameplay team and playerTeamNumber == teamNumber..."))
+		-- debugLog(string.format("DistributeAbandonedResources: player is on gameplay team and playerTeamNumber == teamNumber..."))
 		local resKey
 		local giveableResources
-		if lastKnownGameplayTeamNumber[client] == teamNumber then
-			debugLog(string.format("DistributeAbandonedResources: teamNumber is client's last known gameplay team number..."))
-			resKey = client
-			giveableResources = abandonedResources[playerTeamNumber][client]
-			debugLog(string.format("DistributeAbandonedResources: giveableResources: %s...", giveableResources))
-		else
+		-- if lastKnownGameplayTeamNumber[client] == teamNumber then
+		-- 	debugLog(string.format("DistributeAbandonedResources: teamNumber is client's last known gameplay team number..."))
+		-- 	resKey = client
+		-- 	giveableResources = abandonedResources[playerTeamNumber][client]
+		-- 	debugLog(string.format("DistributeAbandonedResources: giveableResources: %s...", giveableResources))
+		-- else
 			TGNS.DoForPairs(abandonedResources[playerTeamNumber], function(key, resources)
 				if resources ~= nil and (giveableResources == nil or resources > giveableResources) then
 					giveableResources = resources
 					resKey = key
-					debugLog(string.format("DistributeAbandonedResources: giveableResources: %s...", giveableResources))
+					-- debugLog(string.format("DistributeAbandonedResources: giveableResources: %s...", giveableResources))
 				end
 			end)
-		end
+		-- end
 		if giveableResources ~= nil then
-			debugLog(string.format("DistributeAbandonedResources: giveable resources found..."))
+			-- debugLog(string.format("DistributeAbandonedResources: giveable resources found..."))
 			local originalResources = TGNS.GetPlayerResources(player)
-			debugLog(string.format("DistributeAbandonedResources: player original resources: %s...", originalResources))
+			-- debugLog(string.format("DistributeAbandonedResources: player original resources: %s...", originalResources))
 			if math.floor(giveableResources) > math.floor(originalResources) then
-				debugLog(string.format("DistributeAbandonedResources: player has fewer resources than are giveable. Setting player resources to %s.", giveableResources))
+				-- debugLog(string.format("DistributeAbandonedResources: player has fewer resources than are giveable. Setting player resources to %s.", giveableResources))
 				TGNS.SetPlayerResources(player, giveableResources)
 				local resourcesToRetain = math.floor(originalResources) > 0 and originalResources or nil
-				debugLog(string.format("DistributeAbandonedResources: setting abandoned resources for %s to %s...", Shine:IsValidClient(resKey) and TGNS.GetClientName(resKey) or resKey, resourcesToRetain))
-				abandonedResources[playerTeamNumber][resKey] = resourcesToRetain
-				debugLog(string.format("DistributeAbandonedResources: announcing abandoned resources..."))
+				-- debugLog(string.format("DistributeAbandonedResources: holding %s original resources of player for team...", resourcesToRetain))
+				abandonedResources[playerTeamNumber][TGNS.GetSecondsSinceMapLoaded()] = resourcesToRetain
+				abandonedResources[playerTeamNumber][resKey] = nil
+				-- debugLog(string.format("DistributeAbandonedResources: announcing abandoned resources..."))
 				AnnounceAbandonedResources(client, originalResources)
-				debugLog(string.format("DistributeAbandonedResources: announcing received resources..."))
+				-- debugLog(string.format("DistributeAbandonedResources: announcing received resources..."))
 				AnnounceReceivedResources(player, giveableResources)
 			end
 		end
-		lastKnownGameplayTeamNumber[client] = teamNumber
+		-- lastKnownGameplayTeamNumber[client] = teamNumber
 	end
 end
 
@@ -114,26 +115,26 @@ function Plugin:EndGame()
 end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-	debugLog(string.format("ADMINDEBUG JoinTeam: %s changing teams... getting current team number...", TGNS.GetPlayerName(player)))
+	-- debugLog(string.format("ADMINDEBUG JoinTeam: %s changing teams... getting current team number...", TGNS.GetPlayerName(player)))
 	local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
-	debugLog(string.format("ADMINDEBUG JoinTeam: %s changing teams from %s to %s...", TGNS.GetPlayerName(player), TGNS.GetPlayerTeamNumber(player), TGNS.GetTeamName(newTeamNumber)))
+	-- debugLog(string.format("ADMINDEBUG JoinTeam: %s changing teams from %s to %s...", TGNS.GetPlayerName(player), TGNS.GetPlayerTeamNumber(player), TGNS.GetTeamName(newTeamNumber)))
 	local joiningClient = TGNS.GetClient(player)
-	debugLog(string.format("ADMINDEBUG JoinTeam: joiningClient object is %s...", joiningClient and "not nil" or "nil"))
+	-- debugLog(string.format("ADMINDEBUG JoinTeam: joiningClient object is %s...", joiningClient and "not nil" or "nil"))
 	local playerIsDroppingToReadyRoom = TGNS.IsGameplayTeamNumber(playerTeamNumber) and newTeamNumber == kTeamReadyRoom
-	debugLog(string.format("ADMINDEBUG JoinTeam: Player %s dropping to Ready Room...", playerIsDroppingToReadyRoom and "is" or "is not"))
+	-- debugLog(string.format("ADMINDEBUG JoinTeam: Player %s dropping to Ready Room...", playerIsDroppingToReadyRoom and "is" or "is not"))
 	local playerIsJoiningTeam = TGNS.IsGameplayTeamNumber(newTeamNumber)
-	debugLog(string.format("ADMINDEBUG JoinTeam: Player %s joining a playing team...", playerIsJoiningTeam and "is" or "is not"))
+	-- debugLog(string.format("ADMINDEBUG JoinTeam: Player %s joining a playing team...", playerIsJoiningTeam and "is" or "is not"))
 	if playerIsDroppingToReadyRoom then
-		debugLog(string.format("ADMINDEBUG JoinTeam: Abandoning resources..."))
+		-- debugLog(string.format("ADMINDEBUG JoinTeam: Abandoning resources..."))
 		AbandonResources(joiningClient)
 	elseif playerIsJoiningTeam then
-		debugLog(string.format("ADMINDEBUG JoinTeam: Scheduling res distribution..."))
+		-- debugLog(string.format("ADMINDEBUG JoinTeam: Scheduling res distribution..."))
 		TGNS.ScheduleAction(2, function()
 			if Shine:IsValidClient(joiningClient) then
-				debugLog(string.format("ADMINDEBUG JoinTeam: joiningClient is valid Shine client. Distributing abandoned resources..."))
+				-- debugLog(string.format("ADMINDEBUG JoinTeam: joiningClient is valid Shine client. Distributing abandoned resources..."))
 				DistributeAbandonedResources(joiningClient, newTeamNumber)
 			else
-				debugLog(string.format("ADMINDEBUG JoinTeam: joiningClient is not valid Shine client..."))
+				-- debugLog(string.format("ADMINDEBUG JoinTeam: joiningClient is not valid Shine client..."))
 			end
 		end)
 	end
