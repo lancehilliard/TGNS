@@ -1,13 +1,15 @@
-local originalGetCanAttack
-
 local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
+	local originalGetCanAttack
 	originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack", function(self)
-		local preGame = GetGamerules():GetGameState() == kGameState.PreGame or GetGamerules():GetGameState() == kGameState.NotStarted
-		local canAttack = originalGetCanAttack(self) and not preGame
-		return canAttack
+		local result = originalGetCanAttack(self)
+		if result and not TGNS.IsPlayerReadyRoom(self) then
+			local isPreGame = GetGamerules():GetGameState() == kGameState.PreGame or GetGamerules():GetGameState() == kGameState.NotStarted
+			result = not isPreGame
+		end
+		return result
 	end)
     return true
 end
