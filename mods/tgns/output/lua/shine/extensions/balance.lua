@@ -252,7 +252,7 @@ local function BeginBalance()
 	SendNextPlayer()
 end
 
-local function svBalance(client)
+local function svBalance(client, forcePlayersToReadyRoom)
 	local player = TGNS.GetPlayer(client)
 	if balanceInProgress then
 		md:ToPlayerNotifyError(player, "Balance is already in progress.")
@@ -260,13 +260,16 @@ local function svBalance(client)
 		md:ToPlayerNotifyError(player, string.format("Balance has a server-wide cooldown of %s seconds.", RECENT_BALANCE_DURATION_IN_SECONDS))
 	elseif (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) then
 		md:ToPlayerNotifyError(player, "You may not Balance during Captains.")
-	elseif false and mayBalanceAt > Shared.GetTime() then
+	elseif mayBalanceAt > Shared.GetTime() and not forcePlayersToReadyRoom then
 		md:ToPlayerNotifyError(player, "Wait a bit to let players join teams of choice.")
 	else
 		local gameState = GetGamerules():GetGameState()
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
-			md:ToAllNotifyInfo(string.format("%s is balancing teams using TG and ns2stats score-per-minute data.", TGNS.GetClientName(client)))
-			--md:ToAllNotifyInfo("Scoreboard is hidden until you're placed on a team.")
+			md:ToAllNotifyInfo(string.format("%s is sending players to teams.", TGNS.GetClientName(client)))
+			local playingClients = TGNS.GetPlayingClients(TGNS.GetPlayerList())
+			if forcePlayersToReadyRoom then
+				TGNS.DoFor(playingClients, function(c) TGNS.ExecuteClientCommand(c, "readyroom") end)
+			end
 			balanceInProgress = true
 			lastBalanceStartTimeInSeconds = Shared.GetTime()
 			TGNS.ScheduleAction(5, BeginBalance)
@@ -406,6 +409,9 @@ end
 function Plugin:CreateCommands()
 	local balanceCommand = self:BindCommand("sh_balance", "balance", svBalance)
 	balanceCommand:Help("Balance players across teams.")
+
+	local balanceCommand = self:BindCommand("sh_forcebalance", "forcebalance", function(client) svBalance(client, true) end)
+	balanceCommand:Help("Balance players across teams (after forced RR).")
 
 	local commandersCommand = self:BindCommand("sh_comm", "comm", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "Commanders") end)
 	commandersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
