@@ -24,6 +24,8 @@ local highVolumeMessagesLastShownTime
 local bannerDisplayed
 local showRemainingTimer
 local MAPCHANGE_VOTE_ALLOW_ACTION_DELAY_IN_SECONDS = 115
+local lastOptInAttemptWhen = {}
+local OPT_IN_THROTTLE_IN_SECONDS = 3
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -566,7 +568,9 @@ function Plugin:CreateCommands()
 
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
 		local player = TGNS.GetPlayer(client)
-		if mayVoteYet ~= true and votesAllowedUntil ~= math.huge and not TGNS.IsGameInProgress() then
+		if TGNS.GetSecondsSinceMapLoaded() - (lastOptInAttemptWhen[client] or 0) < OPT_IN_THROTTLE_IN_SECONDS then
+			md:ToPlayerNotifyError(player, string.format("Every opt-in attempt (including this one) resets a %s-second cooldown.", OPT_IN_THROTTLE_IN_SECONDS))
+		elseif mayVoteYet ~= true and votesAllowedUntil ~= math.huge and not TGNS.IsGameInProgress() then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
@@ -591,8 +595,9 @@ function Plugin:CreateCommands()
 				end
 			end
 		end
+		lastOptInAttemptWhen[client] = TGNS.GetSecondsSinceMapLoaded()
 	end, true)
-	wantCaptainsCommand:Help("Tell you want to play a Captains Game.")
+	wantCaptainsCommand:Help(string.format("Tell the server you want to play a Captains Game (cooldown: %s seconds).", OPT_IN_THROTTLE_IN_SECONDS))
 
 	local voteAllowCommand = self:BindCommand("sh_allowcaptainsvotes", nil, function(client)
 		mayVoteYet = true
@@ -604,6 +609,7 @@ function Plugin:CreateCommands()
 
 	local voteRestrictCommand = self:BindCommand("sh_roland", nil, function(client)
 		mayVoteYet = false
+		votesAllowedUntil = nil
 		local player = TGNS.GetPlayer(client)
 		md:ToPlayerNotifyInfo(player, "Captains votes disallowed until sh_allowcaptainsvotes.")
 		automaticVoteAllowAction = function() end
