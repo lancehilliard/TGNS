@@ -133,7 +133,7 @@ function Plugin:Initialise()
 				originalChangelevelFunc(client, mapName)
 			end)
 			local md = TGNSMessageDisplayer.Create()
-			md:ToAdminConsole(string.format("%s executed 'sh_changelevel %s'.", TGNS.GetClientNameSteamIdCombo(client), mapName))
+			md:ToAllConsole(string.format("%s executed 'sh_changelevel %s'.", TGNS.GetClientNameSteamIdCombo(client), mapName))
 		end
 	end)
 
