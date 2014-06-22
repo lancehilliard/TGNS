@@ -79,6 +79,7 @@
 !mods/tgns/output/lua/shine/extensions/hidespectators.lua
 !mods/tgns/output/lua/shine/extensions/improvedafkhandler.lua
 !mods/tgns/output/lua/shine/extensions/lookdown.lua
+!mods/tgns/output/lua/shine/extensions/mapvotehelper.lua
 !mods/tgns/output/lua/shine/extensions/modupdatednotice.lua
 !mods/tgns/output/lua/shine/extensions/noattackpregame.lua
 !mods/tgns/output/lua/shine/extensions/notifyadminonmuteplayer.lua
