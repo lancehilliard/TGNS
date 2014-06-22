@@ -6,6 +6,34 @@ local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
 
+function TGNS.GetTwoLists(values)
+	local list1 = {}
+	local list2 = {}
+	TGNS.DoFor(values, function(n, index)
+		if index % 2 ~= 0 then
+			table.insert(list1, n)
+		else
+			table.insert(list2, n)
+		end
+	end)
+	return list1, list2
+end
+
+function TGNS.ShowPanel(values, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText, titleSumText, duration, emptyText)
+	local columnsY = titleY + 0.05
+	local list1, list2 = TGNS.GetTwoLists(values)
+	if #list1 == 0 and emptyText then table.insert(list1, emptyText) end
+	local columnYDelta = 0.10
+	titleText = TGNS.HasNonEmptyValue(titleText) and string.format("%s (%s)", titleText, titleSumText) or ""
+	TGNS.DoFor(renderClients, function(c)
+		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.80, titleY, titleText, duration, 0, 255, 0, 0, 2, 0 ) )
+		local column1Message = TGNS.Join(list1, '\n')
+		Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.80, columnsY, column1Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		local column2Message = TGNS.Join(list2, '\n')
+		Shine:SendText(c, Shine.BuildScreenMessage( column2MessageId, 0.80 + columnYDelta, columnsY, column2Message, duration, 0, 255, 0, 0, 1, 0 ) )
+	end)
+end
+
 function TGNS.IsPlayerHallucination(player)
 	local result = player and (player.isHallucination or player:isa("Hallucination"))
 	return result
