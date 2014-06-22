@@ -426,6 +426,12 @@ end
 //end
 //TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
+local function getMaximumSpectatorCount()
+    local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
+    local result = captainsModeIsEnabled and Shine.Plugins.communityslots.Config.CommunitySlots or Shine.Plugins.communityslots.Config.MaximumSpectators
+    return result
+end
+
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
     local cancel = false
     local victimTeamNumber = nil
@@ -455,7 +461,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
     elseif newTeamNumber == kSpectatorIndex then
         -- SMs may spec mid-game; anyone may spec pre-game (limit enforced)
         if not (force or shineForce) then
-            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self.Config.MaximumSpectators
+            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
             if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled then
                 tgnsMd:ToPlayerNotifyError(player, "Mid-game spectate is available only when teams are 8v8.")
@@ -530,7 +536,7 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
         local nonSpectatorPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) and not TGNS.GetIsClientVirtual(TGNS.GetClient(p)) end)
         if ServerIsFull(nonSpectatorPlayers) then
             local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
-            result = bumpableClient ~= nil or (TGNS.Has(fullSpecSteamIds, joiningSteamId) and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < Shine.Plugins.communityslots.Config.MaximumSpectators)
+            result = bumpableClient ~= nil or (TGNS.Has(fullSpecSteamIds, joiningSteamId) and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < getMaximumSpectatorCount())
         end
     end
     return result
