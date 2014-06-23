@@ -27,17 +27,17 @@ end
 
 local function IsTargetProtectedStranger(targetClient, playerList)
     local result = IsClientAmongLongestConnected(TGNS.GetStrangersClients(playerList), targetClient, Shine.Plugins.communityslots.Config.MinimumStrangers)
-    if result then
-        tgnsMd:ToAdminConsole(string.format("%s is protected Stranger.", TGNS.GetClientName(targetClient)))
-    end
+    -- if result then
+    --     tgnsMd:ToAdminConsole(string.format("%s is protected Stranger.", TGNS.GetClientName(targetClient)))
+    -- end
     return result
 end
 
 local function IsTargetProtectedPrimerOnly(targetClient, playerList)
     local result = IsClientAmongLongestConnected(TGNS.GetPrimerOnlyClients(playerList), targetClient, Shine.Plugins.communityslots.Config.MinimumPrimerOnlys)
-    if result then
-        tgnsMd:ToAdminConsole(string.format("%s is protected PrimerOnly.", TGNS.GetClientName(targetClient)))
-    end
+    -- if result then
+    --     tgnsMd:ToAdminConsole(string.format("%s is protected PrimerOnly.", TGNS.GetClientName(targetClient)))
+    -- end
     return result
 end
 
@@ -250,6 +250,16 @@ local function PrintBumpCountsReport(client)
     tgnsMd:ToClientConsole(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", bumpCounts.totalRejects, bumpCounts.primerOnlyRejects, bumpCounts.strangerRejects))
 end
 
+-- local function getCountOfPlayersWhoCanBumpTarget(targetClient, playerList, steamIds)
+--     local result = 0
+--     TGNS.DoFor(steamIds, function(steamId)
+--         if Shine.Plugins.communityslots:IsTargetBumpable(targetClient, playerList, steamId) then
+--             result = result + 1
+--         end
+--     end)
+--     return result
+-- end
+
 local Plugin = {}
 Plugin.HasConfig = true
 Plugin.ConfigName = "communityslots.json"
@@ -259,9 +269,12 @@ function Plugin:IsClientRecentCommander(client)
 end
 
 function Plugin:GetPlayersForNewGame()
+    --local playerList = TGNS.GetPlayerList()
     local clients = TGNS.GetClientList()
+    --local steamIds = TGNS.Select(clients, TGNS.GetClientSteamId)
     TGNS.SortAscending(clients, function(c)
         return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge)
+        --return getCountOfPlayersWhoCanBumpTarget(c, playerList, steamIds)
     end)
     local result = {}
     TGNS.DoFor(clients, function(c, index)
@@ -342,7 +355,7 @@ end
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
     UpdateReservedSlotAmount()
     if not TGNS.GetIsClientVirtual(client) then
-	    tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
+        tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
     end
 end)
 
