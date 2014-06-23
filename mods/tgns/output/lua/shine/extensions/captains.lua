@@ -10,7 +10,7 @@ local gameStarted
 local readyPlayerClients
 local readyCaptainClients
 local timeAtWhichToForceRoundStart
-local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 300
+local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 270
 local whenToAllowTeamJoins = 0
 local votesAllowedUntil
 local mayVoteYet
@@ -119,6 +119,7 @@ end
 local function showPickables()
 	if not TGNS.IsGameInProgress() then
 		if captainsGamesFinished == 0 then
+			local allClients = TGNS.GetClientList()
 			local readyRoomClients = TGNS.GetReadyRoomClients()
 			local firstCaptainName = (#captainClients > 0 and Shine:IsValidClient(captainClients[1])) and TGNS.GetClientName(captainClients[1]) or nil
 			local secondCaptainName = (#captainClients > 1 and Shine:IsValidClient(captainClients[2])) and TGNS.GetClientName(captainClients[2]) or nil
@@ -129,8 +130,8 @@ local function showPickables()
 			end
 			local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
-			showRoster(optedInClients, readyRoomClients, 52, 53, 54, 0.25, "Opted In")
-			showRoster(notOptedInClients, readyRoomClients, 55, 56, 57, 0.55, "Not Opted In")
+			showRoster(optedInClients, allClients, 52, 53, 54, 0.25, "Opted In")
+			showRoster(notOptedInClients, allClients, 55, 56, 57, 0.55, "Not Opted In")
 			if #notOptedInClients > 0 then
 				TGNS.DoFor(readyRoomClients, function(c)
 					Shine:SendText(c, Shine.BuildScreenMessage(59, 0.80, 0.75, "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'", 3, 0, 255, 0, 0, 1, 0 ) )
@@ -190,18 +191,20 @@ end
 
 local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	local result = ""
-	local adjustedNumberOfNeededReadyPlayerClients = getAdjustedNumberOfNeededReadyPlayerClients(playingClients)
-	local remaining = adjustedNumberOfNeededReadyPlayerClients - numberOfPlayingReadyPlayerClients
-	if not captainsModeEnabled and numberOfPlayingReadyCaptainClients == 1 then
-		result = getCaptainCallText(firstCaptainName)
-		md:ToAllNotifyInfo(result)
-	elseif remaining > 0 then
-		local headline = string.format("(%s vs %s)", firstCaptainName, secondCaptainName)
-		if not bannerDisplayed then
-			showBanner(headline)
+	if not captainsModeEnabled then
+		local adjustedNumberOfNeededReadyPlayerClients = getAdjustedNumberOfNeededReadyPlayerClients(playingClients)
+		local remaining = adjustedNumberOfNeededReadyPlayerClients - numberOfPlayingReadyPlayerClients
+		if not captainsModeEnabled and numberOfPlayingReadyCaptainClients == 1 then
+			result = getCaptainCallText(firstCaptainName)
+			md:ToAllNotifyInfo(result)
+		elseif remaining > 0 then
+			local headline = string.format("(%s vs %s)", firstCaptainName, secondCaptainName)
+			if not bannerDisplayed then
+				showBanner(headline)
+			end
+			local howManyNeededMessage = votesAllowedUntil and string.format("%s more needed!", remaining) or ""
+			result = string.format("%s wants Captains! %s", TGNS.GetClientName(headlineReadyClient), howManyNeededMessage)
 		end
-		local howManyNeededMessage = votesAllowedUntil and string.format("%s more needed!", remaining) or ""
-		result = string.format("%s wants Captains! %s", TGNS.GetClientName(headlineReadyClient), howManyNeededMessage)
 	end
 	return result
 end
