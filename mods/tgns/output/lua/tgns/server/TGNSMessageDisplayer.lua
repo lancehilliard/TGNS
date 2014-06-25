@@ -23,18 +23,24 @@ local function SendChatMessage(player, message, channel, isTeamMessage)
 end
 
 local function NotifyInfo(player, message, messagesChannel)
-	Shine:NotifyDualColour(player, 240, 230, 130, "[" .. messagesChannel .. "]", 255, 255, 255, message)
-	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	if player ~= nil then
+		Shine:NotifyDualColour(player, 240, 230, 130, "[" .. messagesChannel .. "]", 255, 255, 255, message)
+		SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	end
 end
 
 local function NotifyRed(player, message, messagesChannel)
-	Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. "]", 255, 255, 255, message)
-	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	if player ~= nil then
+		Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. "]", 255, 255, 255, message)
+		SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	end
 end
 
 local function NotifyError(player, message, messagesChannel)
-	Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. " ERROR]", 255, 255, 255, message)
-	SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	if player ~= nil then
+		Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. " ERROR]", 255, 255, 255, message)
+		SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	end
 end
 
 -- local function ShowTickerInfo(client, message, messagesChannel)
