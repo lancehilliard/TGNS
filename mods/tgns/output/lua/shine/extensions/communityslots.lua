@@ -567,11 +567,8 @@ function Plugin:PlayerSay(client, networkMessage)
     local message = StringTrim(networkMessage.message)
     if not teamOnly then
         TGNS.PlayerAction(client, function(p)
-            if TGNS.IsPlayerSpectator(p) then
-                tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator or @admin chat.")
-                if TGNS.IsClientAdmin(client) then
-                    tgnsMd:ToPlayerNotifyError(p, "Full admin note: sh_say (chat: !say) is also available.")
-                end
+            if TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.chatchannels and Shine.Plugins.chatchannels.DoesChatStartWithChatChannelTriggerCharacter and Shine.Plugins.chatchannels:DoesChatStartWithChatChannelTriggerCharacter(message)) then
+                tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator chat.")
                 cancel = true
             else
                 if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() and not TGNS.HasClientSignedPrimerWithGames(client) then
