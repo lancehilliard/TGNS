@@ -65,6 +65,17 @@ function Plugin:ClientConfirmConnect(client)
 	end)
 end
 
+function Plugin:DoesChatStartWithChatChannelTriggerCharacter(chatMessage)
+	local result = false
+	TGNS.DoForPairs(Shine.Plugins.chatchannels.Config.Channels, function(command, channel)
+		if TGNS.StartsWith(chatMessage, channel.triggerChar) then
+			result = true
+			return true
+		end
+	end)
+	return result
+end
+
 function Plugin:PlayerSay(client, networkMessage)
 	local cancel = false
 	local message = networkMessage.message
