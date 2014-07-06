@@ -1132,6 +1132,10 @@ function TGNS.GetMatchingClients(playerList, predicate)
 	return result
 end
 
+function TGNS.ClientIsOnPlayingTeam(client)
+	return TGNS.PlayerIsOnPlayingTeam(TGNS.GetPlayer(client))
+end
+
 function TGNS.PlayerIsOnPlayingTeam(player)
 	local result = TGNS.IsGameplayTeamNumber(TGNS.GetPlayerTeamNumber(player))
 	return result
