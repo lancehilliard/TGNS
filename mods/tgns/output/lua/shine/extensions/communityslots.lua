@@ -269,20 +269,38 @@ function Plugin:IsClientRecentCommander(client)
 end
 
 function Plugin:GetPlayersForNewGame()
-    --local playerList = TGNS.GetPlayerList()
-    local clients = TGNS.GetClientList()
-    --local steamIds = TGNS.Select(clients, TGNS.GetClientSteamId)
-    TGNS.SortAscending(clients, function(c)
-        return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge)
-        --return getCountOfPlayersWhoCanBumpTarget(c, playerList, steamIds)
+    -- local clients = TGNS.GetClientList()
+    -- TGNS.SortAscending(clients, function(c)
+    --     return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge)
+    -- end)
+    -- local result = {}
+    -- TGNS.DoFor(clients, function(c, index)
+    --     if index <= 16 then
+    --         table.insert(result, TGNS.GetPlayer(c))
+    --     end
+    -- end)
+    -- return result
+
+
+
+    local playerList = TGNS.GetPlayerList()
+    local eligiblePlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and  not TGNS.IsPlayerAFK(p) end)
+    local eligibleClients = TGNS.GetClients(eligiblePlayers)
+    TGNS.SortAscending(eligibleClients, function(c) return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge) end)
+    eligiblePlayers = TGNS.GetPlayers(eligibleClients)
+    local playersForNewGame = TGNS.Take(eligiblePlayers, 16)
+    local leftoverPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(eligiblePlayers, p) end)
+    TGNS.DoFor(leftoverPlayers, function(p)
+        local leftoverClient = TGNS.GetClient(p)
+        local clientsForNewGame = TGNS.GetClients(playersForNewGame)
+        TGNS.DoForReverse(clientsForNewGame, function(clientForNewGame, index)
+            if self:IsTargetBumpable(clientForNewGame, playersForNewGame, TGNS.GetClientSteamId(leftoverClient)) then
+                table.remove(playersForNewGame, index)
+                table.insert(playersForNewGame, p)
+            end
+        end)
     end)
-    local result = {}
-    TGNS.DoFor(clients, function(c, index)
-        if index <= 16 then
-            table.insert(result, TGNS.GetPlayer(c))
-        end
-    end)
-    return result
+    return playersForNewGame
 end
 
 function Plugin:GetBumpMessage(targetName)
