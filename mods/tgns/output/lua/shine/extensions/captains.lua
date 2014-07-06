@@ -26,6 +26,7 @@ local showRemainingTimer
 local MAPCHANGE_VOTE_ALLOW_ACTION_DELAY_IN_SECONDS = 115
 local lastOptInAttemptWhen = {}
 local OPT_IN_THROTTLE_IN_SECONDS = 3
+local allPlayersWereArtificiallyForcedToReadyRoom
 
 local function setCaptainsGameConfig()
 	if not originalForceEvenTeamsOnJoinSetting then
@@ -159,14 +160,18 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 		md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	end)
 	setCaptainsGameConfig()
+	allPlayersWereArtificiallyForcedToReadyRoom = true
+	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + (TGNS.IsGameInProgress() and 3 or 2)
 	TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
 	whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 	votesAllowedUntil = nil
-	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + 2
 	TGNS.ScheduleAction(2, showPickables)
 	Shine.Plugins.afkkick.Config.KickTime = 20
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
 		Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
+	end)
+	TGNS.ScheduleAction(2, function()
+		allPlayersWereArtificiallyForcedToReadyRoom = false
 	end)
 end
 
@@ -375,44 +380,42 @@ function Plugin:UpdatePregame(gamerules)
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
-	if captainsModeEnabled then
-		gameStarted = false
-		captainsGamesFinished = captainsGamesFinished + 1
-		local message = "Time for Round 2! Everyone switch teams!"
-		TGNS.DoForPairs(captainTeamNumbers, function(client, teamNumber)
-			captainTeamNumbers[client] = captainTeamNumbers[client] == 1 and 2 or 1
-		end)
-		if captainsGamesFinished < 2 then
-			setCaptainsGameConfig()
-			setTimeAtWhichToForceRoundStart()
-		else
-			disableCaptainsMode()
-			message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
-		end
-		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 2.5, function()
-			//swapTeamsAfterDelay(3)
-			md:ToAllNotifyInfo(message)
-		end)
-		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 4, function()
-			TGNS.DoFor(TGNS.GetPlayers(TGNS.GetStrangersClients(TGNS.GetPlayerList())), function(p)
-				md:ToPlayerNotifyInfo(p, "If you enjoy playing here, be sure to bookmark this TacticalGamer.com server!")
+	if not allPlayersWereArtificiallyForcedToReadyRoom then
+		if captainsModeEnabled then
+			gameStarted = false
+			captainsGamesFinished = captainsGamesFinished + 1
+			local message = "Time for Round 2! Everyone switch teams!"
+			TGNS.DoForPairs(captainTeamNumbers, function(client, teamNumber)
+				captainTeamNumbers[client] = captainTeamNumbers[client] == 1 and 2 or 1
 			end)
-		end)
-	else
-		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 65, function()
-			if Shine.Plugins.mapvote:VoteStarted() then
-				md:ToAllNotifyInfo("Join us Friday nights for Captains Games! Passworded, scrim-style gameplay")
-				md:ToAllNotifyInfo("from ~7PM 'til. Read more in our forums: TacticalGamer.com/natural-selection")
+			if captainsGamesFinished < 2 then
+				setCaptainsGameConfig()
+				setTimeAtWhichToForceRoundStart()
+			else
+				disableCaptainsMode()
+				message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
 			end
-		end)
-		readyCaptainClients = {}
-		readyPlayerClients = {}
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 2.5, function()
+				//swapTeamsAfterDelay(3)
+				md:ToAllNotifyInfo(message)
+			end)
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 4, function()
+				TGNS.DoFor(TGNS.GetPlayers(TGNS.GetStrangersClients(TGNS.GetPlayerList())), function(p)
+					md:ToPlayerNotifyInfo(p, "If you enjoy playing here, be sure to bookmark this TacticalGamer.com server!")
+				end)
+			end)
+		else
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 65, function()
+				if Shine.Plugins.mapvote:VoteStarted() then
+					md:ToAllNotifyInfo("Join us Friday nights for Captains Games! Passworded, scrim-style gameplay")
+					md:ToAllNotifyInfo("from ~7PM 'til. Read more in our forums: TacticalGamer.com/natural-selection")
+				end
+			end)
+			readyCaptainClients = {}
+			readyPlayerClients = {}
+		end
 	end
 	gamesFinished = gamesFinished + 1
-
-	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 1, function()
-		clientFriendlyFireWarnings = {}
-	end)
 end
 
 local function displayPlansToAll()
@@ -539,6 +542,8 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		if captainsModeEnabled then
 			md:ToPlayerNotifyError(player, "Captains Game is already active.")
+		-- elseif TGNS.IsGameInProgress() and not TGNS.ClientIsOnPlayingTeam(client) then
+		-- 	md:ToPlayerNotifyError(player, "You must be on a team to opt-in during gameplay.")
 		elseif mayVoteYet ~= true and not TGNS.IsGameInProgress() then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 		elseif TGNS.IsPlayerSpectator(player) then
@@ -576,6 +581,8 @@ function Plugin:CreateCommands()
 		end
 		if TGNS.GetSecondsSinceMapLoaded() - (lastOptInAttemptWhen[client] or 0) < OPT_IN_THROTTLE_IN_SECONDS then
 			md:ToPlayerNotifyError(player, string.format("Every opt-in attempt (including this one) resets a %s-second cooldown.", OPT_IN_THROTTLE_IN_SECONDS))
+		-- elseif TGNS.IsGameInProgress() and not TGNS.ClientIsOnPlayingTeam(client) then
+		--  	md:ToPlayerNotifyError(player, "You must be on a team to opt-in during gameplay.")
 		elseif mayVoteYet ~= true and votesAllowedUntil ~= math.huge and not TGNS.IsGameInProgress() then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
 			addIfSupportingMember(client)
