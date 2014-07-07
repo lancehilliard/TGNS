@@ -10,6 +10,7 @@ local inReadyRoomSinceTimes = {}
 local fullSpecDataRepository
 local fullSpecSteamIds
 local canNotifyAboutOtherServerSlots = true
+local blacklistedClients = {}
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 
@@ -26,7 +27,9 @@ local function IsClientAmongLongestConnected(clients, client, limit)
 end
 
 local function IsTargetProtectedStranger(targetClient, playerList)
-    local result = IsClientAmongLongestConnected(TGNS.GetStrangersClients(playerList), targetClient, Shine.Plugins.communityslots.Config.MinimumStrangers)
+    local strangersClients = TGNS.GetStrangersClients(playerList)
+    local strangersClientsWithFewerThanTenGames = TGNS.Where(strangersClients, function(c) return Balance.GetTotalGamesPlayed(c) < TGNS.PRIMER_GAMES_THRESHOLD end)
+    local result = IsClientAmongLongestConnected(strangersClientsWithFewerThanTenGames, targetClient, Shine.Plugins.communityslots.Config.MinimumStrangers)
     -- if result then
     --     tgnsMd:ToAdminConsole(string.format("%s is protected Stranger.", TGNS.GetClientName(targetClient)))
     -- end
@@ -205,7 +208,9 @@ local function IsClientBumped(joiningClient)
         local playerList = GetPlayingPlayers(joiningClient)
         if ServerIsFull(playerList) then
             local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
-            local victimClient = FindVictimClient(joiningSteamId, playerList)
+            local victimClient = blacklistedClients[joiningClient] and nil or FindVictimClient(joiningSteamId, playerList)
+            local joiningName = TGNS.GetClientName(joiningClient)
+            local blacklistAdvisoryClient
             if victimClient ~= nil then
                 local victimPlayer = TGNS.GetPlayer(victimClient)
                 victimTeamNumber = TGNS.GetPlayerTeamNumber(victimPlayer)
@@ -216,17 +221,28 @@ local function IsClientBumped(joiningClient)
                 TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(victimClient, Shared.GetSystemTime())
                 tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
-                tgnsMd:ToAdminConsole(string.format("%s was bumped.", victimName))
+                tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
+                if blacklistedClients[victimClient] then
+                    blacklistAdvisoryClient = victimClient
+                end
             else
                 local joiningPlayer = TGNS.GetPlayer(joiningClient)
-                local joiningName = TGNS.GetClientName(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(joiningPlayer, Shine.Plugins.communityslots:GetBumpMessage(joiningName))
                 tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
                 onPreJoinerKick(joiningClient,joiningPlayer,playerList)
                 TGNS.ExecuteClientCommand(joiningClient, "readyroom")
-                tgnsMd:ToAdminConsole(string.format("%s was bumped.", joiningName))
+                tgnsMd:ToAdminConsole(string.format("%s was bumped (prevented from joining a team).", joiningName))
                 result = true
+                if blacklistedClients[joiningClient] then
+                    blacklistAdvisoryClient = joiningClient
+                end
+            end
+            if blacklistAdvisoryClient then
+                    tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(blacklistAdvisoryClient), "Your reserved slot is presently revoked. See console for details.")
+                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Your reserved slot privilege is presently revoked.")
+                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Do not on the server complain or inquire about revoked privileges.")
+                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Rather, use the CAA forum: http://www.tacticalgamer.com/natural-selection-contact-admin/")
             end
         end
     end
@@ -316,15 +332,16 @@ end
 function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     local result = not TGNS.GetIsClientVirtual(targetClient)
     if result then
+        local targetClientHasSlotsPrivilege = not blacklistedClients[targetClient]
         local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
-        local targetIsSM = TGNS.IsClientSM(targetClient)
+        local targetIsSM = TGNS.IsClientSM(targetClient) and targetClientHasSlotsPrivilege
         local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
-        local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList)
-        local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList)
-        local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
-        local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
+        local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList) and targetClientHasSlotsPrivilege
+        local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList) and targetClientHasSlotsPrivilege
+        local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId) and targetClientHasSlotsPrivilege
+        local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList) and targetClientHasSlotsPrivilege
         local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
-        local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
+        local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() and targetClientHasSlotsPrivilege
 
         if joinerIsStranger or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
         then
@@ -343,6 +360,10 @@ function Plugin:ClientConnect(joiningClient)
             end
         end)
     end
+    local pbr = TGNSPlayerBlacklistRepository.Create("communityslots")
+    pbr:IsClientBlacklisted(joiningClient, function(isBlacklisted)
+        blacklistedClients[joiningClient] = isBlacklisted
+    end)
 end
 
 function Plugin:ClientConfirmConnect(client)
