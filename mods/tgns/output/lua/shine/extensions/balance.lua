@@ -187,19 +187,21 @@ local function SendNextPlayer()
 
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
 	local sortedPlayers = sortedPlayersGetter(playerList)
-	local eligiblePlayers = TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
+	local eligiblePlayers = sortedPlayers -- TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
 	local gamerules = GetGamerules()
 	local numberOfMarines = gamerules:GetTeam(kTeam1Index):GetNumPlayers()
 	local numberOfAliens = gamerules:GetTeam(kTeam2Index):GetNumPlayers()
 	TGNS.DoFor(eligiblePlayers, function(player)
 		local teamNumber = numberOfMarines <= numberOfAliens and kMarineTeamType or kAlienTeamType
-		local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
-		table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
-		TGNS.SendToTeam(player, teamNumber, true)
-		if teamNumber == kMarineTeamType then
-			numberOfMarines = numberOfMarines + 1
-		else
-			numberOfAliens = numberOfAliens + 1
+		if (teamNumber == kMarineTeamType and numberOfMarines < 8) or (teamNumber == kAlienTeamType and numberOfAliens < 8) then
+			local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
+			table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
+			TGNS.SendToTeam(player, teamNumber, true)
+			if teamNumber == kMarineTeamType then
+				numberOfMarines = numberOfMarines + 1
+			else
+				numberOfAliens = numberOfAliens + 1
+			end
 		end
 	end)
 
