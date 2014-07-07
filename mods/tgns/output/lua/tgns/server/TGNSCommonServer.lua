@@ -5,6 +5,7 @@ local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 
 TGNS.Config = {}
+TGNS.PRIMER_GAMES_THRESHOLD = 10
 
 function TGNS.GetTwoLists(values)
 	local list1 = {}
@@ -898,7 +899,7 @@ end
 function TGNS.HasSteamIdSignedPrimerWithGames(steamId)
 	local result = TGNS.HasSteamIdSignedPrimer(steamId)
 	if result == true and Shine.Plugins.Balance and Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId then
-		result = Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId(steamId) >= 10
+		result = Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId(steamId) >= TGNS.PRIMER_GAMES_THRESHOLD
 	end
 	return result
 end
