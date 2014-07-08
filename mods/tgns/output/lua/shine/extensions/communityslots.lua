@@ -307,15 +307,16 @@ function Plugin:GetPlayersForNewGame()
     eligiblePlayers = TGNS.GetPlayers(eligibleClients)
     local playersForNewGame = TGNS.Take(eligiblePlayers, 16)
     local leftoverPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(eligiblePlayers, p) end)
-    TGNS.DoFor(leftoverPlayers, function(p)
-        local leftoverClient = TGNS.GetClient(p)
-        local clientsForNewGame = TGNS.GetClients(playersForNewGame)
-        TGNS.DoForReverse(clientsForNewGame, function(clientForNewGame, index)
-            if self:IsTargetBumpable(clientForNewGame, playersForNewGame, TGNS.GetClientSteamId(leftoverClient)) then
-                table.remove(playersForNewGame, index)
-                table.insert(playersForNewGame, p)
+    TGNS.DoFor(leftoverPlayers, function(leftoverPlayer)
+        local leftoverClient = TGNS.GetClient(leftoverPlayer)
+        if leftoverClient then
+            local victimClient = FindVictimClient(TGNS.GetClientSteamId(leftoverClient), playersForNewGame)
+            if victimClient then
+                local victimPlayer = TGNS.GetPlayer(victimClient)
+                TGNS.RemoveAllMatching(playersForNewGame, victimPlayer)
+                TGNS.InsertDistinctly(playersForNewGame, leftoverPlayer)
             end
-        end)
+        end
     end)
     return playersForNewGame
 end
