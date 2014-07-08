@@ -122,11 +122,20 @@ local function showPickables()
 		if captainsGamesFinished == 0 then
 			local allClients = TGNS.GetClientList()
 			local readyRoomClients = TGNS.GetReadyRoomClients()
-			local firstCaptainName = (#captainClients > 0 and Shine:IsValidClient(captainClients[1])) and TGNS.GetClientName(captainClients[1]) or nil
-			local secondCaptainName = (#captainClients > 1 and Shine:IsValidClient(captainClients[2])) and TGNS.GetClientName(captainClients[2]) or nil
-			if firstCaptainName and secondCaptainName then
+			local teamChoiceCaptainClient = (#captainClients > 0 and Shine:IsValidClient(captainClients[1])) and captainClients[1] or nil
+			local playerChoiceCaptainClient = (#captainClients > 1 and Shine:IsValidClient(captainClients[2])) and captainClients[2] or nil
+			if teamChoiceCaptainClient and playerChoiceCaptainClient then
+				if Balance and Balance.GetClientWeight then
+					if Balance.GetClientWeight(playerChoiceCaptainClient) > Balance.GetClientWeight(teamChoiceCaptainClient) then
+						local originalPlayerChoiceCaptainClient = playerChoiceCaptainClient
+						playerChoiceCaptainClient = teamChoiceCaptainClient
+						teamChoiceCaptainClient = originalPlayerChoiceCaptainClient
+					end
+				end
+				local teamChoiceCaptainName = TGNS.GetClientName(teamChoiceCaptainClient)
+				local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 				TGNS.DoFor(readyRoomClients, function(c)
-					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team Choice\n%s: Player Choice", firstCaptainName, secondCaptainName), 3, 0, 255, 0, 0, 2, 0))
+					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
 				end)
 			end
 			local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
