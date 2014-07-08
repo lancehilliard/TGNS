@@ -44,6 +44,14 @@ function Balance.GetTotalGamesPlayed(client)
 	local result = Balance.GetTotalGamesPlayedBySteamId(steamId)
 	return result
 end
+function Balance.GetClientWeight(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	local bestWeight = TGNS.Has(bestPlayerSteamIds, steamId) and 3 or 0
+	local betterWeight = TGNS.Has(betterPlayerSteamIds, steamId) and 2 or 0
+	local goodWeight = TGNS.Has(goodPlayerSteamIds, steamId) and 1 or 0
+	local result = goodWeight + betterWeight + bestWeight
+	return result
+end
 
 local addWinToBalance = function(balance)
 	balance.wins = balance.wins + 1
