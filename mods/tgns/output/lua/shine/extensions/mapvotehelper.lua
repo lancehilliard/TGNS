@@ -1,4 +1,5 @@
-local md = TGNSMessageDisplayer.Create("VOTE")
+local md = TGNSMessageDisplayer.Create()
+local mapNominations = {}
 
 local function show(mapVoteSummaries, totalVotes)
 	local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
@@ -33,10 +34,22 @@ local function showVoteReminders()
 	end
 end
 
+local function checkForMaxNominations()
+	local nominationsNeededToForceTheVote = Shine.Plugins.mapvote.Config.MaxOptions
+	if #Shine.Plugins.mapvote.Vote.Nominated >= nominationsNeededToForceTheVote then
+		if not TGNS.IsGameInProgress() and not Shine.Plugins.mapvote:VoteStarted() then
+			Shine.Plugins.mapvote.MapCycle.time = 0
+			Shine.Commands.sh_forcemapvote.Func()
+			TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerReadyRoom(p) end))
+		end
+	end
+end
+
 local Plugin = {}
 
 function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 17, showVoteReminders)
+	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, checkForMaxNominations)
 end
 
 function Plugin:Initialise()
@@ -62,6 +75,28 @@ function Plugin:Initialise()
 			end
 		end
 	end)
+
+	TGNS.ScheduleAction(5, function()
+		local originalNominateFunc = Shine.Commands.sh_nominate.Func
+		Shine.Commands.sh_nominate.Func = function(client, mapName)
+			local steamId = TGNS.GetClientSteamId(client)
+			local player = TGNS.GetPlayer(client)
+			if mapNominations[steamId] then
+				md:ToPlayerNotifyError(player, string.format("You may nominate only one map. You have already nominated %s.", mapNominations[steamId]))
+			else
+				local mapVoteNominationsCollectionContainedMapNameBeforeExecutingOriginalFunc = table.contains(Shine.Plugins.mapvote.Vote.Nominated, mapName)
+				originalNominateFunc(client, mapName)
+				local mapVoteNominationsCollectionContainedMapNameAfterExecutingOriginalFunc = table.contains(Shine.Plugins.mapvote.Vote.Nominated, mapName)
+				if mapVoteNominationsCollectionContainedMapNameAfterExecutingOriginalFunc then
+					if not mapVoteNominationsCollectionContainedMapNameBeforeExecutingOriginalFunc then
+						mapNominations[steamId] = mapName
+						checkForMaxNominations()
+					end
+				end
+			end
+		end
+	end)
+
     return true
 end
 
