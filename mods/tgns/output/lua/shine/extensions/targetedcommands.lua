@@ -28,8 +28,8 @@ local commands = { CreateCommand(
 		"sh_affirm"
 		, "affirm"
 		, "AFFIRM"
-		, function(self, client) return TGNS.IsClientStranger(client) end
-		, "'%s' is not a stranger."
+		, function(self, client) return TGNS.IsClientStranger(client) and Balance.GetTotalGamesPlayed(client) < TGNS.PRIMER_GAMES_THRESHOLD end
+		, string.format("'%%s' is not a stranger with fewer than %s games.", TGNS.PRIMER_GAMES_THRESHOLD)
 		, function(self, client, targetClient, reason, md)
 			affirm(client, targetClient, md, self.consoleCommandName)
 		end
@@ -96,7 +96,7 @@ function Plugin:CreateCommands()
 				local targetPlayer = TGNS.GetPlayerMatching(playerPredicate, nil)
 				if targetPlayer ~= nil then
 					local targetClient = TGNS.GetClient(targetPlayer)
-					if command.IsValidTarget == nil or command.IsValidTarget(targetClient) then
+					if command.IsValidTargetClient == nil or command.IsValidTargetClient(targetClient) then
 						if TGNS.HasNonEmptyValue(reason) or not command.isReasonRequired then
 							command:OnInputValidated(client, targetClient, reason, md)
 						else
