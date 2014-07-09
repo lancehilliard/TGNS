@@ -1,6 +1,7 @@
 local approvedClients = {}
 local changers = {}
 local clientsReadyForScoreboardData = {}
+local approvalCounts = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -97,6 +98,27 @@ local function initScoreboardDecorations(client)
 	end
 end
 
+function Plugin:GetApprovalsCount(client)
+	local approvalCount = TGNS.SingleOrNil(approvalCounts, function(c) return c[1] == client end)
+	local result = (client and approvalCount) and approvalCount[1] or 0
+	return result
+end
+
+function Plugin:ClientConnect(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	local url = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
+	TGNS.GetHttpAsync(url, function(approvalsResponseJson)
+		if Shine:IsValidClient(client) then
+			local approvalsResponse = json.decode(approvalsResponseJson) or {}
+			if approvalsResponse.success then
+				table.insert(approvalCounts, {client, approvalsResponse.result})
+			else
+				TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approvals count data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, approvalsResponse.msg, approvalsResponseJson, approvalsResponse.stacktrace))
+			end
+		end
+	end)
+end
+
 function Plugin:ClientConfirmConnect(client)
 	TGNS.ScheduleAction(1, function()
 		initScoreboardDecorations(client)
@@ -133,8 +155,21 @@ function Plugin:EndGame(gamerules, winningTeam)
 	end)
 end
 
+function Plugin:CreateCommands()
+	local approvalsCountsCommand = self:BindCommand( "sh_approvalcounts", nil, function(client)
+		local md = TGNSMessageDisplayer.Create("APPROVALS")
+		local approvalCountsToDisplay = TGNS.Where(approvalCounts, function(c) return Shine:IsValidClient(c[1]) end)
+		TGNS.SortAscending(approvalCountsToDisplay, function(c) return c[2] end)
+		TGNS.DoFor(approvalCountsToDisplay, function(c)
+			md:ToClientConsole(client, string.format("%s: %s", TGNS.GetClientName(c[1]), c[2]))
+		end)
+	end)
+	approvalsCountsCommand:Help( "Show approval counts." )
+end
+
 function Plugin:Initialise()
     self.Enabled = true
+    self:CreateCommands()
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
 		self:AnnouncePlayerPrefix(player)
 	end)

@@ -12,7 +12,7 @@ local function getPdr(persistedDataName)
 	return result
 end
 
-local function CreateRole(displayName, candidatesDescription, groupName, messagePrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery)
+local function CreateRole(displayName, candidatesDescription, groupName, messagePrefix, optInConsoleCommandName, persistedDataName, isClientOneOfQuery, isClientBlockerQuery, minimumRequirementsQuery, clientRankQuery)
 	local result = {}
 	pdrCache[persistedDataName] = {}
 	pbrCache[persistedDataName] = {}
@@ -34,6 +34,7 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 		local pdrData = pdrCache[persistedDataName][steamId]
 		return pdrData
 	end
+	function result:GetClientRank(client) return clientRankQuery(client) end
 	function result:SaveOptInData(pdrData, callback)
 		callback = callback or function() end
 		pdr:Save(pdrData, function(saveResponse)
@@ -75,6 +76,10 @@ local roles = {
 		, function(client)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
 			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
+		end
+		, function(client)
+			local approvalsCount = Shine.Plugins.scoreboard:GetApprovalsCount(client)
+			return approvalsCount
 		end)
 }
 
@@ -85,7 +90,7 @@ local function GetCandidateClient(teamPlayers, role)
 	if teamIsEligible then
 		local clientsAlreadyInTheRole = TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
 		if #clientsAlreadyInTheRole < 2 then
-			TGNS.SortAscending(teamPlayers, function(p) return TGNS.ClientAction(p, function(c) return role:IsClientPreferred(c) end) and 1 or 0 end)
+			TGNS.SortAscending(teamPlayers, function(p) return TGNS.ClientAction(p, function(c) return role:IsClientPreferred(c) end) and math.huge or role:GetClientRank(c) end)
 			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p)
 				return role:IsClientEligible(c)
 			end)
