@@ -301,12 +301,12 @@ function Plugin:GetPlayersForNewGame()
 
 
     local playerList = TGNS.GetPlayerList()
-    local eligiblePlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and  not TGNS.IsPlayerAFK(p) end)
+    local eligiblePlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
     local eligibleClients = TGNS.GetClients(eligiblePlayers)
     TGNS.SortAscending(eligibleClients, function(c) return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge) end)
     eligiblePlayers = TGNS.GetPlayers(eligibleClients)
     local playersForNewGame = TGNS.Take(eligiblePlayers, 16)
-    local leftoverPlayers = TGNS.Where(playerList, function(p) return not TGNS.Has(eligiblePlayers, p) end)
+    local leftoverPlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) and not TGNS.Has(eligiblePlayers, p) end)
     TGNS.DoFor(leftoverPlayers, function(leftoverPlayer)
         local leftoverClient = TGNS.GetClient(leftoverPlayer)
         if leftoverClient then
