@@ -35,7 +35,7 @@ local function showVoteReminders()
 end
 
 local function checkForMaxNominations()
-	local nominationsNeededToForceTheVote = Shine.Plugins.mapvote.Config.MaxOptions
+	local nominationsNeededToForceTheVote = Shine.Plugins.mapvote.MaxNominations
 	if #Shine.Plugins.mapvote.Vote.Nominated >= nominationsNeededToForceTheVote then
 		if not TGNS.IsGameInProgress() and not Shine.Plugins.mapvote:VoteStarted() then
 			Shine.Plugins.mapvote.MapCycle.time = 0
