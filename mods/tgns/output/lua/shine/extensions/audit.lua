@@ -94,7 +94,7 @@ function Plugin:Initialise()
     	local gameData = {}
     	gameData.StartTimeSeconds = currentGame["startTimeSeconds"]
     	gameData.DurationInSeconds = gameDurationInSeconds
-    	gameData.WinningTeamNumber = winningTeam:GetTeamNumber()
+    	gameData.WinningTeamNumber = winningTeam and winningTeam:GetTeamNumber() or 0
     	gameData.TotalPlayerCount = #currentGame["clients"]
     	gameData.FullGameSupportingMemberCount = #TGNS.Where(clients, TGNS.IsClientSM)
     	gameData.FullGamePrimerWithGamesCount = #TGNS.Where(clients, TGNS.HasClientSignedPrimerWithGames)
