@@ -9,7 +9,7 @@ local function CreateCommand(consoleCommandName, chatCommandName, messageChannel
 	result.isReasonRequired = isReasonRequired
 	result.helpText = helpText
 	function result:OnInputValidated(client, targetClient, reason, md) return onInputValidated(self, client, targetClient, reason, md) end
-	function result:IsValidTargetClient(client) return isValidTargetClient(self, client) end
+	function result:IsValidTargetClient(client) return isValidTargetClient and isValidTargetClient(self, client) or true end
 	return result
 end
 
@@ -96,7 +96,7 @@ function Plugin:CreateCommands()
 				local targetPlayer = TGNS.GetPlayerMatching(playerPredicate, nil)
 				if targetPlayer ~= nil then
 					local targetClient = TGNS.GetClient(targetPlayer)
-					if command.IsValidTargetClient == nil or command.IsValidTargetClient(targetClient) then
+					if command.IsValidTargetClient(targetClient) then
 						if TGNS.HasNonEmptyValue(reason) or not command.isReasonRequired then
 							command:OnInputValidated(client, targetClient, reason, md)
 						else
