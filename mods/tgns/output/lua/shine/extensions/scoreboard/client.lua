@@ -59,16 +59,72 @@ function Plugin:Initialise()
 		        player["Number"]:SetColor(numberColor)
 	        end
 
-			local playerIsBot = playerRecord.Ping == 0 -- or string.sub(playerRecord.Name,1,5)=="[BOT]"
+
+
+		if not player.PlayerApproveIcon then
+		    local playerApproveIcon = GUIManager:CreateGraphicItem()
+		    local playerApproveIconPosition = player.Status:GetPosition()
+		    playerApproveIconPosition.x = playerApproveIconPosition.x - 25
+		    playerApproveIconPosition.y = playerApproveIconPosition.y - 10
+		    playerApproveIcon:SetSize(Vector(20, 20, 0))
+		    playerApproveIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		    playerApproveIcon:SetPosition(playerApproveIconPosition)
+		    playerApproveIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
+		    player.PlayerApproveIcon = playerApproveIcon
+		    player.Background:AddChild(playerApproveIcon)
+		end
+		if not player.PlayerQueryIcon then
+		    local playerQueryIcon = GUIManager:CreateGraphicItem()
+		    local playerQueryIconPosition = player.Status:GetPosition()
+		    playerQueryIconPosition.x = playerQueryIconPosition.x - 45
+		    playerQueryIconPosition.y = playerQueryIconPosition.y - 10
+		    playerQueryIcon:SetSize(Vector(20, 20, 0))
+		    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		    playerQueryIcon:SetPosition(playerQueryIconPosition)
+		    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
+		    player.PlayerQueryIcon = playerQueryIcon
+		    player.Background:AddChild(playerQueryIcon)
+		end
+		if not player.PlayerApproveStatusItem then
+			local playerApproveStatusItem = GUIManager:CreateTextItem()
+			playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+			playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+			playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
+			playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
+			local playerApproveStatusItemPosition = player.Status:GetPosition()
+		    playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
+		    playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
+			playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
+			player.PlayerApproveStatusItem = playerApproveStatusItem
+			player.Background:AddChild(playerApproveStatusItem)
+		end
+		if not player.PlayerNoteItem then
+			local playerNoteItem = GUIManager:CreateTextItem()
+			playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+			playerNoteItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+			playerNoteItem:SetTextAlignmentX(GUIItem.Align_Max)
+			playerNoteItem:SetTextAlignmentY(GUIItem.Align_Min)
+			local playerNoteItemPosition = player.Status:GetPosition()
+		    playerNoteItemPosition.x = playerNoteItemPosition.x - 45
+		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
+			playerNoteItem:SetPosition(playerNoteItemPosition)
+			player.PlayerNoteItem = playerNoteItem
+			player.Background:AddChild(playerNoteItem)
+		end
+
+
+
+
+			local playerIsBot = playerRecord.Ping == 0
 	        local playerApproveIcon = player["PlayerApproveIcon"]
+	        local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
+	        local playerQueryIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        if playerApproveIcon then
-	        	local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
-	        	local playerQueryIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
 		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and QUERY_TEXTURE_DISABLED or getTeamQueryTexture(teamNumber))
 	        end
@@ -97,8 +153,6 @@ function Plugin:Initialise()
 
 	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
 	        	player["Status"]:SetText("Spectator")
-	        -- elseif teamNumber == 1 and (Client.GetLocalClientTeamNumber() == 1 or Client.GetLocalClientTeamNumber() == 3) and hasJetPacks[clientIndex] and playerRecord.Status ~= "Exo" then
-	        -- 	player["Status"]:SetText(string.format("%s/JP", playerRecord.Status == "Flamethrower" and "Flame" or playerRecord.Status))
 	        end
 
 	        -- if not playerIsBot then
@@ -125,65 +179,6 @@ function Plugin:Initialise()
 		    playerApproveReceiveTotalItemPosition = player["Status"]:GetPosition()
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
-	end
-
-	local originalGUIScoreboardCreatePlayerItem = GUIScoreboard.CreatePlayerItem
-	GUIScoreboard.CreatePlayerItem = function(self)
-		local output = originalGUIScoreboardCreatePlayerItem(self)
-		if not output.PlayerApproveIcon then
-		    local playerApproveIcon = GUIManager:CreateGraphicItem()
-		    local playerApproveIconPosition = output.Status:GetPosition()
-		    playerApproveIconPosition.x = playerApproveIconPosition.x - 25
-		    playerApproveIconPosition.y = playerApproveIconPosition.y - 10
-		    playerApproveIcon:SetSize(Vector(20, 20, 0))
-		    playerApproveIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-		    playerApproveIcon:SetPosition(playerApproveIconPosition)
-		    playerApproveIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
-		    output.PlayerApproveIcon = playerApproveIcon
-		    output.Background:AddChild(playerApproveIcon)
-		end
-		if not output.PlayerQueryIcon then
-		    local playerQueryIcon = GUIManager:CreateGraphicItem()
-		    local playerQueryIconPosition = output.Status:GetPosition()
-		    playerQueryIconPosition.x = playerQueryIconPosition.x - 45
-		    playerQueryIconPosition.y = playerQueryIconPosition.y - 10
-		    playerQueryIcon:SetSize(Vector(20, 20, 0))
-		    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-		    playerQueryIcon:SetPosition(playerQueryIconPosition)
-		    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
-		    output.PlayerQueryIcon = playerQueryIcon
-		    output.Background:AddChild(playerQueryIcon)
-		end
-		if not output.PlayerApproveStatusItem then
-			local playerApproveStatusItem = GUIManager:CreateTextItem()
-			playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-			playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
-			playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
-			local playerApproveStatusItemPosition = output.Status:GetPosition()
-		    playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
-		    playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
-			playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
-			output.PlayerApproveStatusItem = playerApproveStatusItem
-			output.Background:AddChild(playerApproveStatusItem)
-		end
-		if not output.PlayerNoteItem then
-			local playerNoteItem = GUIManager:CreateTextItem()
-			playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-			playerNoteItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			playerNoteItem:SetTextAlignmentX(GUIItem.Align_Max)
-			playerNoteItem:SetTextAlignmentY(GUIItem.Align_Min)
-			local playerNoteItemPosition = output.Status:GetPosition()
-		    playerNoteItemPosition.x = playerNoteItemPosition.x - 45
-		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
-			playerNoteItem:SetPosition(playerNoteItemPosition)
-			output.PlayerNoteItem = playerNoteItem
-			output.Background:AddChild(playerNoteItem)
-		end
-
-
-
-	    return output
 	end
 
 	local originalGUIScoreboardSendKeyEvent = GUIScoreboard.SendKeyEvent
