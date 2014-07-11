@@ -5,7 +5,6 @@ local captainsGamesFinished = 0
 local readyTeams = {}
 local gamesFinished = 0
 local captainTeamNumbers = {}
-local originalForceEvenTeamsOnJoinSetting
 local gameStarted
 local readyPlayerClients
 local readyCaptainClients
@@ -28,19 +27,6 @@ local lastOptInAttemptWhen = {}
 local OPT_IN_THROTTLE_IN_SECONDS = 3
 local allPlayersWereArtificiallyForcedToReadyRoom
 
-local function setCaptainsGameConfig()
-	if not originalForceEvenTeamsOnJoinSetting then
-		originalForceEvenTeamsOnJoinSetting = Server.GetConfigSetting("force_even_teams_on_join")
-	end
-	Server.SetConfigSetting("force_even_teams_on_join", false)
-end
-
-local function setOriginalConfig()
-	if originalForceEvenTeamsOnJoinSetting then
-		Server.SetConfigSetting("force_even_teams_on_join", originalForceEvenTeamsOnJoinSetting)
-	end
-end
-
 function disableCaptainsMode()
 	captainsModeEnabled = false
 	TGNS.DoFor(captainClients, function(c)
@@ -54,7 +40,6 @@ local function startGame()
 	if timeAtWhichToForceRoundStart and timeAtWhichToForceRoundStart ~= 0 then
 		timeAtWhichToForceRoundStart = 0
 		TGNS.ScheduleAction(2, function()
-			setOriginalConfig()
 			TGNS.ForceGameStart()
 			TGNS.ScheduleAction(kCountDownLength + 2, function()
 				readyTeams["Marines"] = false
@@ -168,7 +153,6 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	TGNS.ScheduleAction(0, function()
 		md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	end)
-	setCaptainsGameConfig()
 	allPlayersWereArtificiallyForcedToReadyRoom = true
 	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + (TGNS.IsGameInProgress() and 3 or 2)
 	TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
@@ -210,7 +194,7 @@ local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClien
 		local remaining = adjustedNumberOfNeededReadyPlayerClients - numberOfPlayingReadyPlayerClients
 		if not captainsModeEnabled and numberOfPlayingReadyCaptainClients == 1 then
 			result = getCaptainCallText(firstCaptainName)
-			md:ToAllNotifyInfo(result)
+			--md:ToAllNotifyInfo(result)
 		elseif remaining > 0 then
 			local headline = string.format("(%s vs %s)", firstCaptainName, secondCaptainName)
 			if not bannerDisplayed then
@@ -233,14 +217,14 @@ local function updateCaptainsReadyProgress(readyClient)
 	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
 		local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, readyClient)
-		local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and lead)" or "")
+		local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and pick your team for)" or "")
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
 		-- if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 or readyClientIsCaptain then
 			-- md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
 			-- highVolumeMessagesLastShownTime = Shared.GetTime()
 		-- end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
-			Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 1, 0))
+			Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 2, 0))
 		end)
 	else
 		if not captainsModeEnabled then
@@ -398,7 +382,6 @@ function Plugin:EndGame(gamerules, winningTeam)
 				captainTeamNumbers[client] = captainTeamNumbers[client] == 1 and 2 or 1
 			end)
 			if captainsGamesFinished < 2 then
-				setCaptainsGameConfig()
 				setTimeAtWhichToForceRoundStart()
 			else
 				disableCaptainsMode()
@@ -807,6 +790,12 @@ function Plugin:Initialise()
 			plans = {}
 			displayPlansToAll()
 		end
+	end)
+
+	local originalGetCanJoinTeamNumber
+	originalGetCanJoinTeamNumber = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanJoinTeamNumber", function(self, teamNumber)
+		local result = captainsModeEnabled and true or originalGetCanJoinTeamNumber(self, teamNumber)
+		return result
 	end)
 
 	-- TGNS.RegisterEventHook("EverySecond", function()
