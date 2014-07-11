@@ -18,7 +18,7 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 		local gamerules = GetGamerules()
 		if gamerules then
 			md:ToPlayerNotifyError(player, Shine.Plugins.printablenames.Config.WarnMessage)
-			gamerules:JoinTeam(player, kTeamReadyRoom)
+			TGNS.SendToTeam(player, kTeamReadyRoom, true)
 		end
 	end
 end
