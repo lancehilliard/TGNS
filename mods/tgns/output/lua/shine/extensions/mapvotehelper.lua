@@ -37,7 +37,7 @@ end
 local function checkForMaxNominations()
 	local nominationsNeededToForceTheVote = Shine.Plugins.mapvote.MaxNominations
 	if #Shine.Plugins.mapvote.Vote.Nominated >= nominationsNeededToForceTheVote then
-		if not TGNS.IsGameInProgress() and not Shine.Plugins.mapvote:VoteStarted() then
+		if not TGNS.IsGameInProgress() and not Shine.Plugins.mapvote:VoteStarted() and TGNS.GetSecondsSinceMapLoaded() > 600 then
 			Shine.Plugins.mapvote.MapCycle.time = 0
 			Shine.Commands.sh_forcemapvote.Func()
 			TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerReadyRoom(p) end))
