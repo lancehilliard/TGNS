@@ -657,6 +657,7 @@ function TGNS.ForcePlayersToReadyRoom(players)
 end
 
 function TGNS.SendToTeam(player, teamNumber, force)
+	Shared.Message(string.format("TGNS.SendToTeam: Sending %s to team %s...", TGNS.GetPlayerName(player), teamNumber))
 	return GetGamerules():JoinTeam(player, teamNumber, force)
 end
 
