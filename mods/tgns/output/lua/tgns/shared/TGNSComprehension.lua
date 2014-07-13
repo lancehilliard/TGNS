@@ -63,7 +63,7 @@ function TGNS.Where(elements, predicate)
 end
 
 function TGNS.Any(elements, predicate)
-	local result = #TGNS.Where(elements, predicate) > 0
+	local result = (predicate == nil and elements and #elements > 0) and true or #TGNS.Where(elements, predicate) > 0
 	return result
 end
 
