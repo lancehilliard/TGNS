@@ -26,14 +26,24 @@ local MAPCHANGE_VOTE_ALLOW_ACTION_DELAY_IN_SECONDS = 115
 local lastOptInAttemptWhen = {}
 local OPT_IN_THROTTLE_IN_SECONDS = 3
 local allPlayersWereArtificiallyForcedToReadyRoom
+local setSpawnsSummaryText
 
 function disableCaptainsMode()
 	captainsModeEnabled = false
 	TGNS.DoFor(captainClients, function(c)
 		if Shine:IsValidClient(c) then
 			TGNS.RemoveTempGroup(c, "captains_group")
+			TGNS.RemoveTempGroup(c, "teamchoicecaptain_group")
 		end
 	end)
+end
+
+local function getTeamChoiceCaptainClient(clients)
+	return clients[1]
+end
+
+local function getPlayerChoiceCaptainClient(clients)
+	return clients[2]
 end
 
 local function startGame()
@@ -98,7 +108,10 @@ end
 local function showRoster(clients, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText)
 	local columnsY = titleY + 0.05
 	TGNS.SortAscending(clients, TGNS.GetClientId)
-	local names = TGNS.Select(clients, function(c) return TGNS.Truncate(TGNS.GetClientName(c), 16) end)
+	local names = TGNS.Select(clients, function(c)
+		local nameToDisplay = string.format("%s%s", TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) and "!" or "", TGNS.GetClientName(c))
+		return TGNS.Truncate(nameToDisplay, 16)
+	end)
 	TGNS.ShowPanel(names, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText, #names, 3, "(None)")
 end
 
@@ -107,21 +120,23 @@ local function showPickables()
 		if captainsGamesFinished == 0 then
 			local allClients = TGNS.GetClientList()
 			local readyRoomClients = TGNS.GetReadyRoomClients()
-			local teamChoiceCaptainClient = (#captainClients > 0 and Shine:IsValidClient(captainClients[1])) and captainClients[1] or nil
-			local playerChoiceCaptainClient = (#captainClients > 1 and Shine:IsValidClient(captainClients[2])) and captainClients[2] or nil
+			local teamChoiceCaptainClient = (#captainClients > 0 and Shine:IsValidClient(getTeamChoiceCaptainClient(captainClients))) and getTeamChoiceCaptainClient(captainClients) or nil
+			local playerChoiceCaptainClient = (#captainClients > 1 and Shine:IsValidClient(getPlayerChoiceCaptainClient(captainClients))) and getPlayerChoiceCaptainClient(captainClients) or nil
 			if teamChoiceCaptainClient and playerChoiceCaptainClient then
-				if Balance and Balance.GetClientWeight then
-					if Balance.GetClientWeight(playerChoiceCaptainClient) > Balance.GetClientWeight(teamChoiceCaptainClient) then
-						local originalPlayerChoiceCaptainClient = playerChoiceCaptainClient
-						playerChoiceCaptainClient = teamChoiceCaptainClient
-						teamChoiceCaptainClient = originalPlayerChoiceCaptainClient
-					end
-				end
 				local teamChoiceCaptainName = TGNS.GetClientName(teamChoiceCaptainClient)
 				local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 				TGNS.DoFor(readyRoomClients, function(c)
 					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
 				end)
+				if teamChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(teamChoiceCaptainClient) then
+					local teamChoiceCaptainTeamNumber = TGNS.GetClientTeamNumber(teamChoiceCaptainClient)
+					local teamChoiceCaptainTeammateClients = TGNS.GetTeamClients(teamChoiceCaptainTeamNumber, TGNS.GetPlayerList())
+					TGNS.DoFor(teamChoiceCaptainTeammateClients, function(c)
+						local truncatedTeamChoiceCaptainName = TGNS.Truncate(teamChoiceCaptainName, 16)
+						local message = setSpawnsSummaryText and string.format("%s has selected\nthe game's spawn locations!", truncatedTeamChoiceCaptainName) or string.format("%s: Select Spawns!\nM > Captains > sh_setspawns", truncatedTeamChoiceCaptainName)
+						Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
+					end)
+				end
 			end
 			local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
@@ -138,11 +153,24 @@ local function showPickables()
 	end
 end
 
+local function swapCaptains()
+	local newCaptainClients = {}
+	table.insert(newCaptainClients, getPlayerChoiceCaptainClient(captainClients))
+	table.insert(newCaptainClients, getTeamChoiceCaptainClient(captainClients))
+	captainClients = newCaptainClients
+end
+
 local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	local randomizedCaptainClients = TGNS.GetRandomizedElements({captain1Client,captain2Client})
 	captainClients = { randomizedCaptainClients[1], randomizedCaptainClients[2] }
-	captainTeamNumbers[captainClients[1]] = 1
-	captainTeamNumbers[captainClients[2]] = 2
+	if Balance and Balance.GetClientWeight then
+		if Balance.GetClientWeight(getPlayerChoiceCaptainClient(captainClients)) > Balance.GetClientWeight(getTeamChoiceCaptainClient(captainClients)) then
+			swapCaptains()
+		end
+	end
+	TGNS.AddTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
+	captainTeamNumbers[getTeamChoiceCaptainClient(captainClients)] = 1
+	captainTeamNumbers[getPlayerChoiceCaptainClient(captainClients)] = 2
 	captainsModeEnabled = true
 	setTimeAtWhichToForceRoundStart()
 	captainsGamesFinished = 0
@@ -429,6 +457,17 @@ local function displayPlansToAll()
 end
 
 function Plugin:CreateCommands()
+
+	local resetTimerCommand = self:BindCommand("sh_resetcaptainstimer", nil, function(client)
+		if timeAtWhichToForceRoundStart and timeAtWhichToForceRoundStart > 0 then
+			timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START + 30 + (captainsGamesFinished == 0 and 60 or 0)
+			md:ToClientConsole(client, "Captains Timer reset.")
+		else
+			md:ToClientConsole(client, "ERROR: No timer to reset.")
+		end
+	end)
+	resetTimerCommand:Help("Reset the Captains pre-game countdown timer.")
+
 	local captainsCommand = self:BindCommand("sh_captains", "captains", function(client, captain1Predicate, captain2Predicate)
 		local player = TGNS.GetPlayer(client)
 		if captainsModeEnabled then
@@ -605,6 +644,73 @@ function Plugin:CreateCommands()
 		lastOptInAttemptWhen[client] = TGNS.GetSecondsSinceMapLoaded()
 	end, true)
 	wantCaptainsCommand:Help(string.format("Tell the server you want to play a Captains Game (cooldown: %s seconds).", OPT_IN_THROTTLE_IN_SECONDS))
+
+	local swapCaptainsCommand = self:BindCommand( "sh_swapcaptains", nil, function(client)
+		local errorMessage
+		if captainClients and #captainClients == 2 then
+			local matchingCaptainClients = TGNS.GetClientList(function(c) return c == getPlayerChoiceCaptainClient(captainClients) or c == getTeamChoiceCaptainClient(captainClients) end)
+			if #matchingCaptainClients == 2 then
+				TGNS.RemoveTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
+				swapCaptains()
+				TGNS.AddTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
+				md:ToClientConsole(client, string.format("Clients swapped. %s is now Player Choice. %s is now Team Choice.", TGNS.GetClientName(getPlayerChoiceCaptainClient(captainClients)), TGNS.GetClientName(getTeamChoiceCaptainClient(captainClients))))
+			else
+				errorMessage = "Unable to find two Captain clients among connected clients."
+			end
+		else
+			errorMessage = "There are fewer than two Captains presently designated."
+		end
+		if errorMessage then
+			md:ToClientConsole(client, string.format("ERROR: %s", errorMessage))
+		end
+	end)
+	swapCaptainsCommand:Help( "Swap roles between the two Captains (Player Choice <-> Team Choice)." )
+
+	local setSpawnsCommand = self:BindCommand("sh_setspawns", nil, function(client, spawnSelectionIndex)
+		spawnSelectionIndex = tonumber(spawnSelectionIndex)
+		local player = TGNS.GetPlayer(client)
+		local ssoData = Shine.Plugins.spawnselectionoverrides:GetCurrentMapSpawnSelectionOverridesData()
+		local errorMessage
+		if (captainsModeEnabled and captainsGamesFinished == 0 and not TGNS.IsGameInProgress()) or TGNS.IsClientAdmin(client) then
+			if spawnSelectionIndex then
+				if spawnSelectionIndex >= 1 and spawnSelectionIndex <= #ssoData then
+					local spawnSelectionOverride = {}
+					table.insert(spawnSelectionOverride, ssoData[spawnSelectionIndex].spawnSelectionOverride)
+					Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverride)
+					setSpawnsSummaryText = ssoData[spawnSelectionIndex].summaryTextLineDelimited
+					local clientIsCaptain = (#captainClients > 0 and getPlayerChoiceCaptainClient(captainClients) == client) or (#captainClients > 1 and getTeamChoiceCaptainClient(captainClients) == client)
+					if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
+						local clientTeamNumber = TGNS.GetClientTeamNumber(client)
+						md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", TGNS.GetClientName(client), ssoData[spawnSelectionIndex].summaryText))
+					else
+						md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
+					end
+				else
+					errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
+				end
+			else
+				errorMessage = "You must specify a spawn selection override index number."
+			end
+		else
+			errorMessage = "You may manually set map spawns only before the first Captains round."
+		end
+		if errorMessage then
+			-- print errorMessage
+			md:ToClientConsole(client, string.format("ERROR: %s", errorMessage))
+			md:ToClientConsole(client, "usage: sh_setspawns <spawn selection override index number>")
+			md:ToClientConsole(client, " e.g.: sh_setspawns 1")
+			if #ssoData > 0 then
+				md:ToClientConsole(client, "Available spawn pair options:")
+				TGNS.DoFor(ssoData, function(d)
+					md:ToClientConsole(client, string.format("%s. %s", d.spawnSelectionIndex, d.summaryText))
+				end)
+			else
+				md:ToPlayerNotifyError(player, "There are no spawn selection overrides configured for this map.")
+			end
+		end
+	end)
+	setSpawnsCommand:AddParam{ Type = "string", Optional = true }
+	setSpawnsCommand:Help("Set spawns for the next game. Execute without parameters for more help.")
 
 	local voteAllowCommand = self:BindCommand("sh_allowcaptainsvotes", nil, function(client)
 		mayVoteYet = true
@@ -789,6 +895,7 @@ function Plugin:Initialise()
 			Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverrides)
 			plans = {}
 			displayPlansToAll()
+			TGNS.RemoveTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
 		end
 	end)
 
@@ -803,6 +910,23 @@ function Plugin:Initialise()
 	-- 	local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
 	-- 	local adjustedNumberOfNeededReadyPlayerClients = getAdjustedNumberOfNeededReadyPlayerClients(playingReadyPlayerClients)
 	-- end)
+
+	local originalResetGame
+	originalResetGame = TGNS.ReplaceClassMethod("NS2Gamerules", "ResetGame", function(gamerules)
+		local teamChoiceCaptainClient = getTeamChoiceCaptainClient(captainClients)
+		if captainsModeEnabled and teamChoiceCaptainClient then
+			TGNS.RemoveTempGroup(teamChoiceCaptainClient, "teamchoicecaptain_group")
+		end
+		originalResetGame(gamerules)
+		if captainsModeEnabled and teamChoiceCaptainClient and captainsGamesFinished == 0 then
+			TGNS.RemoveTempGroup(teamChoiceCaptainClient, "teamchoicecaptain_group")
+		end
+		-- TGNS.ScheduleAction(2, function()
+		-- 	local chairLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kMarineTeamType)):GetLocationName()
+		-- 	local hiveLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kAlienTeamType)):GetLocationName()
+		-- 	md:ToAllNotifyInfo(string.format("Marines: %s - Aliens: %s", chairLocationName, hiveLocationName))
+		-- end)
+	end)
 
     return true
 end
