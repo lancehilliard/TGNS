@@ -1,7 +1,8 @@
 local md
 local originalResetGame
-local originalSpawnSelectionOverrides
 local forcedSpawnSelectionOverrides
+local currentMapSpawnSelectionOverridesData
+local BRIEF_SUMMARY_TRUNCATE_LENGTH = 5
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -9,6 +10,36 @@ Plugin.ConfigName = "spawnselectionoverrides.json"
 
 function Plugin:ForceOverrides(spawnSelectionOverrides)
 	forcedSpawnSelectionOverrides = spawnSelectionOverrides
+end
+
+function Plugin:GetCurrentMapSpawnSelectionOverridesData()
+	local result = currentMapSpawnSelectionOverridesData
+	if not result then
+		result = {}
+		local currentMapSpawnSelectionsConfig = self.Config.spawnSelections[TGNS.GetCurrentMapName()]
+		if currentMapSpawnSelectionsConfig then
+			TGNS.DoFor(currentMapSpawnSelectionsConfig, function(s, index)
+				local techPointLocationNamesLower = TGNS.Select(TGNS.GetTechPointLocationNames(), function(n) return TGNS.ToLower(n) end)
+				if TGNS.Has(techPointLocationNamesLower, TGNS.ToLower(s[1])) and TGNS.Has(techPointLocationNamesLower, TGNS.ToLower(s[2])) and s[1] ~= s[2] then
+					local data = {}
+					data.spawnSelectionOverride = {s[1], s[2]}
+					data.briefSummaryText = string.format("M: %s | A: %s", TGNS.Truncate(s[1], BRIEF_SUMMARY_TRUNCATE_LENGTH), TGNS.Truncate(s[2], BRIEF_SUMMARY_TRUNCATE_LENGTH))
+					data.summaryText = string.format("Marines: %s | Aliens: %s", s[1], s[2])
+					data.summaryTextLineDelimited = string.format("Marines: %s\nAliens: %s", s[1], s[2])
+
+					data.spawnSelectionIndex = index
+					table.insert(result, data)
+				else
+					TGNS.DebugPrint(string.format("spawnselectionoverrides ERROR: %s spawnSelectionOverride %s/%s was discarded.", TGNS.GetCurrentMapName(), s[1], s[2]))
+				end
+			end)
+			if #result == 0 then
+				TGNS.DebugPrint(string.format("%s has spawnSelectionOverrides, but none is usable.", TGNS.GetCurrentMapName()))
+			end
+		end
+		currentMapSpawnSelectionOverridesData = result
+	end
+	return result
 end
 
 function Plugin:Initialise()
@@ -19,34 +50,18 @@ function Plugin:Initialise()
 		local success, result = xpcall(function()
 			if self.Config.enableForBuildNumber == Shared.GetBuildNumber() then
 				if #TGNS.GetPlayerList() > 0 then
-				    local spawnSelections = forcedSpawnSelectionOverrides or self.Config.spawnSelections[TGNS.GetCurrentMapName()]
-					if spawnSelections then
-						local spawnSelectionOverrides = {}
-						TGNS.DoFor(spawnSelections, function(s)
-							local techPointLocationNamesLower = TGNS.Select(TGNS.GetTechPointLocationNames(), function(n) return TGNS.ToLower(n) end)
-							if TGNS.Has(techPointLocationNamesLower, TGNS.ToLower(s[1])) and TGNS.Has(techPointLocationNamesLower, TGNS.ToLower(s[2])) and s[1] ~= s[2] then
-								local spawnSelectionOverride = {}
-								spawnSelectionOverride.marineSpawn = TGNS.ToLower(s[1])
-								spawnSelectionOverride.alienSpawn = TGNS.ToLower(s[2])
-								table.insert(spawnSelectionOverrides, spawnSelectionOverride)
-							else
-								local message = string.format("%s spawnSelectionOverride %s/%s was discarded.", TGNS.GetCurrentMapName(), s[1], s[2])
-								TGNS.EnhancedLog("spawnselectionoverrides ERROR: " .. message)
-								md:ToAdminNotifyError(message)
-							end
+				    local spawnSelections = forcedSpawnSelectionOverrides or TGNS.Select(self:GetCurrentMapSpawnSelectionOverridesData(), function(d) return d.spawnSelectionOverride end)
+					if TGNS.Any(spawnSelections) then
+						Server.spawnSelectionOverrides = TGNS.Select(spawnSelections, function(s)
+							local spawnSelectionOverride = {}
+							spawnSelectionOverride.marineSpawn = TGNS.ToLower(s[1])
+							spawnSelectionOverride.alienSpawn = TGNS.ToLower(s[2])
+							return spawnSelectionOverride
 						end)
-						if originalSpawnSelectionOverrides == nil then
-							originalSpawnSelectionOverrides = Server.spawnSelectionOverrides
+						if #spawnSelections == 1 and not forcedSpawnSelectionOverrides then
+							md:ToAdminNotifyInfo(string.format("NOTICE: %s only has 1 usable spawnSelectionOverride.", TGNS.GetCurrentMapName()))
 						end
-						if #spawnSelectionOverrides >= 1 then
-							Server.spawnSelectionOverrides = spawnSelectionOverrides
-							if #spawnSelectionOverrides == 1 and not forcedSpawnSelectionOverrides then
-								md:ToAdminNotifyInfo(string.format("NOTICE: %s only has 1 usable spawnSelectionOverride.", TGNS.GetCurrentMapName()))
-							end
-						else
-							md:ToAdminNotifyError(string.format("%s has spawnSelectionOverrides, but none is usable.", TGNS.GetCurrentMapName()))
-						end
-				    end
+					end
 				end
 			else
 				md:ToAdminNotifyError(string.format("Disabled! Configured for Build %s, but running Build %s.", self.Config.enableForBuildNumber, Shared.GetBuildNumber()))
