@@ -252,7 +252,8 @@ local function updateCaptainsReadyProgress(readyClient)
 			-- highVolumeMessagesLastShownTime = Shared.GetTime()
 		-- end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
-			Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 2, 0))
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.80, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 2, 0))
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.85, "To opt-in: Press M, then Captains > sh_iwantcaptains", votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 1, 0))
 		end)
 	else
 		if not captainsModeEnabled then
@@ -428,7 +429,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 65, function()
 				if Shine.Plugins.mapvote:VoteStarted() then
 					md:ToAllNotifyInfo("Join us Friday nights for Captains Games! Passworded, scrim-style gameplay")
-					md:ToAllNotifyInfo("from ~7PM 'til. Read more in our forums: TacticalGamer.com/natural-selection")
+					md:ToAllNotifyInfo("from ~7PM 'til. Read more in the TGNS Forums: http://rr.tacticalgamer.com/Community")
 				end
 			end)
 			readyCaptainClients = {}
