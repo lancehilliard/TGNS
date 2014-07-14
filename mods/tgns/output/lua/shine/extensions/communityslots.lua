@@ -242,7 +242,7 @@ local function IsClientBumped(joiningClient)
                     tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(blacklistAdvisoryClient), "Your reserved slot is presently revoked. See console for details.")
                     tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Your reserved slot privilege is presently revoked.")
                     tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Do not on the server complain or inquire about revoked privileges.")
-                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Rather, use the CAA forum: http://www.tacticalgamer.com/natural-selection-contact-admin/")
+                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Rather, use the CAA forum: http://rr.tacticalgamer.com/Community")
             end
         end
     end
@@ -374,7 +374,7 @@ function Plugin:ClientConfirmConnect(client)
     elseif TGNS.HasClientSignedPrimerWithGames(client) then
         chatMessage = string.format("TGNS Primer signer! Join the full server when >%s strangers are playing!", Shine.Plugins.communityslots.Config.MinimumStrangers)
     else
-        chatMessage = "Press 'm' for menu. Visit tacticalgamer.com/natural-selection to say hello!"
+        chatMessage = "Press 'm' for menu. Visit http://rr.tacticalgamer.com/Community to say hello!"
     end
     if not TGNS.GetIsClientVirtual(client) then
         TGNS.ScheduleAction(2, function()

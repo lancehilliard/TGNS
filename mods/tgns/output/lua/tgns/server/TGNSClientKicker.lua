@@ -43,7 +43,7 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 				if repeatOffensesIsCauseForBan then
 					md:ToClientConsole(client, "Note: Too many kicks may create a temporary ban.")
 				end
-				md:ToClientConsole(client, "Contact TGNS administration: http://www.tacticalgamer.com/natural-selection-contact-admin/")
+				md:ToClientConsole(client, "Contact TGNS administration (CAA): http://rr.tacticalgamer.com/Community")
 			end
 			TGNS.ScheduleAction(kickDelayInSeconds, function()
 				if repeatOffensesIsCauseForBan then

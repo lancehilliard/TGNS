@@ -123,7 +123,7 @@ local function ToggleOptIn(client, role)
 	local roleMd = TGNSMessageDisplayer.Create(role.messagePrefix)
 	local message
 	if role:IsClientBlacklisted(client) then
-		message = string.format("Contact an Admin to get access to %s: tacticalgamer.com/natural-selection-contact-admin", role.displayName)
+		message = string.format("Contact an Admin (CAA) to get access to %s: http://rr.tacticalgamer.com/Community", role.displayName)
 		roleMd:ToClientConsole(client, message)
 	else
 		local pdrData = role:LoadOptInData(client)

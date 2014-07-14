@@ -7,7 +7,7 @@ function Plugin:Initialise()
 		Shine.Commands.sh_status.Func = function(client)
 			originalStatusFunc(client)
 			ServerAdminPrint(client, string.format("Server address: %s", TGNS.Config.ServerAddress))
-			ServerAdminPrint(client, "This is a TacticalGamer.com server. http://tacticalgamer.com/natural-selection")
+			ServerAdminPrint(client, "This is a TacticalGamer.com server. http://rr.tacticalgamer.com/Community")
 		end
 	end)
 

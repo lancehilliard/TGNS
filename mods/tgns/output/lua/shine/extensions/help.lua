@@ -56,7 +56,7 @@ function Plugin:CreateCommands()
 			endMessage = "There are more commands! Re-issue the \"sh_help" .. (search == nil and "" or (" " .. search)) .. "\" command to view them. "
 			md:ToClientConsole(client, endMessage)
 		end
-		md:ToClientConsole(client, "Forums: http://tacticalgamer.com/natural-selection")
+		md:ToClientConsole(client, "Forums: http://rr.tacticalgamer.com/Community")
 	end, true)
 	helpCommand:AddParam{ Type = "string", TakeRestofLine = true, Optional = true }
 	helpCommand:Help("<searchText> View help info for available commands (omit <searchText> to see all).")

@@ -14,7 +14,7 @@ if Client then
 	local function Notify(prefix, message)
 		TGNS.SendNetworkMessage(REQUEST_NOTIFY_MESSAGE_MSG_NAME, {prefix=prefix,text=message})
 	end
-	
+
 	TGNSMenuDisplayer = {}
 
 	local shineMenu
@@ -29,7 +29,7 @@ if Client then
 					TGNS.DoFor(helpLines, function(l)
 						Notify(name, l)
 					end)
-					Notify(name, "Visit http://tacticalgamer.com/natural-selection to learn more.")
+					Notify(name, "Visit http://rr.tacticalgamer.com/Community to learn more.")
 				end)
 				shineMenu:AddBottomButton("Back", function()
 					shineMenu:SetPage(backPageId)
@@ -39,7 +39,7 @@ if Client then
 				end
 			end)
 		end
-		
+
 		result.AddTopButton = function(self, text, onClick)
 			shineMenu:AddTopButton(text, onClick)
 		end
@@ -51,14 +51,14 @@ if Client then
 		result.AddSideButton = function(self, text, onClick)
 			shineMenu:AddSideButton(text, onClick)
 		end
-		
+
 		result.EditPage = function(self, pageId, extraPopulate)
 			Shine.VoteMenu:EditPage(pageId, function(shineSelf)
 				shineMenu = shineSelf
 				extraPopulate(self)
 			end )
 		end
-		
+
 		result.SetPage = function(self, pageId)
 			shineMenu:SetPage(pageId)
 		end
@@ -67,7 +67,7 @@ if Client then
 			shineMenu:SetIsVisible(false)
 			shineMenu:SetPage("Main")
 		end
-		
+
 		initAction(result)
 
 		return result
