@@ -396,7 +396,7 @@ function TGNS.GetClientList(predicate)
 end
 
 function TGNS.GetPlayerTotalCost(player)
-	local result = TGNS.GetPlayerClassPurchaseCost(player) + TGNS.GetMarineWeaponsTotalPurchaseCost(player) + TGNS.GetPlayerResources(player)
+	local result = TGNS.GetPlayerClassPurchaseCost(player) + TGNS.GetMarineWeaponsTotalPurchaseCost(player) + TGNS.GetAlienUpgradesPurchaseCost(player) + TGNS.GetPlayerResources(player)
 	return result
 end
 
@@ -436,6 +436,20 @@ function TGNS.GetMarineWeaponsTotalPurchaseCost(player)
 		end
 	end)
 	return result
+end
+
+function TGNS.GetAlienUpgradesPurchaseCost(player)
+	local alienClassUpgradePurchaseCosts = {
+      ["Skulk"] = kSkulkUpgradeCost,
+      ["Gorge"] = kGorgeUpgradeCost,
+      ["Lerk"] = kLerkUpgradeCost,
+      ["Fade"] = kFadeUpgradeCost,
+      ["Onos"] = kOnosUpgradeCost
+    }
+    local playerClassUpgradePurchaseCost = alienClassUpgradePurchaseCosts[TGNS.GetPlayerClassName(player)]
+    local playerUpgrades = player.GetUpgrades and player:GetUpgrades()
+    local result = (playerUpgrades and playerClassUpgradePurchaseCost) and (playerClassUpgradePurchaseCost * #playerUpgrades) or 0
+    return result
 end
 
 function TGNS.GetPlayerClassPurchaseCost(player)
