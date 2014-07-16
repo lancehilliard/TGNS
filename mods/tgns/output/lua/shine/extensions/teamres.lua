@@ -142,16 +142,17 @@ end
 
 local function ShowPlayerCosts(client)
 	local players = TGNS.GetPlayerList()
-	TGNS.SortAscending(players, TGNS.GetPlayerName)
+	TGNS.SortAscending(players, function(p) return TGNS.ToLower(TGNS.GetPlayerName(p)) end)
 	md:ToClientConsole(client, "PLAYER COSTS:")
 	TGNS.DoFor(players, function(p)
 		local name = TGNS.GetPlayerName(p)
 		local className = TGNS.GetPlayerClassName(p)
 		local classPurchaseCost = TGNS.GetPlayerClassPurchaseCost(p)
 		local weaponsCost = TGNS.GetMarineWeaponsTotalPurchaseCost(p)
+		local upgradesCost = TGNS.GetAlienUpgradesPurchaseCost(p)
 		local resources = math.floor(TGNS.GetPlayerResources(p))
 		local total = classPurchaseCost + weaponsCost + resources
-		md:ToClientConsole(client, string.format("%s: %s (%s: %s, Weapons: %s, Res: %s)", name, total, className, classPurchaseCost, weaponsCost, resources))
+		md:ToClientConsole(client, string.format("%s: %s (%s: %s, Weapons: %s, upgrades: %s, Res: %s)", name, total, className, classPurchaseCost, weaponsCost, upgradesCost, resources))
 	end)
 	md:ToClientConsole(client, "-------------")
 end
