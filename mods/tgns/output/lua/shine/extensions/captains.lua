@@ -3,7 +3,6 @@ local captainClients = {}
 local captainsModeEnabled
 local captainsGamesFinished = 0
 local readyTeams = {}
-local gamesFinished = 0
 local captainTeamNumbers = {}
 local gameStarted
 local readyPlayerClients
@@ -54,9 +53,6 @@ local function startGame()
 			TGNS.ScheduleAction(kCountDownLength + 2, function()
 				readyTeams["Marines"] = false
 				readyTeams["Aliens"] = false
-				if (captainsGamesFinished > 0) then
-					Shine.Plugins.mapvote.Config.RoundLimit = 1
-				end
 			end)
 		end)
 	end
@@ -182,7 +178,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 		md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
 	end)
 	allPlayersWereArtificiallyForcedToReadyRoom = true
-	Shine.Plugins.mapvote.Config.RoundLimit = gamesFinished + (TGNS.IsGameInProgress() and 3 or 2)
+	Shine.Plugins.mapvote.EndGame = function(mapVotePlugin) end
 	TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
 	whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 	votesAllowedUntil = nil
@@ -190,6 +186,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	Shine.Plugins.afkkick.Config.KickTime = 20
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
 		Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
+		Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
 	end)
 	TGNS.ScheduleAction(2, function()
 		allPlayersWereArtificiallyForcedToReadyRoom = false
@@ -252,8 +249,8 @@ local function updateCaptainsReadyProgress(readyClient)
 			-- highVolumeMessagesLastShownTime = Shared.GetTime()
 		-- end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.80, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 2, 0))
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.85, "To opt-in: Press M, then Captains > sh_iwantcaptains", votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 1, 0))
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 2, 0))
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.80, #playingReadyCaptainClients > 1 and "To opt-in: Press M, then Captains > sh_iwantcaptains" or "Captains play two rounds after picking a team and Commander.", votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 1, 0))
 		end)
 	else
 		if not captainsModeEnabled then
@@ -287,6 +284,7 @@ local function announceTimeRemaining()
 						Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, "Captains vote expired.", 5, 255, 0, 0, 1, 1, 0))
 					end)
 					Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
+					Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
 					-- md:ToAllNotifyInfo("Captains vote expired.")
 				end
 			end)
@@ -414,6 +412,9 @@ function Plugin:EndGame(gamerules, winningTeam)
 				setTimeAtWhichToForceRoundStart()
 			else
 				disableCaptainsMode()
+				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+					Shine.Plugins.mapvote:StartVote(true)
+				end)
 				message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
 			end
 			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 2.5, function()
@@ -436,7 +437,6 @@ function Plugin:EndGame(gamerules, winningTeam)
 			readyPlayerClients = {}
 		end
 	end
-	gamesFinished = gamesFinished + 1
 end
 
 local function displayPlansToAll()
