@@ -83,6 +83,8 @@ function Plugin:Initialise()
 			local player = TGNS.GetPlayer(client)
 			if mapNominations[steamId] then
 				md:ToPlayerNotifyError(player, string.format("You may nominate only one map. You have already nominated %s.", mapNominations[steamId]))
+			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps > 0 and TGNS.Has(Shine.Plugins.mapvote.LastMapData, mapName) then
+				md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
 			else
 				local mapVoteNominationsCollectionContainedMapNameBeforeExecutingOriginalFunc = table.contains(Shine.Plugins.mapvote.Vote.Nominated, mapName)
 				originalNominateFunc(client, mapName)
