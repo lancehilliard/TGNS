@@ -195,7 +195,7 @@ end
 
 local function showBanner(headline)
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage(41, 0.5, 0.2, string.format("Captains? %s", headline), 5, 0, 255, 0, 1, 3, 0 ) )
+		Shine:SendText(c, Shine.BuildScreenMessage(41, 0.5, 0.2, string.format("Captains?%s", headline), 5, 0, 255, 0, 1, 3, 0 ) )
 	end)
 	bannerDisplayed = true
 end
@@ -221,12 +221,12 @@ local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClien
 			result = getCaptainCallText(firstCaptainName)
 			--md:ToAllNotifyInfo(result)
 		elseif remaining > 0 then
-			local headline = string.format("(%s vs %s)", firstCaptainName, secondCaptainName)
+			local headline = string.format(" (%s vs %s)", firstCaptainName, secondCaptainName)
 			if not bannerDisplayed then
 				showBanner(headline)
 			end
 			local howManyNeededMessage = votesAllowedUntil and string.format("%s more needed!", remaining) or ""
-			result = string.format("%s wants Captains! %s", TGNS.GetClientName(headlineReadyClient), howManyNeededMessage)
+			result = string.format("%s wants Captains%s! %s", TGNS.GetClientName(headlineReadyClient), headline, howManyNeededMessage)
 		end
 	end
 	return result
@@ -249,8 +249,12 @@ local function updateCaptainsReadyProgress(readyClient)
 			-- highVolumeMessagesLastShownTime = Shared.GetTime()
 		-- end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 2, 0))
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.80, #playingReadyCaptainClients > 1 and "To opt-in: Press M, then Captains > sh_iwantcaptains" or "Captains play two rounds after picking a team and Commander.", votesAllowedUntil and 120 or 5, 0, 255, 0, 1, 1, 0))
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, 1, 2, 0))
+			local secondLineMessage = "Captains play two rounds after picking a team and Commander."
+			if (votesAllowedUntil == math.huge and twoCaptainsReady) or (votesAllowedUntil ~= math.huge and twoCaptainsReady and #playingReadyPlayerClients == 0) then
+				secondLineMessage = "Press 'M > Captains > sh_iwantcaptains' if you want to play Captains."
+			end
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.80, secondLineMessage, votesAllowedUntil and 120 or 10, 0, 255, 0, 1, 1, 0))
 		end)
 	else
 		if not captainsModeEnabled then
@@ -274,7 +278,7 @@ local function announceTimeRemaining()
 			local secondCaptainName = #playingReadyCaptainClients > 1 and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
 			-- md:ToAllNotifyInfo(string.format("Press M > Captains if you want to play Captains (%s & %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory))
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
-				Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, string.format("Press M > Captains if you want to play Captains (%s vs %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory), 10, 0, 255, 0, 1, 1, 0))
+				Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, string.format("Press 'M > Captains > sh_iwantcaptains' if you want to play Captains (%s vs %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory), 10, 0, 255, 0, 1, 1, 0))
 			end)
 			TGNS.ScheduleAction(1, announceTimeRemaining)
 		else
@@ -588,7 +592,7 @@ function Plugin:CreateCommands()
 			md:ToPlayerNotifyError(player, "Game duration > 0:15. It's too late to opt-in as a Captain.")
 		else
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
-			if #playingReadyCaptainClients < 2 then
+			if #playingReadyCaptainClients < 2 or TGNS.Has(readyCaptainClients, client) then
 				addReadyCaptainClient(client)
 			else
 				md:ToPlayerNotifyError(player, "Too many people have already opted in to be Captain.")
