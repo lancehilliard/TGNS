@@ -102,6 +102,7 @@
 !mods/tgns/output/lua/shine/extensions/teamticker.lua
 !mods/tgns/output/lua/shine/extensions/tempgroups.lua
 !mods/tgns/output/lua/shine/extensions/tgnsbadges.lua
+!mods/tgns/output/lua/shine/extensions/updatetoreadyroomhelper.lua
 !mods/tgns/output/lua/shine/extensions/uweranking.lua
 !mods/tgns/output/lua/shine/extensions/voicecommreminder.lua
 !mods/tgns/output/lua/shine/extensions/winorlose.lua
