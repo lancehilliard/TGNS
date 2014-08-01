@@ -826,6 +826,10 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 		    		cancel = true
 		    	end
 		    end
+		    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
+			if TGNS.IsPlayerSpectator(player) and captainsGamesFinished == 1 and serverIsUpdatingToReadyRoom then
+		    	cancel = true
+		   	end
 		end
 		if cancel then
 			return false
