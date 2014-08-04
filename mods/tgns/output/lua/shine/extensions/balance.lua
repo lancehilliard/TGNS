@@ -341,17 +341,19 @@ local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
 end
 
 function Plugin:ClientConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	pdr:Load(steamId, function(loadResponse)
-		if loadResponse.success then
-			if Shine:IsValidClient(client) then
-				updateTotalGamesPlayedCache(client, loadResponse.value.total)
-				balanceCache[client] = loadResponse.value
+	if not TGNS.GetIsClientVirtual(client) then
+		local steamId = TGNS.GetClientSteamId(client)
+		pdr:Load(steamId, function(loadResponse)
+			if loadResponse.success then
+				if Shine:IsValidClient(client) then
+					updateTotalGamesPlayedCache(client, loadResponse.value.total)
+					balanceCache[client] = loadResponse.value
+				end
+			else
+				Shared.Message("balance ERROR: unable to access data")
 			end
-		else
-			Shared.Message("balance ERROR: unable to access data")
-		end
-	end)
+		end)
+	end
 end
 
 function Plugin:ClientConfirmConnect(client)

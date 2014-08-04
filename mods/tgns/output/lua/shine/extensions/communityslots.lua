@@ -353,18 +353,19 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
 end
 
 function Plugin:ClientConnect(joiningClient)
-    TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
     if TGNS.GetIsClientVirtual(joiningClient) then
         TGNS.ScheduleAction(3, function()
             if Shine:IsValidClient(joiningClient) then
                 self:ClientConfirmConnect(joiningClient)
             end
         end)
+    else
+        TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
+        local pbr = TGNSPlayerBlacklistRepository.Create("communityslots")
+        pbr:IsClientBlacklisted(joiningClient, function(isBlacklisted)
+            blacklistedClients[joiningClient] = isBlacklisted
+        end)
     end
-    local pbr = TGNSPlayerBlacklistRepository.Create("communityslots")
-    pbr:IsClientBlacklisted(joiningClient, function(isBlacklisted)
-        blacklistedClients[joiningClient] = isBlacklisted
-    end)
 end
 
 function Plugin:ClientConfirmConnect(client)

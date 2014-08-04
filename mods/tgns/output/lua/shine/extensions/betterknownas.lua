@@ -139,25 +139,27 @@ function Plugin:IsPlayingWithoutBkaName(player)
 end
 
 function Plugin:ClientConnect(client)
-	local ns2id = TGNS.GetClientSteamId(client)
-	local steamApiProfileUrl = TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
-	TGNS.GetHttpAsync(steamApiProfileUrl, function(response)
-		local data = json.decode(response)
-		if data ~= nil then
-			local steamPlayerData = TGNS.GetFirst(data.response.players)
-			steamPlayerDatas[ns2id] = steamPlayerData
-		end
-	end)
-	pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
-		if loadResponse.success then
-			local bkaData = loadResponse.value
-			if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
-				bkas[client] = bkaData.BKA
+	if not TGNS.GetIsClientVirtual(client) then
+		local ns2id = TGNS.GetClientSteamId(client)
+		local steamApiProfileUrl = TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
+		TGNS.GetHttpAsync(steamApiProfileUrl, function(response)
+			local data = json.decode(response)
+			if data ~= nil then
+				local steamPlayerData = TGNS.GetFirst(data.response.players)
+				steamPlayerDatas[ns2id] = steamPlayerData
 			end
-		else
-			Shared.Message("betterknownas ERROR: unable to access data")
-		end
-	end)
+		end)
+		pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
+			if loadResponse.success then
+				local bkaData = loadResponse.value
+				if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
+					bkas[client] = bkaData.BKA
+				end
+			else
+				Shared.Message("betterknownas ERROR: unable to access data")
+			end
+		end)
+	end
 end
 
 function Plugin:GetSteamProfileName(client)
@@ -313,7 +315,7 @@ end
 function Plugin:PlayerNameChange(player, newName, oldName)
 	if newName ~= kDefaultPlayerName and string.len(newName) > 0 then
 		local client = TGNS.GetClient(player)
-		if client then
+		if client and not TGNS.GetIsClientVirtual(client) then
 			local steamId = TGNS.GetClientSteamId(client)
 			AddAka(steamId, newName, false)
 		end

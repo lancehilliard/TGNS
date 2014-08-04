@@ -105,18 +105,20 @@ function Plugin:GetApprovalsCount(client)
 end
 
 function Plugin:ClientConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	local url = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
-	TGNS.GetHttpAsync(url, function(approvalsResponseJson)
-		if Shine:IsValidClient(client) then
-			local approvalsResponse = json.decode(approvalsResponseJson) or {}
-			if approvalsResponse.success then
-				table.insert(approvalCounts, {client, approvalsResponse.result})
-			else
-				TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approvals count data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, approvalsResponse.msg, approvalsResponseJson, approvalsResponse.stacktrace))
+	if not TGNS.GetIsClientVirtual(client) then
+		local steamId = TGNS.GetClientSteamId(client)
+		local url = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
+		TGNS.GetHttpAsync(url, function(approvalsResponseJson)
+			if Shine:IsValidClient(client) then
+				local approvalsResponse = json.decode(approvalsResponseJson) or {}
+				if approvalsResponse.success then
+					table.insert(approvalCounts, {client, approvalsResponse.result})
+				else
+					TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approvals count data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, approvalsResponse.msg, approvalsResponseJson, approvalsResponse.stacktrace))
+				end
 			end
-		end
-	end)
+		end)
+	end
 end
 
 function Plugin:ClientConfirmConnect(client)

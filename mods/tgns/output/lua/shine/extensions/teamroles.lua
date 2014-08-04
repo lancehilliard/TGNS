@@ -188,29 +188,29 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 end
 
 function Plugin:ClientConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	TGNS.DoFor(knownRoleDataNames, function(roleName)
-		local pdr = getPdr(roleName)
-		pdr:Load(steamId, function(loadResponse)
-			pdrCache[roleName][steamId] = loadResponse.value
-			if not loadResponse.success then
-				Shared.Message("teamroles ERROR: Unable to access PDR data.")
-			end
+	if not TGNS.GetIsClientVirtual(client) then
+		local steamId = TGNS.GetClientSteamId(client)
+		TGNS.DoFor(knownRoleDataNames, function(roleName)
+			local pdr = getPdr(roleName)
+			pdr:Load(steamId, function(loadResponse)
+				pdrCache[roleName][steamId] = loadResponse.value
+				if not loadResponse.success then
+					Shared.Message("teamroles ERROR: Unable to access PDR data.")
+				end
+			end)
+
+			local pbr = TGNSPlayerBlacklistRepository.Create(roleName)
+			pbr:IsClientBlacklisted(client, function(isBlacklisted)
+				pbrCache[roleName][client] = isBlacklisted
+			end)
+
+			local ppr = TGNSPlayerPreferredRepository.Create(roleName)
+			ppr:IsClientPreferred(client, function(isPreferred)
+				pprCache[roleName][client] = isPreferred
+			end)
+
 		end)
-
-		local pbr = TGNSPlayerBlacklistRepository.Create(roleName)
-		pbr:IsClientBlacklisted(client, function(isBlacklisted)
-			pbrCache[roleName][client] = isBlacklisted
-		end)
-
-		local ppr = TGNSPlayerPreferredRepository.Create(roleName)
-		ppr:IsClientPreferred(client, function(isPreferred)
-			pprCache[roleName][client] = isPreferred
-		end)
-
-	end)
-
-
+	end
 end
 
 function Plugin:ClientConfirmConnect(client)
