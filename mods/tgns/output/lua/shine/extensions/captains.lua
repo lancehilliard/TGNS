@@ -514,7 +514,7 @@ function Plugin:CreateCommands()
 
 	local planCommand = self:BindCommand("sh_plan", "plan", function(client, plan)
 		local player = TGNS.GetPlayer(client)
-		if captainsModeEnabled and captainsGamesFinished < 2 then
+		-- if captainsModeEnabled and captainsGamesFinished < 2 then
 			if TGNS.PlayerIsOnPlayingTeam(player) then
 				if not TGNS.IsGameInProgress() then
 					plans[client] = plan
@@ -525,9 +525,9 @@ function Plugin:CreateCommands()
 			else
 				md:ToPlayerNotifyError(player, "You must be on a team to plan.")
 			end
-		else
-			md:ToPlayerNotifyError(player, "No Captains Game is being planned or played now.")
-		end
+		-- else
+		--	md:ToPlayerNotifyError(player, "No Captains Game is being planned or played now.")
+		-- end
 	end, true)
 	planCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 	planCommand:Help("<plan> Announce your Captains Game plan.")
