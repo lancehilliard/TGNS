@@ -15,6 +15,8 @@ TGNS.ALIEN_COLOR_R = 255
 TGNS.ALIEN_COLOR_G = 201.96
 TGNS.ALIEN_COLOR_B = 57.885
 
+TGNS.READYROOM_LOCATION_ID = 1000
+
 function TGNS.GetRandomizedElements(elements)
 	local result = {}
 	TGNS.DoFor(elements, function(e) table.insert(result, e) end)
