@@ -50,6 +50,9 @@
 !mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/shared.lua
+!mods/tgns/output/lua/shine/extensions/wraplength/client.lua
+!mods/tgns/output/lua/shine/extensions/wraplength/server.lua
+!mods/tgns/output/lua/shine/extensions/wraplength/shared.lua
 
 !mods/tgns/output/lua/shine/extensions/everysecond/shared.lua
 
