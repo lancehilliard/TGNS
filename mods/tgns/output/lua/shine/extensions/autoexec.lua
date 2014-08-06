@@ -66,7 +66,7 @@ function Plugin:ClientConfirmConnect(client)
 		if loadResponse.success then
 			local data = loadResponse.value
 			TGNS.DoFor(data.commands, function(command)
-				TGNS.SendClientCommand(client, command)
+				TGNS.ExecuteClientCommand(client, command)
 			end)
 		else
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
