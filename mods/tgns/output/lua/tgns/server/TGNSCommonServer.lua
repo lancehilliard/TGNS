@@ -7,6 +7,11 @@ local CHAT_MESSAGE_SENDER = "Admin"
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
 
+-- beginnings of function GetLocationIdByName...
+	-- 	TGNS.DoForPairs(GetLocations(), function(index, location)
+	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
+	-- 	end)
+
 function TGNS.GetTwoLists(values)
 	local list1 = {}
 	local list2 = {}
@@ -225,7 +230,8 @@ function TGNS.ExecuteClientCommand(client, command)
 end
 
 function TGNS.SendClientCommand(client, command)
-	Server.SendCommand(TGNS.GetPlayer(client), command)
+	local player = TGNS.GetPlayer(client)
+	Server.SendCommand(player, command)
 end
 
 function TGNS.ExecuteServerCommand(command)
