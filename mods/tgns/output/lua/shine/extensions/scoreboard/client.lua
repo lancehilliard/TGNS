@@ -295,6 +295,14 @@ function Plugin:Initialise()
 		end
 	end
 
+
+	local originalSharedGetString = Shared.GetString
+	Shared.GetString = function(stringIndex)
+		local result = stringIndex == TGNS.READYROOM_LOCATION_ID and "Ready Room" or originalSharedGetString(stringIndex)
+		return result
+	end
+
+
 	return true
 end
 

@@ -62,6 +62,20 @@ function Plugin:Initialise()
 	end)
 	md = TGNSMessageDisplayer.Create("SPECTATE")
 	self:CreateCommands()
+
+	Shine.Hook.Add("PlayerSay", "SendTeamChatToSpectators", function(client, networkMessage)
+		local chattingPlayer = TGNS.GetPlayer(client)
+		local teamOnly = networkMessage.teamOnly
+		if chattingPlayer and teamOnly and not TGNS.IsPlayerSpectator(chattingPlayer) then
+			local message = StringTrim(networkMessage.message)
+			TGNS.DoFor(TGNS.GetSpectatorPlayers(TGNS.GetPlayerList()), function(listeningPlayer)
+				if listeningPlayer and listenerSpectatorShouldHearSpeaker(listeningPlayer, chattingPlayer) then
+					Server.SendNetworkMessage(listeningPlayer, "Chat", BuildChatMessage(true, TGNS.GetPlayerName(chattingPlayer), TGNS.PlayerIsOnPlayingTeam(chattingPlayer) and chattingPlayer:GetLocationId() or TGNS.READYROOM_LOCATION_ID, chattingPlayer:GetTeamNumber(), chattingPlayer:GetTeamType(), message), true)
+				end
+			end)
+		end
+	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
+
     return true
 end
 
