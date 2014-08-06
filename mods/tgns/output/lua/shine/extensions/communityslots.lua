@@ -466,6 +466,7 @@ function Plugin:CreateCommands()
     local fullSpecRefreshCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
         refreshFullSpecData()
     end)
+    fullSpecRefreshCommand:Help("Used by the TGNS Portal to sync fullspec opt-in changes.")
 end
 
 //local function PrintPlayerSlotsStatuses(client)
