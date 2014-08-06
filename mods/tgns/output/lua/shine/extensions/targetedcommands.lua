@@ -127,13 +127,15 @@ function Plugin:Initialise()
     end)
 
 	TGNS.ScheduleAction(10, function()
-		local originalChangelevelFunc = Shine.Commands.sh_changelevel.Func
-		Shine.Commands.sh_changelevel.Func = function(client, mapName)
-			TGNS.ScheduleAction(1, function()
-				originalChangelevelFunc(client, mapName)
-			end)
-			local md = TGNSMessageDisplayer.Create()
-			md:ToAllConsole(string.format("%s executed 'sh_changelevel %s'.", TGNS.GetClientNameSteamIdCombo(client), mapName))
+		local originalChangelevelFunc = Shine.Commands.sh_changelevel and Shine.Commands.sh_changelevel.Func or nil
+		if originalChangelevelFunc then
+			Shine.Commands.sh_changelevel.Func = function(client, mapName)
+				TGNS.ScheduleAction(1, function()
+					originalChangelevelFunc(client, mapName)
+				end)
+				local md = TGNSMessageDisplayer.Create()
+				md:ToAllConsole(string.format("%s executed 'sh_changelevel %s'.", TGNS.GetClientNameSteamIdCombo(client), mapName))
+			end
 		end
 	end)
 
