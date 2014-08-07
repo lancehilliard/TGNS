@@ -930,6 +930,12 @@ function TGNS.HasSteamIdSignedPrimerWithGames(steamId)
 	return result
 end
 
+function TGNS.HasPlayerSignedPrimerWithGames(player)
+	local client = TGNS.GetClient(player)
+	local result = TGNS.HasClientSignedPrimerWithGames(client)
+	return result
+end
+
 function TGNS.HasClientSignedPrimerWithGames(client)
 	local result = false
 	if client ~= nil then
@@ -972,6 +978,12 @@ function TGNS.IsSteamIdSM(steamId)
 	return result
 end
 
+function TGNS.IsPlayerSM(player)
+	local client = TGNS.GetClient(player)
+	local result = TGNS.IsClientSM(client)
+	return result
+end
+
 function TGNS.IsClientSM(client)
 	local result = false
 	if client ~= nil then
@@ -986,6 +998,12 @@ function TGNS.IsSteamIdStranger(steamId)
 	return result
 end
 
+function TGNS.IsPlayerStranger(player)
+	local client = TGNS.GetClient(player)
+	local result = TGNS.IsClientStranger(client)
+	return result
+end
+
 function TGNS.IsClientStranger(client)
 	local result = false
 	if client ~= nil then
@@ -997,6 +1015,12 @@ end
 
 function TGNS.IsSteamIdPrimerOnly(steamId)
 	local result = TGNS.HasSteamIdSignedPrimerWithGames(steamId) and not TGNS.IsSteamIdSM(steamId)
+	return result
+end
+
+function TGNS.IsPrimerOnlyPlayer(player)
+	local client = TGNS.GetClient(player)
+	local result = TGNS.IsPrimerOnlyClient(client)
 	return result
 end
 

@@ -21,7 +21,7 @@ otherServerStaticInfo["Chuckle"] = { address = "tgns.tacticalgamer.com", simpleN
 local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
 
 local function IsClientAmongLongestConnected(clients, client, limit)
-    TGNS.SortAscending(clients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
+    TGNS.SortDescending(clients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
     local result = TGNS.ElementIsFoundBeforeIndex(clients, client, limit)
     return result
 end
@@ -91,7 +91,7 @@ local function FindVictimClient(joiningSteamId, playerList)
     local result = nil
     local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningSteamId) end)
     if #bumpableClients > 0 then
-        TGNS.SortAscending(bumpableClients, TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds)
+        TGNS.SortDescending(bumpableClients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
         result = TGNS.GetFirst(bumpableClients)
     end
     return result
@@ -191,13 +191,9 @@ local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
     local strangersCount = #TGNS.GetStrangersClients(playerList)
     local clientName = TGNS.GetClientName(bumpedClient)
     local communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
-    local bumpedClientConnectedTime = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(bumpedClient)
-    local bumpedClientConnectedDurationClock = "UNKNOWNTIME"
-    if type(bumpedClientConnectedTime) == "number" then
-        bumpedClientConnectedDuration = Shared.GetSystemTime() - bumpedClientConnectedTime
-        bumpedClientConnectedDurationClock = TGNS.SecondsToClock(bumpedClientConnectedDuration)
-    end
-    local result = string.format("Kicking %s %s> %s after %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, bumpedClientConnectedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount)
+    local bumpedClientPlayedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(bumpedClient) or 0
+    local bumpedClientPlayedDurationClock = TGNS.SecondsToClock(bumpedClientPlayedTimeInSeconds)
+    local result = string.format("Kicking %s %s> %s after %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount)
     return result
 end
 
@@ -218,7 +214,7 @@ local function IsClientBumped(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimName))
                 onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
-                TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(victimClient, Shared.GetSystemTime())
+                --TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(victimClient, Shared.GetSystemTime())
                 tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
                 tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
@@ -286,38 +282,31 @@ function Plugin:IsClientRecentCommander(client)
 end
 
 function Plugin:GetPlayersForNewGame()
-    -- local clients = TGNS.GetClientList()
-    -- TGNS.SortAscending(clients, function(c)
-    --     return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge)
-    -- end)
-    -- local result = {}
-    -- TGNS.DoFor(clients, function(c, index)
-    --     if index <= 16 then
-    --         table.insert(result, TGNS.GetPlayer(c))
-    --     end
-    -- end)
-    -- return result
-
-
-
-    local playerList = TGNS.GetPlayerList()
-    local eligiblePlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
-    local eligibleClients = TGNS.GetClients(eligiblePlayers)
-    TGNS.SortAscending(eligibleClients, function(c) return TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, c) and 0 or (TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c) or math.huge) end)
-    eligiblePlayers = TGNS.GetPlayers(eligibleClients)
-    local playersForNewGame = TGNS.Take(eligiblePlayers, 16)
-    local leftoverPlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) and not TGNS.Has(eligiblePlayers, p) end)
-    TGNS.DoFor(leftoverPlayers, function(leftoverPlayer)
-        local leftoverClient = TGNS.GetClient(leftoverPlayer)
-        if leftoverClient then
-            local victimClient = FindVictimClient(TGNS.GetClientSteamId(leftoverClient), playersForNewGame)
+    local playersForNewGame
+    local balanceBumpingAction = function(bumperCandidatePlayer)
+        local bumperCandidateClient = TGNS.GetClient(bumperCandidatePlayer)
+        if bumperCandidateClient then
+            local victimClient = FindVictimClient(TGNS.GetClientSteamId(bumperCandidateClient), playersForNewGame)
             if victimClient then
                 local victimPlayer = TGNS.GetPlayer(victimClient)
                 TGNS.RemoveAllMatching(playersForNewGame, victimPlayer)
-                TGNS.InsertDistinctly(playersForNewGame, leftoverPlayer)
+                TGNS.InsertDistinctly(playersForNewGame, bumperCandidatePlayer)
             end
         end
-    end)
+    end
+    local getPlayerPlayedTime = function(p) return TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(TGNS.GetClient(p)) end
+
+    local playerList = TGNS.GetPlayerList()
+    local eligiblePlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
+    TGNS.SortAscending(eligiblePlayers, function(p) return TGNS.IsPlayerStranger(p) and 0 or 1 end)
+    playersForNewGame = TGNS.Take(eligiblePlayers, self.Config.MaximumSlots - self.Config.CommunitySlots)
+    local leftoverEligibleRegularPlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, TGNS.GetClient(p)) and not TGNS.IsPlayerAFK(p) and not TGNS.Has(eligiblePlayers, p) and not TGNS.IsPlayerStranger(p) end)
+    local leftoverEligiblePrimerOnlyPlayers = TGNS.Where(leftoverEligibleRegularPlayers, TGNS.IsPrimerOnlyPlayer)
+    local leftoverEligibleSupportingMemberPlayers = TGNS.Where(leftoverEligibleRegularPlayers, TGNS.IsPlayerSM)
+    TGNS.SortAscending(leftoverEligiblePrimerOnlyPlayers, getPlayerPlayedTime)
+    TGNS.SortAscending(leftoverEligibleSupportingMemberPlayers, getPlayerPlayedTime)
+    TGNS.DoFor(leftoverEligiblePrimerOnlyPlayers, balanceBumpingAction)
+    TGNS.DoFor(leftoverEligibleSupportingMemberPlayers, balanceBumpingAction)
     return playersForNewGame
 end
 
