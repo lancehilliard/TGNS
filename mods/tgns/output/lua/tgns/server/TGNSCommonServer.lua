@@ -65,13 +65,13 @@ function TGNS.GetPlayerKills(player)
 	return result
 end
 
-function TGNS.PrintTable(t, d, printAction)
+function TGNS.PrintTable(t, tableDescription, printAction)
 	printAction = printAction and printAction or function(x) Shared.Message(x) end
 	local keys = {}
 	for key,value in pairs(t) do table.insert(keys, key) end
 	TGNS.SortAscending(keys, function(k) return tostring(k) end)
 	TGNS.DoFor(keys, function(k)
-		printAction(string.format("%s.%s: %s", d, k, t[k]))
+		printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
 	end)
 end
 
