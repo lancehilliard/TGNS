@@ -20,7 +20,7 @@ otherServerStaticInfo["Chuckle"] = { address = "tgns.tacticalgamer.com", simpleN
 
 local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
 
-local function IsClientAmongLongestConnected(clients, client, limit)
+local function IsClientAmongLongestPlayed(clients, client, limit)
     TGNS.SortDescending(clients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
     local result = TGNS.ElementIsFoundBeforeIndex(clients, client, limit)
     return result
@@ -29,7 +29,7 @@ end
 local function IsTargetProtectedStranger(targetClient, playerList)
     local strangersClients = TGNS.GetStrangersClients(playerList)
     local strangersClientsWithFewerThanTenGames = TGNS.Where(strangersClients, function(c) return Balance.GetTotalGamesPlayed(c) < TGNS.PRIMER_GAMES_THRESHOLD end)
-    local result = IsClientAmongLongestConnected(strangersClientsWithFewerThanTenGames, targetClient, Shine.Plugins.communityslots.Config.MinimumStrangers)
+    local result = IsClientAmongLongestPlayed(strangersClientsWithFewerThanTenGames, targetClient, Shine.Plugins.communityslots.Config.MinimumStrangers)
     -- if result then
     --     tgnsMd:ToAdminConsole(string.format("%s is protected Stranger.", TGNS.GetClientName(targetClient)))
     -- end
@@ -37,7 +37,7 @@ local function IsTargetProtectedStranger(targetClient, playerList)
 end
 
 local function IsTargetProtectedPrimerOnly(targetClient, playerList)
-    local result = IsClientAmongLongestConnected(TGNS.GetPrimerOnlyClients(playerList), targetClient, Shine.Plugins.communityslots.Config.MinimumPrimerOnlys)
+    local result = IsClientAmongLongestPlayed(TGNS.GetPrimerOnlyClients(playerList), targetClient, Shine.Plugins.communityslots.Config.MinimumPrimerOnlys)
     -- if result then
     --     tgnsMd:ToAdminConsole(string.format("%s is protected PrimerOnly.", TGNS.GetClientName(targetClient)))
     -- end
@@ -282,32 +282,41 @@ function Plugin:IsClientRecentCommander(client)
 end
 
 function Plugin:GetPlayersForNewGame()
-    local playersForNewGame
-    local balanceBumpingAction = function(bumperCandidatePlayer)
-        local bumperCandidateClient = TGNS.GetClient(bumperCandidatePlayer)
-        if bumperCandidateClient then
-            local victimClient = FindVictimClient(TGNS.GetClientSteamId(bumperCandidateClient), playersForNewGame)
-            if victimClient then
-                local victimPlayer = TGNS.GetPlayer(victimClient)
-                TGNS.RemoveAllMatching(playersForNewGame, victimPlayer)
-                TGNS.InsertDistinctly(playersForNewGame, bumperCandidatePlayer)
-            end
-        end
-    end
+    local prioritizedPlayers = {}
+    local addToPrioritizedPlayers = function(p) table.insert(prioritizedPlayers, p) end
     local getPlayerPlayedTime = function(p) return TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(TGNS.GetClient(p)) end
 
-    local playerList = TGNS.GetPlayerList()
-    local eligiblePlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
-    TGNS.SortAscending(eligiblePlayers, function(p) return TGNS.IsPlayerStranger(p) and 0 or 1 end)
-    playersForNewGame = TGNS.Take(eligiblePlayers, self.Config.MaximumSlots - self.Config.CommunitySlots)
-    local leftoverEligibleRegularPlayers = TGNS.Where(playerList, function(p) return TGNS.IsPlayerReadyRoom(p) and TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, TGNS.GetClient(p)) and not TGNS.IsPlayerAFK(p) and not TGNS.Has(eligiblePlayers, p) and not TGNS.IsPlayerStranger(p) end)
-    local leftoverEligiblePrimerOnlyPlayers = TGNS.Where(leftoverEligibleRegularPlayers, TGNS.IsPrimerOnlyPlayer)
-    local leftoverEligibleSupportingMemberPlayers = TGNS.Where(leftoverEligibleRegularPlayers, TGNS.IsPlayerSM)
-    TGNS.SortAscending(leftoverEligiblePrimerOnlyPlayers, getPlayerPlayedTime)
-    TGNS.SortAscending(leftoverEligibleSupportingMemberPlayers, getPlayerPlayedTime)
-    TGNS.DoFor(leftoverEligiblePrimerOnlyPlayers, balanceBumpingAction)
-    TGNS.DoFor(leftoverEligibleSupportingMemberPlayers, balanceBumpingAction)
-    return playersForNewGame
+    local playerList = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
+    local supportingMemberPlayers = TGNS.Where(playerList, TGNS.IsPlayerSM)
+
+    local primerOnlyPlayers = TGNS.Where(playerList, TGNS.IsPrimerOnlyPlayer)
+    local protectedPrimerOnlyPlayers = TGNS.Where(primerOnlyPlayers, function(p) return IsTargetProtectedPrimerOnly(TGNS.GetClient(p), primerOnlyPlayers) end)
+    local otherPrimerOnlyPlayers = TGNS.Where(primerOnlyPlayers, function(p) return not TGNS.Has(protectedPrimerOnlyPlayers, p) end)
+
+    local strangerPlayers = TGNS.Where(playerList, TGNS.IsPlayerStranger)
+    local protectedStrangerPlayers = TGNS.Where(strangerPlayers, function(p) return IsTargetProtectedStranger(TGNS.GetClient(p), strangerPlayers) end)
+    local otherStrangerPlayers = TGNS.Where(strangerPlayers, function(p) return not TGNS.Has(protectedStrangerPlayers, p) end)
+
+    TGNS.SortDescending(protectedStrangerPlayers, getPlayerPlayedTime)
+    TGNS.SortDescending(protectedPrimerOnlyPlayers, getPlayerPlayedTime)
+    TGNS.SortAscending(supportingMemberPlayers, getPlayerPlayedTime)
+    TGNS.SortAscending(otherPrimerOnlyPlayers, getPlayerPlayedTime)
+    TGNS.SortAscending(otherStrangerPlayers, getPlayerPlayedTime)
+
+    TGNS.DoFor(protectedStrangerPlayers, addToPrioritizedPlayers)
+    TGNS.DoFor(protectedPrimerOnlyPlayers, addToPrioritizedPlayers)
+    TGNS.DoFor(supportingMemberPlayers, addToPrioritizedPlayers)
+    TGNS.DoFor(otherPrimerOnlyPlayers, addToPrioritizedPlayers)
+    TGNS.DoFor(otherStrangerPlayers, addToPrioritizedPlayers)
+
+    TGNS.DebugPrint("Prioritized players for new game:")
+    TGNS.DoFor(prioritizedPlayers, function(p, index)
+        local c = TGNS.GetClient(p)
+        TGNS.DebugPrint(string.format("%s. %s> %s (%s)", index, TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c))))
+    end)
+
+    local result = TGNS.Take(prioritizedPlayers, self.Config.MaximumSlots - self.Config.CommunitySlots)
+    return result
 end
 
 function Plugin:GetBumpMessage(targetName)
