@@ -94,7 +94,7 @@ local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllA
 			else
 				bkaData.AKAs = {}
 			end
-			bkaData.AKAs = TGNS.TableUnique(bkaData.AKAs)
+			bkaData.AKAs = TGNS.GetUniqueTableValues(bkaData.AKAs)
 			pdr:Save(bkaData, function(saveResponse)
 				if saveResponse.success then
 					callback(true)
