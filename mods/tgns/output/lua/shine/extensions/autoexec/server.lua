@@ -29,25 +29,35 @@ local md = TGNSMessageDisplayer.Create("AUTOFPS")
 //	md:ToClientConsole(client, "")
 //end
 
-local Plugin = {}
+function Plugin:ClientConfirmConnect(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	pdr:Load(steamId, function(loadResponse)
+		if loadResponse.success then
+			local data = loadResponse.value
+			TGNS.DoFor(data.commands, function(command)
+				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.COMMAND, {c=command})
+			end)
+		else
+			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
+		end
+	end)
+end
 
-function Plugin:CreateCommands()
-	local autofpsCommand = self:BindCommand("sh_autofps", "autofps", function(client)
+local function createCommand(commandName, commandValue, commandDescription)
+	local command = Shine.Plugins.autoexec:BindCommand(commandName, nil, function(client)
 		local steamId = TGNS.GetClientSteamId(client)
 		pdr:Load(steamId, function(loadResponse)
 			if loadResponse.success then
 				local data = loadResponse.value
-				local message
-				if TGNS.Has(data.commands, "fps") then
-					TGNS.RemoveAllMatching(data.commands, "fps")
-					message = "You have toggled off the FPS counter automatic display."
+				local toggleValue
+				if TGNS.Has(data.commands, commandValue) then
+					TGNS.RemoveAllMatching(data.commands, commandValue)
 				else
-					table.insert(data.commands, "fps")
-					message = "You have toggled on the FPS counter automatic display."
+					table.insert(data.commands, commandValue)
 				end
 				pdr:Save(data, function(saveResponse)
 					if saveResponse.success then
-						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have toggled %s the %s.", TGNS.Has(data.commands, commandValue) and "ON" or "OFF", commandDescription))
 					else
 						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to save player data.")
 					end
@@ -57,21 +67,12 @@ function Plugin:CreateCommands()
 			end
 		end)
 	end, true)
-	autofpsCommand:Help("Toggle FPS counter automatic display.")
+	command:Help(string.format("Toggle the %s.", commandDescription))
 end
 
-function Plugin:ClientConfirmConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	pdr:Load(steamId, function(loadResponse)
-		if loadResponse.success then
-			local data = loadResponse.value
-			TGNS.DoFor(data.commands, function(command)
-				TGNS.ExecuteClientCommand(client, command)
-			end)
-		else
-			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
-		end
-	end)
+function Plugin:CreateCommands()
+	createCommand("sh_autofps", "fps 0", "FPS counter automatic display")
+	createCommand("sh_autodebugspeed", "debugspeed", "debugspeed automatic display")
 end
 
 function Plugin:Initialise()
@@ -84,5 +85,3 @@ function Plugin:Cleanup()
     --Cleanup your extra stuff like timers, data etc.
     self.BaseClass.Cleanup( self )
 end
-
-Shine:RegisterExtension("autoexec", Plugin )
