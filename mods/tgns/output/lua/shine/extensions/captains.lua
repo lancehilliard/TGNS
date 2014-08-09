@@ -122,7 +122,7 @@ local function showPickables()
 				local teamChoiceCaptainName = TGNS.GetClientName(teamChoiceCaptainClient)
 				local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 				TGNS.DoFor(readyRoomClients, function(c)
-					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
+					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
 				end)
 				if teamChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(teamChoiceCaptainClient) then
 					local teamChoiceCaptainTeamNumber = TGNS.GetClientTeamNumber(teamChoiceCaptainClient)
