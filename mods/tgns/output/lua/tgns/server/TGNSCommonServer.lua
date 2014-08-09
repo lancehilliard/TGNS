@@ -226,12 +226,17 @@ function TGNS.GetPlayerById(id)
 end
 
 function TGNS.ExecuteClientCommand(client, command)
-	Server.ClientCommand(TGNS.GetPlayer(client), command)
+	local player = TGNS.GetPlayer(client)
+	if player then
+		Server.ClientCommand(player, command)
+	end
 end
 
 function TGNS.SendClientCommand(client, command)
 	local player = TGNS.GetPlayer(client)
-	Server.SendCommand(player, command)
+	if player then
+		Server.SendCommand(player, command)
+	end
 end
 
 function TGNS.ExecuteServerCommand(command)
@@ -730,11 +735,29 @@ function TGNS.TableValueCount(tt, item)
 	return result
 end
 
-function TGNS.TableUnique(tt)
+function TGNS.TableKeyCount(tt)
+	local result = 0
+	TGNS.DoForPairs(tt, function(key, value)
+		result = result + 1
+	end)
+	return result
+end
+
+function TGNS.GetUniqueTableValues(tt)
 	local result = {}
 	TGNS.DoForPairs(tt, function(key, value)
 		if TGNS.TableValueCount(result, value) == 0 then
 			result[#result+1] = value
+		end
+	end)
+	return result
+end
+
+function TGNS.GetUniqueTableKeys(tt)
+	local result = {}
+	TGNS.DoForPairs(tt, function(key, value)
+		if TGNS.TableValueCount(result, key) == 0 then
+			result[#result+1] = key
 		end
 	end)
 	return result
