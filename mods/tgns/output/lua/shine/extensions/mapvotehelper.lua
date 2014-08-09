@@ -1,5 +1,6 @@
 local md = TGNSMessageDisplayer.Create()
 local mapNominations = {}
+local mapSetSelected = false
 
 local function show(mapVoteSummaries, totalVotes)
 	local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
@@ -46,15 +47,60 @@ local function checkForMaxNominations()
 end
 
 local Plugin = {}
+Plugin.HasConfig = true
+Plugin.ConfigName = "mapvotehelper.json"
 
 function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 17, showVoteReminders)
 	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, checkForMaxNominations)
 end
 
+function Plugin:CreateCommands()
+	local setmapvoteCommand = self:BindCommand("sh_setmapvote", nil, function(client, setName)
+		local player = TGNS.GetPlayer(client)
+		if TGNS.HasNonEmptyValue(setName) then
+			local mapSetNames = self.Config.MapSets[setName]
+			if mapSetNames then
+				if #mapSetNames > 0 then
+					local mapSetNamesNotFoundInMapcycle = TGNS.Where(mapSetNames, function(n) return not TGNS.Has(TGNS.GetMapCycleMapNames(), n) end)
+					if not TGNS.Any(mapSetNamesNotFoundInMapcycle) then
+						Shine.Plugins.mapvote.Vote.Nominated = {}
+						Shine.Plugins.mapvote.Config.ForcedMaps = {}
+						TGNS.DoFor(mapSetNames, function(n) Shine.Plugins.mapvote.Config.ForcedMaps[n] = true end)
+						Shine.Plugins.mapvote.ForcedMapCount = #mapSetNames
+						Shine.Plugins.mapvote.Config.MaxOptions = Shine.Plugins.mapvote.ForcedMapCount
+						Shine.Plugins.mapvote.Config.ExcludeLastMaps = 0
+						Shine.Plugins.mapvote.Config.AllowExtend = true
+						Shine.Plugins.mapvote.GetLastMaps = function(mapvotePlugin) return nil end
+						Shine.Plugins.mapvote.CanExtend = function(mapvotePlugin) return TGNS.Has(mapSetNames, TGNS.GetCurrentMapName()) end
+						Shine.Plugins.adminmenu.Config.Admin.Commands.sh_nominate = nil
+						Shine.Plugins.mapvote.ExtendMap = function(self, time, nextmap)
+							local winningMap = Shine.Plugins.mapvote.NextMap.Winner
+							Shine.Plugins.mapvote:Notify( nil, "Map changing in %s.", true, string.TimeToString( Shine.Plugins.mapvote.Config.ChangeDelay ) )
+							TGNS.ScheduleAction(Shine.Plugins.mapvote.Config.ChangeDelay, function() MapCycle_ChangeMap( winningMap ) end)
+						end
+						mapSetSelected = true
+						md:ToPlayerNotifyInfo(player, string.format("MapSet '%s' for next map vote: %s", setName, TGNS.Join(mapSetNames, ", ")))
+					else
+						md:ToPlayerNotifyError(player, string.format("MapSet '%s' has '%s' not found in MapCycle.", setName, TGNS.Join(mapSetNamesNotFoundInMapcycle, ", ")))
+					end
+				else
+					md:ToPlayerNotifyError(player, string.format("MapSet '%s' doesn't seem to include any maps.", setName))
+				end
+			else
+				md:ToPlayerNotifyError(player, string.format("No MapSet was found matching the name '%s'.", setName))
+			end
+		else
+			md:ToPlayerNotifyError(player, "Specify the name of a MapSet when using sh_setmapvote.")
+		end
+	end)
+	setmapvoteCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	setmapvoteCommand:Help("<mapSetName> Configure the map vote for a named set of maps.")
+end
+
 function Plugin:Initialise()
     self.Enabled = true
-
+	self:CreateCommands()
 	TGNS.ScheduleAction(5, function()
 		if Shine.Plugins.mapvote and Shine.Plugins.mapvote.Enabled and Shine.Plugins.mapvote.AddVote then
 			local originalAddVote = Shine.Plugins.mapvote.AddVote
@@ -81,7 +127,9 @@ function Plugin:Initialise()
 		Shine.Commands.sh_nominate.Func = function(client, mapName)
 			local steamId = TGNS.GetClientSteamId(client)
 			local player = TGNS.GetPlayer(client)
-			if mapNominations[steamId] then
+			if mapSetSelected then
+				md:ToPlayerNotifyError(player, "An admin has pre-selected map vote options and disallowed nominations.")
+			elseif mapNominations[steamId] then
 				md:ToPlayerNotifyError(player, string.format("You may nominate only one map. You have already nominated %s.", mapNominations[steamId]))
 			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps > 0 and TGNS.Has(Shine.Plugins.mapvote.LastMapData, mapName) then
 				md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
