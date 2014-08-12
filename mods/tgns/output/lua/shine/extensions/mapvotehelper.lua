@@ -73,7 +73,7 @@ function Plugin:CreateCommands()
 						Shine.Plugins.mapvote.Config.AllowExtend = true
 						Shine.Plugins.mapvote.GetLastMaps = function(mapvotePlugin) return nil end
 						Shine.Plugins.mapvote.CanExtend = function(mapvotePlugin) return TGNS.Has(mapSetNames, TGNS.GetCurrentMapName()) end
-						Shine.Plugins.adminmenu.Config.Admin.Commands.sh_nominate = nil
+						TGNS.GetVoteableMapNames = function() return {} end
 						Shine.Plugins.mapvote.ExtendMap = function(self, time, nextmap)
 							local winningMap = Shine.Plugins.mapvote.NextMap.Winner
 							Shine.Plugins.mapvote:Notify( nil, "Map changing in %s.", true, string.TimeToString( Shine.Plugins.mapvote.Config.ChangeDelay ) )
