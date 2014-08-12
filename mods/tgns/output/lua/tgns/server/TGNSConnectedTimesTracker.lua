@@ -1,7 +1,7 @@
 TGNSConnectedTimesTracker = {}
 
 local DISCONNECTED_TIME_ALLOWED_IN_SECONDS = 300
-local CONNECTION_TRACKING_INTERVAL_IN_SECONDS = 15
+local CONNECTION_TRACKING_INTERVAL_IN_SECONDS = 30
 local connectedTimes = {}
 local played = {}
 local pdr = TGNSPlayerDataRepository.Create("connectedtimes", function(data)
@@ -79,7 +79,7 @@ function TGNSConnectedTimesTracker.PrintConnectedDurations(client)
 		local connectedTimeInSeconds = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c)
 		local playedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c)
 		local gamesCount = Balance and Balance.GetTotalGamesPlayed and Balance.GetTotalGamesPlayed(c) or "?"
-		md:ToClientConsole(client, string.format("%s> %s: %s/%s %s", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds), TGNS.SecondsToClock(playedTimeInSeconds), string.format("(games: %s%s)", gamesCount, TGNS.IsClientCommander(c) and "; Commander" or "")))
+		md:ToClientConsole(client, string.format("%s%s> %s: %s/%s %s", TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) and "!" or "", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds), TGNS.SecondsToClock(playedTimeInSeconds), string.format("(games: %s%s)", gamesCount, TGNS.IsClientCommander(c) and "; Commander" or "")))
 	end
 	TGNS.DoFor(trackedStrangers, printConnectedTime)
 	TGNS.DoFor(trackedPrimerOnlys, printConnectedTime)
