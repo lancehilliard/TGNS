@@ -798,7 +798,7 @@ local function ProcessScheduledActions()
 end
 
 local function ProcessScheduledRequests()
-	local unsentScheduledRequests = TGNS.Take(TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end), 10)
+	local unsentScheduledRequests = TGNS.Take(TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end), TGNS.Config and TGNS.Config.HttpRequestsPerSecond or 1)
 	TGNS.DoFor(unsentScheduledRequests, function(r)
 		r.sent = true
 		-- local requestStartTime = Shared.GetTime()
