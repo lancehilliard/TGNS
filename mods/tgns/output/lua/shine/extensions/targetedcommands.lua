@@ -1,4 +1,5 @@
 local TEMPBAN_DURATION_IN_MINUTES = 15
+local AFFIRM_PLAYTIME_DELTA_IN_SECONDS = 43200
 
 local function CreateCommand(consoleCommandName, chatCommandName, messageChannel, isValidTargetClient, isNotValidTargetTemplate, onInputValidated, isReasonRequired, helpText)
 	local result = {}
@@ -19,8 +20,10 @@ local log = function(client, targetClient, commandName, reason)
 end
 
 local function affirm(client, targetClient, md, commandName)
-	TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(targetClient, 0)
-	md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s seemingly connected a long, long time ago...", TGNS.GetClientName(targetClient)))
+	if TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(targetClient) < AFFIRM_PLAYTIME_DELTA_IN_SECONDS then
+		TGNSConnectedTimesTracker.AddToPlayTime(targetClient, AFFIRM_PLAYTIME_DELTA_IN_SECONDS)
+	end
+	md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Thanks for affirming %s!", TGNS.GetClientName(targetClient)))
 	log(client, targetClient, commandName or "sh_affirm")
 end
 
