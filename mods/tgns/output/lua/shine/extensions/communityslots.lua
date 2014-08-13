@@ -11,6 +11,7 @@ local fullSpecDataRepository
 local fullSpecSteamIds
 local canNotifyAboutOtherServerSlots = true
 local blacklistedClients = {}
+local lastAnnouncedRemainingPublicSlotsCount
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 
@@ -180,8 +181,11 @@ end
 
 local function AnnounceRemainingPublicSlots()
     local playingPlayers = GetPlayingPlayers()
-    local remainingPublicSlots = GetRemainingPublicSlots(playingPlayers)
-    TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlots, #playingPlayers)
+    local remainingPublicSlotsCount = GetRemainingPublicSlots(playingPlayers)
+    if lastAnnouncedRemainingPublicSlotsCount == nil or lastAnnouncedRemainingPublicSlotsCount ~= remainingPublicSlotsCount then
+        TGNS.ExecuteEventHooks("PublicSlotsRemainingChanged", TGNS.GetSimpleServerName(), remainingPublicSlotsCount, #playingPlayers)
+        lastAnnouncedRemainingPublicSlotsCount = remainingPublicSlotsCount
+    end
     UpdateReservedSlotAmount()
 end
 
@@ -214,7 +218,6 @@ local function IsClientBumped(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimName))
                 onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
-                --TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(victimClient, Shared.GetSystemTime())
                 tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
                 tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
@@ -358,7 +361,7 @@ function Plugin:ClientConnect(joiningClient)
             end
         end)
     else
-        TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
+        --TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
         local pbr = TGNSPlayerBlacklistRepository.Create("communityslots")
         pbr:IsClientBlacklisted(joiningClient, function(isBlacklisted)
             blacklistedClients[joiningClient] = isBlacklisted
