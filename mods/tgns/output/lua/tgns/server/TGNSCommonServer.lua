@@ -474,7 +474,8 @@ function TGNS.GetPlayerClassPurchaseCost(player)
 	local exoLayoutNamePurchaseCosts = {
       ["ClawMinigun"] = kExosuitCost,
       ["ClawRailgun"] = kClawRailgunExosuitCost,
-      ["MinigunMinigun"] = kDualExosuitCost
+      ["MinigunMinigun"] = kDualExosuitCost,
+      ["RailgunRailgun"] = kDualRailgunExosuitCost
     }
 	local playerClassNameResCost
 	if (player.layout) then
