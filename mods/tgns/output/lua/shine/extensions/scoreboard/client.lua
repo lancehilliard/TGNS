@@ -145,16 +145,15 @@ function Plugin:Initialise()
 
 	        local playerNoteItem = player["PlayerNoteItem"]
 	        if playerNoteItem then
-	        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or PlayerUI_GetIsSpecating())
+	        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
 	        	playerNoteItem:SetIsVisible(playerNoteItemShouldDisplay)
 	        	playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
 	        	playerNoteItem:SetColor(color)
 	        end
 
-
-	        if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
-	        	player["Status"]:SetText("Spectator")
-	        end
+	        -- if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
+	        -- 	player["Status"]:SetText("Spectator")
+	        -- end
 
 	        -- if not playerIsBot then
 	        -- 	local lastUpdatedClientPingsWhen = lastUpdatedPingsWhen[clientIndex] or 0

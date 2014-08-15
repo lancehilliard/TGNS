@@ -902,10 +902,10 @@ function Plugin:Initialise()
 			local spawnSelectionOverride = {chairLocationName, hiveLocationName}
 			table.insert(spawnSelectionOverrides, spawnSelectionOverride)
 			Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverrides)
-			plans = {}
-			displayPlansToAll()
 			TGNS.RemoveTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
 		end
+		plans = {}
+		displayPlansToAll()
 	end)
 
 	local originalGetCanJoinTeamNumber
