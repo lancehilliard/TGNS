@@ -16,6 +16,7 @@ local showOptionals = false
 local notes = {}
 local hasJetPacks = {}
 local showTeamMessages = true
+local badgeLabels = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -203,16 +204,16 @@ function Plugin:Initialise()
 		                isQuerying[clientIndex] = true
 		                TGNS.SendNetworkMessage(Plugin.QUERY_REQUESTED, {c=clientIndex})
 		            end
-		            local badgeIcons = playerItem["BadgeItems"]
-		            if badgeIcons then
-		                for i = 1, #badgeIcons do
-		                	local badgeIcon = badgeIcons[i]
-				            if badgeIcon and badgeIcon:GetIsVisible() and GUIItemContainsPoint(badgeIcon, mouseX, mouseY) and not isQueryingBadge[clientIndex] then
-				                isQueryingBadge[clientIndex] = true
-				                TGNS.SendNetworkMessage(Plugin.BADGE_QUERY_REQUESTED, {c=clientIndex})
-				            end
-					    end
-		            end
+		       --      local badgeIcons = playerItem["BadgeItems"]
+		       --      if badgeIcons then
+		       --          for i = 1, #badgeIcons do
+		       --          	local badgeIcon = badgeIcons[i]
+				     --        if badgeIcon and badgeIcon:GetIsVisible() and GUIItemContainsPoint(badgeIcon, mouseX, mouseY) and not isQueryingBadge[clientIndex] then
+				     --            isQueryingBadge[clientIndex] = true
+				     --            TGNS.SendNetworkMessage(Plugin.BADGE_QUERY_REQUESTED, {c=clientIndex})
+				     --        end
+					    -- end
+		       --      end
 		        end
 
 		    end
@@ -300,6 +301,31 @@ function Plugin:Initialise()
 	Shared.GetString = function(stringIndex)
 		local result = stringIndex == TGNS.READYROOM_LOCATION_ID and "Ready Room" or originalSharedGetString(stringIndex)
 		return result
+	end
+
+
+    local originalGetBadgeFormalName = GetBadgeFormalName
+    GetBadgeFormalName = function(name)
+    	local result = originalGetBadgeFormalName(name)
+    	if result == "Custom Badge" then
+    		local badgeLabel = badgeLabels[name]
+    		if badgeLabel then
+    			result = badgeLabel
+    		end
+    	end
+    	return result
+	end
+
+	TGNS.HookNetworkMessage(Plugin.BADGE_DISPLAY_LABEL, function(message)
+		badgeLabels[string.format("ui/badges/%s.dds", message.n)] = message.l
+	end)
+
+	local originalGUIHoverTooltipShow = GUIHoverTooltip.Show
+	GUIHoverTooltip.Show = function(self, displayTimeInSeconds)
+		if self.tooltip and self.tooltip.GetText and self.tooltip:GetText():find("TGNS") then
+			displayTimeInSeconds = 2
+		end
+		originalGUIHoverTooltipShow(self, displayTimeInSeconds)
 	end
 
 

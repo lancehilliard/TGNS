@@ -303,34 +303,33 @@ function Plugin:Initialise()
 			md:ToPlayerNotifyError(player, "There was a problem querying.")
 		end
 	end)
-	TGNS.HookNetworkMessage(self.BADGE_QUERY_REQUESTED, function(client, message)
-		Shared.Message(tostring(targetClientIndex))
-		local player = TGNS.GetPlayer(client)
-		local targetClientIndex = message.c
-		local targetClient = TGNS.GetClientById(targetClientIndex)
-		local md = TGNSMessageDisplayer.Create("BADGES")
-		if targetClient and Shine:IsValidClient(targetClient) then
-			if not TGNS.GetIsClientVirtual(targetClient) then
-				local sourceSteamId = TGNS.GetClientSteamId(client)
-				local targetSteamId = TGNS.GetClientSteamId(targetClient)
-				local targetClientName = TGNS.GetClientName(targetClient)
-				local badgeInfo = Shine.Plugins.tgnsbadges:GetCurrentBadgeInfo(targetSteamId)
-				if badgeInfo then
-					md = TGNSMessageDisplayer.Create("BADGES")
-					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s - %s", targetClientName, badgeInfo.DisplayName, badgeInfo.Description))
-				end
-				TGNS.ScheduleAction(5, function()
-					if Shine:IsValidClient(client) then
-						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.BADGE_QUERY_ALLOWED, {c=targetClientIndex})
-					end
-				end)
-			else
-				md:ToPlayerNotifyError(player, "The bots don't take kindly to being queried.")
-			end
-		else
-			md:ToPlayerNotifyError(player, "There was a problem querying.")
-		end
-	end)
+	-- TGNS.HookNetworkMessage(self.BADGE_QUERY_REQUESTED, function(client, message)
+	-- 	local player = TGNS.GetPlayer(client)
+	-- 	local targetClientIndex = message.c
+	-- 	local targetClient = TGNS.GetClientById(targetClientIndex)
+	-- 	local md = TGNSMessageDisplayer.Create("BADGES")
+	-- 	if targetClient and Shine:IsValidClient(targetClient) then
+	-- 		if not TGNS.GetIsClientVirtual(targetClient) then
+	-- 			local sourceSteamId = TGNS.GetClientSteamId(client)
+	-- 			local targetSteamId = TGNS.GetClientSteamId(targetClient)
+	-- 			local targetClientName = TGNS.GetClientName(targetClient)
+	-- 			local badgeInfo = Shine.Plugins.tgnsbadges:GetCurrentBadgeInfo(targetSteamId)
+	-- 			if badgeInfo then
+	-- 				md = TGNSMessageDisplayer.Create("BADGES")
+	-- 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s: %s - %s", targetClientName, badgeInfo.DisplayName, badgeInfo.Description))
+	-- 			end
+	-- 			TGNS.ScheduleAction(5, function()
+	-- 				if Shine:IsValidClient(client) then
+	-- 					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.BADGE_QUERY_ALLOWED, {c=targetClientIndex})
+	-- 				end
+	-- 			end)
+	-- 		else
+	-- 			md:ToPlayerNotifyError(player, "The bots don't take kindly to being queried.")
+	-- 		end
+	-- 	else
+	-- 		md:ToPlayerNotifyError(player, "There was a problem querying.")
+	-- 	end
+	-- end)
 	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
 		local isLookingUp = not isLookingDown
 		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})

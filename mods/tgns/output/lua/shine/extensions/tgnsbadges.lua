@@ -2,13 +2,20 @@ local badgeNames = {}
 local badges = {}
 local md = TGNSMessageDisplayer.Create("BADGES")
 local badgesModIsLoaded = false
+local targetClientBadgeLabels = {}
 
 local Plugin = {}
 
 local function tellTargetAboutSource(targetClient, sourceClient)
 	local badgeName = badgeNames[sourceClient]
-	if badgeName and kBadges[badgeName] then
+	local sourceClientSteamId = TGNS.GetClientSteamId(sourceClient)
+	local sourceBadge = badges[sourceClientSteamId]
+	if badgeName and sourceBadge and kBadges[badgeName] then
 		Server.SendNetworkMessage(targetClient, "Badge", { clientIndex = TGNS.GetClientId(sourceClient), badge = kBadges[badgeName] }, true)
+		if targetClientBadgeLabels[targetClient] ~= nil and not TGNS.Has(targetClientBadgeLabels[targetClient], badgeName) then
+			Server.SendNetworkMessage(targetClient, Shine.Plugins.scoreboard.BADGE_DISPLAY_LABEL, { n = badgeName, l = string.format('%s (TGNS)\n%s', sourceBadge.DisplayName, sourceBadge.Description) }, true)
+			table.insert(targetClientBadgeLabels[targetClient], badgeName)
+		end
 	end
 end
 
@@ -25,7 +32,7 @@ local function assignBadge(client)
 					if kBadges[badgeName] then
 						badgeNames[client] = badgeName
 						badges[steamId] = badge
-						-- TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
+						--TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
 						TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
 					end
 				end
@@ -59,8 +66,15 @@ end
 function Plugin:ClientConnect(client)
 	if badgesModIsLoaded then
 		assignBadge(client)
-		TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
-		-- TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
+	end
+end
+
+function Plugin:ClientConfirmConnect(client)
+	if badgesModIsLoaded then
+		targetClientBadgeLabels[client] = {}
+		TGNS.ScheduleAction(1, function()
+			TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
+		end)
 	end
 end
 
