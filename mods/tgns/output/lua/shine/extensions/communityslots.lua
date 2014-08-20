@@ -1,3 +1,4 @@
+local NUMBER_OF_SLOTS_TO_LEAVE_FOR_JOINERS_DURING_NON_CAPTAINS_GAMES = 2
 local actionslog = { }
 local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
 local MESSAGE_PREFIX = "SLOTS"
@@ -14,6 +15,10 @@ local blacklistedClients = {}
 local lastAnnouncedRemainingPublicSlotsCount
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
+local physicalSlotsCount
+local publicSlotsCount
+local communitySlotsCount
+local maximumSpectatorsCount
 
 local otherServerStaticInfo = {}
 otherServerStaticInfo["Taunt"] = { address = "tgns2.tacticalgamer.com", simpleName = "Chuckle" }
@@ -55,14 +60,8 @@ local function TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
     return result
 end
 
-local function getDefaultPublicSlots()
-    local result = Shine.Plugins.communityslots.Config.MaximumSlots - Shine.Plugins.communityslots.Config.CommunitySlots
-    return result
-end
-
 local function GetRemainingPublicSlots(playingPlayers)
-    local defaultPublicSlots = getDefaultPublicSlots()
-    local result = defaultPublicSlots - #playingPlayers
+    local result = publicSlotsCount - #playingPlayers
     result = result > 0 and result or 0
     return result
 end
@@ -172,7 +171,7 @@ local function GetPlayingPlayers(clientToExclude)
 end
 
 local function UpdateReservedSlotAmount()
-    local reservedSlotCount = Shine.Plugins.communityslots.Config.CommunitySlots - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
+    local reservedSlotCount = communitySlotsCount - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
     if lastSetReservedSlotAmount ~= reservedSlotCount then
         SetReservedSlotAmount(reservedSlotCount)
         lastSetReservedSlotAmount = reservedSlotCount
@@ -318,13 +317,12 @@ function Plugin:GetPlayersForNewGame()
         TGNS.DebugPrint(string.format("%s. %s%s> %s (%s)", index, TGNS.IsPlayerAFK(p) and "!" or "", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c))))
     end)
 
-    local result = TGNS.Take(prioritizedPlayers, self.Config.MaximumSlots - self.Config.CommunitySlots)
+    local result = TGNS.Take(prioritizedPlayers, publicSlotsCount)
     return result
 end
 
 function Plugin:GetBumpMessage(targetName)
-    local defaultPublicSlots = getDefaultPublicSlots()
-    local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, targetName, defaultPublicSlots, defaultPublicSlots)
+    local result = string.format(Shine.Plugins.communityslots.Config.BumpReason, targetName, publicSlotsCount, publicSlotsCount)
     if Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
         result = result .. " Captains Game in play!"
     end
@@ -483,9 +481,9 @@ end
 //end
 //TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
-local function getMaximumSpectatorCount()
+local function getMaximumEffectiveSpectatorCount()
     local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
-    local result = captainsModeIsEnabled and Shine.Plugins.communityslots.Config.CommunitySlots or Shine.Plugins.communityslots.Config.MaximumSpectators
+    local result = captainsModeIsEnabled and communitySlotsCount or maximumSpectatorsCount
     return result
 end
 
@@ -518,7 +516,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
     elseif newTeamNumber == kSpectatorIndex then
         -- SMs may spec mid-game; anyone may spec pre-game (limit enforced)
         if not (force or shineForce) then
-            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumSpectatorCount()
+            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumEffectiveSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
             if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled then
                 tgnsMd:ToPlayerNotifyError(player, "Mid-game spectate is available only when teams are 8v8.")
@@ -556,7 +554,7 @@ local function sweep()
     local countOfPlayingPlayers = #GetPlayingPlayers()
     TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
         if #totalPlayersOnServer > 16 and TGNS.IsGameInProgress() then
-            if countOfPlayingPlayers >= 10 or #totalPlayersOnServer >= Shine.Plugins.communityslots.Config.MaximumSlots-3 then
+            if countOfPlayingPlayers >= 10 or #totalPlayersOnServer >= physicalSlotsCount-3 then
                 local lastTeamChangeTime = inReadyRoomSinceTimes[c]
                 if lastTeamChangeTime then
                     local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
@@ -593,7 +591,7 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
         local nonSpectatorPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) and not TGNS.GetIsClientVirtual(TGNS.GetClient(p)) end)
         if ServerIsFull(nonSpectatorPlayers) then
             local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
-            result = bumpableClient ~= nil or (TGNS.Has(fullSpecSteamIds, joiningSteamId) and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < getMaximumSpectatorCount())
+            result = bumpableClient ~= nil or (TGNS.Has(fullSpecSteamIds, joiningSteamId) and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < getMaximumEffectiveSpectatorCount())
         end
     end
     return result
@@ -668,6 +666,10 @@ function Plugin:Initialise()
             end
         end
     end)
+    physicalSlotsCount = Server.GetMaxPlayers()
+    publicSlotsCount = 16
+    communitySlotsCount = physicalSlotsCount - publicSlotsCount
+    maximumSpectatorsCount = communitySlotsCount - NUMBER_OF_SLOTS_TO_LEAVE_FOR_JOINERS_DURING_NON_CAPTAINS_GAMES
     return true
 end
 
