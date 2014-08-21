@@ -4,11 +4,13 @@ local prefixes = {}
 local isCaptainsCaptain = {}
 local isApproved = {}
 local isQuerying = {}
+local isVring = false
 local isQueryingBadge = {}
 local approveReceivedTotal = 0
 local approveSentTotal = 0
 local APPROVE_TEXTURE_DISABLED = "ui/approve/chevron-disabled.dds"
 local QUERY_TEXTURE_DISABLED = "ui/query/questionmark-disabled.dds"
+local VR_TEXTURE_DISABLED = "ui/vr/vr-disabled.dds"
 local lastUpdatedPingsWhen = {}
 local pings = {}
 local showCustomNumbersColumn = true
@@ -17,6 +19,7 @@ local notes = {}
 local hasJetPacks = {}
 local showTeamMessages = true
 local badgeLabels = {}
+local vrConfirmed = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -27,6 +30,11 @@ end)
 
 local function getTeamApproveTexture(teamNumber)
 	local result = string.format("ui/approve/chevron-team%s.dds", teamNumber)
+	return result
+end
+
+local function getTeamVrTexture(teamNumber)
+	local result = string.format("ui/vr/vr-team%s.dds", teamNumber)
 	return result
 end
 
@@ -74,6 +82,18 @@ function Plugin:Initialise()
 		    player.PlayerApproveIcon = playerApproveIcon
 		    player.Background:AddChild(playerApproveIcon)
 		end
+		if not player.PlayerVrIcon then
+		    local playerVrIcon = GUIManager:CreateGraphicItem()
+		    local playerVrIconPosition = player.Status:GetPosition()
+		    playerVrIconPosition.x = playerVrIconPosition.x - 65
+		    playerVrIconPosition.y = playerVrIconPosition.y - 10
+		    playerVrIcon:SetSize(Vector(20, 20, 0))
+		    playerVrIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		    playerVrIcon:SetPosition(playerVrIconPosition)
+		    playerVrIcon:SetTexture(VR_TEXTURE_DISABLED)
+		    player.PlayerVrIcon = playerVrIcon
+		    player.Background:AddChild(playerVrIcon)
+		end
 		if not player.PlayerQueryIcon then
 		    local playerQueryIcon = GUIManager:CreateGraphicItem()
 		    local playerQueryIconPosition = player.Status:GetPosition()
@@ -105,10 +125,6 @@ function Plugin:Initialise()
 			playerNoteItem:SetAnchor(GUIItem.Left, GUIItem.Top)
 			playerNoteItem:SetTextAlignmentX(GUIItem.Align_Max)
 			playerNoteItem:SetTextAlignmentY(GUIItem.Align_Min)
-			local playerNoteItemPosition = player.Status:GetPosition()
-		    playerNoteItemPosition.x = playerNoteItemPosition.x - 45
-		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
-			playerNoteItem:SetPosition(playerNoteItemPosition)
 			player.PlayerNoteItem = playerNoteItem
 			player.Background:AddChild(playerNoteItem)
 		end
@@ -119,10 +135,28 @@ function Plugin:Initialise()
 			local playerIsBot = playerRecord.Ping == 0
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
+	        local playerVrIconShouldDisplay = (teamNumber == Client.GetLocalClientTeamNumber()) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals and not vrConfirmed[clientIndex]
+	        if playerVrIconShouldDisplay then
+	        	local targetPrefix = prefixes[clientIndex] or ""
+        		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
+        		targetPrefixFiltered = TGNS.Replace(targetPrefixFiltered, "*", "")
+        		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
+	        end
+
+			local playerNoteItemPosition = player.Status:GetPosition()
+			playerNoteItemPosition.x = playerNoteItemPosition.x - ((playerVrIconShouldDisplay and 60 or 40) + 5)
+		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
+			player.PlayerNoteItem:SetPosition(playerNoteItemPosition)
+
 	        local playerQueryIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        if playerApproveIcon then
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
+	        end
+	        local playerVrIcon = player["PlayerVrIcon"]
+	        if playerVrIcon then
+	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
+		        playerVrIcon:SetTexture(isVring and VR_TEXTURE_DISABLED or getTeamVrTexture(teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
@@ -203,6 +237,11 @@ function Plugin:Initialise()
 		                isQuerying[clientIndex] = true
 		                TGNS.SendNetworkMessage(Plugin.QUERY_REQUESTED, {c=clientIndex})
 		            end
+		            local playerVrIcon = playerItem["PlayerVrIcon"]
+		            if playerVrIcon and playerVrIcon:GetIsVisible() and GUIItemContainsPoint(playerVrIcon, mouseX, mouseY) and not isVring then
+		                isVring = true
+		                TGNS.SendNetworkMessage(Plugin.VR_REQUESTED, {c=clientIndex})
+		            end
 		       --      local badgeIcons = playerItem["BadgeItems"]
 		       --      if badgeIcons then
 		       --          for i = 1, #badgeIcons do
@@ -223,14 +262,19 @@ function Plugin:Initialise()
 		isApproved[message.c] = false
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, function(message)
-		-- Shared.Message(tostring(message.c))
 		isApproved[message.c] = true
+	end)
+	TGNS.HookNetworkMessage(Plugin.VR_CONFIRMED, function(message)
+		vrConfirmed[message.c] = true
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
 		isApproved = {}
 	end)
 	TGNS.HookNetworkMessage(Plugin.QUERY_ALLOWED, function(message)
 		isQuerying[message.c] = false
+	end)
+	TGNS.HookNetworkMessage(Plugin.VR_ALLOWED, function(message)
+		isVring = false
 	end)
 	TGNS.HookNetworkMessage(Plugin.BADGE_QUERY_ALLOWED, function(message)
 		isQueryingBadge[message.c] = false

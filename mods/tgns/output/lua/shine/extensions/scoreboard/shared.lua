@@ -11,6 +11,9 @@ Plugin.APPROVE_SENT_TOTAL = "scoreboard_APPROVE_SENT_TOTAL"
 Plugin.APPROVE_ALREADY_APPROVED = "scoreboard_APPROVE_ALREADY_APPROVED"
 Plugin.QUERY_REQUESTED = "scoreboard_QUERY_REQUESTED"
 Plugin.QUERY_ALLOWED = "scoreboard_QUERY_ALLOWED"
+Plugin.VR_REQUESTED = "scoreboard_VR_REQUESTED"
+Plugin.VR_ALLOWED = "scoreboard_VR_ALLOWED"
+Plugin.VR_CONFIRMED = "scoreboard_VR_CONFIRMED"
 --Plugin.BADGE_QUERY_REQUESTED = "scoreboard_BADGE_QUERY_REQUESTED"
 Plugin.BADGE_QUERY_ALLOWED = "scoreboard_BADGE_QUERY_ALLOWED"
 Plugin.BADGE_DISPLAY_LABEL = "scoreboard_BADGE_DISPLAY_LABEL"
@@ -30,6 +33,9 @@ TGNS.RegisterNetworkMessage(Plugin.APPROVE_SENT_TOTAL, {t="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.QUERY_REQUESTED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.QUERY_ALLOWED, {c="integer"})
+TGNS.RegisterNetworkMessage(Plugin.VR_REQUESTED, {c="integer"})
+TGNS.RegisterNetworkMessage(Plugin.VR_ALLOWED, {})
+TGNS.RegisterNetworkMessage(Plugin.VR_CONFIRMED, {c="integer"})
 --TGNS.RegisterNetworkMessage(Plugin.BADGE_QUERY_REQUESTED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.BADGE_QUERY_ALLOWED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.BADGE_DISPLAY_LABEL, {n="string(100)",l="string(100)"})
