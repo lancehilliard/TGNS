@@ -353,11 +353,6 @@ function TGNS.ReplaceClassMethod(className, methodName, method)
 	return Shine.ReplaceClassMethod(className, methodName, method)
 end
 
-function TGNS.Replace(original, pattern, replace)
-	local result = string.gsub(original, pattern, replace)
-	return result
-end
-
 function TGNS.GetNextMapName()
 	local result = Shine.Plugins.mapvote:GetNextMap()
 	return result
@@ -638,14 +633,6 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 		result = "?"
 	end
 	return result
-end
-
-function TGNS.IndexOf(s, part)
-	return s:find(part) or -1
-end
-
-function TGNS.Contains(s, part)
-	return TGNS.IndexOf(s, part) >= 1
 end
 
 function TGNS.StartsWith(s,part)

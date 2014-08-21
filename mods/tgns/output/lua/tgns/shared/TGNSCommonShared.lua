@@ -86,6 +86,19 @@ function TGNS.EnhancedLog(message)
 	Shared.Message(message)
 end
 
+function TGNS.IndexOf(s, part)
+	return s:find(part) or -1
+end
+
+function TGNS.Contains(s, part)
+	return TGNS.IndexOf(s, part) >= 1
+end
+
+function TGNS.Replace(original, pattern, replace)
+	local result = string.gsub(original, pattern, replace)
+	return result
+end
+
 function TGNS.HasNonEmptyValue(stringValue)
 	local result = stringValue ~= nil and stringValue ~= ""
 	return result
