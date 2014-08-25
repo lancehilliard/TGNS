@@ -85,6 +85,15 @@ function TGNS.GetReadableSteamIdFromNs2Id(ns2id)
 	return result
 end
 
+function TGNS.GetReadyRoomCommandParameters()
+	local result = TGNS.Select(TGNS.GetPlayers(TGNS.Where(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c) return not TGNS.GetIsClientVirtual(c) end)), function(p) return {name=TGNS.GetPlayerName(p), value=TGNS.GetPlayerGameId(p)} end)
+	table.insert(result, {name="All Players (*)", value="*"})
+	table.insert(result, {name="Marines (@marine)", value="@marine"})
+	table.insert(result, {name="Aliens (@alien)", value="@alien"})
+	table.insert(result, {name="Strangers (%guest)", value="%guest"})
+	return result
+end
+
 function TGNS.GetSteamCommunityProfileIdFromReadableSteamId(readableSteamId)
 	local parts = TGNS.Split( ':', string.sub(readableSteamId,7) )
 	local id_64 = (1197960265728 + tonumber(parts[2])) + (tonumber(parts[3]) * 2)
