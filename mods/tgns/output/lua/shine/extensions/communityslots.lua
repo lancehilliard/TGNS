@@ -170,10 +170,27 @@ local function GetPlayingPlayers(clientToExclude)
     return result
 end
 
+local function UpdateReservedSlotsTag(reservedSlotCount)
+    local Tags = {}
+
+    Server.GetTags( Tags )
+
+    for i = 1, #Tags do
+        local Tag = Tags[ i ]
+
+        if Tag and Tag:find( "R_S" ) then
+            Server.RemoveTag( Tag )
+        end
+    end
+
+    Server.AddTag( "R_S"..reservedSlotCount )
+end
+
 local function UpdateReservedSlotAmount()
     local reservedSlotCount = communitySlotsCount - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
     if lastSetReservedSlotAmount ~= reservedSlotCount then
-        SetReservedSlotAmount(reservedSlotCount)
+        --SetReservedSlotAmount(reservedSlotCount)
+        UpdateReservedSlotsTag(reservedSlotCount)
         lastSetReservedSlotAmount = reservedSlotCount
     end
 end
