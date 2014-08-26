@@ -56,15 +56,6 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 end
 
 local roles = {
-	//CreateRole("Temp Admin"
-	//	, "Supporting Members who have signed the TGNS Primer"
-	//	, "tempadmin_group"
-	//	, "TEMPADMIN"
-	//	, "sh_tempadmin"
-	//	, "tempadmin"
-	//	, TGNS.IsClientTempAdmin
-	//	, TGNS.IsClientAdmin
-	//	, function(client) return TGNS.IsClientSM(client) and TGNS.HasClientSignedPrimerWithGames(client) end),
 	CreateRole("Guardian"
 		, "TGNS Primer signers who've played >=40 full rounds on this server"
 		, "guardian_group"

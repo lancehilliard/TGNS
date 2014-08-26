@@ -23,10 +23,8 @@ local STRANGER_EXTENDED_WELCOME_LINES = { ""
 local PRIMERONLY_EXTENDED_WELCOME_LINES = { ""
                                , " === TACTICAL GAMER NATURAL SELECTION 2: USING YOUR RESERVED SLOT === "
 							   , "Thank you for signing the TGNS Primer. Did you know that you NOW have a reserved"
-							   , "slot on this server? You can join this full server anytime more than two Strangers*"
+							   , "slot on this server? You can join this full server anytime more than two Strangers"
 							   , "are playing. So bookmark us and play with a server full of regulars!"
-							   , ""
-							   , "* Stranger = player who hasn't signed the TGNS Primer and isn't a Supporting Member"
 							   , ""
 							   , "If you want to show MORE support for what Tactical Gamer offers -- and/or if you'd"
 							   , "like a more powerful reserved slot -- consider becoming a Supporting Member! You"
@@ -88,7 +86,7 @@ function Plugin:ClientConfirmConnect(client)
 		end)
 		TGNS.ScheduleActionInterval(600, function()
 			if Shine:IsValidClient(client) then
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Hit 'M > Info > TGNS Primer' to read our rules. Enjoy your stay!")
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Hit 'M > Info > Required Reading' to read our rules. Enjoy your stay!")
 			end
 		end)
 	end
