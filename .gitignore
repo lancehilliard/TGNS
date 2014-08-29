@@ -167,6 +167,10 @@
 !mods/tgns/source/ui/query/questionmark-team0.psd
 !mods/tgns/source/ui/query/questionmark-team1.psd
 !mods/tgns/source/ui/query/questionmark-team2.psd
+!mods/tgns/source/ui/query/contactcard-disabled.psd
+!mods/tgns/source/ui/query/contactcard-team0.psd
+!mods/tgns/source/ui/query/contactcard-team1.psd
+!mods/tgns/source/ui/query/contactcard-team2.psd
 
 # And then whitelist spec files
 
