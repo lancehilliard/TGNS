@@ -9,7 +9,7 @@ local isQueryingBadge = {}
 local approveReceivedTotal = 0
 local approveSentTotal = 0
 local APPROVE_TEXTURE_DISABLED = "ui/approve/chevron-disabled.dds"
-local QUERY_TEXTURE_DISABLED = "ui/query/questionmark-disabled.dds"
+local QUERY_TEXTURE_DISABLED = "ui/query/contactcard-disabled.dds"
 local VR_TEXTURE_DISABLED = "ui/vr/vr-disabled.dds"
 local lastUpdatedPingsWhen = {}
 local pings = {}
@@ -39,7 +39,7 @@ local function getTeamVrTexture(teamNumber)
 end
 
 local function getTeamQueryTexture(teamNumber)
-	local result = string.format("ui/query/questionmark-team%s.dds", teamNumber)
+	local result = string.format("ui/query/contactcard-team%s.dds", teamNumber)
 	return result
 end
 
