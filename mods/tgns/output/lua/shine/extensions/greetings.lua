@@ -89,6 +89,15 @@ function Plugin:ClientConfirmConnect(client)
 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Hit 'M > Info > Required Reading' to read our rules. Enjoy your stay!")
 			end
 		end)
+	elseif TGNS.IsPrimerOnlyClient(client) then
+		local totalGames = Balance.GetTotalGamesPlayed(client)
+		if totalGames < GAMES_COUNT_TO_NOTIFY_TEAMMATES then
+			TGNS.ScheduleActionInterval(600, function()
+				if Shine:IsValidClient(client) then
+					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Hit 'M > Info > TGNS FAQ' to learn more about TGNS. Enjoy your stay!")
+				end
+			end)
+		end
 	end
 end
 
