@@ -103,11 +103,11 @@ end
 
 local function showRoster(clients, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText)
 	local columnsY = titleY + 0.05
-	TGNS.SortAscending(clients, TGNS.GetClientId)
-	local names = TGNS.Select(clients, function(c)
+	local clientNameGetter = function(c)
 		local nameToDisplay = string.format("%s%s", TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) and "!" or "", TGNS.GetClientName(c))
 		return TGNS.Truncate(nameToDisplay, 16)
-	end)
+	end
+	local names = TGNS.Select(clients, clientNameGetter)
 	TGNS.ShowPanel(names, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText, #names, 3, "(None)")
 end
 
@@ -122,7 +122,7 @@ local function showPickables()
 				local teamChoiceCaptainName = TGNS.GetClientName(teamChoiceCaptainClient)
 				local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 				TGNS.DoFor(readyRoomClients, function(c)
-					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
+					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
 				end)
 				if teamChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(teamChoiceCaptainClient) then
 					local teamChoiceCaptainTeamNumber = TGNS.GetClientTeamNumber(teamChoiceCaptainClient)
@@ -130,19 +130,34 @@ local function showPickables()
 					TGNS.DoFor(teamChoiceCaptainTeammateClients, function(c)
 						local truncatedTeamChoiceCaptainName = TGNS.Truncate(teamChoiceCaptainName, 16)
 						local message = setSpawnsSummaryText and string.format("%s has selected\nthe game's spawn locations!", truncatedTeamChoiceCaptainName) or string.format("%s: Select Spawns!\nM > Captains > sh_setspawns", truncatedTeamChoiceCaptainName)
-						Shine:SendText(c, Shine.BuildScreenMessage(58, 0.80, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
+						Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
 					end)
 				end
 			end
 			local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
-			showRoster(optedInClients, allClients, 52, 53, 54, 0.25, "Opted In")
+
+			local renderCaptainClients = TGNS.Where(allClients, function(c) return TGNS.Has(captainClients, c) end)
+			local renderOtherClients = TGNS.Where(allClients, function(c) return not TGNS.Has(renderCaptainClients, c) end)
+
+			TGNS.SortDescending(optedInClients, TGNS.GetClientHiveSkillRank)
+			showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.25, "Opted In")
+
+			TGNS.SortAscending(optedInClients, TGNS.GetClientId)
+			showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.25, "Opted In")
+
 			showRoster(notOptedInClients, allClients, 55, 56, 57, 0.55, "Not Opted In")
-			if #notOptedInClients > 0 then
-				TGNS.DoFor(readyRoomClients, function(c)
-					Shine:SendText(c, Shine.BuildScreenMessage(59, 0.80, 0.75, "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'", 3, 0, 255, 0, 0, 1, 0 ) )
-				end)
-			end
+
+			TGNS.DoFor(readyRoomClients, function(c)
+				local message
+				if TGNS.Has(captainClients, c) then
+					message = "Captains: Your 'Opted In' list is sorted by Hive Skill rank.\nTop row is highest (left, right), then next row, etc, etc.\nDon't put too much stock in this ranking."
+					message = "Captains:\n\nThe game has sorted your 'Opted In' player list\nby skill level. The top row is highest (left, right),\nand then the next row (left, right), and so on...\n\nThis sort isn't perfect. Choose as you like."
+				else
+					message = #notOptedInClients > 0 and "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'" or " "
+				end
+				Shine:SendText(c, Shine.BuildScreenMessage(59, 0.75, 0.70, message, 3, 0, 255, 0, 0, 1, 0 ) )
+			end)
 
 			TGNS.ScheduleAction(1, showPickables)
 		end
