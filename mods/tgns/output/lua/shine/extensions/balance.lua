@@ -155,6 +155,8 @@ local function SendNextPlayer()
 	local sortedPlayersGetter
 	local teamAverageGetter
 
+	local playerSortValueGetter = TGNS.GetPlayerHiveSkillRank -- GetPlayerScorePerMinuteAverage
+
 	if wantToUseWinLossToBalance then
 		sortedPlayersGetter = function(playerList)
 			local playersWithFewerThanTenGames = TGNS.GetPlayers(TGNS.GetMatchingClients(playerList, function(c,p) return GetPlayerBalance(p).total < LOCAL_DATAPOINTS_COUNT_THRESHOLD end))
@@ -178,13 +180,13 @@ local function SendNextPlayer()
 			local nonRookieStrangers = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and not TGNS.Has(betterPlayers, p) and not TGNS.Has(goodPlayers, p) and not TGNS.Has(rookiePlayers, p) and TGNS.ClientAction(p, TGNS.IsClientStranger) end)
 			local nonRookieRegulars = TGNS.Where(playerList, function(p) return not TGNS.Has(commanders, p) and not TGNS.Has(bestPlayers, p) and not TGNS.Has(betterPlayers, p) and not TGNS.Has(goodPlayers, p) and not TGNS.Has(rookiePlayers, p) and not TGNS.Has(nonRookieStrangers, p) end)
 			local sortAction = math.random() < 0.5 and TGNS.SortDescending or TGNS.SortAscending
-			sortAction(commanders, GetPlayerScorePerMinuteAverage)
-			sortAction(bestPlayers, GetPlayerScorePerMinuteAverage)
-			sortAction(betterPlayers, GetPlayerScorePerMinuteAverage)
-			sortAction(goodPlayers, GetPlayerScorePerMinuteAverage)
-			sortAction(rookiePlayers, GetPlayerScorePerMinuteAverage)
-			sortAction(nonRookieStrangers, GetPlayerScorePerMinuteAverage)
-			sortAction(nonRookieRegulars, GetPlayerScorePerMinuteAverage)
+			sortAction(commanders, playerSortValueGetter)
+			sortAction(bestPlayers, playerSortValueGetter)
+			sortAction(betterPlayers, playerSortValueGetter)
+			sortAction(goodPlayers, playerSortValueGetter)
+			sortAction(rookiePlayers, playerSortValueGetter)
+			sortAction(nonRookieStrangers, playerSortValueGetter)
+			sortAction(nonRookieRegulars, playerSortValueGetter)
 			local playerGroups = { commanders, bestPlayers, betterPlayers, goodPlayers, rookiePlayers, nonRookieStrangers, nonRookieRegulars }
 			local addPlayerToResult = function(p) table.insert(result, p) end
 			TGNS.DoFor(playerGroups, function(g) TGNS.DoFor(g, addPlayerToResult) end)
@@ -203,7 +205,7 @@ local function SendNextPlayer()
 		local teamNumber = numberOfMarines <= numberOfAliens and kMarineTeamType or kAlienTeamType
 		if (teamNumber == kMarineTeamType and numberOfMarines < 8) or (teamNumber == kAlienTeamType and numberOfAliens < 8) then
 			local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
-			table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), GetPlayerScorePerMinuteAverage(player), GetPlayerBalance(player).total, actionMessage))
+			table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), playerSortValueGetter(player), GetPlayerBalance(player).total, actionMessage))
 			TGNS.SendToTeam(player, teamNumber, true)
 			if teamNumber == kMarineTeamType then
 				numberOfMarines = numberOfMarines + 1

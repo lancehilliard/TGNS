@@ -25,6 +25,16 @@ function TGNS.GetTwoLists(values)
 	return list1, list2
 end
 
+function TGNS.GetClientHiveSkillRank(client)
+	local result = TGNS.PlayerAction(client, TGNS.GetPlayerHiveSkillRank)
+	return result
+end
+
+function TGNS.GetPlayerHiveSkillRank(player)
+	local result = player.GetPlayerSkill and player:GetPlayerSkill() or 0
+	return result
+end
+
 function TGNS.ShowPanel(values, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText, titleSumText, duration, emptyText)
 	local columnsY = titleY + 0.05
 	local list1, list2 = TGNS.GetTwoLists(values)
@@ -32,11 +42,11 @@ function TGNS.ShowPanel(values, renderClients, titleMessageId, column1MessageId,
 	local columnYDelta = 0.10
 	titleText = TGNS.HasNonEmptyValue(titleText) and string.format("%s (%s)", titleText, titleSumText) or ""
 	TGNS.DoFor(renderClients, function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.80, titleY, titleText, duration, 0, 255, 0, 0, 2, 0 ) )
+		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.75, titleY, titleText, duration, 0, 255, 0, 0, 2, 0 ) )
 		local column1Message = TGNS.Join(list1, '\n')
-		Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.80, columnsY, column1Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.75, columnsY, column1Message, duration, 0, 255, 0, 0, 1, 0 ) )
 		local column2Message = TGNS.Join(list2, '\n')
-		Shine:SendText(c, Shine.BuildScreenMessage( column2MessageId, 0.80 + columnYDelta, columnsY, column2Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		Shine:SendText(c, Shine.BuildScreenMessage( column2MessageId, 0.75 + columnYDelta, columnsY, column2Message, duration, 0, 255, 0, 0, 1, 0 ) )
 	end)
 end
 
