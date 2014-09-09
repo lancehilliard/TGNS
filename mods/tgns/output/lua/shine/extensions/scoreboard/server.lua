@@ -165,6 +165,20 @@ function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK_RESET, {})
 	end)
+	local captainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains:IsCaptainsModeEnabled()
+	if not captainsModeEnabled then
+		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 240, function()
+			if not TGNS.IsGameInProgress() then
+				local md = TGNSMessageDisplayer.Create("APPROVALS")
+				TGNS.DoFor(TGNS.GetClientList(), function(c)
+					if not TGNS.IsClientStranger(c) then
+						local p = TGNS.GetPlayer(p)
+						md:ToPlayerNotifyInfo(p, "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!")
+					end
+				end)
+			end
+		end)
+	end
 end
 
 function Plugin:CreateCommands()
