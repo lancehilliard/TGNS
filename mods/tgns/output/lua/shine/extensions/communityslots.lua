@@ -634,7 +634,7 @@ function Plugin:PlayerSay(client, networkMessage)
                     if ServerIsFull(GetPlayingPlayers()) and not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
                         tgnsMd:ToPlayerNotifyError(p, "You must read and agree to our rules")
                         tgnsMd:ToPlayerNotifyError(p, "to chat to a full game from the Ready Room.")
-                        tgnsMd:ToPlayerNotifyError(p, "Team chat with '@' goes to all admins.")
+                        tgnsMd:ToPlayerNotifyError(p, "Team chat starting with '@' goes to all admins.")
                         cancel = true
                     end
                 end
