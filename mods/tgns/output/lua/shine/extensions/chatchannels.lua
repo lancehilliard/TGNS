@@ -59,7 +59,8 @@ Plugin.ConfigName = "chatchannels.json"
 function Plugin:ClientConfirmConnect(client)
 	local md = TGNSMessageDisplayer.Create("ADMINCHAT")
 	TGNS.ScheduleAction(7, function()
-		if Shine:IsValidClient(client) and Balance.GetTotalGamesPlayed(client) < 50 then
+		local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
+		if Shine:IsValidClient(client) and totalGamesPlayed > 0 and totalGamesPlayed < 50 then
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Any chat beginning with \"@\" shows only to admins. Try it!")
 		end
 	end)
