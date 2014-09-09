@@ -58,9 +58,6 @@ function Plugin:Initialise()
 							spawnSelectionOverride.alienSpawn = TGNS.ToLower(s[2])
 							return spawnSelectionOverride
 						end)
-						if #spawnSelections == 1 and not forcedSpawnSelectionOverrides then
-							md:ToAdminNotifyInfo(string.format("NOTICE: %s only has 1 usable spawnSelectionOverride.", TGNS.GetCurrentMapName()))
-						end
 					end
 				end
 			else
