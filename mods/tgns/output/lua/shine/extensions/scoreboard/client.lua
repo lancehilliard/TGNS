@@ -135,7 +135,7 @@ function Plugin:Initialise()
 			local playerIsBot = playerRecord.Ping == 0
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
-	        local playerVrIconShouldDisplay = (teamNumber == Client.GetLocalClientTeamNumber()) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals and not vrConfirmed[clientIndex]
+	        local playerVrIconShouldDisplay = ((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals and not vrConfirmed[clientIndex]
 	        if playerVrIconShouldDisplay then
 	        	local targetPrefix = prefixes[clientIndex] or ""
         		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
@@ -156,7 +156,8 @@ function Plugin:Initialise()
 	        local playerVrIcon = player["PlayerVrIcon"]
 	        if playerVrIcon then
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
-		        playerVrIcon:SetTexture(isVring and VR_TEXTURE_DISABLED or getTeamVrTexture(teamNumber))
+	        	local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and VR_TEXTURE_DISABLED or getTeamVrTexture(teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
@@ -238,7 +239,8 @@ function Plugin:Initialise()
 		                TGNS.SendNetworkMessage(Plugin.QUERY_REQUESTED, {c=clientIndex})
 		            end
 		            local playerVrIcon = playerItem["PlayerVrIcon"]
-		            if playerVrIcon and playerVrIcon:GetIsVisible() and GUIItemContainsPoint(playerVrIcon, mouseX, mouseY) and not isVring then
+		            local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+		            if playerVrIcon and playerVrIcon:GetIsVisible() and GUIItemContainsPoint(playerVrIcon, mouseX, mouseY) and not playerVrIconShouldBeDisabled then
 		                isVring = true
 		                TGNS.SendNetworkMessage(Plugin.VR_REQUESTED, {c=clientIndex})
 		            end
