@@ -22,6 +22,13 @@ local function removeBanners()
 	Shine:RemoveText(nil, { ID = 74 } )
 end
 
+local function showVoteUpdateMessageToTeamAndSpectators(teamNumber, message)
+	md:ToTeamNotifyInfo(teamNumber, message)
+	local teamName = TGNS.GetTeamName(teamNumber)
+	local teamMd = TGNSMessageDisplayer.Create(string.format("WINORLOSE (%s)", TGNS.ToUpper(teamName)))
+	teamMd:ToTeamNotifyInfo(kSpectatorIndex, message)
+end
+
 local function SetupWinOrLoseVars()
 	for i = 1, kWinOrLoseTeamCount do
 		local WinOrLoseVoteTeamArray = {WinOrLoseRunning = 0, WinOrLoseVotes = { }, WinOrLoseVotesAlertTime = 0}
@@ -189,7 +196,7 @@ local function UpdateWinOrLoseVotes()
 						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + Shine.Plugins.winorlose.Config.VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
 					end
-					md:ToTeamNotifyInfo(i, chatMessage)
+					showVoteUpdateMessageToTeamAndSpectators(i, chatMessage)
 					-- TGNS.DoFor(playerRecords, function(p)
 					-- 	md:ToPlayerNotifyInfo(p, chatMessage)
 					-- end)
@@ -234,12 +241,12 @@ local function OnCommandWinOrLose(client)
 							chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
 							md:ToPlayerNotifyError(player, chatMessage)
 						else
-							md:ToTeamNotifyInfo(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 						end
 					else
 						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + 180 <= TGNS.GetSecondsSinceMapLoaded() then
-							md:ToTeamNotifyInfo(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 							lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
