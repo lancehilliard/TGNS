@@ -368,7 +368,8 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 						if attackerTeamNumber ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and victimTeamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining + 1
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 8 and 8 or numberOfSecondsToDeductFromCountdownTimeRemaining
-							kCountdownTimeRemaining = kCountdownTimeRemaining - numberOfSecondsToDeductFromCountdownTimeRemaining
+							local deductionAmountMultiplier = TGNS.IsClientStranger(TGNS.GetClient(attackerEntity)) and 0.5 or 1
+							kCountdownTimeRemaining = kCountdownTimeRemaining - math.floor(numberOfSecondsToDeductFromCountdownTimeRemaining * deductionAmountMultiplier)
 							local attackerTeamNumber = TGNS.GetPlayerTeamNumber(attackerEntity)
 							local attackerIsMarine = attackerTeamNumber == kMarineTeamType
 							local attackerRed = attackerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
