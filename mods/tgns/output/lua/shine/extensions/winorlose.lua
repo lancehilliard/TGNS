@@ -11,6 +11,8 @@ local numberOfSecondsToDeductFromCountdownTimeRemaining
 local mayVoteAt = 0
 local lastNoAttackNoticeTimes = {}
 local lastBannerDisplayCountdownRemaining
+local TEXT_LOCATION_HEIGHT_ADDITIVE = 0.15
+local textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
 
 local originalGetCanAttack
 
@@ -87,7 +89,7 @@ local function UpdateWinOrLoseVotes()
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 		if kCountdownTimeRemaining > 0 then
-			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 5) then
+			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 10) then
 				local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				TGNS.DoFor(commandStructures, function(s)
 					s.GetCanBeHealedOverride = function(self) return false, false end
@@ -113,7 +115,8 @@ local function UpdateWinOrLoseVotes()
 
 				local teamNameWhichMustWinOrLose = TGNS.GetTeamName(TGNS.GetOtherPlayingTeamNumber(teamNumberWhichWillWinIfWinLoseCountdownExpires))
 				TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
-					local teamNumber = TGNS.PlayerAction(c, TGNS.GetPlayerTeamNumber)
+					local p = TGNS.GetPlayer(c)
+					local teamNumber = TGNS.GetPlayerTeamNumber(p)
 					local playerIsMarine = teamNumber == kMarineTeamType
 					local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
 					local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
@@ -121,8 +124,20 @@ local function UpdateWinOrLoseVotes()
 					local winningTeamText = string.format("WinOrLose! Kill the %s%s!", TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
 					local losingTeamText = string.format("Your team has surrendered. %s must WinOrLose!", teamNameWhichMustWinOrLose)
 					local bannerText = teamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires and losingTeamText or winningTeamText
-					Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, 0.2, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
-					Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, 0.24, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
+
+
+					local LOWEST_ALLOWABLE_TEXT_LOCATION_HEIGHT = 0.2
+					local textLocationHeight = LOWEST_ALLOWABLE_TEXT_LOCATION_HEIGHT
+					local additiveShouldBeApplied = true -- TGNS.ClientIsStranger(c)
+					if additiveShouldBeApplied then
+						textLocationHeight = textLocationHeight + textLocationHeightAdditive
+					end
+
+
+					Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, textLocationHeight, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
+					Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, textLocationHeight + 0.04, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
+					textLocationHeightAdditive = textLocationHeightAdditive > 0 and textLocationHeightAdditive - 0.05 or textLocationHeightAdditive
+					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.WINORLOSE_WARNING, {})
 				end)
 				local spectatorsText = string.format("WinOrLose! %s have %s seconds to kill the %s%s!", teamNameWhichMustWinOrLose, kCountdownTimeRemaining, TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
 				TGNS.DoFor(TGNS.GetSpectatorClients(TGNS.GetPlayerList()), function(c)
@@ -206,7 +221,7 @@ local function UpdateWinOrLoseVotes()
 	end
 end
 
-local function ClearWinOrLoseVotes()
+local function InitializeVariables()
 	for i = 1, kWinOrLoseTeamCount do
 		kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 		kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
@@ -215,6 +230,7 @@ local function ClearWinOrLoseVotes()
 	kTimeAtWhichWinOrLoseVoteSucceeded = 0
 	lastVoteStartTimes = {}
 	lastBannerDisplayCountdownRemaining = nil
+	textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
 end
 
 local function OnCommandWinOrLose(client)
@@ -244,6 +260,7 @@ local function OnCommandWinOrLose(client)
 							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 						end
+						TGNS.ScheduleAction(1, UpdateWinOrLoseVotes)
 					else
 						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + 180 <= TGNS.GetSecondsSinceMapLoaded() then
 							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
@@ -320,11 +337,12 @@ function Plugin:Initialise()
 		end
 	end)
 	self:CreateCommands()
+	InitializeVariables()
     return true
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
-	ClearWinOrLoseVotes()
+	InitializeVariables()
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SHOW_TEAM_MESSAGES, {s=true})
 	end)
