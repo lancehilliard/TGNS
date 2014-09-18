@@ -20,6 +20,7 @@ local hasJetPacks = {}
 local showTeamMessages = true
 local badgeLabels = {}
 local vrConfirmed = {}
+local countdownSoundEventName = "sound/tgns_notifications.fev/winorlose/countdown"
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -45,6 +46,9 @@ end
 
 function Plugin:Initialise()
 	self.Enabled = true
+
+	Client.PrecacheLocalSound(countdownSoundEventName)
+
 	-- lua\GUIScoreboard.lua
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
 	GUIScoreboard.UpdateTeam = function(self, updateTeam)
@@ -373,6 +377,9 @@ function Plugin:Initialise()
 		originalGUIHoverTooltipShow(self, displayTimeInSeconds)
 	end
 
+	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
+		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
+	end)
 
 	return true
 end
