@@ -15,6 +15,14 @@
 !mods/tgns/mod.settings
 !mods/tgns/preview.jpg
 
+# And then whitelist mod sound files
+!mods/tgns/fmod/readme.txt
+!mods/tgns/fmod/assets/countdown.wav
+!mods/tgns/fmod/tgns_notifications.fdp
+!mods/tgns/output/sound/tgns_notifications.fev
+!mods/tgns/output/sound/tgns_notifications.fsb
+!mods/tgns/output/sound/tgns_notifications.soundinfo
+
 # And then whitelist TGNS common/shared files
 !mods/tgns/output/lua/tgns/TGNS.lua
 
