@@ -328,11 +328,11 @@ function Plugin:GetPlayersForNewGame()
     TGNS.DoFor(otherPrimerOnlyPlayers, addToPrioritizedPlayers)
     TGNS.DoFor(otherStrangerPlayers, addToPrioritizedPlayers)
 
-    TGNS.DebugPrint("Prioritized players for new game:")
-    TGNS.DoFor(prioritizedPlayers, function(p, index)
-        local c = TGNS.GetClient(p)
-        TGNS.DebugPrint(string.format("%s. %s%s> %s (%s)", index, TGNS.IsPlayerAFK(p) and "!" or "", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c))))
-    end)
+    -- TGNS.DebugPrint("Prioritized players for new game:")
+    -- TGNS.DoFor(prioritizedPlayers, function(p, index)
+    --     local c = TGNS.GetClient(p)
+    --     TGNS.DebugPrint(string.format("%s. %s%s> %s (%s)", index, TGNS.IsPlayerAFK(p) and "!" or "", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c))))
+    -- end)
 
     local result = TGNS.Take(prioritizedPlayers, publicSlotsCount)
     return result
