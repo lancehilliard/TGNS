@@ -171,7 +171,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 			if not TGNS.IsGameInProgress() then
 				local md = TGNSMessageDisplayer.Create("APPROVALS")
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
-					if not TGNS.IsClientStranger(c) then
+					if c and not TGNS.IsClientStranger(c) then
 						local p = TGNS.GetPlayer(p)
 						md:ToPlayerNotifyInfo(p, "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!")
 					end
