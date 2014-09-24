@@ -2,7 +2,7 @@ FMOD 4.38.00 installer:
 
 http://www.fmod.org/download/fmodex/tool/win/fmoddesigner43800win-installer.exe
 
-) Open tgns_notifications.fdp in FMOD Designer
+) Open tgns.fdp in FMOD Designer
 
 ) Create Event Group per TGNS plugin
 

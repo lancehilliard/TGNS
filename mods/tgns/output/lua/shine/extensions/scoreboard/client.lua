@@ -20,7 +20,7 @@ local hasJetPacks = {}
 local showTeamMessages = true
 local badgeLabels = {}
 local vrConfirmed = {}
-local countdownSoundEventName = "sound/tgns_notifications.fev/winorlose/countdown"
+local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
