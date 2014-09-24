@@ -13,6 +13,7 @@ local lastNoAttackNoticeTimes = {}
 local lastBannerDisplayCountdownRemaining
 local TEXT_LOCATION_HEIGHT_ADDITIVE = 0.15
 local textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
+local VOTE_START_COOLDOWN = 240
 
 local originalGetCanAttack
 
@@ -66,7 +67,7 @@ end
 
 local function onVoteSuccessful(teamNumber)
 	local teamName = TGNS.GetTeamName(teamNumber)
-	local chatMessage = string.sub(string.format("WinOrLose! %s can't attack! End it in %s secs, or THEY WIN!", teamName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
+	local chatMessage = string.sub(string.format("WinOrLose! %s surrendered and can't attack! End it in %s secs, or THEY WIN!", teamName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
 	md:ToAllNotifyInfo(chatMessage)
 
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
@@ -121,7 +122,8 @@ local function UpdateWinOrLoseVotes()
 					local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
 					local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
 					local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
-					local winningTeamText = string.format("WinOrLose! Kill the %s%s!", TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
+					local explanationText = TGNS.IsClientStranger(c) and "They surrendered!" or "WinOrLose!"
+					local winningTeamText = string.format("%s Kill the %s%s!", explanationText, TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
 					local losingTeamText = string.format("Your team has surrendered. %s must WinOrLose!", teamNameWhichMustWinOrLose)
 					local bannerText = teamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires and losingTeamText or winningTeamText
 
@@ -262,7 +264,7 @@ local function OnCommandWinOrLose(client)
 						end
 						TGNS.ScheduleAction(1, UpdateWinOrLoseVotes)
 					else
-						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + 180 <= TGNS.GetSecondsSinceMapLoaded() then
+						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + VOTE_START_COOLDOWN <= TGNS.GetSecondsSinceMapLoaded() then
 							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
