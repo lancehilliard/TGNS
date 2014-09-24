@@ -21,6 +21,7 @@ local showTeamMessages = true
 local badgeLabels = {}
 local vrConfirmed = {}
 local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
+local approveSoundEventName = "sound/tgns.fev/scoreboard/approve"
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -48,6 +49,7 @@ function Plugin:Initialise()
 	self.Enabled = true
 
 	Client.PrecacheLocalSound(countdownSoundEventName)
+	Client.PrecacheLocalSound(approveSoundEventName)
 
 	-- lua\GUIScoreboard.lua
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
@@ -286,6 +288,9 @@ function Plugin:Initialise()
 		isQueryingBadge[message.c] = false
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RECEIVED_TOTAL, function(message)
+		if message.t > approveReceivedTotal then
+			Shared.PlaySound(Client.GetLocalPlayer(), approveSoundEventName, 0.015)
+		end
 		approveReceivedTotal = message.t
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_SENT_TOTAL, function(message)
