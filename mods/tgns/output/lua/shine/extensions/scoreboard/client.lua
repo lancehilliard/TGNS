@@ -63,7 +63,6 @@ function Plugin:Initialise()
 		for index, player in pairs(playerList) do
 	        local playerRecord = teamScores[currentPlayerIndex]
 	        local clientIndex = playerRecord.ClientIndex
-	        -- Shared.Message(string.format("%s: %s", playerRecord.Name, clientIndex))
 	        if showCustomNumbersColumn then
 		        local prefix = prefixes[clientIndex]
 		        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
@@ -192,31 +191,6 @@ function Plugin:Initialise()
 	        	playerNoteItem:SetColor(color)
 	        end
 
-	        -- if teamNumber == kTeamReadyRoom and playerRecord.IsSpectator then
-	        -- 	player["Status"]:SetText("Spectator")
-	        -- end
-
-	        -- if not playerIsBot then
-	        -- 	local lastUpdatedClientPingsWhen = lastUpdatedPingsWhen[clientIndex] or 0
-	        -- 	if lastUpdatedClientPingsWhen < Shared.GetTime() - kUpdatePingsIndividual then
-			      --   math.randomseed(clientIndex + Shared.GetTime())
-			      --   local ping = playerRecord.Ping * 0.5 -- math.random(24, 49)
-			      --   pings[clientIndex] = math.floor(ping)
-	        -- 		lastUpdatedPingsWhen[clientIndex] = Shared.GetTime()
-	        -- 	end
-	        -- 	local ping = pings[clientIndex]
-		       --  player["Ping"]:SetText(tostring(ping))
-		       --  if ping < GUIScoreboard.kLowPingThreshold then
-		       --      player["Ping"]:SetColor(GUIScoreboard.kLowPingColor)
-		       --  elseif ping < GUIScoreboard.kMedPingThreshold then
-		       --      player["Ping"]:SetColor(GUIScoreboard.kMedPingColor)
-		       --  elseif ping < GUIScoreboard.kHighPingThreshold then
-		       --      player["Ping"]:SetColor(GUIScoreboard.kHighPingColor)
-		       --  else
-		       --      player["Ping"]:SetColor(GUIScoreboard.kInsanePingColor)
-		       --  end
-	        -- end
-
 		    playerApproveReceiveTotalItemPosition = player["Status"]:GetPosition()
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
@@ -250,16 +224,6 @@ function Plugin:Initialise()
 		                isVring = true
 		                TGNS.SendNetworkMessage(Plugin.VR_REQUESTED, {c=clientIndex})
 		            end
-		       --      local badgeIcons = playerItem["BadgeItems"]
-		       --      if badgeIcons then
-		       --          for i = 1, #badgeIcons do
-		       --          	local badgeIcon = badgeIcons[i]
-				     --        if badgeIcon and badgeIcon:GetIsVisible() and GUIItemContainsPoint(badgeIcon, mouseX, mouseY) and not isQueryingBadge[clientIndex] then
-				     --            isQueryingBadge[clientIndex] = true
-				     --            TGNS.SendNetworkMessage(Plugin.BADGE_QUERY_REQUESTED, {c=clientIndex})
-				     --        end
-					    -- end
-		       --      end
 		        end
 
 		    end
@@ -307,16 +271,6 @@ function Plugin:Initialise()
 		local note = message.n
 		notes[clientIndex] = note
 	end)
-
-
-	-- if CHUDGUI_DeathStats then
-	-- 	local originalCHUDGUI_DeathStatsUpdate = CHUDGUI_DeathStats.Update
-	-- 	CHUDGUI_DeathStats.Update = function(self, deltaTime) end
-	-- end
-	-- if ShowClientStats then
-	-- 	local originalShowClientStats = ShowClientStats
-	-- 	ShowClientStats = function(endRound) end
-	-- end
 
 	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK, function(message)
 		hasJetPacks[message.c] = message.h
