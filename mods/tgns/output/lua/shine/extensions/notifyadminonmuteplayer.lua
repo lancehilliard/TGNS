@@ -26,7 +26,7 @@ local function GetPlayerMutes()
 	TGNS.DoFor(playerList, function(sourcePlayer)
 			if sourcePlayer then
 				TGNS.DoFor(playerList, function(targetPlayer)
-						if TGNS.PlayerIsOnPlayingTeam(sourcePlayer) and TGNS.PlayersAreTeammates(sourcePlayer, targetPlayer) then
+						if TGNS.PlayersAreTeammates(sourcePlayer, targetPlayer) and not TGNS.IsPlayerSpectator(sourcePlayer) then
 							if sourcePlayer:GetClientMuted(targetPlayer:GetClientIndex()) then
 								table.insert(result, { sourcePlayer = sourcePlayer, targetPlayer = targetPlayer })
 							end
