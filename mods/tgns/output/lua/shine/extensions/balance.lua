@@ -205,7 +205,7 @@ local function SendNextPlayer()
 		local teamNumber = numberOfMarines <= numberOfAliens and kMarineTeamType or kAlienTeamType
 		if (teamNumber == kMarineTeamType and numberOfMarines < 8) or (teamNumber == kAlienTeamType and numberOfAliens < 8) then
 			local actionMessage = string.format("sent to %s", TGNS.GetTeamName(teamNumber))
-			table.insert(balanceLog, string.format("%s: %s with %s = %s", TGNS.GetPlayerName(player), playerSortValueGetter(player), GetPlayerBalance(player).total, actionMessage))
+			table.insert(balanceLog, string.format("%s: %s (NS2 Hive Skill ranking) with %s games = %s", TGNS.GetPlayerName(player), playerSortValueGetter(player), GetPlayerBalance(player).total, actionMessage))
 			TGNS.SendToTeam(player, teamNumber, true)
 			if teamNumber == kMarineTeamType then
 				numberOfMarines = numberOfMarines + 1
@@ -224,7 +224,7 @@ local function SendNextPlayer()
 	local alienClients = TGNS.GetAlienClients(playerList)
 	local marineAvg = teamAverageGetter(marineClients)
 	local alienAvg = teamAverageGetter(alienClients)
-	local averagesReport = string.format("MarineAvg: %s | AlienAvg: %s", marineAvg, alienAvg)
+	local averagesReport = string.format("MarineAvg SPM: %s | AlienAvg SPM: %s", marineAvg, alienAvg)
 	table.insert(balanceLog, averagesReport)
 	TGNS.ScheduleAction(1, PrintBalanceLog)
 end
