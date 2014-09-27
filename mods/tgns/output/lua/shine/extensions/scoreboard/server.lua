@@ -221,6 +221,7 @@ function Plugin:Initialise()
 					local targetPlayer = TGNS.GetPlayer(targetClient)
 					if TGNS.PlayersAreTeammates(player, targetPlayer) and not TGNS.HasClientSignedPrimerWithGames(targetClient) and not vrConfirmed[targetClient] then
 						vrConfirmed[targetClient] = true
+						TGNS.ExecuteEventHooks("VrConfirmed", targetClient)
 						TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 							TGNS.SendNetworkMessageToPlayer(p, self.VR_CONFIRMED, {c=targetClientIndex})
 						end)
