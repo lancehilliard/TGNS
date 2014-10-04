@@ -50,7 +50,7 @@ local function approve(sourceClient, sourcePlayer, sourceSteamId, targetClient, 
 					approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
 					if approvedClients[sourceSteamId][targetSteamId] == nil then
 						if reason == nil or string.len(reason) <= 20 then
-							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s&re=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds or TGNS.GetSecondsSinceEpoch(), TGNS.UrlEncode(reason))
+							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s&re=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds or TGNS.GetSecondsSinceEpoch(), TGNS.UrlEncode(reason or ""))
 							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
 								local approveResponse = json.decode(approveResponseJson) or {}
 								if approveResponse.success then
