@@ -102,6 +102,7 @@
 !mods/tgns/output/lua/shine/extensions/permissions.lua
 !mods/tgns/output/lua/shine/extensions/playerlocationchanged.lua
 !mods/tgns/output/lua/shine/extensions/printablenames.lua
+!mods/tgns/output/lua/shine/extensions/push.lua
 !mods/tgns/output/lua/shine/extensions/reluse.lua
 !mods/tgns/output/lua/shine/extensions/rookiethrottle.lua
 !mods/tgns/output/lua/shine/extensions/scoreboardicons.lua
