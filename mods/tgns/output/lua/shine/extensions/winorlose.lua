@@ -34,7 +34,7 @@ end
 
 local function SetupWinOrLoseVars()
 	for i = 1, kWinOrLoseTeamCount do
-		local WinOrLoseVoteTeamArray = {WinOrLoseRunning = 0, WinOrLoseVotes = { }, WinOrLoseVotesAlertTime = 0}
+		local WinOrLoseVoteTeamArray = {WinOrLoseRunning = 0, WinOrLoseVotes = { }, WinOrLoseVotesAlertTime = 0, VotingTimeInSeconds = 0}
 		table.insert(kWinOrLoseVoteArray, WinOrLoseVoteTeamArray)
 	end
 end
@@ -79,6 +79,7 @@ local function onVoteSuccessful(teamNumber)
 
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotesAlertTime = 0
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = 0
+	kWinOrLoseVoteArray[teamNumber].VotingTimeInSeconds = 0
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes = { }
 	TGNS.ExecuteEventHooks("WinOrLoseCalled", teamNumber)
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
@@ -194,7 +195,9 @@ local function UpdateWinOrLoseVotes()
 					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
 						chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(#playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
-					elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + Shine.Plugins.winorlose.Config.VotingTimeInSeconds < TGNS.GetSecondsSinceMapLoaded() then
+						local someStrangersAreRequiredToPassTheVote = getNumberOfRequiredVotes(#playerRecords) > #TGNS.Where(TGNS.GetClientList(), TGNS.HasClientSignedPrimerWithGames)
+						kWinOrLoseVoteArray[i].VotingTimeInSeconds = someStrangersAreRequiredToPassTheVote and Shine.Plugins.winorlose.Config.VotingTimeInSeconds or Shine.Plugins.winorlose.Config.VotingTimeInSeconds * 0.75
+					elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds < TGNS.GetSecondsSinceMapLoaded() then
 						--local abstainedNames = {}
 						--TGNS.DoFor(playerRecords, function(p)
 						--	local playerSteamId = TGNS.ClientAction(p, TGNS.GetClientSteamId)
@@ -206,11 +209,12 @@ local function UpdateWinOrLoseVotes()
 						chatMessage = "Concede vote expired."
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
+						kWinOrLoseVoteArray[i].VotingTimeInSeconds = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 					else
 						chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
 						 getNumberOfRequiredVotes(#playerRecords),
-						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + Shine.Plugins.winorlose.Config.VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
+						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
 					end
 					showVoteUpdateMessageToTeamAndSpectators(i, chatMessage)
@@ -227,6 +231,7 @@ local function InitializeVariables()
 	for i = 1, kWinOrLoseTeamCount do
 		kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 		kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
+		kWinOrLoseVoteArray[i].VotingTimeInSeconds = 0
 		kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 	end
 	kTimeAtWhichWinOrLoseVoteSucceeded = 0
