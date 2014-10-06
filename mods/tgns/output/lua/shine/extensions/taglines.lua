@@ -1,3 +1,5 @@
+local unescapedTaglineMessages = {}
+
 local Plugin = {}
 
 local pdr = TGNSPlayerDataRepository.Create("taglines", function(tagline)
@@ -92,6 +94,22 @@ function Plugin:CreateCommands()
 	taglineCommand:Help( "<tagline> Sets your tagline." )
 end
 
+function Plugin:ClientConnect(client)
+	if not TGNS.GetIsClientVirtual(client) then
+		local steamId = TGNS.GetClientSteamId(client)
+		pdr:Load(steamId, function(loadResponse)
+			if loadResponse.success then
+				local tagline = loadResponse.value
+				if TGNS.HasNonEmptyValue(tagline.message) then
+					unescapedTaglineMessages[client] = getUnescapedTaglineMessage(tagline.message)
+				end
+			else
+				Shared.Message("taglines ERROR: Unable to access data.")
+			end
+		end)
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("OnSlotTaken", function(client)
@@ -101,19 +119,9 @@ function Plugin:Initialise()
 				local steamProfileName = Shine.Plugins.betterknownas and Shine.Plugins.betterknownas.GetSteamProfileName and Shine.Plugins.betterknownas:GetSteamProfileName(client)
 				local steamProfileNameDisplay = (TGNS.HasNonEmptyValue(steamProfileName) and TGNS.ToLower(steamProfileName) ~= TGNS.ToLower(TGNS.GetClientName(client))) and string.format("    Steam: %s", steamProfileName) or ""
 				local message = string.format("%s joined (%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), steamProfileNameDisplay)
-				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") then
-					local steamId = TGNS.GetClientSteamId(client)
-					pdr:Load(steamId, function(loadResponse)
-						tgnsMd:ToAllNotifyInfo(message)
-						if loadResponse.success then
-							local tagline = loadResponse.value
-							if TGNS.HasNonEmptyValue(tagline.message) then
-								tgnsMd:ToAllNotifyInfo(string.format("-- %s", getUnescapedTaglineMessage(tagline.message)))
-							end
-						else
-							Shared.Message("taglines ERROR: Unable to access data.")
-						end
-					end)
+				tgnsMd:ToAllNotifyInfo(message)
+				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") and TGNS.HasNonEmptyValue(unescapedTaglineMessages[client]) then
+					tgnsMd:ToAllNotifyInfo(unescapedTaglineMessages[client])
 				end
 			end
 		end
