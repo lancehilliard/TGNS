@@ -35,8 +35,13 @@ local function getTeamApproveTexture(teamNumber)
 	return result
 end
 
-local function getTeamVrTexture(teamNumber)
-	local result = string.format("ui/vr/vr-team%s.dds", teamNumber)
+local function getTeamVrTexture(clientIndex, teamNumber)
+	local result = vrConfirmed[clientIndex] and string.format("ui/vr/vr-checked-team%s.dds", teamNumber) or string.format("ui/vr/vr-team%s.dds", teamNumber)
+	return result
+end
+
+local function getDisabledVrTexture(clientIndex)
+	local result = vrConfirmed[clientIndex] and "ui/vr/vr-checked-disabled.dds" or VR_TEXTURE_DISABLED
 	return result
 end
 
@@ -140,7 +145,7 @@ function Plugin:Initialise()
 			local playerIsBot = playerRecord.Ping == 0
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
-	        local playerVrIconShouldDisplay = ((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals and not vrConfirmed[clientIndex]
+	        local playerVrIconShouldDisplay = ((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        if playerVrIconShouldDisplay then
 	        	local targetPrefix = prefixes[clientIndex] or ""
         		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
@@ -162,7 +167,7 @@ function Plugin:Initialise()
 	        if playerVrIcon then
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
 	        	local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
-		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and VR_TEXTURE_DISABLED or getTeamVrTexture(teamNumber))
+		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and getDisabledVrTexture(clientIndex) or getTeamVrTexture(clientIndex, teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then

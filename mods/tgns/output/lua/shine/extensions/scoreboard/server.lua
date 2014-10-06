@@ -287,8 +287,12 @@ function Plugin:Initialise()
 					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.VR_ALLOWED, {})
 				end
 			end)
-			local targetPlayer = TGNS.GetPlayer(targetClient)
-			Shine.Plugins.voicecommreminder:SendVoicecommReminder(client, targetPlayer)
+			if vrConfirmed[targetClient] then
+				md:ToPlayerNotifyInfo(player, string.format("Someone already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", TGNS.GetClientName(targetClient)))
+			else
+				local targetPlayer = TGNS.GetPlayer(targetClient)
+				Shine.Plugins.voicecommreminder:SendVoicecommReminder(client, targetPlayer)
+			end
 		else
 			md:ToPlayerNotifyError(player, "There was a problem showing the voicecomm reminder.")
 		end
