@@ -266,9 +266,9 @@ function Plugin:Initialise()
 			Shine.Plugins.betterknownas:ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 			if Balance then
 				local totalGamesCount = Balance.GetTotalGamesPlayedBySteamId(targetSteamId)
-				if totalGamesCount > 0 and totalGamesCount < 50 then
+				if totalGamesCount > 0 then
 					local targetPlayer = TGNS.GetPlayer(targetClient)
-					md:ToPlayerNotifyInfo(player, string.format("%s has played %s games so far on TGNS.", targetClientName, totalGamesCount))
+					md:ToPlayerNotifyInfo(player, string.format("%s has played %s on TGNS.", targetClientName, totalGamesCount < 50 and string.format("%s games so far", totalGamesCount) or "more than 50 games"))
 				end
 			end
 		else
