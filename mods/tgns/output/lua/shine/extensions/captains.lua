@@ -206,7 +206,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	TGNS.ScheduleAction(2, function()
 		allPlayersWereArtificiallyForcedToReadyRoom = false
 	end)
-	Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Game Starting", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo\\n\\nUnsubscribe: http://rr.tacticalgamer.com/Community", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+	Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Game Starting", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 end
 
 local function showBanner(headline)
