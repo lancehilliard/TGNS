@@ -121,7 +121,7 @@ function Plugin:Initialise()
 				local message = string.format("%s joined (%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), steamProfileNameDisplay)
 				tgnsMd:ToAllNotifyInfo(message)
 				if TGNS.ClientCanRunCommand(client, "sh_taglineannounce") and TGNS.HasNonEmptyValue(unescapedTaglineMessages[client]) then
-					tgnsMd:ToAllNotifyInfo(unescapedTaglineMessages[client])
+					tgnsMd:ToAllNotifyInfo(string.format("-- %s", unescapedTaglineMessages[client]))
 				end
 			end
 		end
