@@ -220,6 +220,17 @@ function Plugin:CreateCommands()
 	humansMaxCommand:Help( "<threshold> Set the player threshold count for bots." )
 end
 
+function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
+	if victimEntity and victimEntity:isa("Player") and TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) and attackerEntity and attackerEntity:isa("Player") then
+		local humanSameTeamPlayersWithFewerThan100Resources = TGNS.Where(TGNS.GetPlayersOnSameTeam(attackerEntity), function(p) return TGNS.GetPlayerResources(p) < 100 and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end)
+		if #humanSameTeamPlayersWithFewerThan100Resources > 0 then
+			TGNS.DoFor(humanSameTeamPlayersWithFewerThan100Resources, function(p)
+				TGNS.AddPlayerResources(p, 1 / #humanSameTeamPlayersWithFewerThan100Resources)
+			end)
+		end
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("BOTS")
