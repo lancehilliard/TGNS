@@ -230,7 +230,7 @@ end
 
 function TGNS.GetPlayerGameId(player)
 	local client = TGNS.GetClient(player)
-	local result = Shine.GameIDs[client]
+	local result = Shine.GameIDs:Get(client)
 	return result
 end
 
