@@ -64,7 +64,6 @@ function Plugin:Initialise()
 		local teamScores = updateTeam["GetScores"]()
 		local teamNumber = updateTeam["TeamNumber"]
 		local currentPlayerIndex = 1
-		local playerApproveReceiveTotalItemPosition
 		for index, player in pairs(playerList) do
 	        local playerRecord = teamScores[currentPlayerIndex]
 	        local clientIndex = playerRecord.ClientIndex
@@ -116,19 +115,19 @@ function Plugin:Initialise()
 		    player.PlayerQueryIcon = playerQueryIcon
 		    player.Background:AddChild(playerQueryIcon)
 		end
-		if not player.PlayerApproveStatusItem then
-			local playerApproveStatusItem = GUIManager:CreateTextItem()
-			playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-			playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
-			playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
-			local playerApproveStatusItemPosition = player.Status:GetPosition()
-		    playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
-		    playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
-			playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
-			player.PlayerApproveStatusItem = playerApproveStatusItem
-			player.Background:AddChild(playerApproveStatusItem)
-		end
+		-- if not player.PlayerApproveStatusItem then
+		-- 	local playerApproveStatusItem = GUIManager:CreateTextItem()
+		-- 	playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+		-- 	playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+		-- 	playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
+		-- 	playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
+		-- 	local playerApproveStatusItemPosition = player.Status:GetPosition()
+		--     playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
+		--     playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
+		-- 	playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
+		-- 	player.PlayerApproveStatusItem = playerApproveStatusItem
+		-- 	player.Background:AddChild(playerApproveStatusItem)
+		-- end
 		if not player.PlayerNoteItem then
 			local playerNoteItem = GUIManager:CreateTextItem()
 			playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
@@ -146,8 +145,8 @@ function Plugin:Initialise()
 	        local playerApproveIcon = player["PlayerApproveIcon"]
 	        local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
 	        local playerVrIconShouldDisplay = ((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
+        	local targetPrefix = prefixes[clientIndex] or ""
 	        if playerVrIconShouldDisplay then
-	        	local targetPrefix = prefixes[clientIndex] or ""
         		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
         		targetPrefixFiltered = TGNS.Replace(targetPrefixFiltered, "*", "")
         		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
@@ -166,7 +165,7 @@ function Plugin:Initialise()
 	        local playerVrIcon = player["PlayerVrIcon"]
 	        if playerVrIcon then
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
-	        	local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+	        	local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (TGNS.Contains(targetPrefix, "!") and not vrConfirmed[clientIndex])
 		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and getDisabledVrTexture(clientIndex) or getTeamVrTexture(clientIndex, teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
@@ -196,7 +195,6 @@ function Plugin:Initialise()
 	        	playerNoteItem:SetColor(color)
 	        end
 
-		    playerApproveReceiveTotalItemPosition = player["Status"]:GetPosition()
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
 	end
