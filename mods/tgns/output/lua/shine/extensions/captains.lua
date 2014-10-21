@@ -104,7 +104,7 @@ end
 local function showRoster(clients, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText)
 	local columnsY = titleY + 0.05
 	local clientNameGetter = function(c)
-		local nameToDisplay = string.format("%s%s", TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) and "!" or "", TGNS.GetClientName(c))
+		local nameToDisplay = string.format("%s%s%s", TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) and "!" or "", TGNS.GetClientName(c), TGNS.PlayerAction(c, TGNS.IsPlayerSpectator) and " (Spec)" or "")
 		return TGNS.Truncate(nameToDisplay, 16)
 	end
 	local names = TGNS.Select(clients, clientNameGetter)
@@ -135,7 +135,7 @@ local function showPickables()
 				end
 			end
 			local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
-			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and TGNS.IsPlayerReadyRoom(TGNS.GetPlayer(c)) end)
+			local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and not TGNS.ClientIsOnPlayingTeam(c) end)
 
 			local renderCaptainClients = TGNS.Where(allClients, function(c) return TGNS.Has(captainClients, c) end)
 			local renderOtherClients = TGNS.Where(allClients, function(c) return not TGNS.Has(renderCaptainClients, c) end)
