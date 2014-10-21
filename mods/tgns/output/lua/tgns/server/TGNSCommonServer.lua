@@ -526,6 +526,10 @@ function TGNS.SetPlayerResources(player, value)
 	player:SetResources(value)
 end
 
+function TGNS.AddPlayerResources(player, value)
+	player:SetResources(TGNS.GetPlayerResources(player) + value)
+end
+
 function TGNS.RemoveAllMatching(elements, element)
 	TGNS.DoForReverse(elements, function(e, index)
 		if element == e then
