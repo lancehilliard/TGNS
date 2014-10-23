@@ -2,6 +2,7 @@ local changers = {}
 local clientsReadyForScoreboardData = {}
 local approvalCounts = {}
 local vrConfirmed = {}
+local vrConfirmedBy = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -221,6 +222,7 @@ function Plugin:Initialise()
 					local targetPlayer = TGNS.GetPlayer(targetClient)
 					if TGNS.PlayersAreTeammates(player, targetPlayer) and not TGNS.HasClientSignedPrimerWithGames(targetClient) and not vrConfirmed[targetClient] then
 						vrConfirmed[targetClient] = true
+						vrConfirmedBy[targetClient] = TGNS.GetClientName(client)
 						TGNS.ExecuteEventHooks("VrConfirmed", targetClient)
 						TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 							TGNS.SendNetworkMessageToPlayer(p, self.VR_CONFIRMED, {c=targetClientIndex})
@@ -288,7 +290,9 @@ function Plugin:Initialise()
 				end
 			end)
 			if vrConfirmed[targetClient] then
-				md:ToPlayerNotifyInfo(player, string.format("Someone already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", TGNS.GetClientName(targetClient)))
+				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vrConfirmedBy[targetClient], TGNS.GetClientName(targetClient)))
+			else if TGNS.PlayerAction(targetClient, TGNS.IsPlayerAFK) then
+				md:ToPlayerNotifyError(player, "You may not use this feature on an AFK player.")
 			else
 				local targetPlayer = TGNS.GetPlayer(targetClient)
 				Shine.Plugins.voicecommreminder:SendVoicecommReminder(client, targetPlayer)
