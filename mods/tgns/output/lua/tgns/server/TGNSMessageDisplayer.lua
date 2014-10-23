@@ -29,6 +29,13 @@ local function NotifyInfo(player, message, messagesChannel)
 	end
 end
 
+local function NotifyColors(player, message, messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
+	if player ~= nil then
+		Shine:NotifyDualColour(player, channelRed, channelBlue, channelGreen, "[" .. messagesChannel .. "]", messageRed, messageBlue, messageGreen, message)
+		SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	end
+end
+
 local function NotifyRed(player, message, messagesChannel)
 	if player ~= nil then
 		Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. "]", 255, 255, 255, message)
@@ -163,6 +170,13 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 			NotifyError(p, message, self.messagesChannel)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To all notifyerror: %s", message))
+	end
+
+	function result:ToTeamNotifyColors(teamNumber, message, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
+		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
+			TGNS.PlayerAction(c, function(p) NotifyColors(p, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen) end)
+		end)
+		Shared.Message(string.format("TGNSMessageDisplayer: To team %s notifyinfo: %s", teamNumber, message))
 	end
 
 	function result:ToTeamNotifyInfo(teamNumber, message)
