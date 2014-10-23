@@ -15,7 +15,7 @@ local spawnReprieveAction = function() end
 
 local Plugin = {}
 
-local function getTotalNumberOfBots()
+function Plugin:GetTotalNumberOfBots()
 	local result = #TGNS.Where(TGNS.GetClientList(), TGNS.GetIsClientVirtual)
 	return result
 end
@@ -53,7 +53,7 @@ local function setBotConfig()
 			if kEggGenerationRate == 0 then
 				kEggGenerationRate = originalkEggGenerationRate
 				TGNS.ScheduleAction(20, function()
-					if getTotalNumberOfBots() > 0 then
+					if Shine.Plugins.bots:GetTotalNumberOfBots() > 0 then
 						kEggGenerationRate = 0
 					end
 				end)
@@ -101,12 +101,12 @@ local function showBotAdvisory(client)
 end
 
 function Plugin:ClientConfirmConnect(client)
-	if getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
+	if self:GetTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
 		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
 		Shine.Plugins.winorlose:CallWinOrLose(kAlienTeamType)
 		winOrLoseOccurredRecently = true
 		TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
-	elseif getTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
+	elseif self:GetTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
 		showBotAdvisory(client)
 		TGNS.ScheduleAction(5, function() showBotAdvisory(client) end)
 		TGNS.ScheduleAction(10, function() showBotAdvisory(client) end)
@@ -118,7 +118,7 @@ end
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if not (force or shineForce) then
-		if getTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
+		if self:GetTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
 			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
 			if #alienHumanClients >= 1 and newTeamNumber ~= kMarineTeamType then
 			--if newTeamNumber ~= kMarineTeamType then
@@ -142,7 +142,7 @@ function Plugin:CreateCommands()
 		local errorMessage
 		local players = TGNS.GetPlayerList()
 		if countModifier then
-			if getTotalNumberOfBots() == 0 then
+			if self:GetTotalNumberOfBots() == 0 then
 				local atLeastOnePlayerIsOnGameplayTeam = #TGNS.GetAlienClients(players) + #TGNS.GetMarineClients(players) > 0
 				if #players >= PLAYER_COUNT_THRESHOLD then
 					errorMessage = string.format("Bots are used only for seeding the server to %s players.", PLAYER_COUNT_THRESHOLD)
@@ -160,7 +160,7 @@ function Plugin:CreateCommands()
 		if TGNS.HasNonEmptyValue(errorMessage) then
 			md:ToPlayerNotifyError(TGNS.GetPlayer(client), errorMessage)
 		else
-			local proposedTotalCount = getTotalNumberOfBots() + countModifier
+			local proposedTotalCount = self:GetTotalNumberOfBots() + countModifier
 			countModifier = proposedTotalCount <= BOT_COUNT_THRESHOLD and countModifier or (countModifier - (proposedTotalCount - BOT_COUNT_THRESHOLD))
 			if countModifier > 0 then
 				if not TGNS.IsGameInProgress() then
@@ -180,7 +180,7 @@ function Plugin:CreateCommands()
 				end)
 			else
 				local numberOfBotsToRemove = math.abs(countModifier)
-				numberOfBotsToRemove = numberOfBotsToRemove < getTotalNumberOfBots() and numberOfBotsToRemove or getTotalNumberOfBots() - 1
+				numberOfBotsToRemove = numberOfBotsToRemove < self:GetTotalNumberOfBots() and numberOfBotsToRemove or self:GetTotalNumberOfBots() - 1
 				removeBots(players, numberOfBotsToRemove)
 			end
 		end
@@ -195,7 +195,7 @@ function Plugin:CreateCommands()
 			md:ToPlayerNotifyError(player, "Bots maximum must be a positive number.")
 		else
 			BOT_COUNT_THRESHOLD = max
-			local excessBotCount = getTotalNumberOfBots() - BOT_COUNT_THRESHOLD
+			local excessBotCount = self:GetTotalNumberOfBots() - BOT_COUNT_THRESHOLD
 			if excessBotCount > 0 then
 				removeBots(TGNS.GetPlayerList(), excessBotCount)
 			end

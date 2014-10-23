@@ -55,10 +55,11 @@ function TGNSConnectedTimesTracker.PrintConnectedDurations(client)
 end
 
 TGNS.ScheduleActionInterval(TRACKING_INTERVAL_IN_SECONDS, function()
+	local gameIsHumansOnly = Shine.Plugins.bots:GetTotalNumberOfBots() == 0
 	TGNS.DoFor(GetHumanClients(), function(client)
 		local steamId = TGNS.GetClientSteamId(client)
 		local clientIsInGame = TGNS.IsGameInProgress() and TGNS.ClientIsOnPlayingTeam(client)
-		local secondsToAddToPlayed = clientIsInGame and TRACKING_INTERVAL_IN_SECONDS or 0
+		local secondsToAddToPlayed = (clientIsInGame and gameIsHumansOnly) and TRACKING_INTERVAL_IN_SECONDS or 0
 		connectedTimes[steamId] = connectedTimes[steamId] or Shared.GetSystemTime()
 		played[steamId] = (played[steamId] or 0) + secondsToAddToPlayed
 		if (Shared.GetTime() - (lastUpdatedTimes[steamId] or 0) > DATA_BACKEND_UPDATE_INTERVAL_IN_SECONDS) then
