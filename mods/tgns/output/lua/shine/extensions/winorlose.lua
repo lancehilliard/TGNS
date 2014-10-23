@@ -26,10 +26,18 @@ local function removeBanners()
 end
 
 local function showVoteUpdateMessageToTeamAndSpectators(teamNumber, message)
-	md:ToTeamNotifyInfo(teamNumber, message)
+	local notify = function(md, teamNumber, message)
+		if TGNS.Contains(message, "expired") then
+			md:ToTeamNotifyColors(teamNumber, message, 255, 0, 0, 255, 0, 0)
+		else
+			md:ToTeamNotifyInfo(teamNumber, message)
+		end
+	end
+
+	notify(md, teamNumber, message)
 	local teamName = TGNS.GetTeamName(teamNumber)
 	local teamMd = TGNSMessageDisplayer.Create(string.format("WINORLOSE (%s)", TGNS.ToUpper(teamName)))
-	teamMd:ToTeamNotifyInfo(kSpectatorIndex, message)
+	notify(teamMd, kSpectatorIndex, message)
 end
 
 local function SetupWinOrLoseVars()
@@ -193,7 +201,7 @@ local function UpdateWinOrLoseVotes()
 				else
 					local chatMessage
 					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
-						chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(#playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
+						-- chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(#playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
 						local someStrangersAreRequiredToPassTheVote = getNumberOfRequiredVotes(#playerRecords) > #TGNS.Where(TGNS.GetClientList(), TGNS.HasClientSignedPrimerWithGames)
 						kWinOrLoseVoteArray[i].VotingTimeInSeconds = someStrangersAreRequiredToPassTheVote and Shine.Plugins.winorlose.Config.VotingTimeInSeconds or Shine.Plugins.winorlose.Config.VotingTimeInSeconds * 0.75
@@ -217,7 +225,9 @@ local function UpdateWinOrLoseVotes()
 						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
 					end
-					showVoteUpdateMessageToTeamAndSpectators(i, chatMessage)
+					if TGNS.HasNonEmptyValue(chatMessage) then
+						showVoteUpdateMessageToTeamAndSpectators(i, chatMessage)
+					end
 					-- TGNS.DoFor(playerRecords, function(p)
 					-- 	md:ToPlayerNotifyInfo(p, chatMessage)
 					-- end)
@@ -389,7 +399,7 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 					local victimRed = victimIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
 					local victimGreen = victimIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
 					local victimBlue = victimIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
-					if kCountdownTimeRemaining > 18 then
+					if kCountdownTimeRemaining > 16 then
 						if attackerTeamNumber ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and victimTeamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining + 1
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 8 and 8 or numberOfSecondsToDeductFromCountdownTimeRemaining
