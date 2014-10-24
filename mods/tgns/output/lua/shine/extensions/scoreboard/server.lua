@@ -291,7 +291,7 @@ function Plugin:Initialise()
 			end)
 			if vrConfirmed[targetClient] then
 				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vrConfirmedBy[targetClient], TGNS.GetClientName(targetClient)))
-			else if TGNS.PlayerAction(targetClient, TGNS.IsPlayerAFK) then
+			elseif TGNS.PlayerAction(targetClient, TGNS.IsPlayerAFK) then
 				md:ToPlayerNotifyError(player, "You may not use this feature on an AFK player.")
 			else
 				local targetPlayer = TGNS.GetPlayer(targetClient)
