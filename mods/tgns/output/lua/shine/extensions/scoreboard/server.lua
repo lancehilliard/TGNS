@@ -292,7 +292,7 @@ function Plugin:Initialise()
 			if vrConfirmed[targetClient] then
 				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vrConfirmedBy[targetClient], TGNS.GetClientName(targetClient)))
 			elseif TGNS.PlayerAction(targetClient, TGNS.IsPlayerAFK) then
-				md:ToPlayerNotifyError(player, "You may not use this feature on an AFK player.")
+				md:ToPlayerNotifyError(player, string.format("This icon is disabled because %s is AFK.", TGNS.GetClientName(targetClient)))
 			else
 				local targetPlayer = TGNS.GetPlayer(targetClient)
 				Shine.Plugins.voicecommreminder:SendVoicecommReminder(client, targetPlayer)
