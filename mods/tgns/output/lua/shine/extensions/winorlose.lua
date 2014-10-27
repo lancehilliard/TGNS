@@ -28,7 +28,7 @@ end
 local function showVoteUpdateMessageToTeamAndSpectators(teamNumber, message)
 	local notify = function(md, teamNumber, message)
 		if TGNS.Contains(message, "expired") then
-			md:ToTeamNotifyColors(teamNumber, message, 255, 0, 0, 255, 0, 0)
+			md:ToTeamNotifyColors(teamNumber, message, 255, 255, 255, 255, 0, 0)
 		else
 			md:ToTeamNotifyInfo(teamNumber, message)
 		end
