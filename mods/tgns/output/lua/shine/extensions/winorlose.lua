@@ -204,7 +204,7 @@ local function UpdateWinOrLoseVotes()
 						-- chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(#playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
 						local someStrangersAreRequiredToPassTheVote = getNumberOfRequiredVotes(#playerRecords) > #TGNS.Where(TGNS.GetClientList(), TGNS.HasClientSignedPrimerWithGames)
-						kWinOrLoseVoteArray[i].VotingTimeInSeconds = someStrangersAreRequiredToPassTheVote and Shine.Plugins.winorlose.Config.VotingTimeInSeconds or Shine.Plugins.winorlose.Config.VotingTimeInSeconds * 0.75
+						kWinOrLoseVoteArray[i].VotingTimeInSeconds = someStrangersAreRequiredToPassTheVote and Shine.Plugins.winorlose.Config.VotingTimeInSeconds or (Shine.Plugins.winorlose.Config.VotingTimeInSeconds * 0.75)
 					elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds < TGNS.GetSecondsSinceMapLoaded() then
 						--local abstainedNames = {}
 						--TGNS.DoFor(playerRecords, function(p)
