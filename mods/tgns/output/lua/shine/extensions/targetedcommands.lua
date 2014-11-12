@@ -15,7 +15,13 @@ local function CreateCommand(consoleCommandName, chatCommandName, messageChannel
 	result.isReasonRequired = isReasonRequired
 	result.helpText = helpText
 	function result:OnInputValidated(client, targetClient, reason, md) return onInputValidated(self, client, targetClient, reason, md) end
-	function result:IsValidTargetClient(client) return isValidTargetClient and isValidTargetClient(self, client) or true end
+	function result.IsValidTargetClient(client)
+		if isValidTargetClient == nil then
+			return true
+		else
+			return isValidTargetClient(client)
+		end
+	end
 	return result
 end
 
@@ -134,7 +140,7 @@ local commands = { CreateCommand(
 		"sh_affirm"
 		, "affirm"
 		, "AFFIRM"
-		, function(self, client) return TGNS.IsClientStranger(client) and Balance.GetTotalGamesPlayed(client) < TGNS.PRIMER_GAMES_THRESHOLD end
+		, function(client) return TGNS.IsClientStranger(client) and Balance.GetTotalGamesPlayed(client) < TGNS.PRIMER_GAMES_THRESHOLD end
 		, string.format("'%%s' is not a stranger with fewer than %s games.", TGNS.PRIMER_GAMES_THRESHOLD)
 		, function(self, client, targetClient, reason, md)
 			affirm(client, targetClient, md, self.consoleCommandName)
@@ -165,6 +171,24 @@ local commands = { CreateCommand(
 		end
 		, true
 		, "<player> <reason> Remove strangers misaligned with our rules/tenets."
+	), CreateCommand(
+		"sh_afkrr"
+		, "afkrr"
+		, "PREGAMEAFK"
+		, function(client) return TGNS.PlayerAction(client, TGNS.IsPlayerAFK) and TGNS.ClientIsOnPlayingTeam(client) and not TGNS.IsGameInProgress() and not TGNS.IsGameInCountdown() end
+		, "%s must be AFK and on a playing team, and a game must not be in progress."
+		, function(self, client, targetClient, reason, md)
+			if TGNS.PlayersAreTeammates(TGNS.GetPlayer(client), TGNS.GetPlayer(targetClient)) then
+				TGNS.SendToTeam(TGNS.GetPlayer(targetClient), kTeamReadyRoom, true)
+				md:ToAllNotifyInfo(string.format("%s sent %s (AFK) to ReadyRoom. Learn more in console: sh_help %s", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), self.consoleCommandName))
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Note: Always attempt to communicate with your target before using this command.")
+				log(client, targetClient, self.consoleCommandName)
+			else
+				md:ToPlayerNotifyError(TGNS.GetPlayer(client), string.format("You are not on the same team as %s.", TGNS.GetClientName(targetClient)))
+			end
+		end
+		, false
+		, "<player> Send an AFK pre-game teammate to ReadyRoom."
 	), CreateCommand(
 		"sh_tempban"
 		, "tempban"
