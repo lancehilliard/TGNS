@@ -611,7 +611,7 @@ function TGNS.IsPlayerAFK(player)
                     result = false
             else
                     local LastMoveTime = TGNS.ClientAction(player, function(c) return AFKKick:GetLastMoveTime(c) end)
-                    result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 30)
+                    result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 25)
             end
     end
     return result
