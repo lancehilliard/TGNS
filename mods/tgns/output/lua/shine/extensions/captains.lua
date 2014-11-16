@@ -21,11 +21,11 @@ local plans = {}
 local highVolumeMessagesLastShownTime
 local bannerDisplayed
 local showRemainingTimer
-local MAPCHANGE_VOTE_ALLOW_ACTION_DELAY_IN_SECONDS = 115
 local lastOptInAttemptWhen = {}
 local OPT_IN_THROTTLE_IN_SECONDS = 3
 local allPlayersWereArtificiallyForcedToReadyRoom
 local setSpawnsSummaryText
+local confirmedConnectedClients = {}
 
 function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -881,6 +881,7 @@ function Plugin:ClientConfirmConnect(client)
 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
 		end)
 	end
+	table.insert(confirmedConnectedClients, client)
 end
 
 function Plugin:Initialise()
@@ -889,7 +890,20 @@ function Plugin:Initialise()
 	self:CreateCommands()
 
 	mayVoteYet = false
-	TGNS.ScheduleAction(MAPCHANGE_VOTE_ALLOW_ACTION_DELAY_IN_SECONDS, function() automaticVoteAllowAction() end)
+	local whenPlayersWereLastStillConnecting
+	local mayVoteYetChecker
+	mayVoteYetChecker = function()
+		if not mayVoteYet then
+			if TGNS.GetSecondsSinceMapLoaded() < 115 and Server.GetNumPlayersTotal() > #TGNS.GetClientList(function(c) return TGNS.Has(confirmedConnectedClients, c) end) then
+				whenPlayersWereLastStillConnecting = TGNS.GetSecondsSinceMapLoaded()
+			end
+			if whenPlayersWereLastStillConnecting == nil or TGNS.GetSecondsSinceMapLoaded() - whenPlayersWereLastStillConnecting > 5 then
+				automaticVoteAllowAction()
+			end
+			TGNS.ScheduleAction(2, mayVoteYetChecker)
+		end
+	end
+	TGNS.ScheduleAction(10, mayVoteYetChecker)
 
 	local originalGetCanPlayerHearPlayer
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
