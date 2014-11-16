@@ -1113,6 +1113,11 @@ function TGNS.GetIsClientVirtual(client)
 	return result
 end
 
+function TGNS.GetIsPlayerVirtual(player)
+	local result = TGNS.GetIsClientVirtual(TGNS.GetClient(player))
+	return result
+end
+
 function TGNS.DisconnectClient(client, reason)
 	pcall(function()
 		client.disconnectreason = reason
