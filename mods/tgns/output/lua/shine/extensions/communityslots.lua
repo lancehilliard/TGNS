@@ -25,6 +25,7 @@ otherServerStaticInfo["Taunt"] = { address = "tgns2.tacticalgamer.com", simpleNa
 otherServerStaticInfo["Chuckle"] = { address = "tgns.tacticalgamer.com", simpleName = "Taunt" }
 
 local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
+local slotsDebugMd = TGNSMessageDisplayer.Create("SLOTSDEBUG")
 
 local function IsClientAmongLongestPlayed(clients, client, limit)
     TGNS.SortDescending(clients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
@@ -236,7 +237,7 @@ local function IsClientBumped(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimName))
                 onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
-                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
+                slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
                 --tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
@@ -246,7 +247,7 @@ local function IsClientBumped(joiningClient)
             else
                 local joiningPlayer = TGNS.GetPlayer(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(joiningPlayer, Shine.Plugins.communityslots:GetBumpMessage(joiningName))
-                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, joiningClient, "JOINER"))
+                slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, joiningClient, "JOINER"))
                 onPreJoinerKick(joiningClient,joiningPlayer,playerList)
                 TGNS.ExecuteClientCommand(joiningClient, "readyroom")
                 --tgnsMd:ToAdminConsole(string.format("%s was bumped (prevented from joining a team).", joiningName))
@@ -517,7 +518,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
         end
         if cancel then
             tgnsMd:ToPlayerNotifyError(player, "Teams are full (8v8). You might be able to join Spectate.")
-            tgnsMd:ToAdminConsole(string.format("%s was not allowed to JoinTeam.", TGNS.GetPlayerName(player)))
+            --tgnsMd:ToAdminConsole(string.format("%s was not allowed to JoinTeam.", TGNS.GetPlayerName(player)))
             TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
         else
             if not (force or shineForce) and not TGNS.GetIsClientVirtual(joiningClient) then
