@@ -66,7 +66,7 @@ local roles = {
 		, function(client) return false end
 		, function(client)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
-			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
+			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and Shine.Plugins.betterknownas:IsPlayingWithBkaName(client) and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
 		end
 		, function(client)
 			local approvalsCount = Shine.Plugins.scoreboard:GetApprovalsCount(client)
@@ -159,23 +159,38 @@ end
 
 local Plugin = {}
 
-function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
+function reviewPlayerForRolesChange(player)
+	local teamPlayers = TGNS.GetPlayersOnSameTeam(player)
+	local teamClients = TGNS.GetClients(teamPlayers)
 	TGNS.DoFor(roles, function(role)
-		local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 		local clientIsBlockerOf = TGNS.ClientAction(player, role.IsClientBlockerOf)
 		if clientIsBlockerOf then
 			TGNS.DoFor(TGNS.Where(teamClients, role.IsClientOneOf), function(c) RemoveFromClient(c, role) end)
 		end
 		local clientIsOneOf = TGNS.ClientAction(player, role.IsClientOneOf)
 		if clientIsOneOf then
-			local teamPlayers = TGNS.GetPlayers(teamClients)
 			local numberOnNewTeam = #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
 			local numberOfBlockersOnNewTeam = #TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientBlockerOf(c) end)
-			if (numberOnNewTeam >= 2 or numberOfBlockersOnNewTeam > 0) then
-				TGNS.ClientAction(player, function(c) RemoveFromClient(c, role) end)
+			local client = TGNS.GetClient(player)
+			if numberOnNewTeam >= 2 or numberOfBlockersOnNewTeam > 0 or not role:IsClientEligible(client) then
+				RemoveFromClient(client, role)
 			end
 		end
 	end)
+end
+
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	if not TGNS.GetIsPlayerVirtual(player) then
+		reviewPlayerForRolesChange(player)
+	end
+end
+
+function Plugin:PlayerNameChange(player, newName, oldName)
+	if newName ~= kDefaultPlayerName and string.len(newName) > 0 then
+		if not TGNS.GetIsPlayerVirtual(player) then
+			reviewPlayerForRolesChange(player)
+		end
+	end
 end
 
 function Plugin:ClientConnect(client)
@@ -205,13 +220,18 @@ function Plugin:ClientConnect(client)
 end
 
 function Plugin:ClientConfirmConnect(client)
-	CheckRoster()
+	if not TGNS.GetIsClientVirtual(client) then
+		CheckRoster()
+	end
 end
 
 function Plugin:Initialise()
 	self.Enabled = true
 	TGNS.ScheduleActionInterval(10, CheckRoster)
 	TGNS.DoFor(roles, function(r) RegisterCommandHook(self, r) end)
+	TGNS.RegisterEventHook("BkaChanged", function(client)
+		reviewPlayerForRolesChange(TGNS.GetPlayer(client))
+	end)
 	return true
 end
 
