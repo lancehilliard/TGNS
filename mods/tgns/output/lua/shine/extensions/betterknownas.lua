@@ -131,10 +131,16 @@ local function ShowWhoisUsage(client)
 	md:ToClientConsole(client, "Usage: sh_whois <player>")
 end
 
+function Plugin:IsPlayingWithBkaName(client)
+	local bkaName = bkas[client]
+	local result = bkaName ~= nil and TGNS.StringEqualsCaseInsensitive(TGNS.GetClientName(client), bkaName)
+	return result
+end
+
 function Plugin:IsPlayingWithoutBkaName(player)
 	local client = TGNS.GetClient(player)
 	local bkaName = bkas[client]
-	local result = bkaName ~= nil and not TGNS.StringEqualsCaseInsensitive(TGNS.GetPlayerName(player), bkaName)
+	local result = bkaName ~= nil and not self:IsPlayingWithBkaName(client)
 	return result
 end
 
