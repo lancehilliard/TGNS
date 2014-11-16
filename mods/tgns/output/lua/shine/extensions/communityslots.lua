@@ -205,15 +205,17 @@ local function AnnounceRemainingPublicSlots()
     UpdateReservedSlotAmount()
 end
 
-local function GetBumpSummary(playerList, bumpedClient, joinerOrVictim)
+local function GetBumpSummary(playerList, bumpingClient, bumpedClient, joinerOrVictim)
     local supportingMembersCount = #TGNS.GetSmClients(playerList)
     local primerOnlysCount = #TGNS.GetPrimerOnlyClients(playerList)
     local strangersCount = #TGNS.GetStrangersClients(playerList)
-    local clientName = TGNS.GetClientName(bumpedClient)
-    local communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
+    local bumpingClientName = TGNS.GetClientName(bumpingClient)
+    local bumpedClientName = TGNS.GetClientName(bumpedClient)
+    local bumpingClientCommunityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpingClient)
+    local bumpedClientCommunityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
     local bumpedClientPlayedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(bumpedClient) or 0
     local bumpedClientPlayedDurationClock = TGNS.SecondsToClock(bumpedClientPlayedTimeInSeconds)
-    local result = string.format("Kicking %s %s> %s after %s with S:%s P:%s ?:%s", joinerOrVictim, communityDesignationCharacter, clientName, bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount)
+    local result = string.format("%s %s bumping %s %s> %s after %s with S:%s P:%s ?:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount)
     return result
 end
 
@@ -234,9 +236,9 @@ local function IsClientBumped(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, Shine.Plugins.communityslots:GetBumpMessage(victimName))
                 onPreVictimKick(victimClient,victimPlayer,joiningClient,playerList)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
-                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, victimClient, "VICTIM"))
+                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
-                tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
+                --tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
                 if blacklistedClients[victimClient] then
                     blacklistAdvisoryClient = victimClient
@@ -244,10 +246,10 @@ local function IsClientBumped(joiningClient)
             else
                 local joiningPlayer = TGNS.GetPlayer(joiningClient)
                 tgnsMd:ToPlayerNotifyInfo(joiningPlayer, Shine.Plugins.communityslots:GetBumpMessage(joiningName))
-                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, "JOINER"))
+                tgnsMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, joiningClient, "JOINER"))
                 onPreJoinerKick(joiningClient,joiningPlayer,playerList)
                 TGNS.ExecuteClientCommand(joiningClient, "readyroom")
-                tgnsMd:ToAdminConsole(string.format("%s was bumped (prevented from joining a team).", joiningName))
+                --tgnsMd:ToAdminConsole(string.format("%s was bumped (prevented from joining a team).", joiningName))
                 result = true
                 if blacklistedClients[joiningClient] then
                     blacklistAdvisoryClient = joiningClient
@@ -412,9 +414,9 @@ end
 
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
     UpdateReservedSlotAmount()
-    if not TGNS.GetIsClientVirtual(client) then
-        tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
-    end
+    -- if not TGNS.GetIsClientVirtual(client) then
+    --     tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
+    -- end
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
