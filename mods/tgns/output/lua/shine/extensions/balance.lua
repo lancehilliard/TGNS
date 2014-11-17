@@ -261,7 +261,11 @@ end
 
 local function BeginBalance()
 	balanceLog = {}
-	SendNextPlayer()
+	if Shine.Plugins.mapvote:VoteStarted() then
+		md:ToAllNotifyError(player, "Halted. Map vote in progress.")
+	else
+		SendNextPlayer()
+	end
 end
 
 local function svBalance(client, forcePlayersToReadyRoom)
@@ -274,6 +278,8 @@ local function svBalance(client, forcePlayersToReadyRoom)
 		md:ToPlayerNotifyError(player, "You may not Balance during Captains.")
 	elseif mayBalanceAt > Shared.GetTime() and not forcePlayersToReadyRoom then
 		md:ToPlayerNotifyError(player, "Wait a bit to let players join teams of choice.")
+	elseif Shine.Plugins.mapvote:VoteStarted() then
+		md:ToPlayerNotifyError(player, "You may not balance while a map vote is in progress.")
 	else
 		local gameState = GetGamerules():GetGameState()
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
