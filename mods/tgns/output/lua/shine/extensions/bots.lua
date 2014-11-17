@@ -172,6 +172,7 @@ function Plugin:CreateCommands()
 						TGNS.SendToTeam(p, kMarineTeamType, true)
 					end)
 					Shine.Plugins.forceroundstart:ForceRoundStart()
+					Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 				end
 				setBotConfig()
 				local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
