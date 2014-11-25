@@ -95,7 +95,7 @@ local function onVoteSuccessful(teamNumber)
 	end)
 end
 
-local function UpdateWinOrLoseVotes()
+local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 		if kCountdownTimeRemaining > 0 then
@@ -171,7 +171,7 @@ local function UpdateWinOrLoseVotes()
 		TGNS.ExecuteEventHooks("WinOrLoseCountdownChanged", kCountdownTimeRemaining)
 	else
 		for i = 1, kWinOrLoseTeamCount do
-			if kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and TGNS.IsGameInProgress() and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
+			if (forceVoteStatusUpdateForTeamNumber and forceVoteStatusUpdateForTeamNumber == i) or (kWinOrLoseVoteArray[i].WinOrLoseRunning ~= 0 and TGNS.IsGameInProgress() and kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded()) then
 				local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return p:GetTeamNumber() == i end))
 				local totalvotes = 0
 				for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
@@ -277,7 +277,7 @@ local function OnCommandWinOrLose(client)
 							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 						end
-						TGNS.ScheduleAction(1, UpdateWinOrLoseVotes)
+						UpdateWinOrLoseVotes(teamNumber)
 					else
 						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + VOTE_START_COOLDOWN <= TGNS.GetSecondsSinceMapLoaded() then
 							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
