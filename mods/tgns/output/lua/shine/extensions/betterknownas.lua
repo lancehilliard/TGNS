@@ -60,6 +60,15 @@ function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pre
 			md:ToClientConsole(client, " ")
 			whoisMd:ToPlayerNotifyInfo(player, string.format("Steam Community Profile Name: %s", getSteamIdProfileName(targetSteamId) or "<unknown>"))
 			md:ToClientConsole(client, " ")
+
+			if not TGNS.IsClientStranger(client) and not TGNS.IsSteamIdStranger(targetSteamId) then
+				local otherAdminPlayers = TGNS.GetPlayers(TGNS.GetClientList(function(c) return c ~= client and TGNS.IsClientAdmin(c) end))
+				TGNS.DoFor(otherAdminPlayers, function(p)
+					md:ToPlayerNotifyInfo(p, string.format("ADMIN: %s queried %s.", TGNS.GetClientName(client), TGNS.GetPlayerName(targetPlayer)))
+				end)
+			end
+
+
 		else
 			Shared.Message("betterknownas ERROR: unable to access data")
 			whoisMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access data.")
