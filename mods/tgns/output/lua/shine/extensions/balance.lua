@@ -259,10 +259,10 @@ end
 -- 	return result
 -- end
 
-local function BeginBalance()
+local function BeginBalance(originatingPlayer)
 	balanceLog = {}
 	if Shine.Plugins.mapvote:VoteStarted() then
-		md:ToAllNotifyError(player, "Halted. Map vote in progress.")
+		md:ToPlayerNotifyError(originatingPlayer, "Halted. Map vote in progress.")
 	else
 		SendNextPlayer()
 	end
@@ -290,7 +290,7 @@ local function svBalance(client, forcePlayersToReadyRoom)
 			end
 			balanceInProgress = true
 			lastBalanceStartTimeInSeconds = Shared.GetTime()
-			TGNS.ScheduleAction(5, BeginBalance)
+			TGNS.ScheduleAction(5, function() BeginBalance(player) end)
 		else
 			md:ToPlayerNotifyError(player, "Balance cannot be used during a game.")
 		end
