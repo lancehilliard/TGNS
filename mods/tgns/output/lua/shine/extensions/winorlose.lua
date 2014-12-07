@@ -59,7 +59,8 @@ local function GetCommandStructureToKeep(commandStructures)
 	return result
 end
 
-local function getNumberOfRequiredVotes(votersCount)
+local function getNumberOfRequiredVotes(potentialVoterPlayers)
+	local votersCount = #TGNS.Where(potentialVoterPlayers, function(p) return not (TGNS.PlayerIsRookie(p) and TGNS.IsPlayerStranger(p)) end)
 	local result = math.floor((votersCount * (Shine.Plugins.winorlose.Config.MinimumPercentage / 100)))
 	return result
 end
@@ -196,14 +197,14 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						table.remove(kWinOrLoseVoteArray[i].WinOrLoseVotes, j)
 					end
 				end
-				if totalvotes >= getNumberOfRequiredVotes(#playerRecords) then
+				if totalvotes >= getNumberOfRequiredVotes(playerRecords) then
 					onVoteSuccessful(i)
 				else
 					local chatMessage
 					if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime == 0 then
-						-- chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(#playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
+						-- chatMessage = string.sub(string.format("Concede vote started. %s votes are needed. %s", getNumberOfRequiredVotes(playerRecords), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
-						local someStrangersAreRequiredToPassTheVote = getNumberOfRequiredVotes(#playerRecords) > #TGNS.Where(TGNS.GetClients(playerRecords), TGNS.HasClientSignedPrimerWithGames)
+						local someStrangersAreRequiredToPassTheVote = getNumberOfRequiredVotes(playerRecords) > #TGNS.Where(TGNS.GetClients(playerRecords), TGNS.HasClientSignedPrimerWithGames)
 						kWinOrLoseVoteArray[i].VotingTimeInSeconds = someStrangersAreRequiredToPassTheVote and Shine.Plugins.winorlose.Config.VotingTimeInSeconds or math.floor(Shine.Plugins.winorlose.Config.VotingTimeInSeconds * 0.75)
 					elseif kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds < TGNS.GetSecondsSinceMapLoaded() then
 						--local abstainedNames = {}
@@ -222,7 +223,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 					else
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
 							chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
-							 getNumberOfRequiredVotes(#playerRecords),
+							 getNumberOfRequiredVotes(playerRecords),
 							 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
 
 							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
