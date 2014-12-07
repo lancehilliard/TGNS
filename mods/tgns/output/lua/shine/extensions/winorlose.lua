@@ -220,10 +220,13 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						kWinOrLoseVoteArray[i].VotingTimeInSeconds = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 					else
-						chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
-						 getNumberOfRequiredVotes(#playerRecords),
-						 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
-						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
+						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
+							chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
+							 getNumberOfRequiredVotes(#playerRecords),
+							 math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded()), VOTE_HOWTO_TEXT), 1, kMaxChatLength)
+
+							kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = TGNS.GetSecondsSinceMapLoaded()
+						end
 					end
 					if TGNS.HasNonEmptyValue(chatMessage) then
 						showVoteUpdateMessageToTeamAndSpectators(i, chatMessage)
