@@ -12,6 +12,7 @@ local botAdvisory
 local alltalk = false
 local originalGetCanPlayerHearPlayer
 local spawnReprieveAction = function() end
+local pushSentForThisMap = false
 
 local Plugin = {}
 
@@ -172,7 +173,10 @@ function Plugin:CreateCommands()
 						TGNS.SendToTeam(p, kMarineTeamType, true)
 					end)
 					Shine.Plugins.forceroundstart:ForceRoundStart()
-					Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+					if not pushSentForThisMap then
+						Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+						pushSentForThisMap = true
+					end
 				end
 				setBotConfig()
 				local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
