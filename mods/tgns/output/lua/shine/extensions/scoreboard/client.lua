@@ -79,72 +79,72 @@ function Plugin:Initialise()
 
 
 
-		if not player.PlayerApproveIcon then
-		    local playerApproveIcon = GUIManager:CreateGraphicItem()
-		    local playerApproveIconPosition = player.Status:GetPosition()
-		    playerApproveIconPosition.x = playerApproveIconPosition.x - 25
-		    playerApproveIconPosition.y = playerApproveIconPosition.y - 10
-		    playerApproveIcon:SetSize(Vector(20, 20, 0))
-		    playerApproveIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-		    playerApproveIcon:SetPosition(playerApproveIconPosition)
-		    playerApproveIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
-		    player.PlayerApproveIcon = playerApproveIcon
-		    player.Background:AddChild(playerApproveIcon)
-		end
-		if not player.PlayerVrIcon then
-		    local playerVrIcon = GUIManager:CreateGraphicItem()
-		    local playerVrIconPosition = player.Status:GetPosition()
-		    playerVrIconPosition.x = playerVrIconPosition.x - 65
-		    playerVrIconPosition.y = playerVrIconPosition.y - 10
-		    playerVrIcon:SetSize(Vector(20, 20, 0))
-		    playerVrIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-		    playerVrIcon:SetPosition(playerVrIconPosition)
-		    playerVrIcon:SetTexture(VR_TEXTURE_DISABLED)
-		    player.PlayerVrIcon = playerVrIcon
-		    player.Background:AddChild(playerVrIcon)
-		end
-		if not player.PlayerQueryIcon then
-		    local playerQueryIcon = GUIManager:CreateGraphicItem()
-		    local playerQueryIconPosition = player.Status:GetPosition()
-		    playerQueryIconPosition.x = playerQueryIconPosition.x - 45
-		    playerQueryIconPosition.y = playerQueryIconPosition.y - 10
-		    playerQueryIcon:SetSize(Vector(20, 20, 0))
-		    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-		    playerQueryIcon:SetPosition(playerQueryIconPosition)
-		    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
-		    player.PlayerQueryIcon = playerQueryIcon
-		    player.Background:AddChild(playerQueryIcon)
-		end
-		-- if not player.PlayerApproveStatusItem then
-		-- 	local playerApproveStatusItem = GUIManager:CreateTextItem()
-		-- 	playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-		-- 	playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-		-- 	playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
-		-- 	playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
-		-- 	local playerApproveStatusItemPosition = player.Status:GetPosition()
-		--     playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
-		--     playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
-		-- 	playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
-		-- 	player.PlayerApproveStatusItem = playerApproveStatusItem
-		-- 	player.Background:AddChild(playerApproveStatusItem)
-		-- end
-		if not player.PlayerNoteItem then
-			local playerNoteItem = GUIManager:CreateTextItem()
-			playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-			playerNoteItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			playerNoteItem:SetTextAlignmentX(GUIItem.Align_Max)
-			playerNoteItem:SetTextAlignmentY(GUIItem.Align_Min)
-			player.PlayerNoteItem = playerNoteItem
-			player.Background:AddChild(playerNoteItem)
-		end
+			if not player.PlayerApproveIcon then
+			    local playerApproveIcon = GUIManager:CreateGraphicItem()
+			    local playerApproveIconPosition = player.Status:GetPosition()
+			    playerApproveIconPosition.x = playerApproveIconPosition.x - 25
+			    playerApproveIconPosition.y = playerApproveIconPosition.y - 10
+			    playerApproveIcon:SetSize(Vector(20, 20, 0))
+			    playerApproveIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+			    playerApproveIcon:SetPosition(playerApproveIconPosition)
+			    playerApproveIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
+			    player.PlayerApproveIcon = playerApproveIcon
+			    player.Background:AddChild(playerApproveIcon)
+			end
+			if not player.PlayerVrIcon then
+			    local playerVrIcon = GUIManager:CreateGraphicItem()
+			    local playerVrIconPosition = player.Status:GetPosition()
+			    playerVrIconPosition.x = playerVrIconPosition.x - 65
+			    playerVrIconPosition.y = playerVrIconPosition.y - 10
+			    playerVrIcon:SetSize(Vector(20, 20, 0))
+			    playerVrIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+			    playerVrIcon:SetPosition(playerVrIconPosition)
+			    playerVrIcon:SetTexture(VR_TEXTURE_DISABLED)
+			    player.PlayerVrIcon = playerVrIcon
+			    player.Background:AddChild(playerVrIcon)
+			end
+			if not player.PlayerQueryIcon then
+			    local playerQueryIcon = GUIManager:CreateGraphicItem()
+			    local playerQueryIconPosition = player.Status:GetPosition()
+			    playerQueryIconPosition.x = playerQueryIconPosition.x - 45
+			    playerQueryIconPosition.y = playerQueryIconPosition.y - 10
+			    playerQueryIcon:SetSize(Vector(20, 20, 0))
+			    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+			    playerQueryIcon:SetPosition(playerQueryIconPosition)
+			    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
+			    player.PlayerQueryIcon = playerQueryIcon
+			    player.Background:AddChild(playerQueryIcon)
+			end
+			-- if not player.PlayerApproveStatusItem then
+			-- 	local playerApproveStatusItem = GUIManager:CreateTextItem()
+			-- 	playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+			-- 	playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+			-- 	playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
+			-- 	playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
+			-- 	local playerApproveStatusItemPosition = player.Status:GetPosition()
+			--     playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
+			--     playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
+			-- 	playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
+			-- 	player.PlayerApproveStatusItem = playerApproveStatusItem
+			-- 	player.Background:AddChild(playerApproveStatusItem)
+			-- end
+			if not player.PlayerNoteItem then
+				local playerNoteItem = GUIManager:CreateTextItem()
+				playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
+				playerNoteItem:SetAnchor(GUIItem.Left, GUIItem.Top)
+				playerNoteItem:SetTextAlignmentX(GUIItem.Align_Max)
+				playerNoteItem:SetTextAlignmentY(GUIItem.Align_Min)
+				player.PlayerNoteItem = playerNoteItem
+				player.Background:AddChild(playerNoteItem)
+			end
 
 
-
+			local guiItemsWhichShouldPreventNs2PlusHighlight = {}
 
 			local playerIsBot = playerRecord.Ping == 0
 	        local playerApproveIcon = player["PlayerApproveIcon"]
-	        local playerApproveIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
-	        local playerVrIconShouldDisplay = ((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
+	        local playerApproveIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
+	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
         	local targetPrefix = prefixes[clientIndex] or ""
 	        if playerVrIconShouldDisplay then
         		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
@@ -157,19 +157,22 @@ function Plugin:Initialise()
 		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
 			player.PlayerNoteItem:SetPosition(playerNoteItemPosition)
 
-	        local playerQueryIconShouldDisplay = (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals
+	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
 	        if playerApproveIcon then
+	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveIcon)
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
 	        end
 	        local playerVrIcon = player["PlayerVrIcon"]
 	        if playerVrIcon then
+	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerVrIcon)
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
 	        	local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (TGNS.Contains(targetPrefix, "!") and not vrConfirmed[clientIndex])
 		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and getDisabledVrTexture(clientIndex) or getTeamVrTexture(clientIndex, teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
+	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerQueryIcon)
 	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
 		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and QUERY_TEXTURE_DISABLED or getTeamQueryTexture(teamNumber))
 	        end
@@ -181,7 +184,8 @@ function Plugin:Initialise()
 		    end
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
-	        	local playerApproveStatusItemShouldDisplay = clientIndex == Client.GetLocalClientIndex() and showOptionals
+	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveStatusItem)
+	        	local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals) or Shared.GetDevMode()
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
 	        	playerApproveStatusItem:SetColor(color)
@@ -194,6 +198,17 @@ function Plugin:Initialise()
 	        	playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
 	        	playerNoteItem:SetColor(color)
 	        end
+
+			if MouseTracker_GetIsVisible() then
+				local mouseX, mouseY = Client.GetCursorPosScreen()
+				for i = 1, #guiItemsWhichShouldPreventNs2PlusHighlight do
+					local guiItem = guiItemsWhichShouldPreventNs2PlusHighlight[i]
+					if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
+						player["Background"]:SetColor(updateTeam["Color"])
+						break
+					end
+				end
+			end
 
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
@@ -212,20 +227,35 @@ function Plugin:Initialise()
 		            local playerItem = playerList[p]
 	                local clientIndex = playerItem["ClientIndex"]
 		            local playerApproveIcon = playerItem["PlayerApproveIcon"]
-		            if playerApproveIcon and playerApproveIcon:GetIsVisible() and GUIItemContainsPoint(playerApproveIcon, mouseX, mouseY) and not isApproved[clientIndex] then
-		                isApproved[clientIndex] = true
-		                TGNS.SendNetworkMessage(Plugin.APPROVE_REQUESTED, {c=clientIndex})
+		            if playerApproveIcon and playerApproveIcon:GetIsVisible() and GUIItemContainsPoint(playerApproveIcon, mouseX, mouseY) then
+		            	if self.hoverMenu then
+		            		self.hoverMenu:Hide()
+		            	end
+		            	if not isApproved[clientIndex] then
+			                isApproved[clientIndex] = true
+			                TGNS.SendNetworkMessage(Plugin.APPROVE_REQUESTED, {c=clientIndex})
+		            	end
 		            end
 		            local playerQueryIcon = playerItem["PlayerQueryIcon"]
-		            if playerQueryIcon and playerQueryIcon:GetIsVisible() and GUIItemContainsPoint(playerQueryIcon, mouseX, mouseY) and not isQuerying[clientIndex] then
-		                isQuerying[clientIndex] = true
-		                TGNS.SendNetworkMessage(Plugin.QUERY_REQUESTED, {c=clientIndex})
+		            if playerQueryIcon and playerQueryIcon:GetIsVisible() and GUIItemContainsPoint(playerQueryIcon, mouseX, mouseY) then
+		            	if self.hoverMenu then
+		            		self.hoverMenu:Hide()
+		            	end
+		            	if not isQuerying[clientIndex] then
+			                isQuerying[clientIndex] = true
+			                TGNS.SendNetworkMessage(Plugin.QUERY_REQUESTED, {c=clientIndex})
+		            	end
 		            end
 		            local playerVrIcon = playerItem["PlayerVrIcon"]
 		            local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
-		            if playerVrIcon and playerVrIcon:GetIsVisible() and GUIItemContainsPoint(playerVrIcon, mouseX, mouseY) and not playerVrIconShouldBeDisabled then
-		                isVring = true
-		                TGNS.SendNetworkMessage(Plugin.VR_REQUESTED, {c=clientIndex})
+		            if playerVrIcon and playerVrIcon:GetIsVisible() and GUIItemContainsPoint(playerVrIcon, mouseX, mouseY) then
+		            	if self.hoverMenu then
+		            		self.hoverMenu:Hide()
+		            	end
+		            	if not playerVrIconShouldBeDisabled then
+			                isVring = true
+			                TGNS.SendNetworkMessage(Plugin.VR_REQUESTED, {c=clientIndex})
+		            	end
 		            end
 		        end
 
