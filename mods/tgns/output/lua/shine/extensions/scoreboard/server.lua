@@ -122,7 +122,7 @@ end
 
 function Plugin:ClientConfirmConnect(client)
 	local player = TGNS.GetPlayer(client)
-	TGNS.ScheduleAction(1, function()
+	TGNS.ScheduleAction(2, function()
 		if Shine:IsValidClient(client) then
 			initScoreboardDecorations(client)
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
@@ -130,6 +130,8 @@ function Plugin:ClientConfirmConnect(client)
 					TGNS.SendNetworkMessageToPlayer(player, self.VR_CONFIRMED, {c=TGNS.GetClientId(c)})
 				end
 			end)
+			TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_PROGRESS, {b=TGNS.IsGameInProgress()})
+			TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
 		end
 	end)
 end
@@ -162,6 +164,7 @@ end
 function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK_RESET, {})
+		TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=false})
 	end)
 	local captainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains:IsCaptainsModeEnabled()
 	if not captainsModeEnabled then
@@ -211,6 +214,12 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("BkaChanged", function(client)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
+	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=true})
+		end)
+	end)
+
 	TGNS.HookNetworkMessage(self.APPROVE_REQUESTED, function(client, message)
 		local md = TGNSMessageDisplayer.Create("APPROVE")
 		local targetClientIndex = message.c
@@ -301,6 +310,14 @@ function Plugin:Initialise()
 			md:ToPlayerNotifyError(player, "There was a problem showing the voicecomm reminder.")
 		end
 	end)
+
+	TGNS.HookNetworkMessage(self.REQUEST_AFKRR, function(client, message)
+		local targetClientIndex = message.c
+		local targetClient = TGNS.GetClientById(targetClientIndex)
+		local md = TGNSMessageDisplayer.Create("PREGAMEAFK")
+		Shine.Plugins.targetedcommands:AfkRr(client, targetClient, md)
+	end)
+
 	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
 		local isLookingUp = not isLookingDown
 		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})

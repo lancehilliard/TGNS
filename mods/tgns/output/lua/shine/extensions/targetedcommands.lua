@@ -136,6 +136,18 @@ local function affirm(client, targetClient, md, commandName)
 	log(client, targetClient, commandName or "sh_affirm")
 end
 
+local function afkrr(client, targetClient, md, commandName)
+	commandName = commandName or "sh_afkrr"
+	if TGNS.PlayersAreTeammates(TGNS.GetPlayer(client), TGNS.GetPlayer(targetClient)) then
+		TGNS.SendToTeam(TGNS.GetPlayer(targetClient), kTeamReadyRoom, true)
+		md:ToAllNotifyInfo(string.format("%s sent %s (AFK) to ReadyRoom. Learn more in console: sh_help %s", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), commandName))
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Note: Always attempt to communicate with your target before using this command.")
+		log(client, targetClient, commandName)
+	else
+		md:ToPlayerNotifyError(TGNS.GetPlayer(client), string.format("You are not on the same team as %s.", TGNS.GetClientName(targetClient)))
+	end
+end
+
 local commands = { CreateCommand(
 		"sh_affirm"
 		, "affirm"
@@ -178,14 +190,7 @@ local commands = { CreateCommand(
 		, function(client) return TGNS.PlayerAction(client, TGNS.IsPlayerAFK) and TGNS.ClientIsOnPlayingTeam(client) and not TGNS.IsGameInProgress() and not TGNS.IsGameInCountdown() end
 		, "%s must be AFK and on a playing team, and a game must not be in progress."
 		, function(self, client, targetClient, reason, md)
-			if TGNS.PlayersAreTeammates(TGNS.GetPlayer(client), TGNS.GetPlayer(targetClient)) then
-				TGNS.SendToTeam(TGNS.GetPlayer(targetClient), kTeamReadyRoom, true)
-				md:ToAllNotifyInfo(string.format("%s sent %s (AFK) to ReadyRoom. Learn more in console: sh_help %s", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), self.consoleCommandName))
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Note: Always attempt to communicate with your target before using this command.")
-				log(client, targetClient, self.consoleCommandName)
-			else
-				md:ToPlayerNotifyError(TGNS.GetPlayer(client), string.format("You are not on the same team as %s.", TGNS.GetClientName(targetClient)))
-			end
+			afkrr(client, targetClient, self.consoleCommandName)
 		end
 		, false
 		, "<player> Send an AFK pre-game teammate to ReadyRoom."
@@ -283,6 +288,10 @@ end
 
 function Plugin:Affirm(client, targetClient, md)
 	affirm(client, targetClient, md)
+end
+
+function Plugin:AfkRr(client, targetClient, md)
+	afkrr(client, targetClient, md)
 end
 
 function Plugin:Approve(client, targetClient, reason, md)

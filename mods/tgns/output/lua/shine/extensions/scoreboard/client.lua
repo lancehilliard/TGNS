@@ -22,6 +22,8 @@ local badgeLabels = {}
 local vrConfirmed = {}
 local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
 local approveSoundEventName = "sound/tgns.fev/scoreboard/approve"
+local gameIsInProgress = false
+local serverSimpleName
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -68,6 +70,7 @@ function Plugin:Initialise()
 	        local playerRecord = teamScores[currentPlayerIndex]
 	        local clientIndex = playerRecord.ClientIndex
 	        if showCustomNumbersColumn then
+	        	player["Number"]:SetIsVisible(true)
 		        local prefix = prefixes[clientIndex]
 		        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
 		        local numberColor = Color(0.5, 0.5, 0.5, 1)
@@ -76,8 +79,6 @@ function Plugin:Initialise()
 		        end
 		        player["Number"]:SetColor(numberColor)
 	        end
-
-
 
 			if not player.PlayerApproveIcon then
 			    local playerApproveIcon = GUIManager:CreateGraphicItem()
@@ -90,18 +91,9 @@ function Plugin:Initialise()
 			    playerApproveIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
 			    player.PlayerApproveIcon = playerApproveIcon
 			    player.Background:AddChild(playerApproveIcon)
-			end
-			if not player.PlayerVrIcon then
-			    local playerVrIcon = GUIManager:CreateGraphicItem()
-			    local playerVrIconPosition = player.Status:GetPosition()
-			    playerVrIconPosition.x = playerVrIconPosition.x - 65
-			    playerVrIconPosition.y = playerVrIconPosition.y - 10
-			    playerVrIcon:SetSize(Vector(20, 20, 0))
-			    playerVrIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    playerVrIcon:SetPosition(playerVrIconPosition)
-			    playerVrIcon:SetTexture(VR_TEXTURE_DISABLED)
-			    player.PlayerVrIcon = playerVrIcon
-			    player.Background:AddChild(playerVrIcon)
+			    if player.IconTable then
+			    	table.insert(player["IconTable"], playerApproveIcon)
+			    end
 			end
 			if not player.PlayerQueryIcon then
 			    local playerQueryIcon = GUIManager:CreateGraphicItem()
@@ -114,6 +106,24 @@ function Plugin:Initialise()
 			    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
 			    player.PlayerQueryIcon = playerQueryIcon
 			    player.Background:AddChild(playerQueryIcon)
+			    if player.IconTable then
+			    	table.insert(player["IconTable"], playerQueryIcon)
+			    end
+			end
+			if not player.PlayerVrIcon then
+			    local playerVrIcon = GUIManager:CreateGraphicItem()
+			    local playerVrIconPosition = player.Status:GetPosition()
+			    playerVrIconPosition.x = playerVrIconPosition.x - 65
+			    playerVrIconPosition.y = playerVrIconPosition.y - 10
+			    playerVrIcon:SetSize(Vector(20, 20, 0))
+			    playerVrIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+			    playerVrIcon:SetPosition(playerVrIconPosition)
+			    playerVrIcon:SetTexture(VR_TEXTURE_DISABLED)
+			    player.PlayerVrIcon = playerVrIcon
+			    player.Background:AddChild(playerVrIcon)
+			    if player.IconTable then
+			    	table.insert(player["IconTable"], playerVrIcon)
+			    end
 			end
 			-- if not player.PlayerApproveStatusItem then
 			-- 	local playerApproveStatusItem = GUIManager:CreateTextItem()
@@ -152,9 +162,9 @@ function Plugin:Initialise()
         		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
 	        end
 
-			local playerNoteItemPosition = player.Status:GetPosition()
-			playerNoteItemPosition.x = playerNoteItemPosition.x - ((playerVrIconShouldDisplay and 60 or 40) + 5)
-		    playerNoteItemPosition.y = playerNoteItemPosition.y + 8
+			local playerNoteItemPosition = player.PlayerQueryIcon:GetPosition()
+			playerNoteItemPosition.x = playerNoteItemPosition.x - ((playerVrIconShouldDisplay and 20 or 0) + 3)
+		    playerNoteItemPosition.y = playerNoteItemPosition.y + 17
 			player.PlayerNoteItem:SetPosition(playerNoteItemPosition)
 
 	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
@@ -195,7 +205,8 @@ function Plugin:Initialise()
 	        if playerNoteItem then
 	        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
 	        	playerNoteItem:SetIsVisible(playerNoteItemShouldDisplay)
-	        	playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
+	        	-- playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
+	        	playerNoteItem:SetText("test")
 	        	playerNoteItem:SetColor(color)
 	        end
 
@@ -210,12 +221,75 @@ function Plugin:Initialise()
 				end
 			end
 
+			if self.hoverMenu then
+				self.hoverMenu:RemoveButtonByText("Mute text")
+				if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) then
+					self.hoverMenu:RemoveButtonByText("Hive profile")
+					self.hoverMenu:RemoveButtonByText("NS2Stats profile")
+				end
+			end
+
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
 	end
 
+	-- local originalGUIScoreboardCreatePlayerItem = GUIScoreboard.CreatePlayerItem
+	-- GUIScoreboard.CreatePlayerItem = function(self)
+	-- 	local playerItem = originalGUIScoreboardCreatePlayerItem(self)
+
+	-- end
+
 	local originalGUIScoreboardSendKeyEvent = GUIScoreboard.SendKeyEvent
 	GUIScoreboard.SendKeyEvent = function(self, key, down)
+
+
+		if self.hoverMenu then
+			if self.hoverPlayerClientIndex ~= 0 then
+				local isCommander = Scoreboard_GetPlayerData(self.hoverPlayerClientIndex, "IsCommander")
+				local teamNumber = Scoreboard_GetPlayerData(self.hoverPlayerClientIndex, "EntityTeamNumber")
+				local textColor = Color(1, 1, 1, 1)
+				local teamColorBg
+				local teamColorHighlight
+				local groupLabelColor = Color(0, 0, 0, 0)
+				
+				if isCommander then
+					teamColorBg = GUIScoreboard.kCommanderFontColor
+				elseif teamNumber == 1 then
+					teamColorBg = GUIScoreboard.kBlueColor
+				elseif teamNumber == 2 then
+					teamColorBg = GUIScoreboard.kRedColor
+				else
+					teamColorBg = GUIScoreboard.kSpectatorColor
+				end
+				
+				teamColorHighlight = teamColorBg * 0.60
+				teamColorBg = teamColorBg * 0.4					
+
+				local targetPrefix = prefixes[self.hoverPlayerClientIndex] or ""
+				local targetIsSelf = GetSteamIdForClientIndex(self.hoverPlayerClientIndex) == Client.GetSteamId()
+				local targetIsEligibleForAfkRr = teamNumber == Client.GetLocalClientTeamNumber() and not gameIsInProgress and TGNS.Contains(targetPrefix, "!") and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType)
+				local buttons = {
+					{text="TGNS"}
+				  , {text="  Portal: My Badges", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Badges/Manage") end, condition=targetIsSelf}
+				  , {text="  Portal: My Settings", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/My/Settings") end, condition=targetIsSelf}
+				  , {text="  Send to RR (pre-game AFK)", callback=function(data) TGNS.SendNetworkMessage(Plugin.REQUEST_AFKRR, {c=self.hoverPlayerClientIndex}) end, condition=targetIsEligibleForAfkRr}
+				  , {text="  Admin Feedback", callback=function(data) Client.ShowWebpage(string.format("http://rr.tacticalgamer.com/Feedback/Index?i=%s&n=%s&s=%s", data.ns2id, url_encode(data.playerName), url_encode(data.serverSimpleName))) end, condition=not targetIsSelf}
+				}
+				local ns2id = GetSteamIdForClientIndex(self.hoverPlayerClientIndex)
+				local playerName = Scoreboard_GetPlayerData(self.hoverPlayerClientIndex, "Name")
+				for i = 1, #buttons do
+					local button = buttons[i]
+					self.hoverMenu:RemoveButtonByText(button.text)
+					if button.condition == nil or button.condition then
+						local bgColor = button.callback and teamColorBg or groupLabelColor
+						local highlightColor = button.callback and teamColorHighlight or groupLabelColor
+						button.callback = button.callback or function() end
+						self.hoverMenu:AddButton(button.text, bgColor, highlightColor, textColor, function() button.callback({ns2id=ns2id,playerName=playerName,serverSimpleName=serverSimpleName}) end)
+					end
+				end
+			end
+		end
+
 		local result = originalGUIScoreboardSendKeyEvent(self, key, down)
 		if result then
 			local mouseX, mouseY = Client.GetCursorPosScreen()
@@ -371,6 +445,14 @@ function Plugin:Initialise()
 
 	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
 		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.SERVER_SIMPLE_NAME, function(message)
+		serverSimpleName = message.n
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
+		gameIsInProgress = message.b
 	end)
 
 	return true

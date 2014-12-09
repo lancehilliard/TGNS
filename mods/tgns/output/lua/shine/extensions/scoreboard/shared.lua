@@ -24,6 +24,9 @@ Plugin.HAS_JETPACK = "scoreboard_HAS_JETPACK"
 Plugin.HAS_JETPACK_RESET = "scoreboard_HAS_JETPACK_RESET"
 Plugin.SHOW_TEAM_MESSAGES = "scoreboard_SHOW_TEAM_MESSAGES"
 Plugin.WINORLOSE_WARNING = "scoreboard_WINORLOSE_WARNING"
+Plugin.GAME_IN_PROGRESS = "scoreboard_GAME_IN_PROGRESS"
+Plugin.REQUEST_AFKRR = "scoreboard_REQUEST_AFKRR"
+Plugin.SERVER_SIMPLE_NAME = "scoreboard_SERVER_SIMPLE_NAME"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -47,6 +50,10 @@ TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK, {c="integer", h="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK_RESET, {})
 TGNS.RegisterNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, {s="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.WINORLOSE_WARNING, {})
+TGNS.RegisterNetworkMessage(Plugin.GAME_IN_PROGRESS, {b="boolean"})
+TGNS.RegisterNetworkMessage(Plugin.REQUEST_AFKRR, {c="integer"})
+TGNS.RegisterNetworkMessage(Plugin.SERVER_SIMPLE_NAME, {n="string(20)"})
+
 
 function Plugin:Initialise()
 	self.Enabled = true
