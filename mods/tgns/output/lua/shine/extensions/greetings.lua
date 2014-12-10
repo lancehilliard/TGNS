@@ -103,6 +103,11 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
+    TGNS.ScheduleActionInterval(180, function()
+    	if TGNS.ConvertSecondsToMinutes(TGNS.GetSecondsSinceMapLoaded()) < 16 then
+    		md:ToAllNotifyInfo("2015 brings new reserved slots logic. Are you losing your slot? See our 'Reserved Slots logic change' forum thread for details.")
+    	end
+    end)
     return true
 end
 
