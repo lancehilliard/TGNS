@@ -454,6 +454,12 @@ function Plugin:Initialise()
 		gameIsInProgress = message.b
 	end)
 
+	TGNS.HookNetworkMessage(Plugin.ALERT_ICON, function(message)
+		if Client.WindowNeedsAttention then
+			Client.WindowNeedsAttention()
+		end
+	end)
+
 	return true
 end
 
