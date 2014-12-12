@@ -12,6 +12,10 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
 	-- 	end)
 
+function TGNS.AlertApplicationIconForPlayer(player)
+	Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(player)
+end
+
 function TGNS.GetTwoLists(values)
 	local list1 = {}
 	local list2 = {}
@@ -611,7 +615,7 @@ function TGNS.IsPlayerAFK(player)
                     result = false
             else
                     local LastMoveTime = TGNS.ClientAction(player, function(c) return AFKKick:GetLastMoveTime(c) end)
-                    result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 25)
+                    result = (LastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - LastMoveTime >= 20)
             end
     end
     return result
