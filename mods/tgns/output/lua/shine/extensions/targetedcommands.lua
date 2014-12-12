@@ -139,7 +139,9 @@ end
 local function afkrr(client, targetClient, md, commandName)
 	commandName = commandName or "sh_afkrr"
 	if TGNS.PlayersAreTeammates(TGNS.GetPlayer(client), TGNS.GetPlayer(targetClient)) then
-		TGNS.SendToTeam(TGNS.GetPlayer(targetClient), kTeamReadyRoom, true)
+		local targetPlayer = TGNS.GetPlayer(targetClient)
+		TGNS.SendToTeam(targetPlayer, kTeamReadyRoom, true)
+		TGNS.AlertApplicationIconForPlayer(targetPlayer)
 		md:ToAllNotifyInfo(string.format("%s sent %s (AFK) to ReadyRoom. Learn more in console: sh_help %s", TGNS.GetClientName(client), TGNS.GetClientName(targetClient), commandName))
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Note: Always attempt to communicate with your target before using this command.")
 		log(client, targetClient, commandName)
