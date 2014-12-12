@@ -120,6 +120,10 @@ function Plugin:ClientConnect(client)
 	end
 end
 
+function Plugin:AlertApplicationIconForPlayer(player)
+	TGNS.SendNetworkMessageToPlayer(player, self.ALERT_ICON)
+end
+
 function Plugin:ClientConfirmConnect(client)
 	local player = TGNS.GetPlayer(client)
 	TGNS.ScheduleAction(2, function()
@@ -134,6 +138,7 @@ function Plugin:ClientConfirmConnect(client)
 			TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
 		end
 	end)
+	self:AlertApplicationIconForPlayer(player)
 end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
