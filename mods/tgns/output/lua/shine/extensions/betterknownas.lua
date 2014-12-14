@@ -119,11 +119,13 @@ local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllA
 	end)
 end
 
-local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bkaHeader, akaHeader, messagePrefix)
+local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bkaHeader, akaHeader, messagePrefix, showCurrentBka)
 	bkaData.BKA = newBkaName
 	pdr:Save(bkaData)
 	bkas[targetClient] = newBkaName
-	Shine.Plugins.betterknownas:ShowCurrentBka(actingClient, TGNS.GetClientSteamId(targetClient), bkaHeader, akaHeader, messagePrefix)
+	if showCurrentBka then
+		Shine.Plugins.betterknownas:ShowCurrentBka(actingClient, TGNS.GetClientSteamId(targetClient), bkaHeader, akaHeader, messagePrefix)
+	end
 	TGNS.ExecuteEventHooks("BkaChanged", targetClient)
 end
 
@@ -228,7 +230,7 @@ function Plugin:CreateCommands()
 					pdr:Load(targetSteamId, function(loadResponse)
 						if loadResponse.success then
 							local bkaData = loadResponse.value
-							OnBkaChanged(client, targetClient, bkaData, newBkaName, "BKA", "AKAs", "BKA")
+							OnBkaChanged(client, targetClient, bkaData, newBkaName, "BKA", "AKAs", "BKA", true)
 						else
 							md:ToClientConsole(client, "ERROR: Unable to access BKA data. BKA not changed.")
 							Shared.Message("betterknownas ERROR: unable to access data")
@@ -261,21 +263,32 @@ function Plugin:CreateCommands()
 				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 then
 					bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
 				else
-					if newBkaName == "" then
-						bkaChangeError = "No Better Known As name specified."
+					if newBkaName == nil or newBkaName == "" then
+						bkaChangeError = "You did not specify a new Better Known As name."
 					elseif newBkaName == "clear" then
-						bkaChangeError = "This Better Known As name may not be used."
+						bkaChangeError = "You specified a Better Known As name that is not allowed."
 					end
+				end
+				local showSummary = function(client)
+					md:ToClientConsole(client, "------------------------------------------")
+					md:ToClientConsole(client, string.format("Your current BKA: %s", bkas[client]))
+					md:ToClientConsole(client, string.format("Your current player name: %s", TGNS.GetClientName(client)))
+					md:ToClientConsole(client, string.format("Your current BKA %s match your current player name.", self:IsPlayingWithBkaName(client) and "does" or "does not"))
+					md:ToClientConsole(client, "------------------------------------------")
 				end
 				if bkaChangeError then
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
 					md:ToClientConsole(client, "Usage: sh_name <name>")
+					showSummary(client)
+					md:ToClientConsole(client, "You can get help with this command in our Contact an Admin forum.")
+					md:ToClientConsole(client, "Also, any full admin can fix any BKA you've set for yourself in error. Just ask!")
 				else
 					if warned[client] == newBkaName then
 						TGNS.ExecuteClientCommand(client, string.format("name %s", newBkaName))
 						bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
 						bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
-						OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA")
+						OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
+						showSummary(client)
 					else
 						md:ToClientConsole(client, string.format("WHOA! You're setting your Better Known As name, with a %s cooldown before you can edit it again!", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
 						md:ToClientConsole(client, "Your Better Known As name stays with you if you later choose a different player name.")
