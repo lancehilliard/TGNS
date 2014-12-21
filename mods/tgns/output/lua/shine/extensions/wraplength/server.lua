@@ -13,15 +13,20 @@ local function getWraplengthDescription(client, wraplengthData)
 	return result
 end
 
-function Plugin:ClientConnect(client)
-	pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
-		if loadResponse.success then
-			local length = loadResponse.value.wraplength
-			if length ~= nil then
-				updateClientWraplength(client, length)
-			end
-		else
-			Shared.Message(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)))
+function Plugin:ClientConfirmConnect(client)
+	TGNS.ScheduleAction(3, function()
+		if Shine:IsValidClient(client) then
+			pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
+				if loadResponse.success then
+					local length = loadResponse.value.wraplength
+					if length ~= nil then
+						updateClientWraplength(client, length)
+						md:ToClientConsole(client, getWraplengthDescription(client, loadResponse.value))
+					end
+				else
+					Shared.Message(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)))
+				end
+			end)
 		end
 	end)
 end
