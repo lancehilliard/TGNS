@@ -115,7 +115,7 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("OnSlotTaken", function(client)
 		if not TGNS.GetIsClientVirtual(client) then
 			local connectedTimeInSeconds = Shared.GetSystemTime() - TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(client)
-			if connectedTimeInSeconds < 120 then
+			if connectedTimeInSeconds < 120 and TGNS.IsGameInProgress() then
 				local steamProfileName = Shine.Plugins.betterknownas and Shine.Plugins.betterknownas.GetSteamProfileName and Shine.Plugins.betterknownas:GetSteamProfileName(client)
 				local steamProfileNameDisplay = (TGNS.HasNonEmptyValue(steamProfileName) and TGNS.ToLower(steamProfileName) ~= TGNS.ToLower(TGNS.GetClientName(client))) and string.format("    Steam: %s", steamProfileName) or ""
 				local message = string.format("%s joined (%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), steamProfileNameDisplay)
