@@ -343,6 +343,15 @@ function Plugin:Initialise()
 		TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
 		TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
  	end
+
+ 	TGNS.ScheduleAction(5, function()
+	 	local originalAfkkickPrePlayerInfoUpdate = Shine.Plugins.afkkick.PrePlayerInfoUpdate
+	 	Shine.Plugins.afkkick.PrePlayerInfoUpdate = function(self, playerInfo, player) end
+
+	 	local originalAfkkickPostPlayerInfoUpdate = Shine.Plugins.afkkick.PostPlayerInfoUpdate
+	 	Shine.Plugins.afkkick.PostPlayerInfoUpdate = function(self, playerInfo, player) end
+ 	end)
+
 	return true
 end
 
