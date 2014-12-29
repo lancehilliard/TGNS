@@ -505,6 +505,23 @@ function Plugin:Initialise()
         local team2Players = GetGamerules():GetTeam(kTeam2Index):GetNumPlayers()
         Server.ClientCommand(player, team2Players < team1Players and "jointeamtwo" or "jointeamone")
     end
+
+	local originalMarineRespawnTime = kMarineRespawnTime
+    local originalMarineTeamSpawnInitialStructures = MarineTeam.SpawnInitialStructures
+    MarineTeam.SpawnInitialStructures = function(selfx, techPoint)
+    	local originalGetNumPlayers = selfx.GetNumPlayers
+    	kMarineRespawnTime = originalMarineRespawnTime
+    	if selfx:GetNumPlayers() == 8 then
+    		kMarineRespawnTime = kMarineRespawnTime + 2
+	    	selfx.GetNumPlayers = function(selfy)
+	    		return originalGetNumPlayers(selfy) + 1
+	    	end
+    	end
+    	local tower, commandStation = originalMarineTeamSpawnInitialStructures(selfx, techPoint)
+    	selfx.GetNumPlayers = originalGetNumPlayers
+    	return tower, commandStation
+	end
+
     return true
 end
 
