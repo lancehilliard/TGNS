@@ -512,7 +512,7 @@ function Plugin:Initialise()
     	local originalGetNumPlayers = selfx.GetNumPlayers
     	kMarineRespawnTime = originalMarineRespawnTime
     	if selfx:GetNumPlayers() == 8 then
-    		kMarineRespawnTime = kMarineRespawnTime + 2
+    		-- kMarineRespawnTime = kMarineRespawnTime + 2
 	    	selfx.GetNumPlayers = function(selfy)
 	    		return originalGetNumPlayers(selfy) + 1
 	    	end
