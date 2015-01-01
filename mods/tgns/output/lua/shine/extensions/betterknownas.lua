@@ -4,6 +4,7 @@ local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
 local warned = {}
 local bkas = {}
 local steamPlayerDatas = {}
+local fetchDurations = {}
 
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
@@ -156,6 +157,8 @@ function Plugin:IsPlayingWithoutBkaName(player)
 end
 
 function Plugin:ClientConnect(client)
+	local connectMomentInSeconds = TGNS.GetSecondsSinceEpoch()
+	local md = TGNSMessageDisplayer.Create(string.format("BKAFETCHADMINDEBUG %s", TGNS.GetClientSteamId(client)))
 	if not TGNS.GetIsClientVirtual(client) then
 		local ns2id = TGNS.GetClientSteamId(client)
 		local steamApiProfileUrl = TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
@@ -175,6 +178,9 @@ function Plugin:ClientConnect(client)
 			else
 				Shared.Message("betterknownas ERROR: unable to access data")
 			end
+			local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
+			table.insert(fetchDurations, fetchDuration)
+			md:ToAdminConsole(string.format("%s (%s, %s)", loadResponse.success and "LOADED" or "ERROR", math.floor(fetchDuration), math.floor(TGNSAverageCalculator.CalculateFor(fetchDurations))))
 		end)
 	end
 end
@@ -221,7 +227,7 @@ function Plugin:CreateCommands()
 		md:ToClientConsole(client, "")
 		md:ToClientConsole(client, "Primer Only BKAs:")
 		TGNS.DoFor(clients, function(c)
-			md:ToClientConsole(client, string.format("%s: %s %s", TGNS.GetClientName(c), bkas[c], self:IsPlayingWithBkaName(c) and "<MATCH>" or "<NO MATCH>"))
+			md:ToClientConsole(client, string.format("%s: %s: %s", self:IsPlayingWithBkaName(c) and "MATCH" or "NO MATCH", TGNS.GetClientName(c), bkas[c]))
 		end)
 		md:ToClientConsole(client, "")
 	end)
