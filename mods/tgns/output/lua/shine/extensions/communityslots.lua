@@ -43,8 +43,13 @@ local function IsTargetProtectedStranger(targetClient, playerList)
     return result
 end
 
+local function clientSatisfiesBkaRequirement(client)
+    local result = client == nil or Shine.Plugins.betterknownas:IsPlayingWithBkaName(client)
+    return result
+end
+
 local function IsTargetProtectedPrimerOnly(targetClient, playerList)
-    local candidateClients = TGNS.Where(TGNS.GetPrimerOnlyClients(playerList), function(c) return Shine.Plugins.betterknownas:IsPlayingWithBkaName(c) end)
+    local candidateClients = TGNS.Where(TGNS.GetPrimerOnlyClients(playerList), function(c) return clientSatisfiesBkaRequirement(c) end)
     local result = IsClientAmongLongestPlayed(candidateClients, targetClient, Shine.Plugins.communityslots.Config.MinimumPrimerOnlys)
     -- if result then
     --     tgnsMd:ToAdminConsole(string.format("%s is protected PrimerOnly.", TGNS.GetClientName(targetClient)))
@@ -53,12 +58,12 @@ local function IsTargetProtectedPrimerOnly(targetClient, playerList)
 end
 
 local function IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
-    local result = TGNS.IsPrimerOnlyClient(targetClient) and Shine.Plugins.betterknownas:IsPlayingWithBkaName(targetClient) and #TGNS.GetStrangersClients(playerList) > Shine.Plugins.communityslots.Config.MinimumStrangers
+    local result = TGNS.IsPrimerOnlyClient(targetClient) and clientSatisfiesBkaRequirement(targetClient) and #TGNS.GetStrangersClients(playerList) > Shine.Plugins.communityslots.Config.MinimumStrangers
     return result
 end
 
 local function TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId)
-    local result = (TGNS.IsPrimerOnlyClient(targetClient) and Shine.Plugins.betterknownas:IsPlayingWithBkaName(targetClient)) and (TGNS.IsSteamIdPrimerOnly(joiningSteamId) and Shine.Plugins.betterknownas:IsPlayingWithBkaName(TGNS.GetClientByNs2Id(joiningSteamId)))
+    local result = (TGNS.IsPrimerOnlyClient(targetClient) and clientSatisfiesBkaRequirement(targetClient)) and (TGNS.IsSteamIdPrimerOnly(joiningSteamId) and clientSatisfiesBkaRequirement(TGNS.GetClientByNs2Id(joiningSteamId)))
     return result
 end
 
@@ -355,7 +360,7 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     if result then
         local targetClientHasSlotsPrivilege = not blacklistedClients[targetClient]
         local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
-        local joinerIsPrimerSignerWhoIsNotPlayingWithBka = TGNS.IsSteamIdPrimerOnly(joiningSteamId) and not Shine.Plugins.betterknownas:IsPlayingWithBkaName(TGNS.GetClientByNs2Id(joiningSteamId))
+        local joinerIsPrimerSignerWhoIsNotPlayingWithBka = TGNS.IsSteamIdPrimerOnly(joiningSteamId) and not clientSatisfiesBkaRequirement(TGNS.GetClientByNs2Id(joiningSteamId))
         local targetIsSM = TGNS.IsClientSM(targetClient) and targetClientHasSlotsPrivilege
         local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
         local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList) and targetClientHasSlotsPrivilege
