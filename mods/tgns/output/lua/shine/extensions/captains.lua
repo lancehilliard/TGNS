@@ -26,8 +26,9 @@ local OPT_IN_THROTTLE_IN_SECONDS = 3
 local allPlayersWereArtificiallyForcedToReadyRoom
 local setSpawnsSummaryText
 local confirmedConnectedClients = {}
+local captainsGamesWon = {}
 
-function disableCaptainsMode()
+local function disableCaptainsMode()
 	captainsModeEnabled = false
 	TGNS.DoFor(captainClients, function(c)
 		if Shine:IsValidClient(c) then
@@ -423,6 +424,20 @@ end
 function Plugin:EndGame(gamerules, winningTeam)
 	if not allPlayersWereArtificiallyForcedToReadyRoom then
 		if captainsModeEnabled then
+			if winningTeam == nil then
+				TGNS.DoFor(captainClients, function(c)
+					captainsGamesWon[c] = captainsGamesWon[c] or 0
+					captainsGamesWon[c] = captainsGamesWon[c] + 1
+					Shine.Plugins.scoreboard:SetTeamScoresData(c, captainsGamesWon[c])
+				end)
+			else
+				local winningCaptainClient = TGNS.SingleOrNil(TGNS.GetTeamClients(winningTeam:GetTeamNumber()), function(c) return TGNS.Has(captainClients, c) end)
+				if winningCaptainClient ~= nil then
+					captainsGamesWon[winningCaptainClient] = captainsGamesWon[winningCaptainClient] or 0
+					captainsGamesWon[winningCaptainClient] = captainsGamesWon[winningCaptainClient] + 1
+					Shine.Plugins.scoreboard:SetTeamScoresData(winningCaptainClient, captainsGamesWon[winningCaptainClient])
+				end
+			end
 			gameStarted = false
 			captainsGamesFinished = captainsGamesFinished + 1
 			local message = "Time for Round 2! Everyone switch teams!"
@@ -868,7 +883,10 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		end
 		if captainsModeEnabled then
 			md:ToPlayerNotifyInfo(player, getCaptainsGameStateDescription())
+			Shine.Plugins.scoreboard:SendTeamScoresDatas()
 		end
+	elseif TGNS.IsGameplayTeamNumber(newTeamNumber) and captainsModeEnabled and TGNS.Has(captainClients, client) then
+		Shine.Plugins.scoreboard:SetTeamScoresData(client, captainsGamesWon[client])
     end
     if captainsModeEnabled and not TGNS.IsGameInProgress() then
     	plans[client] = nil
