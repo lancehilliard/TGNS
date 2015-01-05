@@ -28,6 +28,7 @@ Plugin.GAME_IN_PROGRESS = "scoreboard_GAME_IN_PROGRESS"
 Plugin.REQUEST_AFKRR = "scoreboard_REQUEST_AFKRR"
 Plugin.SERVER_SIMPLE_NAME = "scoreboard_SERVER_SIMPLE_NAME"
 Plugin.ALERT_ICON = "scoreboard_ALERT_ICON"
+Plugin.TEAM_SCORES_DATA = "scoreboard_TEAM_SCORES_DATA"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -55,6 +56,7 @@ TGNS.RegisterNetworkMessage(Plugin.GAME_IN_PROGRESS, {b="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.REQUEST_AFKRR, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.SERVER_SIMPLE_NAME, {n="string(20)"})
 TGNS.RegisterNetworkMessage(Plugin.ALERT_ICON, {});
+TGNS.RegisterNetworkMessage(Plugin.TEAM_SCORES_DATA, {mn="string(30)", an="string(30)",ms="integer",as="integer"});
 
 function Plugin:Initialise()
 	self.Enabled = true

@@ -3,6 +3,7 @@ local clientsReadyForScoreboardData = {}
 local approvalCounts = {}
 local vrConfirmed = {}
 local vrConfirmedBy = {}
+local teamScoresDatas = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -52,6 +53,42 @@ end
 
 local function SendNetworkMessage(sourcePlayer, targetPlayer)
 	TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(TGNS.GetClient(sourcePlayer), "captains_group")})
+end
+
+function Plugin:SendTeamScoresDatas()
+	local marineTeamName = "Marine Team"
+	local marineTeamScore = 0
+	local alienTeamName = "Alien Team"
+	local alienTeamScore = 0
+	local teamNameCreator = function(c) return string.format("Team %s", TGNS.GetClientName(c)) end
+	TGNS.DoFor(teamScoresDatas, function(d)
+		local client = TGNS.GetClientByNs2Id(d.i)
+		if client ~= nil then
+			if TGNS.GetClientTeamNumber(client) == kMarineTeamType then
+				marineTeamName = teamNameCreator(client)
+				marineTeamScore = d.s or 0
+			elseif TGNS.GetClientTeamNumber(client) == kAlienTeamType then
+				alienTeamName = teamNameCreator(client)
+				alienTeamScore = d.s or 0
+			end
+		end
+	end)
+	TGNS.DoFor(TGNS.GetSpectatorPlayers(TGNS.GetPlayerList()), function(p)
+		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.TEAM_SCORES_DATA, {mn=marineTeamName,an=alienTeamName,ms=marineTeamScore,as=alienTeamScore})
+	end)
+end
+
+function Plugin:SetTeamScoresData(client, teamScore) 
+	local steamId = TGNS.GetClientSteamId(client)
+	TGNS.DoForReverse(teamScoresDatas, function(d, index)
+		if d.i == steamId then
+			table.remove(teamScoresDatas, index)
+		end
+	end)
+	table.insert(teamScoresDatas, {i=steamId,s=teamScore})
+	TGNS.ScheduleAction(1, function()
+		self:SendTeamScoresDatas()
+	end)
 end
 
 function Plugin:AnnouncePlayerPrefix(player)

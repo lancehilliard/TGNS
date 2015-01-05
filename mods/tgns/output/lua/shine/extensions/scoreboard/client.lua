@@ -460,6 +460,13 @@ function Plugin:Initialise()
 		end
 	end)
 
+	TGNS.HookNetworkMessage(Plugin.TEAM_SCORES_DATA, function(message)
+		Shared.ConsoleCommand(string.format("team1 %s", message.mn))
+		Shared.ConsoleCommand(string.format("team2 %s", message.an))
+		Shared.ConsoleCommand(string.format("score1 %s", message.ms))
+		Shared.ConsoleCommand(string.format("score2 %s", message.as))
+	end)
+
 	return true
 end
 
