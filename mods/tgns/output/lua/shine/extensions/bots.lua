@@ -6,6 +6,7 @@ local originalAutoTeamBalanceSetting = { enabled_after_seconds = 10, enabled_on_
 local originalHatchCooldown = kHatchCooldown
 local originalAlienSpawnTime = kAlienSpawnTime
 local originalkEggGenerationRate = kEggGenerationRate
+local originalkMarineRespawnTime = kMarineRespawnTime
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -43,6 +44,7 @@ local function setBotConfig()
 	kHatchCooldown = 1
 	kAlienSpawnTime = 0.5
 	kEggGenerationRate = 0
+	kMarineRespawnTime = kMarineRespawnTime / 2
 
 	TGNS.ScheduleAction(2, function()
 		alltalk = true
@@ -77,6 +79,7 @@ local function setOriginalConfig()
 	kHatchCooldown = originalHatchCooldown
 	kAlienSpawnTime = originalAlienSpawnTime
 	kEggGenerationRate = originalkEggGenerationRate
+	kMarineRespawnTime = originalkMarineRespawnTime
 
 	if alltalk then
 		alltalk = false
