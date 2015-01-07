@@ -1,4 +1,6 @@
 local isAfkResetEnabled
+local md
+local afkThresholdInMinutes = 2
 
 local function resetAfk(client)
 	if isAfkResetEnabled and client then
@@ -20,6 +22,7 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
+    md = TGNSMessageDisplayer.Create("AFK")
     TGNS.ScheduleAction(5, function()
     	isAfkResetEnabled = Shine.Plugins.afkkick and Shine.Plugins.afkkick.Enabled and Shine.Plugins.afkkick.ResetAFKTime
     end)
@@ -28,6 +31,28 @@ function Plugin:Initialise()
 		resetAfk(TGNS.GetClient(speakerPlayer))
 		return originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
 	end)
+
+	TGNS.ScheduleActionInterval(15, function()
+		TGNS.DoFor(TGNS.GetClientList(), function(c)
+			local p = TGNS.GetPlayer(c)
+			if TGNS.IsPlayerAFK(p) then
+				local lastMoveTime = Shine.Plugins.afkkick:GetLastMoveTime(c)
+				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= TGNS.ConvertMinutesToSeconds(afkThresholdInMinutes)) and TGNS.ClientIsOnPlayingTeam(c) then
+					md:ToPlayerNotifyInfo(p, string.format("AFK %s minutes. Move to avoid being sent to Ready Room.", afkThresholdInMinutes))
+					TGNS.ScheduleAction(6, function()
+						if Shine:IsValidClient(c) then
+							p = TGNS.GetPlayer(c)
+							if TGNS.IsPlayerAFK(p) then
+								md:ToPlayerNotifyInfo(p, string.format("AFK %s minutes. Moved to Ready Room.", afkThresholdInMinutes))
+								TGNS.SendToTeam(p, kTeamReadyRoom, true)
+							end
+						end
+					end)
+				end
+			end
+		end)
+	end)
+
     return true
 end
 
