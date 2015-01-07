@@ -621,7 +621,7 @@ function Plugin:CreateCommands()
 		elseif votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
 			md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
 		elseif TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 15 and votesAllowedUntil ~= math.huge then
-			md:ToPlayerNotifyError(player, "Game duration > 0:15. It's too late to opt-in as a Captain.")
+			md:ToPlayerNotifyError(player, "Game duration > 0:15. It's too late this game to opt-in as a Captain.")
 		else
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			if #playingReadyCaptainClients < 2 or TGNS.Has(readyCaptainClients, client) then
