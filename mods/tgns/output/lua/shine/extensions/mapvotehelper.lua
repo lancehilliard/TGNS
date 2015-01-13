@@ -1,6 +1,7 @@
 local md = TGNSMessageDisplayer.Create()
 local mapNominations = {}
 local mapSetSelected = false
+local gamesPlayedOnCurrentMap = 0
 
 local function show(mapVoteSummaries, totalVotes)
 	local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
@@ -38,7 +39,7 @@ end
 local function checkForMaxNominations()
 	local nominationsNeededToForceTheVote = Shine.Plugins.mapvote.MaxNominations
 	if #Shine.Plugins.mapvote.Vote.Nominated >= nominationsNeededToForceTheVote then
-		if not TGNS.IsGameInProgress() and not Shine.Plugins.mapvote:VoteStarted() and TGNS.GetSecondsSinceMapLoaded() > 600 and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+		if not TGNS.IsGameInProgress() and not Shine.Plugins.mapvote:VoteStarted() and gamesPlayedOnCurrentMap >= 2 and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
 			Shine.Plugins.mapvote.MapCycle.time = 0
 			Shine.Commands.sh_forcemapvote.Func()
 			TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerReadyRoom(p) end))
@@ -53,6 +54,7 @@ Plugin.ConfigName = "mapvotehelper.json"
 function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 17, showVoteReminders)
 	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, checkForMaxNominations)
+	gamesPlayedOnCurrentMap = gamesPlayedOnCurrentMap + 1
 end
 
 function Plugin:CreateCommands()
