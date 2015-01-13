@@ -27,6 +27,7 @@ local allPlayersWereArtificiallyForcedToReadyRoom
 local setSpawnsSummaryText
 local confirmedConnectedClients = {}
 local captainsGamesWon = {}
+local recentCaptainPlayerIds = {}
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -641,10 +642,17 @@ function Plugin:CreateCommands()
 	local wantCaptainsCommand = self:BindCommand("sh_iwantcaptains", "iwantcaptains", function(client)
 		local player = TGNS.GetPlayer(client)
 		local addIfSupportingMember = function(optingInClient)
-			if TGNS.IsClientSM(optingInClient) then
+			if TGNS.IsClientSM(optingInClient) and not TGNS.Has(readyPlayerClients, optingInClient) then
 				readyPlayerClients = readyPlayerClients or {}
 				table.insertunique(readyPlayerClients, optingInClient)
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), "You will be automatically opted-in when votes are allowed.")
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), "You will be automatically opted-in when votes are allowed. Thank you for being a Supporting Member!")
+			end
+		end
+		local addIfRecentCaptain = function(optingInClient)
+			if TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(optingInClient)) and not TGNS.Has(readyPlayerClients, optingInClient) then
+				readyPlayerClients = readyPlayerClients or {}
+				table.insertunique(readyPlayerClients, optingInClient)
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), "You will be automatically opted-in when votes are allowed. Thank you for recently being a Captain!")
 			end
 		end
 		if TGNS.GetSecondsSinceMapLoaded() - (lastOptInAttemptWhen[client] or 0) < OPT_IN_THROTTLE_IN_SECONDS then
@@ -653,6 +661,7 @@ function Plugin:CreateCommands()
 		--  	md:ToPlayerNotifyError(player, "You must be on a team to opt-in during gameplay.")
 		elseif mayVoteYet ~= true and votesAllowedUntil ~= math.huge and not TGNS.IsGameInProgress() then
 			md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment.")
+			addIfRecentCaptain(client)
 			addIfSupportingMember(client)
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
@@ -672,6 +681,7 @@ function Plugin:CreateCommands()
 					if #playingReadyCaptainClients == 1 then
 						md:ToPlayerNotifyError(player, string.format("%s has opted in to be a Captain. One more needed!", TGNS.GetClientName(playingReadyCaptainClients[1])))
 					end
+					addIfRecentCaptain(client)
 					addIfSupportingMember(client)
 				else
 					addReadyPlayerClient(client)
@@ -984,6 +994,22 @@ function Plugin:Initialise()
 		-- 	local hiveLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kAlienTeamType)):GetLocationName()
 		-- 	md:ToAllNotifyInfo(string.format("Marines: %s - Aliens: %s", chairLocationName, hiveLocationName))
 		-- end)
+	end)
+
+	TGNS.ScheduleAction(10, function()
+		local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
+		TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
+			local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
+			if recentCaptainPlayerIdsResponse.success then
+				if #recentCaptainPlayerIdsResponse.result > 0 then
+					TGNS.DoFor(recentCaptainPlayerIdsResponse.result, function(i)
+						table.insert(recentCaptainPlayerIds, i)
+					end)
+				end
+			else
+				TGNS.DebugPrint(string.format("captains ERROR: Unable to access recentcaptainplayerids data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), recentCaptainPlayerIdsResponse.msg, recentCaptainPlayerIdsResponseJson, recentCaptainPlayerIdsResponse.stacktrace))
+			end
+		end)
 	end)
 
     return true
