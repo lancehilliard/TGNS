@@ -147,6 +147,16 @@ function Plugin:Initialise()
 				end
 			end
 		end
+
+		local originalForceMapVoteFunc = Shine.Commands.sh_forcemapvote.Func
+		Shine.Commands.sh_forcemapvote.Func = function(client)
+			if TGNS.IsGameInProgress() then
+				local player = TGNS.GetPlayer(client)
+				md:ToPlayerNotifyError(player, "This command is not available during gameplay.")
+			else
+				originalForceMapVoteFunc(client)
+			end
+		end
 	end)
 
     return true
