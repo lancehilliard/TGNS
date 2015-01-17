@@ -580,23 +580,21 @@ local function sweep()
     local totalPlayersOnServer = TGNS.GetPlayerList()
     local countOfPlayingPlayers = #GetPlayingPlayers()
     TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
-        if #totalPlayersOnServer > 16 and TGNS.IsGameInProgress() then
-            if countOfPlayingPlayers >= 10 or #totalPlayersOnServer >= physicalSlotsCount-3 then
-                local lastTeamChangeTime = inReadyRoomSinceTimes[c]
-                if lastTeamChangeTime then
-                    local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
-                    if secondsRemaining > 0 then
-                        // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
-                        if secondsRemaining < 40 then
-                            tgnsMd:ToPlayerNotifyError(TGNS.GetPlayer(c), string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
-                            AnnounceOtherServerOptionsToBumpedClient(c)
-                        end
-                    else
-                        TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
-                        tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
+        if #totalPlayersOnServer >= physicalSlotsCount-4 then
+            local lastTeamChangeTime = inReadyRoomSinceTimes[c]
+            if lastTeamChangeTime then
+                local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
+                if secondsRemaining > 0 then
+                    // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
+                    if secondsRemaining < 40 then
+                        local p = TGNS.GetPlayer(c)
+                        tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
+                        AnnounceOtherServerOptionsToBumpedClient(c)
+                        Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
                     end
                 else
-                    inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
+                    TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
+                    tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
                 end
             else
                 inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
