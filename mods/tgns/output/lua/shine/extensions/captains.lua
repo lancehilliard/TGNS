@@ -905,11 +905,19 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:ClientConfirmConnect(client)
-	if captainsModeEnabled then
-		TGNS.ScheduleAction(6, function()
-			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), getCaptainsGameStateDescription())
-		end)
-	end
+	TGNS.ScheduleAction(6, function()
+		if Shine:IsValidClient(client) then
+			local message
+			if captainsModeEnabled then
+				message = getCaptainsGameStateDescription()
+			elseif TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(client)) and votesAllowedUntil == nil then
+				message = "Thanks for being a Captain recently! Opt-in anytime, if you like."
+			end
+			if TGNS.HasNonEmptyValue(message) then
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+			end
+		end
+	end)
 	table.insert(confirmedConnectedClients, client)
 end
 
