@@ -911,7 +911,7 @@ function Plugin:ClientConfirmConnect(client)
 			if captainsModeEnabled then
 				message = getCaptainsGameStateDescription()
 			elseif TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(client)) and votesAllowedUntil == nil then
-				message = "Thanks for being a Captain recently! Opt-in anytime, if you like."
+				message = "Thanks for being a Captain recently! Opt-in anytime with sh_iwantcaptains, if you like."
 			end
 			if TGNS.HasNonEmptyValue(message) then
 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
