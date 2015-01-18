@@ -194,7 +194,7 @@ local function UpdateReservedSlotsTag(reservedSlotCount)
 end
 
 local function UpdateReservedSlotAmount()
-    local reservedSlotCount = communitySlotsCount - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) end)
+    local reservedSlotCount = communitySlotsCount - #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) or (TGNS.GetPlayerAfkDurationInSeconds(p) >= 120 and TGNS.IsPlayerReadyRoom(p)) end)
     if lastSetReservedSlotAmount ~= reservedSlotCount then
         --SetReservedSlotAmount(reservedSlotCount)
         UpdateReservedSlotsTag(reservedSlotCount)
