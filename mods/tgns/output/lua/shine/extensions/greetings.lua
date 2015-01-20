@@ -105,7 +105,9 @@ function Plugin:Initialise()
     self.Enabled = true
     TGNS.ScheduleActionInterval(180, function()
     	if TGNS.ConvertSecondsToMinutes(TGNS.GetSecondsSinceMapLoaded()) < 16 then
-    		md:ToAllNotifyInfo("2015 brings new reserved slots logic. Are you losing your slot? See our 'Reserved Slots logic change' forum thread for details.")
+    		TGNS.DoFor(TGNS.GetPlayers(TGNS.GetClientList(function(c) return TGNS.IsPrimerOnlyClient(c) and not Shine.Plugins.betterknownas:HasBkaName(c) end), TGNS.GetPlayerList()), function(p)
+    			md:ToPlayerNotifyInfo(p, "New reserved slots logic as of 1/1/2015. See 'Reserved Slots logic change' forum thread for details.")
+    		end)
     	end
     end)
     return true
