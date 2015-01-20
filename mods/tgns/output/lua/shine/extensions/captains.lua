@@ -98,9 +98,23 @@ local function warnOfPendingCaptainsGameStart()
 	end
 end
 
+local function remindTeam(teamName, teamNumber)
+	if captainsModeEnabled and not (TGNS.IsGameInProgress() or readyTeams[teamName]) then
+		local otherTeamName = TGNS.GetOtherPlayingTeamName(teamName)
+		md:ToTeamNotifyInfo(teamNumber, string.format("Play will begin when %s 'ready' in chat.", readyTeams[otherTeamName] and "your team types" or "both teams type"))
+		TGNS.ScheduleAction(readyTeams[otherTeamName] and 20 or 40, function() remindTeam(teamName, teamNumber) end)
+	end
+end
+
+local function remindTeams()
+	remindTeam("Marines", kMarineTeamType)
+	remindTeam("Aliens", kAlienTeamType)
+end
+
 local function setTimeAtWhichToForceRoundStart()
 	timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START + 30 + (captainsGamesFinished == 0 and 60 or 0)
 	TGNS.ScheduleAction(29, warnOfPendingCaptainsGameStart)
+	TGNS.ScheduleAction(30, remindTeams)
 end
 
 local function showRoster(clients, renderClients, titleMessageId, column1MessageId, column2MessageId, titleY, titleText)
