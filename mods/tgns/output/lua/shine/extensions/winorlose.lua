@@ -13,7 +13,7 @@ local lastNoAttackNoticeTimes = {}
 local lastBannerDisplayCountdownRemaining
 local TEXT_LOCATION_HEIGHT_ADDITIVE = 0.15
 local textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
-local VOTE_START_COOLDOWN = 240
+local VOTE_START_COOLDOWN = 180
 
 local originalGetCanAttack
 
