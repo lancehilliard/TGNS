@@ -324,6 +324,16 @@ function TGNS.PlayerTeamIsOverbalanced(player, playerList)
 	return result
 end
 
+function TGNS.GetOtherPlayingTeamName(teamName)
+	local result
+	if teamName and teamName == "Marines" then
+		result = "Aliens"
+	elseif teamName and teamName == "Aliens" then
+		result = "Marines"
+	end
+	return result
+end
+
 function TGNS.DoTeamSizeComparisonAction(player, playerList, action)
 	local playerTeamCount = #TGNS.GetTeamClients(TGNS.GetPlayerTeamNumber(player), playerList)
 	local otherTeamCount = #TGNS.GetPlayersOnOtherPlayingTeam(player, playerList)
