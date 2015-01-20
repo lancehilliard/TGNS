@@ -149,6 +149,11 @@ function Plugin:IsPlayingWithBkaName(client)
 	return result
 end
 
+function Plugin:HasBkaName(client)
+	local result = bkas[client] ~= nil
+	return result
+end
+
 function Plugin:IsPlayingWithoutBkaName(player)
 	local client = TGNS.GetClient(player)
 	local bkaName = bkas[client]
