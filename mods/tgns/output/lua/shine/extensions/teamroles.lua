@@ -186,7 +186,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
-	if newName ~= kDefaultPlayerName and string.len(newName) > 0 then
+	if oldName ~= kDefaultPlayerName and newName ~= kDefaultPlayerName and string.len(newName) > 0 then
 		if not TGNS.GetIsPlayerVirtual(player) then
 			reviewPlayerForRolesChange(player)
 		end
