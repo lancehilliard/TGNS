@@ -12,6 +12,11 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
 	-- 	end)
 
+function TGNS.GetNumberOfConnectingPlayers()
+	local result = Server.GetNumPlayersTotal() - Server.GetNumPlayers()
+	return result
+end
+
 function TGNS.AlertApplicationIconForPlayer(player)
 	Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(player)
 end
