@@ -20,6 +20,12 @@ function Plugin:PlayerSay(client, networkMessage)
 	resetAfk(client)
 end
 
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+    if TGNS.IsPlayerReadyRoom(player) then
+    	TGNS.MarkPlayerAFK(player)
+    end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create("AFK")
