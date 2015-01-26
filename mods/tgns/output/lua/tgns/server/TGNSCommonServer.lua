@@ -3,6 +3,7 @@ local scheduledActions = {}
 local scheduledActionsErrorCounts = {}
 local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
+local AFK_IDLE_THRESHOLD_SECONDS = 20
 
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
@@ -13,7 +14,7 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 	end)
 
 function TGNS.GetNumberOfConnectingPlayers()
-	local result = Server.GetNumPlayersTotal() - Server.GetNumPlayers()
+	local result = Server.GetNumPlayersTotal() - #TGNS.GetClientList(function(c) return not TGNS.GetIsClientVirtual(c) end)
 	return result
 end
 
@@ -624,6 +625,18 @@ function TGNS.GetPlayerAfkDurationInSeconds(player)
     return result
 end
 
+function TGNS.MarkPlayerAFK(player)
+	local client = TGNS.GetClient(player)
+	if not TGNS.GetIsClientVirtual(client) and Shine.Plugins.afkkick and Shine.Plugins.afkkick.Users then
+		local clientAfkData = Shine.Plugins.afkkick.Users[client]
+		if clientAfkData then
+			local lastMove = Shared.GetTime() - AFK_IDLE_THRESHOLD_SECONDS - 1
+			lastMove = lastMove >= 0 and lastMove or 0
+			clientAfkData.LastMove = lastMove
+		end
+	end
+end
+
 function TGNS.IsPlayerAFK(player)
 	-- local result = false
 	-- local AFKKick = Shine.Plugins.improvedafkhandler
@@ -640,7 +653,7 @@ function TGNS.IsPlayerAFK(player)
             if #TGNS.GetPlayerList() < AFKKick.Config.MinPlayers then
                 result = false
             else
-            	result = TGNS.GetPlayerAfkDurationInSeconds(player) >= 20
+            	result = TGNS.GetPlayerAfkDurationInSeconds(player) >= AFK_IDLE_THRESHOLD_SECONDS
             end
     end
     return result
