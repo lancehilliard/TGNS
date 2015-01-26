@@ -78,7 +78,7 @@ local function warnOfPendingCaptainsGameStart()
 			local b = 0
 			local secondsRemaining = timeAtWhichToForceRoundStart - now
 			if secondsRemaining >= 1 then
-				message = string.format("Game will force-start in %s.", string.DigitalTime(secondsRemaining))
+				message = string.format("Game will force-start in %s.\nType in team chat: !plan", string.DigitalTime(secondsRemaining))
 				if secondsRemaining < 30 then
 					r = 255
 					g = 255
@@ -468,7 +468,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 				end)
 				message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
 			end
-			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 2.5, function()
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 				//swapTeamsAfterDelay(3)
 				md:ToAllNotifyInfo(message)
 			end)
@@ -564,8 +564,13 @@ function Plugin:CreateCommands()
 		-- if captainsModeEnabled and captainsGamesFinished < 2 then
 			if TGNS.PlayerIsOnPlayingTeam(player) then
 				if not TGNS.IsGameInProgress() then
-					plans[client] = plan
-					displayPlansToAll()
+					if TGNS.HasNonEmptyValue(plan) then
+						plans[client] = plan
+						displayPlansToAll()
+					else
+						md:ToPlayerNotifyInfo(player, "When !plan-ing, describe your plan (gorge, comm, lerk, etc).")
+						md:ToPlayerNotifyInfo(player, "For example, put 'gorge' on your scoreboard row: !plan gorge")
+					end
 				else
 					md:ToPlayerNotifyError(player, "Planning notes are not displayed during gameplay.")
 				end
