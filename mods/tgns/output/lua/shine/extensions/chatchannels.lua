@@ -110,6 +110,22 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
+
+	local originalPlayerSayCommandExecute = Shine.Hook.GetTable()["PlayerSay"][-20]:Get("CommandExecute")
+	local originalStringFind = string.find
+	local modifiedStringFind = function(findSelf, str)
+		if str == "[^%w]" then
+			str = "^[!/]"
+		end
+		return originalStringFind(findSelf, str)
+	end
+	Shine.Hook.GetTable()["PlayerSay"][-20]:Add("CommandExecute", function( Client, Message )
+		string.find = modifiedStringFind
+		local result = originalPlayerSayCommandExecute( Client, Message )
+		string.find = originalStringFind
+		return result
+	end)
+
     return true
 end
 
