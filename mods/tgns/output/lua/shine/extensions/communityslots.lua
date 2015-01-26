@@ -194,8 +194,16 @@ local function UpdateReservedSlotsTag(reservedSlotCount)
 end
 
 local function UpdateReservedSlotAmount()
-    local nonPlayingPlayersCount = #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) or ((TGNS.GetPlayerAfkDurationInSeconds(p) >= 120) and TGNS.IsPlayerReadyRoom(p)) end)
-    local reservedSlotCount = communitySlotsCount - nonPlayingPlayersCount - TGNS.GetNumberOfConnectingPlayers()
+    local nonPlayingPlayersCount = #TGNS.Where(TGNS.GetPlayerList(), function(p) return (TGNS.IsPlayerSpectator(p) or ((TGNS.GetPlayerAfkDurationInSeconds(p) >= 120) and TGNS.IsPlayerReadyRoom(p))) and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end) + TGNS.GetNumberOfConnectingPlayers()
+    local usedCommunitySlotsCount = 0
+    local neededExtraSlotCount = Server.GetNumPlayersTotal() - publicSlotsCount
+    if neededExtraSlotCount == 0 then
+        neededExtraSlotCount = nonPlayingPlayersCount <= 2 and nonPlayingPlayersCount or 2
+    end
+    if neededExtraSlotCount > 0 then
+        usedCommunitySlotsCount = (nonPlayingPlayersCount > neededExtraSlotCount) and neededExtraSlotCount or nonPlayingPlayersCount
+    end
+    local reservedSlotCount = communitySlotsCount - usedCommunitySlotsCount
     reservedSlotCount = reservedSlotCount > 0 and reservedSlotCount or 0
     if lastSetReservedSlotAmount ~= reservedSlotCount then
         --SetReservedSlotAmount(reservedSlotCount)
@@ -582,7 +590,7 @@ local function sweep()
     local totalPlayersOnServer = TGNS.GetPlayerList()
     local countOfPlayingPlayers = #GetPlayingPlayers()
     TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
-        if #totalPlayersOnServer >= physicalSlotsCount-4 then
+        if (#totalPlayersOnServer >= physicalSlotsCount-2) and TGNS.IsGameInProgress() then
             local lastTeamChangeTime = inReadyRoomSinceTimes[c]
             if lastTeamChangeTime then
                 local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
@@ -697,6 +705,7 @@ function Plugin:Initialise()
     publicSlotsCount = 16
     communitySlotsCount = physicalSlotsCount - publicSlotsCount
     maximumSpectatorsCount = communitySlotsCount - NUMBER_OF_SLOTS_TO_LEAVE_FOR_JOINERS_DURING_NON_CAPTAINS_GAMES
+
     return true
 end
 
