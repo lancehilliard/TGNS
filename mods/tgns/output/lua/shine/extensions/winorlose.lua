@@ -26,18 +26,34 @@ local function removeBanners()
 end
 
 local function showVoteUpdateMessageToTeamAndSpectators(teamNumber, message)
-	local notify = function(md, teamNumber, message)
+	local notify = function(md, teamNumber, displayTeamNumber, message)
 		if TGNS.Contains(message, "expired") then
-			md:ToTeamNotifyColors(teamNumber, message, 255, 255, 255, 255, 0, 0)
+			md:ToTeamNotifyColors(displayTeamNumber, message, 255, 255, 255, 255, 0, 0)
 		else
-			md:ToTeamNotifyInfo(teamNumber, message)
+			local secondsRemaining = math.ceil((kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning + kWinOrLoseVoteArray[teamNumber].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded())
+			TGNS.DoFor(TGNS.GetTeamClients(displayTeamNumber, TGNS.GetPlayerList()), function(c)
+				local messageRed = 255
+				local messageGreen = 255
+				local messageBlue = 255
+				local p = TGNS.GetPlayer(c)
+				if TGNS.Has(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, c:GetUserId()) then
+					messageRed = 3
+					messageGreen = 192
+					messageBlue = 60
+				elseif secondsRemaining > 0 and secondsRemaining <= 10 then
+					messageRed = 255
+					messageGreen = 255
+					messageBlue = 0
+				end
+				md:ToPlayerNotifyColors(p, message, 255, 255, 255, messageRed, messageGreen, messageBlue)
+			end)
 		end
 	end
 
-	notify(md, teamNumber, message)
+	notify(md, teamNumber, teamNumber, message)
 	local teamName = TGNS.GetTeamName(teamNumber)
 	local teamMd = TGNSMessageDisplayer.Create(string.format("WINORLOSE (%s)", TGNS.ToUpper(teamName)))
-	notify(teamMd, kSpectatorIndex, message)
+	notify(teamMd, teamNumber, kSpectatorIndex, message)
 end
 
 local function SetupWinOrLoseVars()
@@ -278,16 +294,16 @@ local function OnCommandWinOrLose(client)
 							chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
 							md:ToPlayerNotifyError(player, chatMessage)
 						else
-							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s voted to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 						end
 						UpdateWinOrLoseVotes(teamNumber)
 					else
 						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + VOTE_START_COOLDOWN <= TGNS.GetSecondsSinceMapLoaded() then
-							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 							lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
+							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s started a concede vote. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 						else
 							md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
 							md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
