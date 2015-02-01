@@ -43,6 +43,20 @@ local function NotifyRed(player, message, messagesChannel)
 	end
 end
 
+local function NotifyYellow(player, message, messagesChannel)
+	if player ~= nil then
+		Shine:NotifyDualColour(player, 255, 255, 0, "[" .. messagesChannel .. "]", 255, 255, 255, message)
+		SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	end
+end
+
+local function NotifyGreen(player, message, messagesChannel)
+	if player ~= nil then
+		Shine:NotifyDualColour(player, 0, 128, 0, "[" .. messagesChannel .. "]", 255, 255, 255, message)
+		SendConsoleMessage(TGNS.GetClient(player), message, messagesChannel)
+	end
+end
+
 local function NotifyError(player, message, messagesChannel)
 	if player ~= nil then
 		Shine:NotifyDualColour(player, 255, 0, 0, "[" .. messagesChannel .. " ERROR]", 255, 255, 255, message)
@@ -142,6 +156,11 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 		end
 	end
 
+	function result:ToPlayerNotifyColors(player, message, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
+		NotifyColors(player, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
+		Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyinfo: %s", TGNS.GetPlayerName(player), message))
+	end
+
 	function result:ToPlayerNotifyError(player, message)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
@@ -155,6 +174,22 @@ function TGNSMessageDisplayer.Create(messagesChannel)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyRed(player, message, self.messagesChannel)
 			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyred: %s", TGNS.GetPlayerName(player), message))
+		end
+	end
+
+	function result:ToPlayerNotifyYellow(player, message)
+		local client = TGNS.GetClient(player)
+		if not TGNS.GetIsClientVirtual(client) then
+			NotifyYellow(player, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyyellow: %s", TGNS.GetPlayerName(player), message))
+		end
+	end
+
+	function result:ToPlayerNotifyGreen(player, message)
+		local client = TGNS.GetClient(player)
+		if not TGNS.GetIsClientVirtual(client) then
+			NotifyGreen(player, message, self.messagesChannel)
+			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifygreen: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
