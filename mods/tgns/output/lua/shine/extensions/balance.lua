@@ -506,22 +506,22 @@ function Plugin:Initialise()
         Server.ClientCommand(player, team2Players < team1Players and "jointeamtwo" or "jointeamone")
     end
 
-    local originalMarineTeamSpawnInitialStructures = MarineTeam.SpawnInitialStructures
-    MarineTeam.SpawnInitialStructures = function(selfx, techPoint)
-    	local extraIpCost = kInfantryPortalCost/2
-    	local originalGetNumPlayers = selfx.GetNumPlayers
-    	-- if selfx:GetNumPlayers() == 8 then
-	    	selfx.GetNumPlayers = function(selfy)
-	    		return originalGetNumPlayers(selfy) + 9
-	    	end
-	    	selfx:AddTeamResources(-extraIpCost)
-    	-- end
-    	local tower, commandStation = originalMarineTeamSpawnInitialStructures(selfx, techPoint)
-    	md:ToTeamNotifyInfo(selfx:GetTeamNumber(), string.format("Marines get extra IP and lose %s resources.", extraIpCost))
+ --    local originalMarineTeamSpawnInitialStructures = MarineTeam.SpawnInitialStructures
+ --    MarineTeam.SpawnInitialStructures = function(selfx, techPoint)
+ --    	local extraIpCost = kInfantryPortalCost/2
+ --    	local originalGetNumPlayers = selfx.GetNumPlayers
+ --    	-- if selfx:GetNumPlayers() == 8 then
+	--     	selfx.GetNumPlayers = function(selfy)
+	--     		return originalGetNumPlayers(selfy) + 9
+	--     	end
+	--     	selfx:AddTeamResources(-extraIpCost)
+ --    	-- end
+ --    	local tower, commandStation = originalMarineTeamSpawnInitialStructures(selfx, techPoint)
+ --    	md:ToTeamNotifyInfo(selfx:GetTeamNumber(), string.format("Marines get extra IP and lose %s resources.", extraIpCost))
 
-    	selfx.GetNumPlayers = originalGetNumPlayers
-    	return tower, commandStation
-	end
+ --    	selfx.GetNumPlayers = originalGetNumPlayers
+ --    	return tower, commandStation
+	-- end
 
     return true
 end
