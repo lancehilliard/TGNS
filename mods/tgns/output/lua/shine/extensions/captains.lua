@@ -28,6 +28,7 @@ local setSpawnsSummaryText
 local confirmedConnectedClients = {}
 local captainsGamesWon = {}
 local recentCaptainPlayerIds = {}
+local oneRemainingDebugHasBeenPrinted = false
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -245,11 +246,11 @@ local function getCaptainCallText(captainName)
 	return result
 end
 
-local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, numberOfPlayingReadyPlayerClients, numberOfPlayingReadyCaptainClients, firstCaptainName, secondCaptainName)
+local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClient, playingClients, playingReadyPlayerClients, numberOfPlayingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	local result = ""
 	if not captainsModeEnabled then
 		local adjustedNumberOfNeededReadyPlayerClients = getAdjustedNumberOfNeededReadyPlayerClients(playingClients)
-		local remaining = adjustedNumberOfNeededReadyPlayerClients - numberOfPlayingReadyPlayerClients
+		local remaining = adjustedNumberOfNeededReadyPlayerClients - #playingReadyPlayerClients
 		if not captainsModeEnabled and numberOfPlayingReadyCaptainClients == 1 then
 			result = getCaptainCallText(firstCaptainName)
 			--md:ToAllNotifyInfo(result)
@@ -260,6 +261,12 @@ local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClien
 			end
 			local howManyNeededMessage = votesAllowedUntil and string.format("%s more needed!", remaining) or ""
 			result = string.format("%s wants Captains%s! %s", TGNS.GetClientName(headlineReadyClient), headline, howManyNeededMessage)
+
+			if remaining == 1 and not oneRemainingDebugHasBeenPrinted then
+				TGNS.PrintTable(playingReadyPlayerClients, "playingReadyPlayerClients", TGNS.DebugPrint)
+				oneRemainingDebugHasBeenPrinted = true
+			end
+
 		end
 	end
 	return result
@@ -272,7 +279,7 @@ local function updateCaptainsReadyProgress(readyClient)
 	local firstCaptainName = #playingReadyCaptainClients > 0 and TGNS.GetClientName(playingReadyCaptainClients[1]) or "???"
 	local secondCaptainName = twoCaptainsReady and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
 	local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) end)
-	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, #playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
+	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
 		local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, readyClient)
 		local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and pick your team for)" or "")
