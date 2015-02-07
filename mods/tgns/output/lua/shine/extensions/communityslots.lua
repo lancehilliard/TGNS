@@ -194,7 +194,12 @@ local function UpdateReservedSlotsTag(reservedSlotCount)
 end
 
 local function UpdateReservedSlotAmount()
-    local nonPlayingPlayersCount = #TGNS.Where(TGNS.GetPlayerList(), function(p) return (TGNS.IsPlayerSpectator(p) or ((TGNS.GetPlayerAfkDurationInSeconds(p) >= 120) and TGNS.IsPlayerReadyRoom(p))) and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end) + TGNS.GetNumberOfConnectingPlayers()
+    local countNonPlayingPlayersConservatively = (TGNS.GetAbbreviatedDayOfWeek() == "Friday" and TGNS.GetCurrentHour() >= 19) or (TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6)
+    local afkNonPlayingThresholdInSeconds = countNonPlayingPlayersConservatively and 300 or 120
+    local nonPlayingPlayersCount = #TGNS.Where(TGNS.GetPlayerList(), function(p) return (TGNS.IsPlayerSpectator(p) or ((TGNS.GetPlayerAfkDurationInSeconds(p) >= afkNonPlayingThresholdInSeconds) and TGNS.IsPlayerReadyRoom(p))) and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end)
+    if not countNonPlayingPlayersConservatively then
+        nonPlayingPlayersCount = nonPlayingPlayersCount + TGNS.GetNumberOfConnectingPlayers()
+    end
     local usedCommunitySlotsCount = 0
     local neededExtraSlotCount = Server.GetNumPlayersTotal() - publicSlotsCount
     if neededExtraSlotCount == 0 then
