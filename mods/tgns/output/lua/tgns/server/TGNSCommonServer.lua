@@ -18,6 +18,16 @@ function TGNS.GetNumberOfConnectingPlayers()
 	return result
 end
 
+function TGNS.GetAbbreviatedDayOfWeek()
+	local result = os.date("%a")
+	return result
+end
+
+function TGNS.GetCurrentHour()
+	local result = os.date("*t").hour
+	return result
+end
+
 function TGNS.AlertApplicationIconForPlayer(player)
 	Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(player)
 end
