@@ -1039,6 +1039,23 @@ function Plugin:Initialise()
 		end)
 	end)
 
+	local originalServerSetPassword = Server.SetPassword
+	local function disallowPasswordAfterMidnightOnSaturdays()
+		if TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6 then
+				Server.SetPassword("")
+				Server.SetPassword = function()
+					TGNS.ScheduleAction(0, function()
+						md:ToAdminConsole("ERROR: Password disabled between midnight and 6AM Saturday.")
+					end)
+				end
+		else
+			Server.SetPassword = originalServerSetPassword
+			TGNS.ScheduleAction(60, disallowPasswordAfterMidnightOnSaturdays)
+		end
+	end
+
+	TGNS.ScheduleAction(10, disallowPasswordAfterMidnightOnSaturdays)
+
     return true
 end
 
