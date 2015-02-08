@@ -4,8 +4,19 @@ local Plugin = {}
 
 function Plugin:SendVoicecommReminder(sourceClient, targetPlayer)
 	if targetPlayer ~= nil then
-		md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(targetPlayer), string.format("%s: %s, make sure you can respond to voicecomm.", TGNS.GetClientName(sourceClient), TGNS.GetPlayerName(targetPlayer)))
-		md:ToTeamNotifyInfo(TGNS.GetPlayerTeamNumber(targetPlayer), "This server requires that from everyone. Press 'y' for team chat.")
+		local targetPlayerTeamNumber = TGNS.GetPlayerTeamNumber(targetPlayer)
+		local firstMessage = string.format("%s: %s, make sure you can respond to voicecomm.", TGNS.GetClientName(sourceClient), TGNS.GetPlayerName(targetPlayer))
+		local secondMessage = "This server requires that from everyone. Press 'y' for team chat."
+		local messageTargetDisplayer = function(player, message) md:ToPlayerNotifyColors(player, message, 240, 230, 130, 255, 0, 0) end 
+		TGNS.DoFor(TGNS.GetPlayers(TGNS.GetTeamClients(targetPlayerTeamNumber)), function(p)
+			if p ~= targetPlayer then
+				messageTargetDisplayer(p, firstMessage)
+				messageTargetDisplayer(p, secondMessage)
+			else
+				md:ToPlayerNotifyInfo(p, firstMessage)
+				md:ToPlayerNotifyInfo(p, secondMessage)
+			end
+		end)
 	end
 end
 
