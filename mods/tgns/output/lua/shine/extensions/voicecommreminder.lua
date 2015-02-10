@@ -9,7 +9,7 @@ function Plugin:SendVoicecommReminder(sourceClient, targetPlayer)
 		local secondMessage = "This server requires that from everyone. Press 'y' for team chat."
 		local messageTargetDisplayer = function(player, message) md:ToPlayerNotifyColors(player, message, 240, 230, 130, 255, 0, 0) end 
 		TGNS.DoFor(TGNS.GetPlayers(TGNS.GetTeamClients(targetPlayerTeamNumber)), function(p)
-			if p ~= targetPlayer then
+			if p == targetPlayer then
 				messageTargetDisplayer(p, firstMessage)
 				messageTargetDisplayer(p, secondMessage)
 			else
