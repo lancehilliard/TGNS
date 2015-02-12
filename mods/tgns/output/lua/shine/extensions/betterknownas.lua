@@ -54,7 +54,7 @@ function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pre
 				TGNS.DoFor(bkaData.AKAs, function(a) md:ToClientConsole(client, string.format("     %s", a)) end)
 			end
 			md:ToClientConsole(client, " ")
-			whoisMd:ToPlayerNotifyInfo(player, string.format("%s (#%s): %s%s", TGNS.GetPlayerName(targetPlayer), TGNS.GetPlayerGameId(targetPlayer), ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
+			whoisMd:ToPlayerNotifyInfo(player, string.format("%s (#%s%s): %s%s", TGNS.GetPlayerName(targetPlayer), TGNS.GetPlayerGameId(targetPlayer), (TGNS.IsClientAdmin(client) and TGNS.IsClientSM(TGNS.GetClient(targetPlayer))) and " SM" or "", ((bkaData.BKA and bkaData.BKA ~= "") and string.format("%s*, ", bkaData.BKA) or ""), TGNS.Join(bkaData.AKAs, ", ")))
 			md:ToClientConsole(client, " ")
 			md:ToClientConsole(client, "Steam Community URL:")
 			md:ToClientConsole(client, getSteamIdProfileUrl(targetSteamId) or "<unknown>")
@@ -62,12 +62,12 @@ function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pre
 			whoisMd:ToPlayerNotifyInfo(player, string.format("Steam Community Profile Name: %s", getSteamIdProfileName(targetSteamId) or "<unknown>"))
 			md:ToClientConsole(client, " ")
 
-			if not TGNS.IsClientStranger(client) and not TGNS.IsSteamIdStranger(targetSteamId) then
-				local otherAdminPlayers = TGNS.GetPlayers(TGNS.GetClientList(function(c) return c ~= client and TGNS.IsClientAdmin(c) end))
-				TGNS.DoFor(otherAdminPlayers, function(p)
-					md:ToPlayerNotifyInfo(p, string.format("ADMIN: %s queried %s.", TGNS.GetClientName(client), TGNS.GetPlayerName(targetPlayer)))
-				end)
-			end
+			-- if not TGNS.IsClientStranger(client) and not TGNS.IsSteamIdStranger(targetSteamId) then
+			-- 	local otherAdminPlayers = TGNS.GetPlayers(TGNS.GetClientList(function(c) return c ~= client and TGNS.IsClientAdmin(c) end))
+			-- 	TGNS.DoFor(otherAdminPlayers, function(p)
+			-- 		md:ToPlayerNotifyInfo(p, string.format("ADMIN: %s queried %s.", TGNS.GetClientName(client), TGNS.GetPlayerName(targetPlayer)))
+			-- 	end)
+			-- end
 
 
 		else
