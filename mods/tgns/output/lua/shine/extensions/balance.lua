@@ -314,6 +314,13 @@ function Plugin:EndGame(gamerules, winningTeam)
 	mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
 end
 
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	if not balanceInProgress and (TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber)) then
+		local client = TGNS.GetClient(player)
+		md:ToAllConsole(string.format("%s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
+	end
+end
+
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	if not (force or shineForce) then
 		if balanceInProgress and not TGNS.IsTeamNumberSpectator(newTeamNumber) then
