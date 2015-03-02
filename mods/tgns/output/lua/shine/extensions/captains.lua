@@ -1143,7 +1143,11 @@ function Plugin:Initialise()
 		end
 	end
 
-	TGNS.ScheduleAction(10, disallowPasswordAfterMidnightOnSaturdays)
+	TGNS.ScheduleAction(15, function()
+		if TGNS.IsProduction() then
+			disallowPasswordAfterMidnightOnSaturdays()
+		end
+	end)
 
     return true
 end
