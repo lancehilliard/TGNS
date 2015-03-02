@@ -394,6 +394,11 @@ function TGNS.GetPlayerScore(player)
 	return result
 end
 
+function TGNS.IsProduction()
+	local result = TGNS.Has({"Taunt","Chuckle"}, TGNS.GetSimpleServerName())
+	return result
+end
+
 function TGNS.GetSimpleServerName()
 	return TGNS.Config.ServerSimpleName
 end
