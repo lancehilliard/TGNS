@@ -242,6 +242,13 @@ function Plugin:CreateCommands()
 	textTestCommand:AddParam{ Type = "number", Min = 0, Max = 1 }
 	textTestCommand:AddParam{ Type = "number", Min = 0, Max = 1 }
 	textTestCommand:Help( "Show test text to yourself." )
+
+	-- local wyzCommand = self:BindCommand( "otherserverall", nil, function(client)
+	-- 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+	-- 		TGNS.SendNetworkMessageToPlayer(p, self.WYZ)
+	-- 	end)
+	-- end)
+
 end
 
 function Plugin:Initialise()

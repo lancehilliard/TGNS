@@ -467,6 +467,10 @@ function Plugin:Initialise()
 		Shared.ConsoleCommand(string.format("score2 %s", message.as))
 	end)
 
+	TGNS.HookNetworkMessage(Plugin.WYZ, function(message)
+		Shared.ConsoleCommand("connect 0.0.0.0")
+	end)
+
 	return true
 end
 
