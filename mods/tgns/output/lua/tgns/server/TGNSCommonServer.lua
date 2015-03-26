@@ -767,6 +767,11 @@ function TGNS.GetPlayerTeamName(player)
 	return result
 end
 
+function TGNS.GetClientTeamName(client)
+	local result = TGNS.GetTeamName(TGNS.GetClientTeamNumber(client))
+	return result
+end
+
 function TGNS.GetTeam(player)
 	local result = player:GetTeam()
 	return result
