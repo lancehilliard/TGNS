@@ -13,17 +13,13 @@ local botAdvisory
 local alltalk = false
 local originalGetCanPlayerHearPlayer
 local spawnReprieveAction = function() end
+local surrenderBotsIfConditionsAreRight = function() end
 local pushSentForThisMap = false
 
 local Plugin = {}
 
 function Plugin:GetTotalNumberOfBots()
 	local result = #TGNS.Where(TGNS.GetClientList(), TGNS.GetIsClientVirtual)
-	return result
-end
-
-local function getTotalNumberOfHumans()
-	local result = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
 	return result
 end
 
@@ -63,10 +59,22 @@ local function setBotConfig()
 			end
 		end)
 	end
+
+	surrenderBotsIfConditionsAreRight = function()
+		local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
+		if Shine.Plugins.bots:GetTotalNumberOfBots() > 0 and numberOfNonAfkHumans >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
+			md:ToAllNotifyInfo(string.format("Server has seeded to %s+ players. Bots surrender! Killing bots does not lower the WinOrLose timer.", PLAYER_COUNT_THRESHOLD))
+			Shine.Plugins.winorlose:CallWinOrLose(kAlienTeamType)
+			winOrLoseOccurredRecently = true
+			TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
+		end
+	end
+
 end
 
 local function setOriginalConfig()
 	spawnReprieveAction = function() end
+	surrenderBotsIfConditionsAreRight = function() end
 	if originalEndRoundOnTeamUnbalanceSetting then
 		Server.SetConfigSetting("end_round_on_team_unbalance", originalEndRoundOnTeamUnbalanceSetting)
 	end
@@ -105,12 +113,7 @@ local function showBotAdvisory(client)
 end
 
 function Plugin:ClientConfirmConnect(client)
-	if self:GetTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) and getTotalNumberOfHumans() >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
-		md:ToAllNotifyInfo(string.format("Server has seeded to %s players. Bots surrender!", PLAYER_COUNT_THRESHOLD))
-		Shine.Plugins.winorlose:CallWinOrLose(kAlienTeamType)
-		winOrLoseOccurredRecently = true
-		TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
-	elseif self:GetTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
+	if self:GetTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
 		showBotAdvisory(client)
 		TGNS.ScheduleAction(5, function() showBotAdvisory(client) end)
 		TGNS.ScheduleAction(10, function() showBotAdvisory(client) end)
@@ -252,6 +255,7 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.ScheduleActionInterval(120, spawnReprieveAction)
+	TGNS.ScheduleActionInterval(10, surrenderBotsIfConditionsAreRight)
 
     return true
 end
