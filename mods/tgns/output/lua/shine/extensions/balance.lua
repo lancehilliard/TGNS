@@ -133,6 +133,11 @@ local function GetPlayerProjectionAverage(clients, playerProjector)
 	return result
 end
 
+local function GetHiveRankAverage(clients)
+	local result = GetPlayerProjectionAverage(clients, TGNS.GetPlayerHiveSkillRank) or 0
+	return result
+end
+
 local function GetScorePerMinuteAverage(clients)
 	local result = GetPlayerProjectionAverage(clients, GetPlayerScorePerMinuteAverage) or 0
 	return result
@@ -155,7 +160,7 @@ local function SendNextPlayer()
 	local sortedPlayersGetter
 	local teamAverageGetter
 
-	local playerSortValueGetter = TGNS.GetPlayerHiveSkillRank -- GetPlayerScorePerMinuteAverage
+	local playerSortValueGetter = TGNS.GetPlayerHiveSkillRank
 
 	if wantToUseWinLossToBalance then
 		sortedPlayersGetter = function(playerList)
@@ -192,7 +197,7 @@ local function SendNextPlayer()
 			TGNS.DoFor(playerGroups, function(g) TGNS.DoFor(g, addPlayerToResult) end)
 			return result
 		end
-		teamAverageGetter = GetScorePerMinuteAverage
+		teamAverageGetter = GetHiveRankAverage
 	end
 
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
@@ -224,40 +229,10 @@ local function SendNextPlayer()
 	local alienClients = TGNS.GetAlienClients(playerList)
 	local marineAvg = teamAverageGetter(marineClients)
 	local alienAvg = teamAverageGetter(alienClients)
-	local averagesReport = string.format("MarineAvg SPM: %s | AlienAvg SPM: %s", marineAvg, alienAvg)
+	local averagesReport = string.format("MarineAvg Hive Skill: %s | AlienAvg Hive Skill: %s", marineAvg, alienAvg)
 	table.insert(balanceLog, averagesReport)
 	TGNS.ScheduleAction(1, PrintBalanceLog)
 end
-
--- local function pickTeamForExtraPlayer(player)
--- 	local result
--- 	local client = TGNS.GetClient(player)
--- 	if client then
--- 		local playerList = TGNS.GetPlayerList()
--- 		local marinePlayers = TGNS.GetMarinePlayers(playerList)
--- 		local alienPlayers = TGNS.GetAlienPlayers(playerList)
--- 		local marinesCurrentGameSpms = TGNS.Select(marinePlayers, TGNS.GetPlayerScorePerMinute)
--- 		local aliensCurrentGameSpms = TGNS.Select(alienPlayers, TGNS.GetPlayerScorePerMinute)
--- 		local marinesCurrentGameAverageSpm = TGNSAverageCalculator.CalculateFor(marinesCurrentGameSpms)
--- 		local aliensCurrentGameAverageSpm = TGNSAverageCalculator.CalculateFor(aliensCurrentGameSpms)
-
--- 		local marineClients = TGNS.GetClients(marinePlayers)
--- 		local alienClients = TGNS.GetClients(alienPlayers)
--- 		local marinesHistoricalAverageSpm = GetScorePerMinuteAverage(marineClients)
--- 		local aliensHistoricalAverageSpm = GetScorePerMinuteAverage(alienClients)
-
--- 		local marinesCertainlyNeedExtraPlayer = (marinesCurrentGameAverageSpm < aliensCurrentGameAverageSpm) and (marinesHistoricalAverageSpm < aliensHistoricalAverageSpm)
--- 		local aliensCertainlyNeedExtraPlayer = (marinesCurrentGameAverageSpm < aliensCurrentGameAverageSpm) and (marinesHistoricalAverageSpm < aliensHistoricalAverageSpm)
-
--- 		if marinesCertainlyNeedExtraPlayer then
--- 			result = kMarineTeamType
--- 		elseif aliensCertainlyNeedExtraPlayer then
--- 			result = kAlienTeamType
--- 		end
-
--- 	end
--- 	return result
--- end
 
 local function BeginBalance(originatingPlayer)
 	balanceLog = {}
@@ -379,7 +354,7 @@ function Plugin:ClientConfirmConnect(client)
 	local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #(GetPlayerBalance(p).scoresPerMinute or {}) < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
 	if playerHasTooFewLocalScoresPerMinute then
 		local steamId = TGNS.GetClientSteamId(client)
-		TGNSNs2StatsProxy.AddSteamId(steamId)
+		-- TGNSNs2StatsProxy.AddSteamId(steamId)
 	end
 end
 
