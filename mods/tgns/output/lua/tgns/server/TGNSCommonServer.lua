@@ -872,8 +872,8 @@ end
 
 local function ProcessScheduledRequests()
 	local waitingCountDebugLogger = function(count)
-		local httpDebugMd = TGNSMessageDisplayer.Create("TGNSHTTPDEBUG")
-		httpDebugMd:ToAdminConsole(string.format("Currently waiting: %s", count))
+		-- local httpDebugMd = TGNSMessageDisplayer.Create("TGNSHTTPDEBUG")
+		-- httpDebugMd:ToAdminConsole(string.format("Currently waiting: %s", count))
 	end
 
 
