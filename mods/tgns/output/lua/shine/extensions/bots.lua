@@ -255,7 +255,7 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.ScheduleActionInterval(120, spawnReprieveAction)
-	TGNS.ScheduleActionInterval(10, surrenderBotsIfConditionsAreRight)
+	TGNS.ScheduleActionInterval(10, function() surrenderBotsIfConditionsAreRight() end)
 
     return true
 end
