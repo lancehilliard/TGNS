@@ -7,6 +7,9 @@ local originalHatchCooldown = kHatchCooldown
 local originalAlienSpawnTime = kAlienSpawnTime
 local originalkEggGenerationRate = kEggGenerationRate
 local originalkMarineRespawnTime = kMarineRespawnTime
+local originalkMatureHiveHealth = kMatureHiveHealth
+local originalkMatureHiveArmor = kMatureHiveArmor
+
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -41,6 +44,8 @@ local function setBotConfig()
 	kAlienSpawnTime = 0.5
 	kEggGenerationRate = 0
 	kMarineRespawnTime = kMarineRespawnTime / 2
+	kMatureHiveHealth = LiveMixin.kMaxHealth
+	kMatureHiveArmor = LiveMixin.kMaxArmor
 
 	TGNS.ScheduleAction(2, function()
 		alltalk = true
@@ -88,6 +93,8 @@ local function setOriginalConfig()
 	kAlienSpawnTime = originalAlienSpawnTime
 	kEggGenerationRate = originalkEggGenerationRate
 	kMarineRespawnTime = originalkMarineRespawnTime
+	kMatureHiveHealth = originalkMatureHiveHealth
+	kMatureHiveArmor = originalkMatureHiveArmor
 
 	if alltalk then
 		alltalk = false
@@ -170,6 +177,7 @@ function Plugin:CreateCommands()
 			local proposedTotalCount = self:GetTotalNumberOfBots() + countModifier
 			countModifier = proposedTotalCount <= BOT_COUNT_THRESHOLD and countModifier or (countModifier - (proposedTotalCount - BOT_COUNT_THRESHOLD))
 			if countModifier > 0 then
+				setBotConfig()
 				if not TGNS.IsGameInProgress() then
 					local humanNonSpectators = TGNS.Where(players, function(p)
 						local client = TGNS.GetClient(p)
@@ -184,7 +192,6 @@ function Plugin:CreateCommands()
 						pushSentForThisMap = true
 					end
 				end
-				setBotConfig()
 				local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
 				TGNS.ScheduleAction(TGNS.IsGameInProgress() and 0 or 2, function()
 					TGNS.ExecuteServerCommand(command)
