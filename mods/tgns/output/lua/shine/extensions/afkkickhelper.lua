@@ -1,6 +1,6 @@
 local isAfkResetEnabled
 local md
-local afkThresholdInMinutes = 2
+local afkThresholdInMinutes = 1
 
 local function resetAfk(client)
 	if isAfkResetEnabled and client then
