@@ -59,6 +59,22 @@ function Plugin:Initialise()
 	Client.PrecacheLocalSound(approveSoundEventName)
 
 	-- lua\GUIScoreboard.lua
+
+	local originalGUIScoreboardUpdate = GUIScoreboard.Update
+	GUIScoreboard.Update = function(self, deltaTime)
+		originalGUIScoreboardUpdate(self, deltaTime)
+		if self.visible then
+	        local gameTime = PlayerUI_GetGameLengthTime()
+	        local minutes = math.floor( gameTime / 60 )
+	        local seconds = math.floor( gameTime - minutes * 60 )
+	        local serverName = Client.GetServerIsHidden() and "Hidden" or Client.GetConnectedServerName()
+	        local ingamePlayersCount = #Scoreboard_GetPlayerList()
+	        local connectingPlayersCount = PlayerUI_GetNumConnectingPlayers()
+	        local connectingDisplay = connectingPlayersCount > 0 and string.format(" (%d)", connectingPlayersCount) or ""
+	        local gameTimeText = string.format("%s | %s - %d%s %s - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, connectingDisplay, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), minutes, seconds)
+	        self.gameTime:SetText(gameTimeText)
+		end
+	end	
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
 	GUIScoreboard.UpdateTeam = function(self, updateTeam)
 		originalGUIScoreboardUpdateTeam(self, updateTeam)
@@ -66,6 +82,7 @@ function Plugin:Initialise()
 		local teamScores = updateTeam["GetScores"]()
 		local teamNumber = updateTeam["TeamNumber"]
 		local currentPlayerIndex = 1
+		local totalAfkCount = 0
 		for index, player in pairs(playerList) do
 	        local playerRecord = teamScores[currentPlayerIndex]
 	        local clientIndex = playerRecord.ClientIndex
@@ -161,6 +178,9 @@ function Plugin:Initialise()
         		targetPrefixFiltered = TGNS.Replace(targetPrefixFiltered, "*", "")
         		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
 	        end
+	        if TGNS.Contains(targetPrefix, "!") then
+	        	totalAfkCount = totalAfkCount + 1
+	        end
 
 			local playerNoteItemPosition = player.PlayerQueryIcon:GetPosition()
 			playerNoteItemPosition.x = playerNoteItemPosition.x - ((playerVrIconShouldDisplay and 20 or 0) + 3)
@@ -229,6 +249,12 @@ function Plugin:Initialise()
 			end
 
 	        currentPlayerIndex = currentPlayerIndex + 1
+		end
+
+		if totalAfkCount > 0 then
+		    local teamNameGUIItem = updateTeam["GUIs"]["TeamName"]
+		    local teamHeaderText = string.format("%s (AFK (!): %d)", teamNameGUIItem:GetText(), totalAfkCount)
+		    teamNameGUIItem:SetText( teamHeaderText )
 		end
 	end
 
