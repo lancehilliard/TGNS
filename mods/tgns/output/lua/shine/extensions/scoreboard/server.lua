@@ -4,6 +4,7 @@ local approvalCounts = {}
 local vrConfirmed = {}
 local vrConfirmedBy = {}
 local teamScoresDatas = {}
+local vouches = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -143,8 +144,8 @@ end
 function Plugin:ClientConnect(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
-		local url = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
-		TGNS.GetHttpAsync(url, function(approvalsResponseJson)
+		local approvalsUrl = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
+		TGNS.GetHttpAsync(approvalsUrl, function(approvalsResponseJson)
 			if Shine:IsValidClient(client) then
 				local approvalsResponse = json.decode(approvalsResponseJson) or {}
 				if approvalsResponse.success then
@@ -162,6 +163,10 @@ function Plugin:AlertApplicationIconForPlayer(player)
 end
 
 function Plugin:ClientConfirmConnect(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	if TGNS.Has(vouches, steamId) then
+		vrConfirmed[client] = true
+	end
 	local player = TGNS.GetPlayer(client)
 	TGNS.ScheduleAction(2, function()
 		if Shine:IsValidClient(client) then
@@ -169,6 +174,9 @@ function Plugin:ClientConfirmConnect(client)
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
 				if vrConfirmed[c] then
 					TGNS.SendNetworkMessageToPlayer(player, self.VR_CONFIRMED, {c=TGNS.GetClientId(c)})
+				end
+				if vrConfirmed[client] then
+					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.VR_CONFIRMED, {c=TGNS.GetClientId(client)})
 				end
 			end)
 			TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_PROGRESS, {b=TGNS.IsGameInProgress()})
@@ -281,6 +289,18 @@ function Plugin:Initialise()
 					if TGNS.PlayersAreTeammates(player, targetPlayer) and not TGNS.HasClientSignedPrimerWithGames(targetClient) and not vrConfirmed[targetClient] then
 						vrConfirmed[targetClient] = true
 						vrConfirmedBy[targetClient] = TGNS.GetClientName(client)
+						local sourceSteamId = TGNS.GetClientSteamId(client)
+						local targetSteamId = TGNS.GetClientSteamId(targetClient)
+						table.insertunique(vouches, targetSteamId)
+
+						local vouchUrl = string.format("%s&i=%s&v=%s", TGNS.Config.VouchesEndpointBaseUrl, sourceSteamId, targetSteamId)
+						TGNS.GetHttpAsync(vouchUrl, function(vouchResponseJson)
+							local vouchResponse = json.decode(approveResponseJson) or {}
+							if not vouchResponse.success then
+								TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to vouch NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, vouchResponse.msg, vouchResponseJson, vouchResponse.stacktrace))
+							end
+						end)
+
 						TGNS.ExecuteEventHooks("VrConfirmed", targetClient)
 						TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 							TGNS.SendNetworkMessageToPlayer(p, self.VR_CONFIRMED, {c=targetClientIndex})
@@ -348,7 +368,7 @@ function Plugin:Initialise()
 				end
 			end)
 			if vrConfirmed[targetClient] then
-				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vrConfirmedBy[targetClient], TGNS.GetClientName(targetClient)))
+				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vrConfirmedBy[targetClient] or "Someone", TGNS.GetClientName(targetClient)))
 			elseif TGNS.PlayerAction(targetClient, TGNS.IsPlayerAFK) then
 				md:ToPlayerNotifyError(player, string.format("This icon is disabled because %s is AFK.", TGNS.GetClientName(targetClient)))
 			else
@@ -394,6 +414,18 @@ function Plugin:Initialise()
 
 	 	local originalAfkkickPostPlayerInfoUpdate = Shine.Plugins.afkkick.PostPlayerInfoUpdate
 	 	Shine.Plugins.afkkick.PostPlayerInfoUpdate = function(self, playerInfo, player) end
+ 	end)
+
+ 	TGNS.ScheduleAction(2, function()
+		local vouchesUrl = string.format("%s&h=3", TGNS.Config.VouchesEndpointBaseUrl)
+		TGNS.GetHttpAsync(vouchesUrl, function(vouchesResponseJson)
+			local vouchesResponse = json.decode(vouchesResponseJson) or {}
+			if vouchesResponse.success then
+				vouches = vouchesResponse.result
+			else
+				TGNS.DebugPrint(string.format("vouches ERROR: Unable to access vouches data. msg: %s | response: %s | stacktrace: %s", vouchesResponse.msg, vouchesResponseJson, vouchesResponse.stacktrace))
+			end
+		end)
  	end)
 
 	return true
