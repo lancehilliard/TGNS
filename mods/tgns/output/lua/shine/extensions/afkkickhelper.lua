@@ -49,7 +49,7 @@ function Plugin:Initialise()
 						if Shine:IsValidClient(c) then
 							p = TGNS.GetPlayer(c)
 							if TGNS.IsPlayerAFK(p) then
-								md:ToPlayerNotifyInfo(p, string.format("AFK %s minutes. Moved to Ready Room.", afkThresholdInMinutes))
+								md:ToPlayerNotifyInfo(p, string.format("AFK %s minute. Moved to Ready Room.", afkThresholdInMinutes))
 								TGNS.SendToTeam(p, kTeamReadyRoom, true)
 							end
 						end
