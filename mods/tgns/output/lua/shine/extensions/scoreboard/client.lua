@@ -68,10 +68,21 @@ function Plugin:Initialise()
 	        local minutes = math.floor( gameTime / 60 )
 	        local seconds = math.floor( gameTime - minutes * 60 )
 	        local serverName = Client.GetServerIsHidden() and "Hidden" or Client.GetConnectedServerName()
-	        local ingamePlayersCount = #Scoreboard_GetPlayerList()
-	        local connectingPlayersCount = PlayerUI_GetNumConnectingPlayers()
-	        local connectingDisplay = connectingPlayersCount > 0 and string.format(" (%d)", connectingPlayersCount) or ""
-	        local gameTimeText = string.format("%s | %s - %d%s %s - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, connectingDisplay, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), minutes, seconds)
+
+	        local ingamePlayersCount = 0
+		    for teamsIndex, team in ipairs(self.teams) do
+		    	local playerList = team["PlayerList"]
+		    	local teamScores = team["GetScores"]()
+		    	local currentPlayerIndex = 1
+				for playerListIndex, player in pairs(playerList) do
+					local playerRecord = teamScores[currentPlayerIndex]
+					if playerRecord.Ping > 0 then
+						ingamePlayersCount = ingamePlayersCount + 1
+					end
+					currentPlayerIndex = currentPlayerIndex + 1
+				end
+		    end
+	        local gameTimeText = string.format("%s | %s - %d %s - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), minutes, seconds)
 	        self.gameTime:SetText(gameTimeText)
 		end
 	end	
@@ -253,8 +264,10 @@ function Plugin:Initialise()
 
 		if totalAfkCount > 0 then
 		    local teamNameGUIItem = updateTeam["GUIs"]["TeamName"]
-		    local teamHeaderText = string.format("%s (AFK (!): %d)", teamNameGUIItem:GetText(), totalAfkCount)
-		    teamNameGUIItem:SetText( teamHeaderText )
+		    local teamNameGUIItemText = teamNameGUIItem:GetText()
+			local truncatedTeamNameGUIItemText = string.sub(teamNameGUIItemText, 1, string.len(teamNameGUIItemText) - 1)
+		    local teamHeaderText = string.format("%s, %d AFK)", truncatedTeamNameGUIItemText, totalAfkCount)
+		    teamNameGUIItem:SetText(teamHeaderText)
 		end
 	end
 
