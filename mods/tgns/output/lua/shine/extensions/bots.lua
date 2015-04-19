@@ -9,7 +9,6 @@ local originalkEggGenerationRate = kEggGenerationRate
 local originalkMarineRespawnTime = kMarineRespawnTime
 local originalkMatureHiveHealth = kMatureHiveHealth
 local originalkMatureHiveArmor = kMatureHiveArmor
-
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -18,8 +17,17 @@ local originalGetCanPlayerHearPlayer
 local spawnReprieveAction = function() end
 local surrenderBotsIfConditionsAreRight = function() end
 local pushSentForThisMap = false
+local freeCragEntity
 
 local Plugin = {}
+
+local function createFreeCragEntity()
+	local hives = GetEntitiesForTeam( "Hive", kAlienTeamType )
+	local hive = hives[ math.random(#hives) ]
+	local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
+	freeCragEntity = CreateEntity("crag", pos, kAlienTeamType)
+	freeCragEntity:SetConstructionComplete()
+end
 
 function Plugin:GetTotalNumberOfBots()
 	local result = #TGNS.Where(TGNS.GetClientList(), TGNS.GetIsClientVirtual)
@@ -243,9 +251,16 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 		local humanSameTeamPlayersWithFewerThan100Resources = TGNS.Where(TGNS.GetPlayersOnSameTeam(attackerEntity), function(p) return TGNS.GetPlayerResources(p) < 100 and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end)
 		if #humanSameTeamPlayersWithFewerThan100Resources > 0 then
 			TGNS.DoFor(humanSameTeamPlayersWithFewerThan100Resources, function(p)
-				TGNS.AddPlayerResources(p, 1 / #humanSameTeamPlayersWithFewerThan100Resources)
+				TGNS.AddPlayerResources(p, 2 / #humanSameTeamPlayersWithFewerThan100Resources)
 			end)
 		end
+		if inflictorEntity:GetParent() == attackerEntity then
+			StartSoundEffectAtOrigin(CatPack.kPickupSound, attackerEntity:GetOrigin())
+    		attackerEntity:ApplyCatPack()
+		end
+	end
+	if freeCragEntity ~= nil and victimEntity == freeCragEntity then
+		createFreeCragEntity()
 	end
 end
 
@@ -263,6 +278,12 @@ function Plugin:Initialise()
 
 	TGNS.ScheduleActionInterval(120, spawnReprieveAction)
 	TGNS.ScheduleActionInterval(10, function() surrenderBotsIfConditionsAreRight() end)
+
+	TGNS.RegisterEventHook("GameStarted", function()
+		if self:GetTotalNumberOfBots() > 0 then
+			createFreeCragEntity()
+		end
+	end)
 
     return true
 end
