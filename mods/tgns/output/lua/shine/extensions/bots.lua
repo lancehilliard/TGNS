@@ -57,7 +57,7 @@ local function setBotConfig()
 
 	TGNS.ScheduleAction(2, function()
 		alltalk = true
-		md:ToAllNotifyInfo("All talk enabled during bots play.")
+		-- md:ToAllNotifyInfo("All talk enabled during bots play.")
 	end)
 
 	spawnReprieveAction = function()
@@ -80,6 +80,7 @@ local function setBotConfig()
 			Shine.Plugins.winorlose:CallWinOrLose(kAlienTeamType)
 			winOrLoseOccurredRecently = true
 			TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
+			Shine.Plugins.push:Push("tgns-seeded", "TGNS seeded!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 		end
 	end
 
@@ -124,6 +125,17 @@ end
 local function showBotAdvisory(client)
 	if Shine:IsValidClient(client) then
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), botAdvisory)
+		md:ToClientConsole(client, "------------")
+		md:ToClientConsole(client, " TGNS BOTS")
+		md:ToClientConsole(client, "------------")
+		md:ToClientConsole(client, string.format("Bots are used on TGNS to seed the server to %s non-AFK human players.", PLAYER_COUNT_THRESHOLD))
+		md:ToClientConsole(client, "When the server reaches this threshold, the aliens surrender and humans-only NS2 play begins.")
+		md:ToClientConsole(client, "During TGNS bots play: marines spawn more quickly than in normal NS2 play")
+		md:ToClientConsole(client, "During TGNS bots play: marines receive personal resources more quickly than in normal NS2 play")
+		md:ToClientConsole(client, "During TGNS bots play: marines receive catpacks when killing bots")
+		md:ToClientConsole(client, "During TGNS bots play: alien hives have more health")
+		md:ToClientConsole(client, "During TGNS bots play: aliens get one free persistent crag")
+		md:ToClientConsole(client, "During TGNS bots play: alltalk is enabled")
 	end
 end
 
@@ -131,7 +143,7 @@ function Plugin:ClientConfirmConnect(client)
 	if self:GetTotalNumberOfBots() > 0 and not TGNS.GetIsClientVirtual(client) then
 		showBotAdvisory(client)
 		TGNS.ScheduleAction(5, function() showBotAdvisory(client) end)
-		TGNS.ScheduleAction(10, function() showBotAdvisory(client) end)
+		TGNS.ScheduleAction(12, function() showBotAdvisory(client) end)
 		TGNS.ScheduleAction(20, function() showBotAdvisory(client) end)
 		TGNS.ScheduleAction(40, function() showBotAdvisory(client) end)
 	end
@@ -192,10 +204,14 @@ function Plugin:CreateCommands()
 						return not TGNS.GetIsClientVirtual(client) and not TGNS.IsPlayerSpectator(p)
 					end)
 					TGNS.DoFor(humanNonSpectators, function(p)
+						local c = TGNS.GetClient(p)
 						TGNS.SendToTeam(p, kMarineTeamType, true)
+						TGNS.ScheduleAction(2, function() showBotAdvisory(c) end)
+						TGNS.ScheduleAction(8, function() showBotAdvisory(c) end)
+						TGNS.ScheduleAction(16, function() showBotAdvisory(c) end)
 					end)
 					Shine.Plugins.forceroundstart:ForceRoundStart()
-					if not pushSentForThisMap then
+					if not pushSentForThisMap and TGNS.IsProduction() then
 						Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 						pushSentForThisMap = true
 					end
@@ -239,7 +255,7 @@ function Plugin:CreateCommands()
 		else
 			PLAYER_COUNT_THRESHOLD = max
 			md:ToPlayerNotifyInfo(player, string.format("Bots player threshold set to %s.", max))
-			botAdvisory = string.format("Server switches to NS after %s players join.", PLAYER_COUNT_THRESHOLD)
+			botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS after %s players join. Console for details.", PLAYER_COUNT_THRESHOLD)
 		end
 	end)
 	humansMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
@@ -269,7 +285,7 @@ function Plugin:Initialise()
 	md = TGNSMessageDisplayer.Create("BOTS")
 	TGNS.ScheduleAction(10, setOriginalConfig)
 	self:CreateCommands()
-	botAdvisory = string.format("Server switches to NS after %s players join.", PLAYER_COUNT_THRESHOLD)
+	botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS after %s players join. Console for details.", PLAYER_COUNT_THRESHOLD)
 
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
 		local result = alltalk or originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
