@@ -280,7 +280,7 @@ local function getDescriptionOfWhatElseIsNeededToPlayCaptains(headlineReadyClien
 end
 
 local function getPlayingClients()
-	local result = rolandHasBeenUsed and TGNS.GetClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (TGNS.IsPlayerSpectator(p) or (false and TGNS.IsPlayerAFK(p))) end)) or TGNS.GetClients(TGNS.Where(TGNS.GetPlayerList(), TGNS.PlayerIsOnPlayingTeam))
+	local result = rolandHasBeenUsed and TGNS.GetClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (TGNS.IsPlayerSpectator(p) or (TGNS.IsPlayerAFK(p))) end)) or TGNS.GetClients(TGNS.Where(TGNS.GetPlayerList(), TGNS.PlayerIsOnPlayingTeam))
 	return result
 end
 
@@ -661,9 +661,9 @@ function Plugin:CreateCommands()
 	pickCommand:Help( "<player> Pick the given player for your Captains Game team." )
 
 	local captainsDebugCommand = self:BindCommand( "sh_captainsdebug", nil, function(client)
-		local clientList = TGNS.GetClientList()
-		local captainsClients = TGNS.Where(clientList, function(c) TGNS.Has(readyCaptainClients, c) end)
-		local optedInClients = TGNS.Where(clientList, function(c) TGNS.Has(readyPlayerClients, c) end)
+		local clientList = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
+		local captainsClients = TGNS.Where(clientList, function(c) return TGNS.Has(readyCaptainClients, c) end)
+		local optedInClients = TGNS.Where(clientList, function(c) return TGNS.Has(readyPlayerClients, c) end)
 		local notOptedInClients = TGNS.Where(clientList, function(c) return not TGNS.Has(captainsClients, c) and not TGNS.Has(optedInClients, c) end)
 		TGNS.SortDescending(captainsClients, TGNS.GetClientName)
 		TGNS.SortDescending(optedInClients, TGNS.GetClientName)
