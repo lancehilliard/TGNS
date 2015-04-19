@@ -556,7 +556,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
         if not (force or shineForce) then
             local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumEffectiveSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
-            if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled then
+            if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
                 tgnsMd:ToPlayerNotifyError(player, "Mid-game spectate is available only when teams are 8v8.")
                 cancel = true
             end
@@ -588,10 +588,8 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 local function sweep()
-    local totalPlayersOnServer = TGNS.GetPlayerList()
-    local countOfPlayingPlayers = #GetPlayingPlayers()
-    TGNS.DoFor(TGNS.GetReadyRoomClients(totalPlayersOnServer), function(c)
-        if (#totalPlayersOnServer >= physicalSlotsCount-2) and TGNS.IsGameInProgress() then
+    TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c)
+        if (Server.GetNumPlayersTotal() >= physicalSlotsCount-2) and TGNS.IsGameInProgress() then
             local lastTeamChangeTime = inReadyRoomSinceTimes[c]
             if lastTeamChangeTime then
                 local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
