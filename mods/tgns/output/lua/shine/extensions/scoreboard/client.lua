@@ -266,7 +266,7 @@ function Plugin:Initialise()
 		    local teamNameGUIItem = updateTeam["GUIs"]["TeamName"]
 		    local teamNameGUIItemText = teamNameGUIItem:GetText()
 			local truncatedTeamNameGUIItemText = string.sub(teamNameGUIItemText, 1, string.len(teamNameGUIItemText) - 1)
-		    local teamHeaderText = string.format("%s, %d AFK)", truncatedTeamNameGUIItemText, totalAfkCount)
+		    local teamHeaderText = string.format("%s, with %d AFK)", truncatedTeamNameGUIItemText, totalAfkCount)
 		    teamNameGUIItem:SetText(teamHeaderText)
 		end
 	end
