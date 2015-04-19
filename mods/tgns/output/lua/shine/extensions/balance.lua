@@ -23,6 +23,7 @@ local balanceDataInitializer = function(balance)
 	return balance
 end
 local npdr
+local preventTeamJoinMessagesDueToRecentEndGame
 
 local pdr = TGNSPlayerDataRepository.Create("balance", balanceDataInitializer)
 
@@ -287,11 +288,15 @@ local Plugin = {}
 
 function Plugin:EndGame(gamerules, winningTeam)
 	mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
+	preventTeamJoinMessagesDueToRecentEndGame = true
+	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+		preventTeamJoinMessagesDueToRecentEndGame = false
+	end)
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
-	if not balanceInProgress and (TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber)) then
-		local client = TGNS.GetClient(player)
+	local client = TGNS.GetClient(player)
+	if not balanceInProgress and not preventTeamJoinMessagesDueToRecentEndGame and (TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber)) and not TGNS.GetIsClientVirtual(client) then
 		md:ToAllConsole(string.format("%s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
 	end
 end
