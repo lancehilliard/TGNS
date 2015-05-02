@@ -106,6 +106,7 @@
 !mods/tgns/output/lua/shine/extensions/reluse.lua
 !mods/tgns/output/lua/shine/extensions/rookiethrottle.lua
 !mods/tgns/output/lua/shine/extensions/scoreboardicons.lua
+!mods/tgns/output/lua/shine/extensions/sidebar.lua
 !mods/tgns/output/lua/shine/extensions/spawnselectionoverrides.lua
 !mods/tgns/output/lua/shine/extensions/speclimit.lua
 !mods/tgns/output/lua/shine/extensions/speclisten.lua
