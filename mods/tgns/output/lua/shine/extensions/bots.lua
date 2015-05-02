@@ -129,10 +129,12 @@ local function showBotAdvisory(client)
 		md:ToClientConsole(client, " TGNS BOTS")
 		md:ToClientConsole(client, "------------")
 		md:ToClientConsole(client, string.format("Bots are used on TGNS to seed the server to %s non-AFK human players.", PLAYER_COUNT_THRESHOLD))
-		md:ToClientConsole(client, "When the server reaches this threshold, the aliens surrender and humans-only NS2 play begins.")
+		md:ToClientConsole(client, string.format("When the server reaches %s non-AFK human players, the aliens surrender and humans-only NS2 play begins.", PLAYER_COUNT_THRESHOLD))
 		md:ToClientConsole(client, "During TGNS bots play: marines spawn more quickly than in normal NS2 play")
 		md:ToClientConsole(client, "During TGNS bots play: marines receive personal resources more quickly than in normal NS2 play")
+		md:ToClientConsole(client, "During TGNS bots play: marines spawn more quickly than in normal NS2 play")
 		md:ToClientConsole(client, "During TGNS bots play: marines receive catpacks when killing bots")
+		md:ToClientConsole(client, "During TGNS bots play: marines receive a clip of ammo when killing bots")
 		md:ToClientConsole(client, "During TGNS bots play: alien hives have more health")
 		md:ToClientConsole(client, "During TGNS bots play: aliens get one free persistent crag")
 		md:ToClientConsole(client, "During TGNS bots play: alltalk is enabled")
@@ -199,11 +201,11 @@ function Plugin:CreateCommands()
 			if countModifier > 0 then
 				setBotConfig()
 				if not TGNS.IsGameInProgress() then
-					local humanNonSpectators = TGNS.Where(players, function(p)
+					local humanNonSpectatorsNotInSidebar = TGNS.Where(players, function(p)
 						local client = TGNS.GetClient(p)
-						return not TGNS.GetIsClientVirtual(client) and not TGNS.IsPlayerSpectator(p)
+						return not TGNS.GetIsClientVirtual(client) and not TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.PlayerIsInSidebar and Shine.Plugins.sidebar:PlayerIsInSidebar(p))
 					end)
-					TGNS.DoFor(humanNonSpectators, function(p)
+					TGNS.DoFor(humanNonSpectatorsNotInSidebar, function(p)
 						local c = TGNS.GetClient(p)
 						TGNS.SendToTeam(p, kMarineTeamType, true)
 						TGNS.ScheduleAction(2, function() showBotAdvisory(c) end)
@@ -270,10 +272,15 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 				TGNS.AddPlayerResources(p, 2 / #humanSameTeamPlayersWithFewerThan100Resources)
 			end)
 		end
-		if inflictorEntity:GetParent() == attackerEntity then
+		if inflictorEntity:GetParent() == attackerEntity or (inflictorEntity.GetClassName and inflictorEntity:GetClassName() == "Grenade") then
 			StartSoundEffectAtOrigin(CatPack.kPickupSound, attackerEntity:GetOrigin())
     		attackerEntity:ApplyCatPack()
-		end
+
+		    local weapon = attackerEntity:GetActiveWeapon()
+		    if weapon and weapon.GiveAmmo then
+			    weapon:GiveAmmo(1)
+		    end
+	    end
 	end
 	if freeCragEntity ~= nil and victimEntity == freeCragEntity then
 		createFreeCragEntity()
@@ -288,7 +295,10 @@ function Plugin:Initialise()
 	botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS after %s players join. Console for details.", PLAYER_COUNT_THRESHOLD)
 
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
-		local result = alltalk or originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
+		local result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
+		if alltalk and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.IsEitherPlayerInSidebar and Shine.Plugins.sidebar:IsEitherPlayerInSidebar(listenerPlayer, speakerPlayer)) then
+			result = true
+		end
 		return result
 	end)
 
