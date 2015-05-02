@@ -202,6 +202,9 @@ local function SendNextPlayer()
 	end
 
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
+	if Shine.Plugins.sidebar and Shine.Plugins.sidebar.PlayerIsInSidebar then
+		playerList = TGNS.Where(playerList, function(p) return not Shine.Plugins.sidebar:PlayerIsInSidebar(p) end)
+	end
 	local sortedPlayers = sortedPlayersGetter(playerList)
 	local eligiblePlayers = sortedPlayers -- TGNS.Where(sortedPlayers, function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) end)
 	local gamerules = GetGamerules()
@@ -252,7 +255,7 @@ local function svBalance(client, forcePlayersToReadyRoom)
 		md:ToPlayerNotifyError(player, string.format("Balance has a server-wide cooldown of %s seconds.", RECENT_BALANCE_DURATION_IN_SECONDS))
 	elseif (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) then
 		md:ToPlayerNotifyError(player, "You may not Balance during Captains.")
-	elseif mayBalanceAt > Shared.GetTime() and not forcePlayersToReadyRoom then
+	elseif mayBalanceAt > Shared.GetTime() and not forcePlayersToReadyRoom and not (Shared.GetTime() < 120 and TGNS.GetNumberOfConnectingPlayers() == 0) then
 		md:ToPlayerNotifyError(player, "Wait a bit to let players join teams of choice.")
 	elseif Shine.Plugins.mapvote:VoteStarted() then
 		md:ToPlayerNotifyError(player, "You may not balance while a map vote is in progress.")
