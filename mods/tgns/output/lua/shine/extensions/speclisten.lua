@@ -94,7 +94,7 @@ function Plugin:Initialise()
 	specmodes = {}
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
 		local result
-		if TGNS.IsPlayerSpectator(listenerPlayer) then
+		if TGNS.IsPlayerSpectator(listenerPlayer) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.IsEitherPlayerInSidebar and Shine.Plugins.sidebar:IsEitherPlayerInSidebar(listenerPlayer, speakerPlayer)) then
 			result = listenerSpectatorShouldHearSpeaker(listenerPlayer, speakerPlayer)
 		else
 			result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
