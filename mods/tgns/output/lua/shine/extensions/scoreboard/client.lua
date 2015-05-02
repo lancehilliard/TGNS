@@ -82,7 +82,8 @@ function Plugin:Initialise()
 					currentPlayerIndex = currentPlayerIndex + 1
 				end
 		    end
-	        local gameTimeText = string.format("%s | %s - %d %s - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), minutes, seconds)
+	        local numPlayersConnecting = PlayerUI_GetNumConnectingPlayers()
+	        local gameTimeText = string.format("%s | %s - (%d %s%s) - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), numPlayersConnecting > 0 and string.format(", %d %s", numPlayersConnecting, Locale.ResolveString("SB_CONNECTING")) or "", minutes, seconds)
 	        self.gameTime:SetText(gameTimeText)
 		end
 	end	
