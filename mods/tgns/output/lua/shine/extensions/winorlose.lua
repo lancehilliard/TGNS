@@ -347,7 +347,7 @@ function Plugin:TakeDamage( Ent, Damage, Attacker, Inflictor, Point, Direction, 
 			local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
 			local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
 			local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
-			Shine:SendText(client, Shine.BuildScreenMessage(70, 0.5, 0.4, "You cannot do damage.", 6, r, g, b, 1, 3, 0 ) )
+			Shine:SendText(client, Shine.BuildScreenMessage(70, 0.5, 0.6, "You cannot do damage.", 6, r, g, b, 1, 3, 0 ) )
 			lastNoAttackNoticeTimes[client] = Shared.GetTime()
 		end
 	else
