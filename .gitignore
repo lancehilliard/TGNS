@@ -220,3 +220,7 @@
 !specs/tgns/spec_AverageCalculator.lua
 !specs/tgns/spec_enforceteamsizes.lua
 !specs/tgns/spec_afkkickimproved.lua
+
+# And then whitelist stock overwrite files
+
+!mods/tgns/output/lua/bots/SkulkBrain_Data.lua
