@@ -9,6 +9,7 @@ local originalkEggGenerationRate = kEggGenerationRate
 local originalkMarineRespawnTime = kMarineRespawnTime
 local originalkMatureHiveHealth = kMatureHiveHealth
 local originalkMatureHiveArmor = kMatureHiveArmor
+local originalGetGestateTechId = Egg.GetGestateTechId
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -18,6 +19,7 @@ local spawnReprieveAction = function() end
 local surrenderBotsIfConditionsAreRight = function() end
 local pushSentForThisMap = false
 local freeCragEntity
+local alienTeamResBonus = 0
 
 local Plugin = {}
 
@@ -54,6 +56,23 @@ local function setBotConfig()
 	kMarineRespawnTime = kMarineRespawnTime / 2
 	kMatureHiveHealth = LiveMixin.kMaxHealth
 	kMatureHiveArmor = LiveMixin.kMaxArmor
+
+	Egg.GetGestateTechId = function()
+		local result = kTechId.Skulk
+		if math.random() < .005 then
+			local random = math.random()
+			if random < .25 then
+				result = kTechId.Gorge
+			elseif random < .5 then
+				result = kTechId.Lerk
+			elseif random < .75 then
+				result = kTechId.Fade
+			else
+				result = kTechId.Onos
+			end
+		end
+		return result
+	end
 
 	TGNS.ScheduleAction(2, function()
 		alltalk = true
@@ -104,6 +123,7 @@ local function setOriginalConfig()
 	kMarineRespawnTime = originalkMarineRespawnTime
 	kMatureHiveHealth = originalkMatureHiveHealth
 	kMatureHiveArmor = originalkMatureHiveArmor
+	Egg.GetGestateTechId = originalGetGestateTechId
 
 	if alltalk then
 		alltalk = false
@@ -138,6 +158,7 @@ local function showBotAdvisory(client)
 		md:ToClientConsole(client, "During TGNS bots play: alien hives have more health")
 		md:ToClientConsole(client, "During TGNS bots play: aliens get one free persistent crag")
 		md:ToClientConsole(client, "During TGNS bots play: alltalk is enabled")
+		md:ToClientConsole(client, "Many thanks to TAW|Leech for contributing to our skulk bot brain code!")
 	end
 end
 
@@ -266,20 +287,27 @@ end
 
 function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
 	if victimEntity and victimEntity:isa("Player") and TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) and attackerEntity and attackerEntity:isa("Player") then
-		local humanSameTeamPlayersWithFewerThan100Resources = TGNS.Where(TGNS.GetPlayersOnSameTeam(attackerEntity), function(p) return TGNS.GetPlayerResources(p) < 100 and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end)
-		if #humanSameTeamPlayersWithFewerThan100Resources > 0 then
-			TGNS.DoFor(humanSameTeamPlayersWithFewerThan100Resources, function(p)
-				TGNS.AddPlayerResources(p, 2 / #humanSameTeamPlayersWithFewerThan100Resources)
-			end)
+		local humanPlayersWithFewerThan100Resources = TGNS.Where(TGNS.GetPlayers(TGNS.GetPlayingClients(TGNS.GetPlayerList())), function(p) return TGNS.GetPlayerResources(p) < 100 and not TGNS.ClientAction(p, TGNS.GetIsClientVirtual) end)
+		TGNS.DoFor(humanPlayersWithFewerThan100Resources, function(p)
+			TGNS.AddPlayerResources(p, 2 / #humanPlayersWithFewerThan100Resources)
+		end)
+		alienTeamResBonus = alienTeamResBonus + 0.25
+		if alienTeamResBonus >= 1 then
+			GetGamerules():GetTeam(kAlienTeamType):AddTeamResources(1)
+			alienTeamResBonus = alienTeamResBonus - 1
 		end
 		if inflictorEntity:GetParent() == attackerEntity or (inflictorEntity.GetClassName and inflictorEntity:GetClassName() == "Grenade") then
-			StartSoundEffectAtOrigin(CatPack.kPickupSound, attackerEntity:GetOrigin())
-    		attackerEntity:ApplyCatPack()
+			if attackerEntity.ApplyCatPack then
+				StartSoundEffectAtOrigin(CatPack.kPickupSound, attackerEntity:GetOrigin())
+	    		attackerEntity:ApplyCatPack()
+			end
 
-		    local weapon = attackerEntity:GetActiveWeapon()
-		    if weapon and weapon.GiveAmmo then
-			    weapon:GiveAmmo(1)
-		    end
+    		local weapons = attackerEntity:GetWeapons()
+    		TGNS.DoFor(weapons, function(w)
+			    if w.GiveAmmo then
+				    w:GiveAmmo(1)
+			    end
+    		end)
 	    end
 	end
 	if freeCragEntity ~= nil and victimEntity == freeCragEntity then
@@ -308,6 +336,8 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("GameStarted", function()
 		if self:GetTotalNumberOfBots() > 0 then
 			createFreeCragEntity()
+			GetGamerules():GetTeam(kAlienTeamType):AddTeamResources(100)
+			alienTeamResBonus = 0
 		end
 	end)
 
