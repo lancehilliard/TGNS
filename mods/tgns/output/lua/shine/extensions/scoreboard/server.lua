@@ -470,10 +470,10 @@ function Plugin:Initialise()
  	SelectableMixin.SetHotGroupNumber = function(mixinSelf, hotGroupNumber)
  		originalSelectableMixinSetHotGroupNumber(mixinSelf, hotGroupNumber)
  		if mixinSelf:isa("Player") then
- 			local clientIndex = TGNS.GetClientIndex(TGNS.GetClient(mixinSelf))
- 			squadNumbers[clientIndex] = hotGroupNumber
+ 			local mixinClient = TGNS.GetClient(mixinSelf)
+ 			squadNumbers[mixinClient] = hotGroupNumber
  			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
- 				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=clientIndex,s=squadNumbers[clientIndex]})
+ 				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(mixinClient),s=squadNumbers[mixinClient]})
  			end)		
  		end
  	end
