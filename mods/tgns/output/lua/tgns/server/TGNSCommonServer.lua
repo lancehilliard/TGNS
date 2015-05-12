@@ -13,6 +13,11 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
 	-- 	end)
 
+function TGNS.GetClientIndex(client)
+	local result = TGNS.GetPlayer(client):GetClientIndex()
+	return result
+end
+
 function TGNS.GetNumberOfConnectingPlayers()
 	local result = Server.GetNumPlayersTotal() - #TGNS.GetClientList(function(c) return not TGNS.GetIsClientVirtual(c) end)
 	return result
@@ -652,6 +657,10 @@ function TGNS.MarkPlayerAFK(player)
 	end
 end
 
+function TGNS.IsClientAFK(client)
+	return TGNS.IsPlayerAFK(TGNS.GetPlayer(client))
+end
+
 function TGNS.IsPlayerAFK(player)
 	-- local result = false
 	-- local AFKKick = Shine.Plugins.improvedafkhandler
@@ -796,6 +805,10 @@ end
 function TGNS.PlayersAreTeammates(player1, player2)
 	local result = TGNS.GetPlayerTeamNumber(player1) == TGNS.GetPlayerTeamNumber(player2)
 	return result
+end
+
+function TGNS.ClientsAreTeammates(client1, client2)
+	return TGNS.PlayersAreTeammates(TGNS.GetPlayer(client1), TGNS.GetPlayer(client2))
 end
 
 function TGNS.TableValueCount(tt, item)
