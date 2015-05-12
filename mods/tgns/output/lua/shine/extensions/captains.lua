@@ -174,12 +174,12 @@ local function showPickables()
 			local renderOtherClients = TGNS.Where(allClients, function(c) return not TGNS.Has(renderCaptainClients, c) end)
 
 			TGNS.SortDescending(optedInClients, TGNS.GetClientHiveSkillRank)
-			showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.25, "Opted In")
+			showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.20, "Opted In")
 
 			TGNS.SortAscending(optedInClients, TGNS.GetClientId)
-			showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.25, "Opted In")
+			showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.20, "Opted In")
 
-			showRoster(notOptedInClients, allClients, 55, 56, 57, 0.55, "Not Opted In")
+			showRoster(notOptedInClients, allClients, 55, 56, 57, 0.50, "Not Opted In")
 
 			TGNS.DoFor(readyRoomClients, function(c)
 				local message
@@ -605,7 +605,7 @@ function Plugin:CreateCommands()
 	captainsCommand:AddParam{ Type = "string", Optional = true }
 	captainsCommand:Help("<captain1player> <captain2player> Designate two captains and activate Captains Game.")
 
-	local planCommand = self:BindCommand("sh_plan", "plan", function(client, plan)
+	local planCommand = self:BindCommand("sh_plan", {"plan", "PLAN", "Plan"}, function(client, plan)
 		local player = TGNS.GetPlayer(client)
 		-- if captainsModeEnabled and captainsGamesFinished < 2 then
 			if TGNS.PlayerIsOnPlayingTeam(player) then
@@ -693,12 +693,12 @@ function Plugin:CreateCommands()
 		md:ToClientConsole(client, "--------------------------------------------------------------")
 		md:ToClientConsole(client, string.format("Opted-In (%s):", #optedInClients))
 		TGNS.DoFor(optedInClients, function(c)
-			md:ToClientConsole(client, string.format("%s (%s)", TGNS.GetClientName(c), TGNS.GetClientTeamName(c)))
+			md:ToClientConsole(client, string.format("%s%s (%s)", TGNS.IsClientAFK(c) and "!" or "", TGNS.GetClientName(c), TGNS.GetClientTeamName(c)))
 		end)
 		md:ToClientConsole(client, "--------------------------------------------------------------")
 		md:ToClientConsole(client, string.format("Not Opted-In (%s):", #notOptedInClients))
 		TGNS.DoFor(notOptedInClients, function(c)
-			md:ToClientConsole(client, string.format("%s (%s)", TGNS.GetClientName(c), TGNS.GetClientTeamName(c)))
+			md:ToClientConsole(client, string.format("%s%s (%s)", TGNS.IsClientAFK(c) and "!" or "", TGNS.GetClientName(c), TGNS.GetClientTeamName(c)))
 		end)
 		md:ToClientConsole(client, "--------------------------------------------------------------")
 		md:ToClientConsole(client, "--------------------------------------------------------------")
@@ -1080,14 +1080,14 @@ function Plugin:Initialise()
 	local whenPlayersWereLastStillConnecting
 	local mayVoteYetChecker
 	mayVoteYetChecker = function()
-		if not mayVoteYet then
-			if TGNS.GetSecondsSinceMapLoaded() < ALLOW_VOTE_MAXIMUM_LIMIT_IN_SECONDS and Server.GetNumPlayersTotal() > #TGNS.GetClientList(function(c) return TGNS.Has(confirmedConnectedClients, c) end) then
-				whenPlayersWereLastStillConnecting = TGNS.GetSecondsSinceMapLoaded()
-			end
-			if whenPlayersWereLastStillConnecting == nil or TGNS.GetSecondsSinceMapLoaded() - whenPlayersWereLastStillConnecting > 5 then
+		if TGNS.GetSecondsSinceMapLoaded() < ALLOW_VOTE_MAXIMUM_LIMIT_IN_SECONDS then
+			if TGNS.GetNumberOfConnectingPlayers() == 0 then
 				automaticVoteAllowAction()
+			else
+				TGNS.ScheduleAction(2, mayVoteYetChecker)
 			end
-			TGNS.ScheduleAction(2, mayVoteYetChecker)
+		else
+			automaticVoteAllowAction()
 		end
 	end
 	TGNS.ScheduleAction(10, mayVoteYetChecker)
