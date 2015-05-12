@@ -30,6 +30,10 @@ Plugin.SERVER_SIMPLE_NAME = "scoreboard_SERVER_SIMPLE_NAME"
 Plugin.ALERT_ICON = "scoreboard_ALERT_ICON"
 Plugin.TEAM_SCORES_DATA = "scoreboard_TEAM_SCORES_DATA"
 Plugin.WYZ = "scoreboard_WYZ"
+Plugin.SQUAD_ALLOWED = "scoreboard_SQUAD_ALLOWED"
+Plugin.SQUAD_REQUESTED = "scoreboard_SQUAD_REQUESTED"
+Plugin.SQUAD_CONFIRMED = "scoreboard_SQUAD_CONFIRMED"
+
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -59,6 +63,9 @@ TGNS.RegisterNetworkMessage(Plugin.SERVER_SIMPLE_NAME, {n="string(20)"})
 TGNS.RegisterNetworkMessage(Plugin.ALERT_ICON, {});
 TGNS.RegisterNetworkMessage(Plugin.TEAM_SCORES_DATA, {mn="string(30)", an="string(30)",ms="integer",as="integer"});
 TGNS.RegisterNetworkMessage(Plugin.WYZ, {});
+TGNS.RegisterNetworkMessage(Plugin.SQUAD_ALLOWED, {});
+TGNS.RegisterNetworkMessage(Plugin.SQUAD_REQUESTED, {c="integer"});
+TGNS.RegisterNetworkMessage(Plugin.SQUAD_CONFIRMED, {c="integer",s="integer"});
 
 function Plugin:Initialise()
 	self.Enabled = true

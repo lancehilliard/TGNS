@@ -5,12 +5,13 @@ local isCaptainsCaptain = {}
 local isApproved = {}
 local isQuerying = {}
 local isVring = false
+local isSquading = false
 local isQueryingBadge = {}
 local approveReceivedTotal = 0
 local approveSentTotal = 0
 local APPROVE_TEXTURE_DISABLED = "ui/approve/chevron-disabled.dds"
 local QUERY_TEXTURE_DISABLED = "ui/query/contactcard-disabled.dds"
-local VR_TEXTURE_DISABLED = "ui/vr/vr-disabled.dds"
+local SQUAD_TEXTURE_DISABLED = "ui/squads/squad-disabled-squad0.dds"
 local lastUpdatedPingsWhen = {}
 local pings = {}
 local showCustomNumbersColumn = true
@@ -24,6 +25,8 @@ local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
 local approveSoundEventName = "sound/tgns.fev/scoreboard/approve"
 local gameIsInProgress = false
 local serverSimpleName
+local squadNumbers={}
+local squadNumbersHudText
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -34,6 +37,12 @@ end)
 
 local function getTeamApproveTexture(teamNumber)
 	local result = string.format("ui/approve/chevron-team%s.dds", teamNumber)
+	return result
+end
+
+local function getTeamSquadTexture(clientIndex, teamNumber, shouldBeDisabled)
+	local teamDescriptor = shouldBeDisabled and "disabled" or string.format("team%s", teamNumber)
+	local result = string.format("ui/squads/squad-%s-squad%s.dds", teamDescriptor, squadNumbers[clientIndex] or 0)
 	return result
 end
 
@@ -52,6 +61,35 @@ local function getTeamQueryTexture(teamNumber)
 	return result
 end
 
+local function initializeSquadHudText()
+	if squadNumbersHudText then
+		squadNumbersHudText:Remove()
+	end
+	squadNumbersHudText = Shine.ScreenText.Add( "Squad", {
+		X = 0.95, Y = 0.95,
+		Text = "",
+		Duration = math.huge,
+		R = 255, G = 255, B = 255,
+		Alignment = 2,
+		Size = 2,
+		FadeIn = 0.5
+	} )
+
+	function squadNumbersHudText:UpdateText()
+		local text = ""
+		local squadNumber = squadNumbers[Client.GetLocalClientIndex()] or 0
+		local isCommander = Scoreboard_GetPlayerData(Client.GetLocalClientIndex(), "IsCommander")
+		if squadNumber ~= 0 and not isCommander then
+			text = string.format("\nSquad %s", squadNumber)
+		end
+		self.Obj:SetText(text)
+	end
+end
+
+function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
+	initializeSquadHudText()
+end
+
 function Plugin:Initialise()
 	self.Enabled = true
 
@@ -60,9 +98,49 @@ function Plugin:Initialise()
 
 	-- lua\GUIScoreboard.lua
 
+	// local originalGUIScoreboardUpdate = GUIScoreboard.Update
+	// GUIScoreboard.Update = function(self, deltaTime)
+	// 	originalGUIScoreboardUpdate(self, deltaTime)
+	// 	if self.visible then
+	//         local gameTime = PlayerUI_GetGameLengthTime()
+	//         local minutes = math.floor( gameTime / 60 )
+	//         local seconds = math.floor( gameTime - minutes * 60 )
+	//         local serverName = Client.GetServerIsHidden() and "Hidden" or Client.GetConnectedServerName()
+
+	//         local ingamePlayersCount = 0
+	// 	    for teamsIndex, team in ipairs(self.teams) do
+	// 	    	local playerList = team["PlayerList"]
+	// 	    	local teamScores = team["GetScores"]()
+	// 	    	local currentPlayerIndex = 1
+	// 			for playerListIndex, player in pairs(playerList) do
+	// 				local playerRecord = teamScores[currentPlayerIndex]
+	// 				if playerRecord.Ping > 0 then
+	// 					ingamePlayersCount = ingamePlayersCount + 1
+	// 				end
+	// 				currentPlayerIndex = currentPlayerIndex + 1
+	// 			end
+	// 	    end
+	//         local numPlayersConnecting = PlayerUI_GetNumConnectingPlayers()
+	//         local gameTimeText = string.format("%s | %s - (%d %s%s) - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), numPlayersConnecting > 0 and string.format(", %d %s", numPlayersConnecting, Locale.ResolveString("SB_CONNECTING")) or "", minutes, seconds)
+	//         self.gameTime:SetText(gameTimeText)
+	// 	end
+	// end
+
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
 		originalGUIScoreboardUpdate(self, deltaTime)
+
+		for index, team in ipairs(self.teams) do
+	        if self.visible then
+	            self:UpdateTeam(team)
+	        end
+	    end
+	end
+
+	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
+	GUIScoreboard.UpdateTeam = function(self, updateTeam)
+		originalGUIScoreboardUpdateTeam(self, updateTeam)
+
 		if self.visible then
 	        local gameTime = PlayerUI_GetGameLengthTime()
 	        local minutes = math.floor( gameTime / 60 )
@@ -73,23 +151,20 @@ function Plugin:Initialise()
 		    for teamsIndex, team in ipairs(self.teams) do
 		    	local playerList = team["PlayerList"]
 		    	local teamScores = team["GetScores"]()
-		    	local currentPlayerIndex = 1
-				for playerListIndex, player in pairs(playerList) do
-					local playerRecord = teamScores[currentPlayerIndex]
-					if playerRecord.Ping > 0 then
+		    	//local currentPlayerIndex = 1
+				for playerListIndex, player in ipairs(playerList) do
+					local playerRecord = teamScores[playerListIndex]
+					if playerRecord and playerRecord.Ping > 0 then
 						ingamePlayersCount = ingamePlayersCount + 1
 					end
-					currentPlayerIndex = currentPlayerIndex + 1
+					//currentPlayerIndex = currentPlayerIndex + 1
 				end
 		    end
 	        local numPlayersConnecting = PlayerUI_GetNumConnectingPlayers()
 	        local gameTimeText = string.format("%s | %s - (%d %s%s) - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), numPlayersConnecting > 0 and string.format(", %d %s", numPlayersConnecting, Locale.ResolveString("SB_CONNECTING")) or "", minutes, seconds)
 	        self.gameTime:SetText(gameTimeText)
 		end
-	end	
-	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
-	GUIScoreboard.UpdateTeam = function(self, updateTeam)
-		originalGUIScoreboardUpdateTeam(self, updateTeam)
+
 		local playerList = updateTeam["PlayerList"]
 		local teamScores = updateTeam["GetScores"]()
 		local teamNumber = updateTeam["TeamNumber"]
@@ -109,64 +184,32 @@ function Plugin:Initialise()
 		        player["Number"]:SetColor(numberColor)
 	        end
 
-			if not player.PlayerApproveIcon then
-			    local playerApproveIcon = GUIManager:CreateGraphicItem()
-			    local playerApproveIconPosition = player.Status:GetPosition()
-			    playerApproveIconPosition.x = playerApproveIconPosition.x - 25
-			    playerApproveIconPosition.y = playerApproveIconPosition.y - 10
-			    playerApproveIcon:SetSize(Vector(20, 20, 0))
-			    playerApproveIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    playerApproveIcon:SetPosition(playerApproveIconPosition)
-			    playerApproveIcon:SetTexture(APPROVE_TEXTURE_DISABLED)
-			    player.PlayerApproveIcon = playerApproveIcon
-			    player.Background:AddChild(playerApproveIcon)
-			    if player.IconTable then
-			    	table.insert(player["IconTable"], playerApproveIcon)
-			    end
-			end
-			if not player.PlayerQueryIcon then
-			    local playerQueryIcon = GUIManager:CreateGraphicItem()
-			    local playerQueryIconPosition = player.Status:GetPosition()
-			    playerQueryIconPosition.x = playerQueryIconPosition.x - 45
-			    playerQueryIconPosition.y = playerQueryIconPosition.y - 10
-			    playerQueryIcon:SetSize(Vector(20, 20, 0))
-			    playerQueryIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    playerQueryIcon:SetPosition(playerQueryIconPosition)
-			    playerQueryIcon:SetTexture(QUERY_TEXTURE_DISABLED)
-			    player.PlayerQueryIcon = playerQueryIcon
-			    player.Background:AddChild(playerQueryIcon)
-			    if player.IconTable then
-			    	table.insert(player["IconTable"], playerQueryIcon)
-			    end
-			end
-			if not player.PlayerVrIcon then
-			    local playerVrIcon = GUIManager:CreateGraphicItem()
-			    local playerVrIconPosition = player.Status:GetPosition()
-			    playerVrIconPosition.x = playerVrIconPosition.x - 65
-			    playerVrIconPosition.y = playerVrIconPosition.y - 10
-			    playerVrIcon:SetSize(Vector(20, 20, 0))
-			    playerVrIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    playerVrIcon:SetPosition(playerVrIconPosition)
-			    playerVrIcon:SetTexture(VR_TEXTURE_DISABLED)
-			    player.PlayerVrIcon = playerVrIcon
-			    player.Background:AddChild(playerVrIcon)
-			    if player.IconTable then
-			    	table.insert(player["IconTable"], playerVrIcon)
-			    end
-			end
-			-- if not player.PlayerApproveStatusItem then
-			-- 	local playerApproveStatusItem = GUIManager:CreateTextItem()
-			-- 	playerApproveStatusItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
-			-- 	playerApproveStatusItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			-- 	playerApproveStatusItem:SetTextAlignmentX(GUIItem.Align_Min)
-			-- 	playerApproveStatusItem:SetTextAlignmentY(GUIItem.Align_Min)
-			-- 	local playerApproveStatusItemPosition = player.Status:GetPosition()
-			--     playerApproveStatusItemPosition.x = playerApproveStatusItemPosition.x - 25
-			--     playerApproveStatusItemPosition.y = playerApproveStatusItemPosition.y + 8
-			-- 	playerApproveStatusItem:SetPosition(playerApproveStatusItemPosition)
-			-- 	player.PlayerApproveStatusItem = playerApproveStatusItem
-			-- 	player.Background:AddChild(playerApproveStatusItem)
-			-- end
+   	        local icons = {
+	        	{n="PlayerSquadIcon",t=SQUAD_TEXTURE_DISABLED,x=-25}
+	        	,{n="PlayerApproveIcon",t=APPROVE_TEXTURE_DISABLED,x=-49}
+	        	,{n="PlayerQueryIcon",t=QUERY_TEXTURE_DISABLED,x=-69}
+	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,x=-89}
+
+	    	}
+
+			TGNS.DoFor(icons, function(i)
+				if not player[i.n] then
+				    local icon = GUIManager:CreateGraphicItem()
+				    local position = player.Status:GetPosition()
+				    position.x = position.x + i.x
+				    position.y = position.y + (i.y or -10)
+				    icon:SetSize(Vector(20, 20, 0))
+				    icon:SetAnchor(GUIItem.Left, GUIItem.Center)
+				    icon:SetPosition(position)
+				    icon:SetTexture(i.t)
+				    player[i.n] = icon
+				    player.Background:AddChild(icon)
+				    if player.IconTable then
+				    	table.insert(player["IconTable"], icon)
+				    end
+				end
+			end)	    	
+
 			if not player.PlayerNoteItem then
 				local playerNoteItem = GUIManager:CreateTextItem()
 				playerNoteItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
@@ -179,27 +222,63 @@ function Plugin:Initialise()
 
 
 			local guiItemsWhichShouldPreventNs2PlusHighlight = {}
-
 			local playerIsBot = playerRecord.Ping == 0
+
 	        local playerApproveIcon = player["PlayerApproveIcon"]
-	        local playerApproveIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
-	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
+
+
+
+	        local playerSquadIconShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType)) and not playerIsBot
+	        local playerApproveIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
+	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
+	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
+        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
+        	local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
+
         	local targetPrefix = prefixes[clientIndex] or ""
 	        if playerVrIconShouldDisplay then
         		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
         		targetPrefixFiltered = TGNS.Replace(targetPrefixFiltered, "*", "")
         		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
 	        end
+
+        	if Shared.GetDevMode() then
+		        playerSquadIconShouldDisplay = true
+		        playerApproveIconShouldDisplay = true
+		        playerQueryIconShouldDisplay = true
+		        playerVrIconShouldDisplay = true
+	        	playerNoteItemShouldDisplay = true
+	        	playerApproveStatusItemShouldDisplay = true
+        	end
+
+        	if player.SteamFriend then
+			    local steamFriendPosition = player.Ping:GetPosition()
+			    steamFriendPosition.x = steamFriendPosition.x + 26
+			    steamFriendPosition.y = steamFriendPosition.y - 10
+			    player.SteamFriend:SetPosition(steamFriendPosition)
+			    player.SteamFriend:SetIsVisible(playerRecord.IsSteamFriend or Shared.GetDevMode())
+			    if player.IconTable then
+			    	table.removevalue(player.IconTable, player.SteamFriend)
+			    end
+        	end
+
+
 	        if TGNS.Contains(targetPrefix, "!") then
 	        	totalAfkCount = totalAfkCount + 1
 	        end
 
-			local playerNoteItemPosition = player.PlayerQueryIcon:GetPosition()
-			playerNoteItemPosition.x = playerNoteItemPosition.x - ((playerVrIconShouldDisplay and 20 or 0) + 3)
-		    playerNoteItemPosition.y = playerNoteItemPosition.y + 17
+			local playerNoteItemPosition = player.Status:GetPosition()
+			local xOffset = 0
+			local addOffsetIf = function(boolean) if boolean then xOffset = xOffset + 20 end end
+			addOffsetIf(playerSquadIconShouldDisplay)
+			addOffsetIf(playerApproveIconShouldDisplay)
+			addOffsetIf(playerQueryIconShouldDisplay)
+			addOffsetIf(playerVrIconShouldDisplay)
+
+			playerNoteItemPosition.x = playerNoteItemPosition.x - xOffset - 5
+		    playerNoteItemPosition.y = playerNoteItemPosition.y + 7
 			player.PlayerNoteItem:SetPosition(playerNoteItemPosition)
 
-	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals) or Shared.GetDevMode()
 	        if playerApproveIcon then
 	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveIcon)
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
@@ -227,7 +306,6 @@ function Plugin:Initialise()
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
 	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveStatusItem)
-	        	local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals) or Shared.GetDevMode()
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
 	        	playerApproveStatusItem:SetColor(color)
@@ -235,10 +313,16 @@ function Plugin:Initialise()
 
 	        local playerNoteItem = player["PlayerNoteItem"]
 	        if playerNoteItem then
-	        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
 	        	playerNoteItem:SetIsVisible(playerNoteItemShouldDisplay)
 	        	playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
 	        	playerNoteItem:SetColor(color)
+	        end
+	        local playerSquadIcon = player["PlayerSquadIcon"]
+	        if playerSquadIcon then
+	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerSquadIcon)
+	        	playerSquadIcon:SetIsVisible(playerSquadIconShouldDisplay)
+	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+		        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
 	        end
 
 			if MouseTracker_GetIsVisible() then
@@ -271,12 +355,6 @@ function Plugin:Initialise()
 		    teamNameGUIItem:SetText(teamHeaderText)
 		end
 	end
-
-	-- local originalGUIScoreboardCreatePlayerItem = GUIScoreboard.CreatePlayerItem
-	-- GUIScoreboard.CreatePlayerItem = function(self)
-	-- 	local playerItem = originalGUIScoreboardCreatePlayerItem(self)
-
-	-- end
 
 	local originalGUIScoreboardSendKeyEvent = GUIScoreboard.SendKeyEvent
 	GUIScoreboard.SendKeyEvent = function(self, key, down)
@@ -370,6 +448,17 @@ function Plugin:Initialise()
 			                TGNS.SendNetworkMessage(Plugin.VR_REQUESTED, {c=clientIndex})
 		            	end
 		            end
+		            local playerSquadIcon = playerItem["PlayerSquadIcon"]
+		            local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+		            if playerSquadIcon and playerSquadIcon:GetIsVisible() and GUIItemContainsPoint(playerSquadIcon, mouseX, mouseY) then
+		            	if self.hoverMenu then
+		            		self.hoverMenu:Hide()
+		            	end
+		            	if not playerSquadIconShouldBeDisabled then
+			                isSquading = true
+			                TGNS.SendNetworkMessage(Plugin.SQUAD_REQUESTED, {c=clientIndex})
+		            	end
+		            end
 		        end
 
 		    end
@@ -385,11 +474,17 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.VR_CONFIRMED, function(message)
 		vrConfirmed[message.c] = true
 	end)
+	TGNS.HookNetworkMessage(Plugin.SQUAD_CONFIRMED, function(message)
+		squadNumbers[message.c] = message.s
+	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
 		isApproved = {}
 	end)
 	TGNS.HookNetworkMessage(Plugin.QUERY_ALLOWED, function(message)
 		isQuerying[message.c] = false
+	end)
+	TGNS.HookNetworkMessage(Plugin.SQUAD_ALLOWED, function(message)
+		isSquading = false
 	end)
 	TGNS.HookNetworkMessage(Plugin.VR_ALLOWED, function(message)
 		isVring = false
@@ -510,6 +605,86 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.WYZ, function(message)
 		Shared.ConsoleCommand("connect 0.0.0.0")
 	end)
+
+	local originalPlayerGetName = Player.GetName
+
+	// what players see
+	// local originalGUINameTagsUpdate = GUIPlayerNameTags.Update
+	// GUIPlayerNameTags.Update = function(nameTagsSelf, deltaTime)
+	// 	Player.GetName = function(playerSelf, forEntity)
+	// 		return string.format("%s NAMETAGS", originalPlayerGetName(playerSelf, forEntity))
+	// 	end
+	// 	originalGUINameTagsUpdate(nameTagsSelf, deltaTime)
+	// 	Player.GetName = originalPlayerGetName
+	// 	Shared.Message("000000000000000000000")
+	// end
+
+
+	// local originalGUIPlayerNamesUpdate
+	// originalGUIPlayerNamesUpdate = Class_ReplaceMethod( "GUIPlayerNames", "Update", function(playerNamesSelf, deltaTime)
+	// 	Player.GetName = function(playerSelf, forEntity)
+	// 		return string.format("%s PLAYERNAMES", originalPlayerGetName(playerSelf, forEntity))
+	// 	end
+	// 	originalGUIPlayerNamesUpdate(playerNamesSelf, deltaTime)
+	// 	Player.GetName = originalPlayerGetName
+	// end)
+
+		// Player.GetName = function(playerSelf, forEntity)
+		// 	return string.format("%s PLAYERNAMES", originalPlayerGetName(playerSelf, forEntity))
+		// end
+
+
+	// what commanders see
+	// local originalGUIPlayerNamesUpdate = GUIPlayerNames.Update
+	// GUIPlayerNames.Update = function(playerNamesSelf, deltaTime)
+	// 	Player.GetName = function(playerSelf, forEntity)
+	// 		return string.format("%s PLAYERNAMES", originalPlayerGetName(playerSelf, forEntity))
+	// 	end
+	// 	originalGUIPlayerNamesUpdate(playerNamesSelf, deltaTime)
+	// 	Player.GetName = originalPlayerGetName
+	// end
+
+	// what spectators see
+	local originalGUIInsight_PlayerHealthbarsUpdatePlayers = GUIInsight_PlayerHealthbars.UpdatePlayers
+	GUIInsight_PlayerHealthbars.UpdatePlayers = function(healthbarsSelf, deltaTime)
+		Player.GetName = function(playerSelf, forEntity)
+			return "TEST" // string.format("%s HEALTHBARS", originalPlayerGetName(playerSelf, forEntity))
+		end
+		originalGUIInsight_PlayerHealthbarsUpdatePlayers(healthbarsSelf, deltaTime)
+		Player.GetName = originalPlayerGetName
+	end
+
+	initializeSquadHudText()
+
+	local parent, OldUpdateUnitStatusBlip = LocateUpValue( GUIUnitStatus.Update, "UpdateUnitStatusBlip", { LocateRecurse = true } )
+	function SquadUpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCommander, baseResearchRot, showHints, playerTeamType )
+		OldUpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCommander, baseResearchRot, showHints, playerTeamType )
+		if blipData.IsPlayer and blipData.TeamType == Client.GetLocalClientTeamNumber() then
+			local kUnitStatusCommanderDisplayRange = 50
+			local kUnitStatusDisplayRange = 13
+
+			local player = Client.GetLocalPlayer()
+			local eyePos = player:GetEyePos()
+	        local range = player:isa("Commander") and kUnitStatusCommanderDisplayRange or kUnitStatusDisplayRange
+			local unit
+			TGNS.DoFor(GetEntitiesWithMixinWithinRange("UnitStatus", eyePos, range), function(u)
+				if u:GetUnitName(player) == blipData.Name then
+					unit = u
+				end
+			end)
+			if unit then
+				local clientIndex = unit:GetClientIndex()
+				local squadNumber = squadNumbers[clientIndex]
+				if squadNumber and squadNumber ~= 0 then
+					local textObject = updateBlip.NameText
+					local originalText = textObject:GetText()
+					local newText = string.format("%s (%s)", originalText, string.format("Squad %d", squadNumber))
+					textObject:SetText(newText)
+				end
+			end
+		end
+	end
+	ReplaceUpValue( parent, "UpdateUnitStatusBlip", SquadUpdateUnitStatusBlip, { LocateRecurse = true } )
 
 	return true
 end

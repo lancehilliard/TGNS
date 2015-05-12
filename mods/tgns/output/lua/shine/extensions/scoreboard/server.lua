@@ -5,6 +5,7 @@ local vrConfirmed = {}
 local vrConfirmedBy = {}
 local teamScoresDatas = {}
 local vouches = {}
+local squadNumbers = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -117,16 +118,18 @@ local function initScoreboardDecorations(client)
 			local approvedReceivedTotal = 0
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
 				if c then
+					local p = TGNS.GetPlayer(c)
 					local targetSteamId = TGNS.GetClientSteamId(c)
 					if Shine.Plugins.targetedcommands:GetApprovedClients(targetSteamId)[sourceSteamId] then
-						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.scoreboard.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
+						TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.APPROVE_ALREADY_APPROVED, {c=sourcePlayer:GetClientIndex()})
 						approvedReceivedTotal = approvedReceivedTotal + 1
 					end
 					if Shine.Plugins.targetedcommands:GetApprovedClients(sourceSteamId)[targetSteamId] then
-						local targetPlayer = TGNS.GetPlayer(c)
-						TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_ALREADY_APPROVED, {c=targetPlayer:GetClientIndex()})
+						TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_ALREADY_APPROVED, {c=p:GetClientIndex()})
 						approvedSentTotal = approvedSentTotal + 1
 					end
+					TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(c),s=squadNumbers[c]})
+					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(client),s=squadNumbers[client]})
 				end
 			end)
 			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
@@ -208,6 +211,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
 		TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
 	end
+	squadNumbers[client] = 0
 	initScoreboardDecorations(client)
 end
 
@@ -215,6 +219,14 @@ function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK_RESET, {})
 		TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=false})
+	end)
+	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			TGNS.DoFor(TGNS.GetClientList(), function(c)
+				squadNumbers[c] = 0
+				TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(c),s=squadNumbers[c]})	
+			end)
+		end)
 	end)
 	local captainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains:IsCaptainsModeEnabled()
 	if not captainsModeEnabled then
@@ -380,6 +392,32 @@ function Plugin:Initialise()
 		end
 	end)
 
+	TGNS.HookNetworkMessage(self.SQUAD_REQUESTED, function(client, message)
+		local player = TGNS.GetPlayer(client)
+		local targetClientIndex = message.c
+		local targetClient = TGNS.GetClientById(targetClientIndex)
+		local md = TGNSMessageDisplayer.Create("SQUADS")
+		local clientIsCaptain = Shine.Plugins.captains and Shine.Plugins.captains.IsClientCaptain and Shine.Plugins.captains:IsClientCaptain(client)
+		local clientIsCommander = TGNS.IsClientCommander(client)
+		if (clientIsCaptain or clientIsCommander or Shared.GetDevMode()) then
+			if targetClient and Shine:IsValidClient(targetClient) then
+				squadNumbers[targetClient] = squadNumbers[targetClient] or 0
+				squadNumbers[targetClient] = squadNumbers[targetClient] + 1
+				if squadNumbers[targetClient] > 3 then
+					squadNumbers[targetClient] = 0
+				end
+				TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+					TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=targetClientIndex,s=squadNumbers[targetClient]})	
+				end)
+			else
+				md:ToPlayerNotifyError(player, "There was a problem setting a squad.")
+			end
+		else
+			md:ToPlayerNotifyError(player, "Captains and Commanders may manage squads.")
+		end
+		TGNS.SendNetworkMessageToPlayer(player, self.SQUAD_ALLOWED, {})
+	end)
+
 	TGNS.HookNetworkMessage(self.REQUEST_AFKRR, function(client, message)
 		local targetClientIndex = message.c
 		local targetClient = TGNS.GetClientById(targetClientIndex)
@@ -427,6 +465,18 @@ function Plugin:Initialise()
 			end
 		end)
  	end)
+
+ 	local originalSelectableMixinSetHotGroupNumber = SelectableMixin.SetHotGroupNumber
+ 	SelectableMixin.SetHotGroupNumber = function(mixinSelf, hotGroupNumber)
+ 		originalSelectableMixinSetHotGroupNumber(mixinSelf, hotGroupNumber)
+ 		if mixinSelf:isa("Player") then
+ 			local clientIndex = TGNS.GetClientIndex(TGNS.GetClient(mixinSelf))
+ 			squadNumbers[clientIndex] = hotGroupNumber
+ 			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+ 				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=clientIndex,s=squadNumbers[clientIndex]})
+ 			end)		
+ 		end
+ 	end
 
 	return true
 end
