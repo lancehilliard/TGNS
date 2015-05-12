@@ -606,53 +606,26 @@ function Plugin:Initialise()
 		Shared.ConsoleCommand("connect 0.0.0.0")
 	end)
 
-	local originalPlayerGetName = Player.GetName
-
-	// what players see
-	// local originalGUINameTagsUpdate = GUIPlayerNameTags.Update
-	// GUIPlayerNameTags.Update = function(nameTagsSelf, deltaTime)
-	// 	Player.GetName = function(playerSelf, forEntity)
-	// 		return string.format("%s NAMETAGS", originalPlayerGetName(playerSelf, forEntity))
-	// 	end
-	// 	originalGUINameTagsUpdate(nameTagsSelf, deltaTime)
-	// 	Player.GetName = originalPlayerGetName
-	// 	Shared.Message("000000000000000000000")
-	// end
-
-
-	// local originalGUIPlayerNamesUpdate
-	// originalGUIPlayerNamesUpdate = Class_ReplaceMethod( "GUIPlayerNames", "Update", function(playerNamesSelf, deltaTime)
-	// 	Player.GetName = function(playerSelf, forEntity)
-	// 		return string.format("%s PLAYERNAMES", originalPlayerGetName(playerSelf, forEntity))
-	// 	end
-	// 	originalGUIPlayerNamesUpdate(playerNamesSelf, deltaTime)
-	// 	Player.GetName = originalPlayerGetName
-	// end)
-
-		// Player.GetName = function(playerSelf, forEntity)
-		// 	return string.format("%s PLAYERNAMES", originalPlayerGetName(playerSelf, forEntity))
-		// end
-
-
-	// what commanders see
-	// local originalGUIPlayerNamesUpdate = GUIPlayerNames.Update
-	// GUIPlayerNames.Update = function(playerNamesSelf, deltaTime)
-	// 	Player.GetName = function(playerSelf, forEntity)
-	// 		return string.format("%s PLAYERNAMES", originalPlayerGetName(playerSelf, forEntity))
-	// 	end
-	// 	originalGUIPlayerNamesUpdate(playerNamesSelf, deltaTime)
-	// 	Player.GetName = originalPlayerGetName
-	// end
-
-	// what spectators see
-	local originalGUIInsight_PlayerHealthbarsUpdatePlayers = GUIInsight_PlayerHealthbars.UpdatePlayers
-	GUIInsight_PlayerHealthbars.UpdatePlayers = function(healthbarsSelf, deltaTime)
-		Player.GetName = function(playerSelf, forEntity)
-			return "TEST" // string.format("%s HEALTHBARS", originalPlayerGetName(playerSelf, forEntity))
+	local originalGUIInsight_PlayerHealthbarsUpdatePlayers
+	originalGUIInsight_PlayerHealthbarsUpdatePlayers = Class_ReplaceMethod("GUIInsight_PlayerHealthbars", "UpdatePlayers", function(playerHealthbarsSelf, deltaTime)
+		originalGUIInsight_PlayerHealthbarsUpdatePlayers(playerHealthbarsSelf, deltaTime)
+		local players = Shared.GetEntitiesWithClassname("Player")
+		for index, player in ientitylist(players) do
+			local squadNumber = squadNumbers[player:GetClientIndex()] or 0
+			if squadNumber ~= 0 then
+				local playerIndex = player:GetId()
+				local playerIsVisibleAliveGroundling = player:GetIsVisible() and player:GetIsAlive() and not player:isa("Commander")
+				if playerIsVisibleAliveGroundling then
+					local playerList = GetUpValue( GUIInsight_PlayerHealthbars.UpdatePlayers, "playerList", { LocateRecurse = true } )
+					local playerGUI = playerList[playerIndex]
+					if playerGUI then
+						local text = string.format("%s (Squad %s)", playerGUI.Name:GetText(), squadNumber)
+						playerGUI.Name:SetText(text)
+					end
+				end
+			end
 		end
-		originalGUIInsight_PlayerHealthbarsUpdatePlayers(healthbarsSelf, deltaTime)
-		Player.GetName = originalPlayerGetName
-	end
+	end)
 
 	initializeSquadHudText()
 
