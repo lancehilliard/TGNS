@@ -786,6 +786,16 @@ function TGNS.GetTeam(player)
 	return result
 end
 
+function TGNS.ClientIsAlien(client)
+	local result = TGNS.GetClientTeamNumber(client) == kAlienTeamType
+	return result
+end
+
+function TGNS.ClientIsMarine(client)
+	local result = TGNS.GetClientTeamNumber(client) == kMarineTeamType
+	return result
+end
+
 function TGNS.GetClientTeamNumber(client)
 	local result = TGNS.GetPlayerTeamNumber(TGNS.GetPlayer(client))
 	return result
