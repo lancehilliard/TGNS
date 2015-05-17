@@ -17,6 +17,10 @@ TGNS.ALIEN_COLOR_B = 57.885
 
 TGNS.READYROOM_LOCATION_ID = 1000
 
+TGNS.ShineTextAlignmentMin = 0
+TGNS.ShineTextAlignmentCenter = 1
+TGNS.ShineTextAlignmentMax = 2
+
 function TGNS.GetRandomizedElements(elements)
 	local result = {}
 	TGNS.DoFor(elements, function(e) table.insert(result, e) end)
