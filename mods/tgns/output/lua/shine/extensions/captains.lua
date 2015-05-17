@@ -22,7 +22,7 @@ local plans = {}
 local highVolumeMessagesLastShownTime
 local bannerDisplayed
 local showRemainingTimer
-local lastOptInAttemptWhen = {}
+//local lastOptInAttemptWhen = {}
 local OPT_IN_THROTTLE_IN_SECONDS = 3
 local allPlayersWereArtificiallyForcedToReadyRoom
 local setSpawnsSummaryText
@@ -37,6 +37,7 @@ local momentWhenSecondCaptainOptedIn
 local ALLOW_VOTE_MAXIMUM_LIMIT_IN_SECONDS = 115
 local RESTRICTED_OPTIN_DURATION_IN_SECONDS = 5
 local PLAN_DISPLAY_LENGTH = 9
+local OPTIN_VOTE_DURATION = 90
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -232,7 +233,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 	votesAllowedUntil = nil
 	TGNS.ScheduleAction(2, showPickables)
-	Shine.Plugins.afkkick.Config.KickTime = 20
+	//Shine.Plugins.afkkick.Config.KickTime = 20
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
 		Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
 		Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
@@ -303,22 +304,26 @@ local function updateCaptainsReadyProgress(readyClient)
 	local playingReadyPlayerClients = TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end)
 	local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
 	if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
-		local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, readyClient)
-		if TGNS.Has(readyPlayerClients, readyClient) or readyClientIsCaptain then
-			local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and pick your team for)" or "")
-			md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
-			-- if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 or readyClientIsCaptain then
-				-- md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
-				-- highVolumeMessagesLastShownTime = Shared.GetTime()
-			-- end
-		end
+		// local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, readyClient)
+		// if TGNS.Has(readyPlayerClients, readyClient) or readyClientIsCaptain then
+		// 	local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and pick your team for)" or "")
+		// 	md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
+		// 	-- if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 or readyClientIsCaptain then
+		// 		-- md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
+		// 		-- highVolumeMessagesLastShownTime = Shared.GetTime()
+		// 	-- end
+		// end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, 1, 2, 0))
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 2, 0))
 			local secondLineMessage = "Captains play two rounds after picking a team and Commander."
 			if (votesAllowedUntil == math.huge and twoCaptainsReady) or (votesAllowedUntil ~= math.huge and twoCaptainsReady and #playingReadyPlayerClients == 0) then
 				secondLineMessage = "Press 'M > Captains > sh_iwantcaptains' if you want to play Captains."
 			end
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.80, secondLineMessage, votesAllowedUntil and 120 or 10, 0, 255, 0, 1, 1, 0))
+			local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, c)
+			if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
+				secondLineMessage = string.format("%s\nYou're opted-in as ready to play%s!", secondLineMessage, readyClientIsCaptain and " (and pick your team)" or "")
+			end
+			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.80, secondLineMessage, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 1, 0))
 		end)
 	else
 		if not captainsModeEnabled then
@@ -336,7 +341,7 @@ local function announceTimeRemaining()
 	if not captainsModeEnabled then
 		local secondsRemaining = getVoteSecondsRemaining()
 		if secondsRemaining > 1 then
-			local timeLeftAdvisory = votesAllowedUntil == math.huge and "" or string.format("%s left.", string.TimeToString(secondsRemaining))
+			local timeLeftAdvisory = votesAllowedUntil == math.huge and "" or string.format("%s left.", string.DigitalTime(secondsRemaining))
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			local firstCaptainName = #playingReadyCaptainClients > 0 and TGNS.GetClientName(playingReadyCaptainClients[1]) or "???"
 			local secondCaptainName = #playingReadyCaptainClients > 1 and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
@@ -362,7 +367,7 @@ end
 
 local function addReadyPlayerClient(client)
 	if votesAllowedUntil == nil then
-		votesAllowedUntil = TGNS.GetSecondsSinceMapLoaded() + 62
+		votesAllowedUntil = TGNS.GetSecondsSinceMapLoaded() + OPTIN_VOTE_DURATION + 2
 		TGNS.DoFor(readyPlayerClients, function(c)
 			if Shine:IsValidClient(c) then
 				if not captainsModeEnabled then
@@ -770,9 +775,9 @@ function Plugin:CreateCommands()
 			end
 		end
 
-		if TGNS.GetSecondsSinceMapLoaded() - (lastOptInAttemptWhen[client] or 0) < OPT_IN_THROTTLE_IN_SECONDS then
-			md:ToPlayerNotifyError(player, string.format("Every opt-in attempt (including this one) resets a %s-second cooldown.", OPT_IN_THROTTLE_IN_SECONDS))
-		elseif TGNS.IsPlayerSpectator(player) then
+		// if TGNS.GetSecondsSinceMapLoaded() - (lastOptInAttemptWhen[client] or 0) < OPT_IN_THROTTLE_IN_SECONDS then
+		// 	md:ToPlayerNotifyError(player, string.format("Every opt-in attempt (including this one) resets a %s-second cooldown.", OPT_IN_THROTTLE_IN_SECONDS))
+		if TGNS.IsPlayerSpectator(player) then
 			md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
 		elseif (not rolandHasBeenUsed) and (not TGNS.PlayerIsOnPlayingTeam(player)) and not captainsModeEnabled then
 			md:ToPlayerNotifyError(player, "Opting in is not allowed from the Ready Room. Join a team to opt-in to Captains.")
@@ -807,17 +812,17 @@ function Plugin:CreateCommands()
 				end
 			end
 		end
-		lastOptInAttemptWhen[client] = TGNS.GetSecondsSinceMapLoaded()
-		if not TGNS.IsClientAdmin(client) and not TGNS.Has(readyPlayerClients, client) then
-			TGNS.ScheduleAction(3.5, function()
-				if Shine:IsValidClient(client) then
-					TGNS.AddTempGroup(client, "iwantcaptainscommand_group")
-					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "... sh_iwantcaptains restored.")
-				end
-			end)
-			TGNS.RemoveTempGroup(client, "iwantcaptainscommand_group")
-			md:ToPlayerNotifyInfo(player, "sh_iwantcaptains 4-second cooldown started...")
-		end
+		// lastOptInAttemptWhen[client] = TGNS.GetSecondsSinceMapLoaded()
+		// if not TGNS.IsClientAdmin(client) and not TGNS.Has(readyPlayerClients, client) then
+		// 	TGNS.ScheduleAction(3.5, function()
+		// 		if Shine:IsValidClient(client) then
+		// 			TGNS.AddTempGroup(client, "iwantcaptainscommand_group")
+		// 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "... sh_iwantcaptains restored.")
+		// 		end
+		// 	end)
+		// 	TGNS.RemoveTempGroup(client, "iwantcaptainscommand_group")
+		// 	md:ToPlayerNotifyInfo(player, "sh_iwantcaptains 4-second cooldown started...")
+		// end
 	end)
 	wantCaptainsCommand:Help(string.format("Tell the server you want to play a Captains Game (cooldown: %s seconds).", OPT_IN_THROTTLE_IN_SECONDS))
 
