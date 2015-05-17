@@ -287,6 +287,12 @@ function Plugin:Initialise()
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=true})
 		end)
+		TGNS.DoFor(TGNS.GetAlienClients(TGNS.GetPlayerList()), function(c)
+			squadNumbers[c] = 0
+			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+				TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(c),s=squadNumbers[c]})	
+			end)
+		end)
 	end)
 
 	TGNS.HookNetworkMessage(self.APPROVE_REQUESTED, function(client, message)
@@ -397,23 +403,27 @@ function Plugin:Initialise()
 		local targetClientIndex = message.c
 		local targetClient = TGNS.GetClientById(targetClientIndex)
 		local md = TGNSMessageDisplayer.Create("SQUADS")
-		local clientIsCaptain = Shine.Plugins.captains and Shine.Plugins.captains.IsClientCaptain and Shine.Plugins.captains:IsClientCaptain(client)
-		local clientIsCommander = TGNS.IsClientCommander(client)
-		if (clientIsCaptain or clientIsCommander or Shared.GetDevMode()) then
-			if targetClient and Shine:IsValidClient(targetClient) then
-				squadNumbers[targetClient] = squadNumbers[targetClient] or 0
-				squadNumbers[targetClient] = squadNumbers[targetClient] + 1
-				if squadNumbers[targetClient] > 3 then
-					squadNumbers[targetClient] = 0
-				end
-				TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-					TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=targetClientIndex,s=squadNumbers[targetClient]})	
-				end)
-			else
-				md:ToPlayerNotifyError(player, "There was a problem setting a squad.")
-			end
+		if TGNS.IsGameInProgress() and TGNS.ClientIsAlien(targetClient) then
+			md:ToPlayerNotifyError(player, "Aliens may not show planned lifeforms on the scoreboard during gameplay.")
 		else
-			md:ToPlayerNotifyError(player, "Captains and Commanders may manage squads.")
+			local clientIsCaptain = Shine.Plugins.captains and Shine.Plugins.captains.IsClientCaptain and Shine.Plugins.captains:IsClientCaptain(client)
+			local clientIsCommander = TGNS.IsClientCommander(client)
+			if (clientIsCaptain or clientIsCommander or (TGNS.ClientIsAlien(client) and client == targetClient)) then
+				if targetClient and Shine:IsValidClient(targetClient) then
+					squadNumbers[targetClient] = squadNumbers[targetClient] or 0
+					squadNumbers[targetClient] = squadNumbers[targetClient] + 1
+					if squadNumbers[targetClient] > (TGNS.ClientIsAlien(targetClient) and 6 or 9) then
+						squadNumbers[targetClient] = 0
+					end
+					TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+						TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=targetClientIndex,s=squadNumbers[targetClient]})	
+					end)
+				else
+					md:ToPlayerNotifyError(player, "There was a problem setting a squad.")
+				end
+			else
+				md:ToPlayerNotifyError(player, string.format("Captains and Commanders may set teammates' %s.", TGNS.ClientIsAlien(client) and "planned lifeforms" or "squads"))
+			end
 		end
 		TGNS.SendNetworkMessageToPlayer(player, self.SQUAD_ALLOWED, {})
 	end)

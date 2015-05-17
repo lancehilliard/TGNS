@@ -1,5 +1,4 @@
 local Plugin = Plugin
-
 local prefixes = {}
 local isCaptainsCaptain = {}
 local isApproved = {}
@@ -27,6 +26,7 @@ local gameIsInProgress = false
 local serverSimpleName
 local squadNumbers={}
 local squadNumbersHudText
+local squadNumberLastSetTimes = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -41,7 +41,7 @@ local function getTeamApproveTexture(teamNumber)
 end
 
 local function getTeamSquadTexture(clientIndex, teamNumber, shouldBeDisabled)
-	local teamDescriptor = shouldBeDisabled and "disabled" or string.format("team%s", teamNumber)
+	local teamDescriptor = string.format("%s%s", shouldBeDisabled and "disabled" or "team", teamNumber)
 	local result = string.format("ui/squads/squad-%s-squad%s.dds", teamDescriptor, squadNumbers[clientIndex] or 0)
 	return result
 end
@@ -66,7 +66,7 @@ local function initializeSquadHudText()
 		squadNumbersHudText:Remove()
 	end
 	squadNumbersHudText = Shine.ScreenText.Add( "Squad", {
-		X = 0.95, Y = 0.95,
+		X = 0.04, Y = 0.61,
 		Text = "",
 		Duration = math.huge,
 		R = 255, G = 255, B = 255,
@@ -77,10 +77,18 @@ local function initializeSquadHudText()
 
 	function squadNumbersHudText:UpdateText()
 		local text = ""
+		local squadNumberLastSetTime = squadNumberLastSetTimes[Client.GetLocalClientIndex()] or 0
+		local secondsSinceSquadNumberLastSet = math.floor(Shared.GetTime() - squadNumberLastSetTime)
+		local shouldHideSquadNumberToCauseBlinkingEffect = secondsSinceSquadNumberLastSet < 6 and secondsSinceSquadNumberLastSet % 2 == 0
 		local squadNumber = squadNumbers[Client.GetLocalClientIndex()] or 0
 		local isCommander = Scoreboard_GetPlayerData(Client.GetLocalClientIndex(), "IsCommander")
-		if squadNumber ~= 0 and not isCommander then
-			text = string.format("\nSquad %s", squadNumber)
+		if squadNumber ~= 0 and not isCommander and not shouldHideSquadNumberToCauseBlinkingEffect then
+			if Client.GetLocalClientTeamNumber() == kMarineTeamType then
+				text = string.format("\nSquad %s", squadNumber)
+			else
+				local plannedLifeFormNames = {"Skulk", "Gorge", "Lerk", "Fade", "Onos", "KHAMM"}
+				text = string.format("\n%s", plannedLifeFormNames[squadNumber])
+			end
 		end
 		self.Obj:SetText(text)
 	end
@@ -95,36 +103,6 @@ function Plugin:Initialise()
 
 	Client.PrecacheLocalSound(countdownSoundEventName)
 	Client.PrecacheLocalSound(approveSoundEventName)
-
-	-- lua\GUIScoreboard.lua
-
-	// local originalGUIScoreboardUpdate = GUIScoreboard.Update
-	// GUIScoreboard.Update = function(self, deltaTime)
-	// 	originalGUIScoreboardUpdate(self, deltaTime)
-	// 	if self.visible then
-	//         local gameTime = PlayerUI_GetGameLengthTime()
-	//         local minutes = math.floor( gameTime / 60 )
-	//         local seconds = math.floor( gameTime - minutes * 60 )
-	//         local serverName = Client.GetServerIsHidden() and "Hidden" or Client.GetConnectedServerName()
-
-	//         local ingamePlayersCount = 0
-	// 	    for teamsIndex, team in ipairs(self.teams) do
-	// 	    	local playerList = team["PlayerList"]
-	// 	    	local teamScores = team["GetScores"]()
-	// 	    	local currentPlayerIndex = 1
-	// 			for playerListIndex, player in pairs(playerList) do
-	// 				local playerRecord = teamScores[currentPlayerIndex]
-	// 				if playerRecord.Ping > 0 then
-	// 					ingamePlayersCount = ingamePlayersCount + 1
-	// 				end
-	// 				currentPlayerIndex = currentPlayerIndex + 1
-	// 			end
-	// 	    end
-	//         local numPlayersConnecting = PlayerUI_GetNumConnectingPlayers()
-	//         local gameTimeText = string.format("%s | %s - (%d %s%s) - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), numPlayersConnecting > 0 and string.format(", %d %s", numPlayersConnecting, Locale.ResolveString("SB_CONNECTING")) or "", minutes, seconds)
-	//         self.gameTime:SetText(gameTimeText)
-	// 	end
-	// end
 
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
@@ -475,6 +453,7 @@ function Plugin:Initialise()
 		vrConfirmed[message.c] = true
 	end)
 	TGNS.HookNetworkMessage(Plugin.SQUAD_CONFIRMED, function(message)
+		squadNumberLastSetTimes[message.c] = Shared.GetTime()
 		squadNumbers[message.c] = message.s
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
@@ -611,28 +590,51 @@ function Plugin:Initialise()
 		originalGUIInsight_PlayerHealthbarsUpdatePlayers(playerHealthbarsSelf, deltaTime)
 		local players = Shared.GetEntitiesWithClassname("Player")
 		for index, player in ientitylist(players) do
-			local squadNumber = squadNumbers[player:GetClientIndex()] or 0
-			if squadNumber ~= 0 then
-				local playerIndex = player:GetId()
-				local playerIsVisibleAliveGroundling = player:GetIsVisible() and player:GetIsAlive() and not player:isa("Commander")
-				if playerIsVisibleAliveGroundling then
-					local playerList = GetUpValue( GUIInsight_PlayerHealthbars.UpdatePlayers, "playerList", { LocateRecurse = true } )
-					local playerGUI = playerList[playerIndex]
-					if playerGUI then
-						local text = string.format("%s (Squad %s)", playerGUI.Name:GetText(), squadNumber)
-						playerGUI.Name:SetText(text)
+			if player:GetTeamNumber() == kMarineTeamType then
+				local squadNumber = squadNumbers[player:GetClientIndex()] or 0
+				if squadNumber ~= 0 then
+					local playerIndex = player:GetId()
+					local playerIsVisibleAliveGroundling = player:GetIsVisible() and player:GetIsAlive() and not player:isa("Commander")
+					if playerIsVisibleAliveGroundling then
+						local playerList = GetUpValue( GUIInsight_PlayerHealthbars.UpdatePlayers, "playerList", { LocateRecurse = true } )
+						local playerGUI = playerList[playerIndex]
+						if playerGUI then
+							local text = string.format("%s (Squad %s)", playerGUI.Name:GetText(), squadNumber)
+							playerGUI.Name:SetText(text)
+						end
 					end
 				end
 			end
 		end
 	end)
 
+
+
+	local originalGUIMinimapUpdate
+	originalGUIMinimapUpdate = Class_ReplaceMethod("GUIMinimap", "Update", function(minimapSelf, deltaTime)
+		local originalScoreboardGetPlayerRecord = Scoreboard_GetPlayerRecord
+		Scoreboard_GetPlayerRecord = function(clientIndex)
+			local playerRecord = originalScoreboardGetPlayerRecord(clientIndex)
+			if playerRecord and playerRecord.EntityTeamNumber and playerRecord.EntityTeamNumber == kMarineTeamType then
+				local squadNumber = squadNumbers[playerRecord.ClientIndex] or 0
+				if squadNumber ~= 0 then
+					playerRecord.Name = string.format("%s (Squad %s)", playerRecord.Name, squadNumber)
+				end
+			end
+			return playerRecord
+		end
+		originalGUIMinimapUpdate(minimapSelf, deltaTime)
+		Scoreboard_GetPlayerRecord = originalScoreboardGetPlayerRecord
+	end)
+
+
+
 	initializeSquadHudText()
 
 	local parent, OldUpdateUnitStatusBlip = LocateUpValue( GUIUnitStatus.Update, "UpdateUnitStatusBlip", { LocateRecurse = true } )
 	function SquadUpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCommander, baseResearchRot, showHints, playerTeamType )
 		OldUpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCommander, baseResearchRot, showHints, playerTeamType )
-		if blipData.IsPlayer and blipData.TeamType == Client.GetLocalClientTeamNumber() then
+		if blipData.IsPlayer and blipData.TeamType == Client.GetLocalClientTeamNumber() and blipData.TeamType == kMarineTeamType then
 			local kUnitStatusCommanderDisplayRange = 50
 			local kUnitStatusDisplayRange = 13
 
