@@ -64,7 +64,7 @@ TGNS.RegisterNetworkMessage(Plugin.ALERT_ICON, {});
 TGNS.RegisterNetworkMessage(Plugin.TEAM_SCORES_DATA, {mn="string(30)", an="string(30)",ms="integer",as="integer"});
 TGNS.RegisterNetworkMessage(Plugin.WYZ, {});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_ALLOWED, {});
-TGNS.RegisterNetworkMessage(Plugin.SQUAD_REQUESTED, {c="integer"});
+TGNS.RegisterNetworkMessage(Plugin.SQUAD_REQUESTED, {c="integer",d="integer"});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_CONFIRMED, {c="integer",s="integer"});
 
 function Plugin:Initialise()

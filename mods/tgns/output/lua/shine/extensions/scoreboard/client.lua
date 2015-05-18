@@ -299,7 +299,7 @@ function Plugin:Initialise()
 	        if playerSquadIcon then
 	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerSquadIcon)
 	        	playerSquadIcon:SetIsVisible(playerSquadIconShouldDisplay)
-	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or gameIsInProgress
 		        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
 	        end
 
@@ -385,6 +385,11 @@ function Plugin:Initialise()
 			end
 		end
 
+			if (GetIsBinding(key, "MovementModifier")) then
+				self.MovementModifierIsPressed = down
+			end
+
+
 		local result = originalGUIScoreboardSendKeyEvent(self, key, down)
 		if result then
 			local mouseX, mouseY = Client.GetCursorPosScreen()
@@ -427,14 +432,15 @@ function Plugin:Initialise()
 		            	end
 		            end
 		            local playerSquadIcon = playerItem["PlayerSquadIcon"]
-		            local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+		            local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (Client.GetLocalClientTeamNumber() == kAlienTeamType and gameIsInProgress)
 		            if playerSquadIcon and playerSquadIcon:GetIsVisible() and GUIItemContainsPoint(playerSquadIcon, mouseX, mouseY) then
+		            	local squadNumberDelta = self.MovementModifierIsPressed and -1 or 1
 		            	if self.hoverMenu then
 		            		self.hoverMenu:Hide()
 		            	end
-		            	if not playerSquadIconShouldBeDisabled then
+		            	if (not playerSquadIconShouldBeDisabled) or (Client.GetLocalClientTeamNumber() == kAlienTeamType and not isSquading) then
 			                isSquading = true
-			                TGNS.SendNetworkMessage(Plugin.SQUAD_REQUESTED, {c=clientIndex})
+			                TGNS.SendNetworkMessage(Plugin.SQUAD_REQUESTED, {c=clientIndex,d=squadNumberDelta})
 		            	end
 		            end
 		        end
