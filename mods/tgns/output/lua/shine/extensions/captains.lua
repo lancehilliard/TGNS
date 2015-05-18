@@ -315,15 +315,6 @@ local function updateCaptainsReadyProgress(readyClient)
 		// end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
 			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 2, 0))
-			local secondLineMessage = "Captains play two rounds after picking a team and Commander."
-			if (votesAllowedUntil == math.huge and twoCaptainsReady) or (votesAllowedUntil ~= math.huge and twoCaptainsReady and #playingReadyPlayerClients == 0) then
-				secondLineMessage = "Press 'M > Captains > sh_iwantcaptains' if you want to play Captains."
-			end
-			local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, c)
-			if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
-				secondLineMessage = string.format("%s\nYou're opted-in as ready to play%s!", secondLineMessage, readyClientIsCaptain and " (and pick your team)" or "")
-			end
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(94, 0.5, 0.80, secondLineMessage, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 1, 0))
 		end)
 	else
 		if not captainsModeEnabled then
@@ -347,7 +338,12 @@ local function announceTimeRemaining()
 			local secondCaptainName = #playingReadyCaptainClients > 1 and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
 			-- md:ToAllNotifyInfo(string.format("Press M > Captains if you want to play Captains (%s & %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory))
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
-				Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, string.format("Press 'M > Captains > sh_iwantcaptains' if you want to play Captains (%s vs %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory), 10, 0, 255, 0, 1, 1, 0))
+				local secondLineMessage = string.format("Press 'M > Captains > sh_iwantcaptains' if you want to play Captains (%s vs %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory)
+				local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, c)
+				if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
+					secondLineMessage = string.format("You're opted-in as ready to play%s!", readyClientIsCaptain and " (and pick your team)" or "")
+				end
+				Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, secondLineMessage, 10, 0, 255, 0, 1, 1, 0))
 			end)
 			TGNS.ScheduleAction(1, announceTimeRemaining)
 		else
