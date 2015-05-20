@@ -130,14 +130,6 @@ local function OnBkaChanged(actingClient, targetClient, bkaData, newBkaName, bka
 	TGNS.ExecuteEventHooks("BkaChanged", targetClient)
 end
 
--- TGNSScoreboardMessageChanger.Add(TGNSScoreboardMessageChanger.Priority.LOWEST, function(scorePlayer, sendToPlayer, scoresMessage)
--- 	local client = TGNS.GetClient(scorePlayer)
--- 	local bkaName = bkas[client]
--- 	if bkaName ~= nil and not TGNS.StringEqualsCaseInsensitive(TGNS.GetPlayerName(scorePlayer), bkaName) then
--- 		scoresMessage.playerName = string.format("*%s", scoresMessage.playerName)
--- 	end
--- end)
-
 local function ShowWhoisUsage(client)
 	local md = TGNSMessageDisplayer.Create("WHOIS")
 	md:ToClientConsole(client, "Usage: sh_whois <player>")
@@ -145,7 +137,7 @@ end
 
 function Plugin:IsPlayingWithBkaName(client)
 	local bkaName = bkas[client]
-	local result = bkaName ~= nil and TGNS.StringEqualsCaseInsensitive(TGNS.GetClientName(client), bkaName)
+	local result = bkaName ~= nil and TGNS.StringEqualsCaseInsensitiveAndWhitespaceInsensitive(TGNS.GetClientName(client), bkaName)
 	return result
 end
 
