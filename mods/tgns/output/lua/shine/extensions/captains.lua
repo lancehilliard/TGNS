@@ -38,6 +38,7 @@ local ALLOW_VOTE_MAXIMUM_LIMIT_IN_SECONDS = 115
 local RESTRICTED_OPTIN_DURATION_IN_SECONDS = 5
 local PLAN_DISPLAY_LENGTH = 9
 local OPTIN_VOTE_DURATION = 90
+local lastUpdateCaptainsReadyProgress = {}
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -61,11 +62,13 @@ local function startGame()
 	if timeAtWhichToForceRoundStart and timeAtWhichToForceRoundStart ~= 0 then
 		timeAtWhichToForceRoundStart = 0
 		TGNS.ScheduleAction(2, function()
-			TGNS.ForceGameStart()
-			TGNS.ScheduleAction(kCountDownLength + 2, function()
-				readyTeams["Marines"] = false
-				readyTeams["Aliens"] = false
-			end)
+			if not (TGNS.IsGameInCountdown() or TGNS.IsGameInProgress()) then
+				TGNS.ForceGameStart()
+				TGNS.ScheduleAction(kCountDownLength + 2, function()
+					readyTeams["Marines"] = false
+					readyTeams["Aliens"] = false
+				end)
+			end
 		end)
 	end
 end
@@ -103,7 +106,9 @@ local function warnOfPendingCaptainsGameStart()
 				g = 0
 				b = 0
 			end
-			Shine:SendText(c, Shine.BuildScreenMessage(51, 0.5, 0.85, message, duration, r, g, b, 1, 1, 0))
+			-- Shine:SendText(c, Shine.BuildScreenMessage(51, 0.5, 0.85, message, duration, r, g, b, 1, 1, 0))
+			--Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+			Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true})
 		end
 	end
 end
@@ -148,7 +153,8 @@ local function showPickables()
 				local teamChoiceCaptainName = TGNS.GetClientName(teamChoiceCaptainClient)
 				local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 				TGNS.DoFor(readyRoomClients, function(c)
-					Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
+					-- Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
+					Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 				end)
 				if teamChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(teamChoiceCaptainClient) then
 					local teamChoiceCaptainTeamNumber = TGNS.GetClientTeamNumber(teamChoiceCaptainClient)
@@ -156,7 +162,8 @@ local function showPickables()
 					TGNS.DoFor(teamChoiceCaptainTeammateClients, function(c)
 						local truncatedTeamChoiceCaptainName = TGNS.Truncate(teamChoiceCaptainName, 16)
 						local message = setSpawnsSummaryText and string.format("%s has selected\nthe game's spawn locations!", truncatedTeamChoiceCaptainName) or string.format("%s: Select Spawns!\nM > Captains > sh_setspawns", truncatedTeamChoiceCaptainName)
-						Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
+						-- Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
+						Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					end)
 				end
 				if playerChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(playerChoiceCaptainClient) then
@@ -164,7 +171,8 @@ local function showPickables()
 					local playerChoiceCaptainTeammateClients = TGNS.GetTeamClients(playerChoiceCaptainTeamNumber, TGNS.GetPlayerList())
 					TGNS.DoFor(playerChoiceCaptainTeammateClients, function(c)
 						local message = "Other team will\npick spawn locations."
-						Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
+						-- Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
+						Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					end)
 				end
 			end
@@ -190,7 +198,8 @@ local function showPickables()
 				else
 					message = #notOptedInClients > 0 and "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'" or " "
 				end
-				Shine:SendText(c, Shine.BuildScreenMessage(59, 0.75, 0.70, message, 3, 0, 255, 0, 0, 1, 0 ) )
+				-- Shine:SendText(c, Shine.BuildScreenMessage(59, 0.75, 0.70, message, 3, 0, 255, 0, 0, 1, 0 ) )
+				Shine.ScreenText.Add(59, {X = 0.75, Y = 0.70, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 			end)
 
 			TGNS.ScheduleAction(1, showPickables)
@@ -235,8 +244,10 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 	TGNS.ScheduleAction(2, showPickables)
 	//Shine.Plugins.afkkick.Config.KickTime = 20
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
-		Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
+		-- Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
+		Shine.ScreenText.End(93, c)
+		-- Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
+		Shine.ScreenText.End(94, c)
 	end)
 	TGNS.ScheduleAction(2, function()
 		allPlayersWereArtificiallyForcedToReadyRoom = false
@@ -247,7 +258,8 @@ end
 
 local function showBanner(headline)
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage(41, 0.5, 0.2, string.format("Captains?%s", headline), 5, 0, 255, 0, 1, 3, 0 ) )
+		-- Shine:SendText(c, Shine.BuildScreenMessage(41, 0.5, 0.2, string.format("Captains?%s", headline), 5, 0, 255, 0, 1, 3, 0 ) )
+		Shine.ScreenText.Add(41, {X = 0.5, Y = 0.2, Text = string.format("Captains?%s", headline), Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 	end)
 	bannerDisplayed = true
 end
@@ -314,7 +326,11 @@ local function updateCaptainsReadyProgress(readyClient)
 		// 	-- end
 		// end
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
-			Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 2, 0))
+			-- Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 2, 0))
+			if (Shared.GetTime() - (lastUpdateCaptainsReadyProgress[c] or 0) > 1) or c == readyClient then
+				Shine.ScreenText.Add(93, {X = 0.5, Y = 0.75, Text = descriptionOfWhatElseIsNeededToPlayCaptains, Duration = votesAllowedUntil and 120 or 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
+				lastUpdateCaptainsReadyProgress[c] = Shared.GetTime()
+			end
 		end)
 	else
 		if not captainsModeEnabled then
@@ -336,25 +352,28 @@ local function announceTimeRemaining()
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			local firstCaptainName = #playingReadyCaptainClients > 0 and TGNS.GetClientName(playingReadyCaptainClients[1]) or "???"
 			local secondCaptainName = #playingReadyCaptainClients > 1 and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
-			-- md:ToAllNotifyInfo(string.format("Press M > Captains if you want to play Captains (%s & %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory))
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
-				local secondLineMessage = string.format("Press 'M > Captains > sh_iwantcaptains' if you want to play Captains (%s vs %s). %s", firstCaptainName, secondCaptainName, timeLeftAdvisory)
+				local optinStatusAdvisory = "Press 'M > Captains > sh_iwantcaptains' if you want to play Captains"
 				local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, c)
 				if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
-					secondLineMessage = string.format("You're opted-in as ready to play%s!", readyClientIsCaptain and " (and pick your team)" or "")
+					optinStatusAdvisory = string.format("You're opted-in as ready to play%s", readyClientIsCaptain and " as a Captain" or "")
 				end
-				Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, secondLineMessage, 10, 0, 255, 0, 1, 1, 0))
+				local secondLineMessage = string.format("%s (%s vs %s)! %s", optinStatusAdvisory, firstCaptainName, secondCaptainName, timeLeftAdvisory)
+				-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, secondLineMessage, 10, 0, 255, 0, 1, 1, 0))
+				Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = secondLineMessage, Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 			end)
 			TGNS.ScheduleAction(1, announceTimeRemaining)
 		else
 			TGNS.ScheduleAction(1, function()
 				if not captainsModeEnabled then
 					TGNS.DoFor(TGNS.GetClientList(), function(c)
-						Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, "Captains vote expired.", 5, 255, 0, 0, 1, 1, 0))
+						-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, "Captains vote expired.", 5, 255, 0, 0, 1, 1, 0))
+						Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = "Captains vote expired.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+						-- Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
+						Shine.ScreenText.End(93, c)
+						-- Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
+						Shine.ScreenText.End(94, c)
 					end)
-					Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
-					Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
-					-- md:ToAllNotifyInfo("Captains vote expired.")
 				end
 			end)
 		end
@@ -397,9 +416,6 @@ local function addReadyPlayerClient(client)
 				if TGNS.PlayerAction(client, TGNS.IsPlayerReadyRoom) and not TGNS.ClientIsInGroup(client, "captainsgame_group") then
 					TGNS.AddTempGroup(client, "captainsgame_group")
 					md:ToAllNotifyInfo(string.format("%s wants Captains, too!", TGNS.GetClientName(client)))
-					-- TGNS.DoFor(TGNS.GetClientList(), function(c)
-					-- 	Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, string.format("%s wants Captains, too!", TGNS.GetClientName(client)), 5, 0, 255, 0, 1, 1, 0))
-					-- end)
 				end
 			end
 		end
@@ -1102,7 +1118,8 @@ function Plugin:Initialise()
 			result = TGNS.IsClientAdmin(speakerClient) or TGNS.IsClientGuardian(speakerClient) or TGNS.ClientIsInGroup(speakerClient, "captains_group")
 			if result ~= true then
 				if lastVoiceWarningTimes[speakerClient] == nil or lastVoiceWarningTimes[speakerClient] < Shared.GetTime() - 2 then
-					Shine:SendText(speakerClient, Shine.BuildScreenMessage(50, 0.2, 0.25, "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", 3, 0, 255, 0, 0, 4, 0 ) )
+					-- Shine:SendText(speakerClient, Shine.BuildScreenMessage(50, 0.2, 0.25, "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", 3, 0, 255, 0, 0, 4, 0 ) )
+					Shine.ScreenText.Add(50, {X = 0.2, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 4, FadeIn = 0, IgnoreFormat = true}, speakerClient)
 					lastVoiceWarningTimes[speakerClient] = Shared.GetTime()
 				end
 			end
