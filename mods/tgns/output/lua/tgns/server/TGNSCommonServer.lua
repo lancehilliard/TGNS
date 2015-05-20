@@ -67,11 +67,14 @@ function TGNS.ShowPanel(values, renderClients, titleMessageId, column1MessageId,
 	local columnYDelta = 0.10
 	titleText = TGNS.HasNonEmptyValue(titleText) and string.format("%s (%s)", titleText, titleSumText) or ""
 	TGNS.DoFor(renderClients, function(c)
-		Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.75, titleY, titleText, duration, 0, 255, 0, 0, 2, 0 ) )
+		-- Shine:SendText(c, Shine.BuildScreenMessage( titleMessageId, 0.75, titleY, titleText, duration, 0, 255, 0, 0, 2, 0 ) )
+		Shine.ScreenText.Add(titleMessageId, {X = 0.75, Y = titleY, Text = titleText, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 		local column1Message = TGNS.Join(list1, '\n')
-		Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.75, columnsY, column1Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		-- Shine:SendText(c, Shine.BuildScreenMessage( column1MessageId, 0.75, columnsY, column1Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		Shine.ScreenText.Add(column1MessageId, {X = 0.75, Y = columnsY, Text = column1Message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 		local column2Message = TGNS.Join(list2, '\n')
-		Shine:SendText(c, Shine.BuildScreenMessage( column2MessageId, 0.75 + columnYDelta, columnsY, column2Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		-- Shine:SendText(c, Shine.BuildScreenMessage( column2MessageId, 0.75 + columnYDelta, columnsY, column2Message, duration, 0, 255, 0, 0, 1, 0 ) )
+		Shine.ScreenText.Add(column2MessageId, {X = 0.75 + columnYDelta, Y = columnsY, Text = column2Message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 	end)
 end
 
