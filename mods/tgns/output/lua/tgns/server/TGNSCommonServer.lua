@@ -1439,6 +1439,16 @@ function TGNS.KickPlayer(player, disconnectReason, onPreKick)
 	end
 end
 
+function TGNS.StripWhitespace(s)
+	local result = s:gsub("%s+", "")
+	return result
+end
+
+function TGNS.StringEqualsCaseInsensitiveAndWhitespaceInsensitive(s1, s2)
+	local result = TGNS.StringEqualsCaseInsensitive(TGNS.StripWhitespace(s1), TGNS.StripWhitespace(s2))
+	return result
+end
+
 function TGNS.StringEqualsCaseInsensitive(s1, s2)
 	local result = string.lower(s1) == string.lower(s2)
 	return result
