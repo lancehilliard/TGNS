@@ -71,7 +71,8 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 				md:ToPlayerNotifyInfo(p, "You are free to leave the Ready Room.")
 			end)
 			TGNS.DoFor(getSidebarParticipantClients(), function(c)
-				Shine:SendText(c, Shine.BuildScreenMessage(70, 0.2, 0.25, "", 1, 0, 255, 0, 0, 4, 0 ) )
+				-- Shine:SendText(c, Shine.BuildScreenMessage(70, 0.2, 0.25, "", 1, 0, 255, 0, 0, 4, 0 ) )
+				Shine.ScreenText.End(70, c)
 			end)
 			sidebarClients = {}
 		end
@@ -132,7 +133,8 @@ function Plugin:Initialise()
 			local message = string.format("Sidebar (%s):\n%s", TGNS.GetClientName(hostClient), TGNS.Join(TGNS.Select(sidebarTargetClients, TGNS.GetClientName), "\n"))
 			TGNS.DoFor(getSidebarParticipantClients(), function(c)
 				if lastVoiceWarningTimes[c] == nil or lastVoiceWarningTimes[c] < Shared.GetTime() - 1 then
-					Shine:SendText(c, Shine.BuildScreenMessage(70, 0.2, 0.25, string.format("%s%s%s", message, TGNS.IsClientAdmin(c) and "\n\nLook down to hear beyond Sidebar." or "", isAllTalkEnabled() and "\nAlltalk enabled!!" or ""), 5, isAllTalkEnabled() and 255 or 0, isAllTalkEnabled() and 0 or 255, 0, 0, 4, 0 ) )
+					-- Shine:SendText(c, Shine.BuildScreenMessage(70, 0.2, 0.25, , 5, isAllTalkEnabled() and 255 or 0, isAllTalkEnabled() and 0 or 255, 0, 0, 4, 0 ) )
+					Shine.ScreenText.Add(70, {X = 0.2, Y = 0.25, Text = string.format("%s%s%s", message, TGNS.IsClientAdmin(c) and "\n\nLook down to hear beyond Sidebar." or "", isAllTalkEnabled() and "\nAlltalk enabled!!" or ""), Duration = 5, R = isAllTalkEnabled() and 255 or 0, G = isAllTalkEnabled() and 0 or 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 4, FadeIn = 0, IgnoreFormat = true}, c)
 					lastVoiceWarningTimes[c] = Shared.GetTime()
 				end
 			end)
