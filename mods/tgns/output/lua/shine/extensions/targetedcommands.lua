@@ -42,7 +42,8 @@ local function showApproval(sourceClient, targetClient, displayMessage, md)
 			local p = TGNS.GetPlayer(c)
 			if TGNS.PlayersAreTeammates(p, sourcePlayer) or TGNS.PlayersAreTeammates(p, targetPlayer) or TGNS.IsPlayerSpectator(p) or TGNS.IsClientAdmin(c) then
 				local modifiedDisplayMessage = string.format("\n   %s", displayMessage)
-				Shine:SendText(c, Shine.BuildScreenMessage(81, 0.05, 0.95, modifiedDisplayMessage, 15, 255, 255, 255, 0, 1, 0 ) )
+				-- Shine:SendText(c, Shine.BuildScreenMessage(81, 0.05, 0.95, modifiedDisplayMessage, 15, 255, 255, 255, 0, 1, 0 ) )
+				Shine.ScreenText.Add(81, {X = 0.05, Y = 0.95, Text = modifiedDisplayMessage, Duration = 15, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 			end
 		end)
 	end
