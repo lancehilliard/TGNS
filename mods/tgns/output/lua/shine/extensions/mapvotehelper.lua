@@ -30,7 +30,8 @@ local function showVoteReminders()
 	if measurableVoteIsInProgress() then
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
 			if not clientHasVoted(c) then
-				Shine:SendText(c, Shine.BuildScreenMessage(101, 0.5, 0.65, " Please take a moment to vote for the next map.\n( instructions are at the top right of your screen )", 8, 0, 255, 0, 1, 4, 0))
+				-- Shine:SendText(c, Shine.BuildScreenMessage(101, 0.5, 0.65, , 8, 0, 255, 0, 1, 4, 0))
+				Shine.ScreenText.Add(101, {X = 0.5, Y = 0.65, Text = " Please take a moment to vote for the next map.\n( instructions are at the top right of your screen )", Duration = 8, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 4, FadeIn = 0, IgnoreFormat = true}, c)
 			end
 		end)
 	end
