@@ -162,14 +162,17 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 					end
 
 
-					Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, textLocationHeight, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
-					Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, textLocationHeight + 0.04, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
+					-- Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, textLocationHeight, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
+					Shine.ScreenText.Add(71, {X = 0.5, Y = textLocationHeight, Text = bannerText, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+					-- Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, textLocationHeight + 0.04, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
+					Shine.ScreenText.Add(72, {X = 0.5, Y = textLocationHeight + 0.04, Text = chatMessage, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 					textLocationHeightAdditive = textLocationHeightAdditive > 0 and textLocationHeightAdditive - 0.05 or textLocationHeightAdditive
 					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.WINORLOSE_WARNING, {})
 				end)
 				local spectatorsText = string.format("WinOrLose! %s have %s seconds to kill the %s%s!", teamNameWhichMustWinOrLose, kCountdownTimeRemaining, TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires), bannerLocationName)
 				TGNS.DoFor(TGNS.GetSpectatorClients(TGNS.GetPlayerList()), function(c)
-					Shine:SendText(c, Shine.BuildScreenMessage(74, 0.5, 0.85, spectatorsText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, 255, 255, 255, 1, 1, 0))
+					-- Shine:SendText(c, Shine.BuildScreenMessage(74, 0.5, 0.85, spectatorsText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, 255, 255, 255, 1, 1, 0))
+					Shine.ScreenText.Add(74, {X = 0.5, Y = 0.85, Text = spectatorsText, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 				end)
 				TGNS.DoFor(ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM, function(className)
 					TGNS.DestroyAllEntities(className, teamNumberWhichWillWinIfWinLoseCountdownExpires)
@@ -179,7 +182,8 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 			kCountdownTimeRemaining = kCountdownTimeRemaining - 1
 		else
 			removeBanners()
-			Shine:SendText(nil, Shine.BuildScreenMessage(75, 0.5, 0.2, "WinOrLose, on to the next game!", 7, 255, 255, 255, 1, 3, 0 ) )
+			-- Shine:SendText(nil, Shine.BuildScreenMessage(75, 0.5, 0.2, "WinOrLose, on to the next game!", 7, 255, 255, 255, 1, 3, 0 ) )
+			Shine.ScreenText.Add(75, {X = 0.5, Y = 0.2, Text = "WinOrLose, on to the next game!", Duration = 7, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true})
 			-- Shine:SendText(nil, Shine.BuildScreenMessage(72, 0.5, 0.24, "", 1, 255, 255, 255, 1, 1, 0))
 			-- Shine:SendText(nil, Shine.BuildScreenMessage(74, 0.5, 0.85, "", 1, 255, 255, 255, 1, 1, 0))
 			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
@@ -347,7 +351,8 @@ function Plugin:TakeDamage( Ent, Damage, Attacker, Inflictor, Point, Direction, 
 			local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
 			local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
 			local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
-			Shine:SendText(client, Shine.BuildScreenMessage(70, 0.5, 0.6, "You cannot do damage.", 6, r, g, b, 1, 3, 0 ) )
+			-- Shine:SendText(client, Shine.BuildScreenMessage(70, 0.5, 0.6, "You cannot do damage.", 6, r, g, b, 1, 3, 0 ) )
+			Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot do damage.", Duration = 6, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
 			lastNoAttackNoticeTimes[client] = Shared.GetTime()
 		end
 	else
@@ -404,7 +409,8 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 			TGNS.DestroyAllEntities("CommandStructure", victimEntity:GetTeamNumber())
 		else
 			if kCountdownTimeRemaining > 0 and victimEntity and victimEntity:isa("Player") and victimEntity:GetTeamNumber() == teamNumberWhichWillWinIfWinLoseCountdownExpires then
-				Shine:SendText(victimEntity, Shine.BuildScreenMessage(70, 0.5, 0.4, "", 6, 255, 255, 255, 1, 3, 0 ) )
+				-- Shine:SendText(victimEntity, Shine.BuildScreenMessage(70, 0.5, 0.4, "", 6, 255, 255, 255, 1, 3, 0 ) )
+				Shine.ScreenText.End(70, victimEntity)
 			end
 			if kCountdownTimeRemaining < Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds - 1 then
 				if victimEntity and attackerEntity and victimEntity:isa("Player") and attackerEntity:isa("Player") and inflictorEntity:GetParent() == attackerEntity and not TGNS.GetIsClientVirtual(TGNS.GetClient(victimEntity)) and not TGNS.IsPlayerHallucination(victimEntity) then
@@ -431,15 +437,18 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 							local attackerGreen = attackerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
 							local attackerBlue = attackerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
 							TGNS.DoFor(TGNS.GetTeamClients(attackerTeamNumber, TGNS.GetPlayerList()), function(c)
-								Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.4, string.format("%s killed a player. Timer reduced to %s!", TGNS.GetPlayerName(attackerEntity), kCountdownTimeRemaining), 3, attackerRed, attackerGreen, attackerBlue, 1, 2, 0 ) )
+								-- Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.4, string.format("%s killed a player. Timer reduced to %s!", TGNS.GetPlayerName(attackerEntity), kCountdownTimeRemaining), 3, attackerRed, attackerGreen, attackerBlue, 1, 2, 0 ) )
+								Shine.ScreenText.Add(73, {X = 0.5, Y = 0.4, Text = string.format("%s killed a player. Timer reduced to %s!", TGNS.GetPlayerName(attackerEntity), kCountdownTimeRemaining), Duration = 3, R = attackerRed, G = attackerGreen, B = attackerBlue, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 							end)
 							TGNS.DoFor(TGNS.GetTeamClients(victimTeamNumber, TGNS.GetPlayerList()), function(c)
-								Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.7, string.format("%s did not die in vain! Timer reduced!", TGNS.GetPlayerName(victimEntity)), 6, victimRed, victimGreen, victimBlue, 1, 3, 0 ) )
+								-- Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.7, string.format("%s did not die in vain! Timer reduced!", TGNS.GetPlayerName(victimEntity)), 6, victimRed, victimGreen, victimBlue, 1, 3, 0 ) )
+								Shine.ScreenText.Add(73, {X = 0.5, Y = 0.7, Text = string.format("%s did not die in vain! Timer reduced!", TGNS.GetPlayerName(victimEntity)), Duration = 6, R = victimRed, G = victimGreen, B = victimBlue, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 							end)
 						end
 					else
 						TGNS.DoFor(TGNS.GetTeamClients(victimTeamNumber, TGNS.GetPlayerList()), function(c)
-							Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.7, string.format("%s has fallen, yet the %s still stands!", TGNS.GetPlayerName(victimEntity), TGNS.ToLower(commandStructureDescription)), 6, victimRed, victimGreen, victimBlue, 1, 3, 0 ) )
+							-- Shine:SendText(c, Shine.BuildScreenMessage(73, 0.5, 0.7, string.format("%s has fallen, yet the %s still stands!", TGNS.GetPlayerName(victimEntity), TGNS.ToLower(commandStructureDescription)), 6, victimRed, victimGreen, victimBlue, 1, 3, 0 ) )
+							Shine.ScreenText.Add(73, {X = 0.5, Y = 0.7, Text = string.format("%s has fallen, yet the %s still stands!", TGNS.GetPlayerName(victimEntity), TGNS.ToLower(commandStructureDescription)), Duration = 6, R = victimRed, G = victimGreen, B = victimBlue, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 						end)
 					end
 				end
