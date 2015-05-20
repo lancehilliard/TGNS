@@ -258,7 +258,8 @@ function Plugin:CreateCommands()
 	approvalsCountsCommand:Help( "Show approval counts." )
 
 	local textTestCommand = self:BindCommand( "sh_texttest", "tt", function(client, message, x, y)
-		Shine:SendText(client, Shine.BuildScreenMessage(81, x, y, message, 15, 255, 255, 255, 1, 1, 0 ) )
+		-- Shine:SendText(client, Shine.BuildScreenMessage(81, x, y, message, 15, 255, 255, 255, 1, 1, 0 ) )
+		Shine.ScreenText.Add(81, {X = x, Y = y, Text = message, Duration = 15, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, client)
 	end)
 	textTestCommand:AddParam{ Type = "string" }
 	textTestCommand:AddParam{ Type = "number", Min = 0, Max = 1 }
