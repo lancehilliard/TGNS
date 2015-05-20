@@ -79,7 +79,7 @@ local function initializeSquadHudText()
 		local text = ""
 		local squadNumberLastSetTime = squadNumberLastSetTimes[Client.GetLocalClientIndex()] or 0
 		local secondsSinceSquadNumberLastSet = math.floor(Shared.GetTime() - squadNumberLastSetTime)
-		local shouldHideSquadNumberToCauseBlinkingEffect = secondsSinceSquadNumberLastSet < 6 and secondsSinceSquadNumberLastSet % 2 == 0
+		local shouldHideSquadNumberToCauseBlinkingEffect = (secondsSinceSquadNumberLastSet < 6 and secondsSinceSquadNumberLastSet % 2 == 0) or (secondsSinceSquadNumberLastSet > 10)
 		local squadNumber = squadNumbers[Client.GetLocalClientIndex()] or 0
 		local isCommander = Scoreboard_GetPlayerData(Client.GetLocalClientIndex(), "IsCommander")
 		if squadNumber ~= 0 and not isCommander and not shouldHideSquadNumberToCauseBlinkingEffect then
