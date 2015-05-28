@@ -234,7 +234,7 @@ function Plugin:Initialise()
 			    steamFriendPosition.x = steamFriendPosition.x + 26
 			    steamFriendPosition.y = steamFriendPosition.y - 10
 			    player.SteamFriend:SetPosition(steamFriendPosition)
-			    player.SteamFriend:SetIsVisible(playerRecord.IsSteamFriend or Shared.GetDevMode())
+			    player.SteamFriend:SetIsVisible(playerRecord.IsSteamFriend or Shared.GetDevMode() or Client.GetLocalClientIndex() == clientIndex)
 			    if player.IconTable then
 			    	table.removevalue(player.IconTable, player.SteamFriend)
 			    end
