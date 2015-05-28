@@ -13,6 +13,13 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
 	-- 	end)
 
+function TGNS.GetStopWatchTime(seconds)
+	local integralSeconds, fractionalSeconds = math.modf(seconds)
+	local milliseconds = math.floor(1000 * fractionalSeconds)
+	local result = string.format("%s:%03d", string.DigitalTime(seconds), milliseconds)
+	return result
+end
+
 function TGNS.GetClientIndex(client)
 	local result = TGNS.GetPlayer(client):GetClientIndex()
 	return result
