@@ -44,7 +44,7 @@ function Plugin:Initialise()
 			if TGNS.IsPlayerAFK(p) then
 				local lastMoveTime = Shine.Plugins.afkkick:GetLastMoveTime(c)
 				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= TGNS.ConvertMinutesToSeconds(afkThresholdInMinutes)) and TGNS.ClientIsOnPlayingTeam(c) then
-					md:ToPlayerNotifyInfo(p, string.format("AFK %s minutes. Move to avoid being sent to Ready Room.", afkThresholdInMinutes))
+					md:ToPlayerNotifyInfo(p, string.format("AFK %s minute. Move to avoid being sent to Ready Room.", afkThresholdInMinutes))
 					TGNS.ScheduleAction(6, function()
 						if Shine:IsValidClient(c) then
 							p = TGNS.GetPlayer(c)
