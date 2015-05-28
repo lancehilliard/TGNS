@@ -94,6 +94,7 @@
 !mods/tgns/output/lua/shine/extensions/hidefullmodlist.lua
 !mods/tgns/output/lua/shine/extensions/hidespectators.lua
 !mods/tgns/output/lua/shine/extensions/improvedafkhandler.lua
+!mods/tgns/output/lua/shine/extensions/lapstracker.lua
 !mods/tgns/output/lua/shine/extensions/lookdown.lua
 !mods/tgns/output/lua/shine/extensions/mapvotehelper.lua
 !mods/tgns/output/lua/shine/extensions/modupdatednotice.lua
