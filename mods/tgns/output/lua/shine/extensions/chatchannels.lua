@@ -11,7 +11,7 @@ local function ProcessChatCommand(sourceClient, channel, command, message)
 	local sourceClientCanReceiveMessagesOnChannel = TGNS.ClientCanRunCommand(sourceClient, label)
 	local name
 	local chatMessage
-	local md = TGNSMessageDisplayer.Create(label .. "(" .. channel.triggerChar .. ")")
+	local md = TGNSMessageDisplayer.Create(label .. "(" .. channel.triggerChar .. ")", {r=channel.prefixRed, g=channel.prefixGreen, b=channel.prefixBlue})
 	local sourcePlayer = TGNS.GetPlayer(sourceClient)
 	local sourceClientName = TGNS.GetClientName(sourceClient)
 
