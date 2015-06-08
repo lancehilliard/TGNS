@@ -39,6 +39,7 @@ local RESTRICTED_OPTIN_DURATION_IN_SECONDS = 5
 local PLAN_DISPLAY_LENGTH = 9
 local OPTIN_VOTE_DURATION = 90
 local lastUpdateCaptainsReadyProgress = {}
+local infiniteTimeRemainingDisplayStarted
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -248,6 +249,7 @@ local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 		Shine.ScreenText.End(93, c)
 		-- Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
 		Shine.ScreenText.End(94, c)
+		Shine.ScreenText.End(92, c)
 	end)
 	TGNS.ScheduleAction(2, function()
 		allPlayersWereArtificiallyForcedToReadyRoom = false
@@ -383,13 +385,16 @@ end
 local function addReadyPlayerClient(client)
 	if votesAllowedUntil == nil then
 		votesAllowedUntil = TGNS.GetSecondsSinceMapLoaded() + OPTIN_VOTE_DURATION + 2
-		TGNS.DoFor(readyPlayerClients, function(c)
-			if Shine:IsValidClient(c) then
-				if not captainsModeEnabled then
-					md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "You are now opted-in to play a Captains game.")
-				end
-			end
-		end)
+		// TGNS.DoFor(readyPlayerClients, function(c)
+		// 	if Shine:IsValidClient(c) then
+		// 		if not captainsModeEnabled then
+		// 			md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "You are now opted-in to play a Captains game.")
+		// 		end
+		// 	end
+		// end)
+		TGNS.ScheduleAction(1, announceTimeRemaining)
+	elseif votesAllowedUntil == math.huge and not infiniteTimeRemainingDisplayStarted then
+		infiniteTimeRemainingDisplayStarted = true
 		TGNS.ScheduleAction(1, announceTimeRemaining)
 	end
 	readyPlayerClients = readyPlayerClients or {}
