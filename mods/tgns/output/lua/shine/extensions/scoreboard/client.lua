@@ -604,7 +604,7 @@ function Plugin:Initialise()
 					if playerIsVisibleAliveGroundling then
 						local playerList = GetUpValue( GUIInsight_PlayerHealthbars.UpdatePlayers, "playerList", { LocateRecurse = true } )
 						local playerGUI = playerList[playerIndex]
-						if playerGUI then
+						if playerGUI and not Client.GetLocalPlayer():GetIsMinimapVisible() then
 							local text = string.format("%s (Squad %s)", playerGUI.Name:GetText(), squadNumber)
 							playerGUI.Name:SetText(text)
 						end
@@ -656,7 +656,7 @@ function Plugin:Initialise()
 			if unit then
 				local clientIndex = unit:GetClientIndex()
 				local squadNumber = squadNumbers[clientIndex]
-				if squadNumber and squadNumber ~= 0 then
+				if squadNumber and squadNumber ~= 0 and not Client.GetLocalPlayer():GetIsMinimapVisible() then
 					local textObject = updateBlip.NameText
 					local originalText = textObject:GetText()
 					local newText = string.format("%s (%s)", originalText, string.format("Squad %d", squadNumber))
