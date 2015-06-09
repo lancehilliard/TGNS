@@ -40,7 +40,9 @@ local function disableLaps(client, reason, endTexts)
 	recentLocations[client] = {}
 	trackStartTimes[client] = {}
 	nextLocationNames[client] = {}
-	md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Laps disabled due to %s. %s", reason, (TGNS.ClientIsOnPlayingTeam(client) and not (TGNS.IsGameInProgress() or TGNS.IsGameInCountdown())) and "Type sh_laps in your client console to re-enable." or ""))
+	local player = TGNS.GetPlayer(client)
+	md:ToPlayerNotifyInfo(player, string.format("Laps disabled due to %s. %s", reason, (TGNS.ClientIsOnPlayingTeam(client) and not (TGNS.IsGameInProgress() or TGNS.IsGameInCountdown())) and "Type sh_laps in your client console to re-enable." or ""))
+	TGNS.RemoveMarinePlayerJetpack(player)
 	if endTexts then
 		clearTexts(client)
 		Shine.ScreenText.End(97, client)
@@ -51,12 +53,15 @@ local function disableLaps(client, reason, endTexts)
 end
 
 local function showLowestTime(client, trackId)
+	local player = TGNS.GetPlayer(client)
 	trackLowestTimes[client] = trackLowestTimes[client] or {}
+	trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
 	trackStartTimes[client] = trackStartTimes[client] or {}
-	if trackLowestTimes[client][trackId] ~= nil and trackLowestTimes[client][trackId] > 0 and trackStartTimes[client][trackId] then
+	local className = TGNS.GetPlayerClassName(player)
+	if trackLowestTimes[client][trackId][className] ~= nil and trackLowestTimes[client][trackId][className] > 0 and trackStartTimes[client][trackId] then
 		local trackData = tracks[trackId]
 		local mapDescriptor = string.format("%s (%s)", trackData.name, Shared.GetBuildNumber())
-		local message = string.format("%s\nYour Best Time:\n%s", mapDescriptor, getTrackDurationDisplay(trackLowestTimes[client][trackId]))
+		local message = string.format("%s\nYour Best Time (%s):\n%s", mapDescriptor, className, getTrackDurationDisplay(trackLowestTimes[client][trackId][className]))
 		Shine.ScreenText.Add(97, {X = 0.8, Y = 0.3, Text = message, Duration = MAXIMUM_ALLOWED_LOCATION_DURATION, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
 	end
 end
@@ -89,13 +94,15 @@ local function OnLocationChanged(player, locationName)
 				if locationName == TGNS.GetFirst(trackLocationNames) and not trackStartTimes[client][trackId] and #recentLocations[client] > 1 and recentLocations[client][#recentLocations[client]-1].locationName == trackLocationNames[#trackLocationNames-1] then
 					trackStartTimes[client][trackId] = TGNS.GetLast(recentLocations[client]).time
 						trackLowestTimes[client] = trackLowestTimes[client] or {}
-						if trackLowestTimes[client][trackId] == nil then
-							local url = string.format("%s&i=%s&t=%s&b=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()))
+						local className = TGNS.GetPlayerClassName(player)
+						trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
+						if trackLowestTimes[client][trackId][className] == nil then
+							local url = string.format("%s&i=%s&t=%s&b=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(className))
 							TGNS.GetHttpAsync(url, function(lapsResponseJson)
 								local lapsResponse = json.decode(lapsResponseJson) or {}
 								if lapsResponse.success then
 									if lapsResponse.seconds > 0 then
-										trackLowestTimes[client][trackId] = lapsResponse.seconds
+										trackLowestTimes[client][trackId][className] = lapsResponse.seconds
 										showLowestTime(client, trackId)
 									end
 								else
@@ -121,6 +128,9 @@ local function OnLocationChanged(player, locationName)
 					end)
 					if #matchingLocations == #trackLocationNames then
 						completedTrack = true
+					end
+					if TGNS.ClientIsMarine(client) then
+						player:SetFuel(1)
 					end
 					TGNS.DoFor(trackLocationNames, function(trackLocationName, mainIndex)
 						if mainIndex > 1 and trackLocationNames[mainIndex-1] == locationName then
@@ -151,8 +161,10 @@ local function OnLocationChanged(player, locationName)
 							md:ToPlayerNotifyInfo(player, message)
 						end
 						trackLowestTimes[client] = trackLowestTimes[client] or {}
-						local lowestPreviousTime = trackLowestTimes[client][trackId]
-						local url = string.format("%s&i=%s&t=%s&b=%s&s=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(trackDuration))
+						trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
+						local className = TGNS.GetPlayerClassName(player)
+						local lowestPreviousTime = trackLowestTimes[client][trackId][className]
+						local url = string.format("%s&i=%s&t=%s&b=%s&s=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(trackDuration), TGNS.UrlEncode(className))
 						TGNS.GetHttpAsync(url, function(lapsResponseJson)
 							local lapsResponse = json.decode(lapsResponseJson) or {}
 							if not lapsResponse.success then
@@ -162,10 +174,10 @@ local function OnLocationChanged(player, locationName)
 								md:ToClientConsole(client, "Feel free to ask Wyzcrak to manually record this time *if* it represents your personal track record.")
 								md:ToClientConsole(client, "When he verifies this notification in the server log, he'll add the time manually for you.")
 								md:ToClientConsole(client, "")
-								trackLowestTimes[client][trackId] = lowestPreviousTime
+								trackLowestTimes[client][trackId][className] = lowestPreviousTime
 							end
 						end)
-						trackLowestTimes[client][trackId] = trackDuration <= (trackLowestTimes[client][trackId] or trackDuration) and trackDuration or trackLowestTimes[client][trackId]
+						trackLowestTimes[client][trackId][className] = trackDuration <= (trackLowestTimes[client][trackId][className] or trackDuration) and trackDuration or trackLowestTimes[client][trackId][className]
 						trackStartTimes[client][trackId] = TGNS.GetLast(recentLocations[client]).time
 					end
 					showLowestTime(client, trackId)
@@ -223,9 +235,9 @@ function Plugin:CreateCommands()
     local lapsCommand = self:BindCommand( "sh_laps", nil, function(client)
         md:ToClientConsole(client, "")
         md:ToClientConsole(client, "== LAPS ==")
-    	if TGNS.ClientIsAlien(client) then
-    		if not TGNS.IsGameInProgress() then
-	    		if #startingRoomNames > 0 then
+
+		if TGNS.ClientIsOnPlayingTeam(client) then
+    		if not TGNS.IsGameInProgress() then    		if #startingRoomNames > 0 then
 			    	enabled[client] = not enabled[client] == true
 			        if enabled[client] then
 			        	local player = TGNS.GetPlayer(client)
@@ -240,18 +252,19 @@ function Plugin:CreateCommands()
 				        md:ToClientConsole(client, "Otherwise, you're ready to race! Starting rooms are displayed on screen!")
 				        md:ToClientConsole(client, "")
 				        OnLocationChanged(player, player:GetLocationName())
+				        TGNS.GiveMarinePlayerJetpack(player)
 				    else
 						disableLaps(client, "console command", true)
 			        end
 	    		else
 	    			md:ToClientConsole(client, "ERROR: No tracks are defined for this map.")
 	    		end
-    		else
-    			md:ToClientConsole(client, "ERROR: You may not enable Laps during gameplay.")
-    		end
-    	else
-    		md:ToClientConsole(client, "ERROR: You must be a Skulk to enable Laps. Other classes might be supported in the future.")
-    	end
+			else
+				md:ToClientConsole(client, "ERROR: You may not enable Laps during gameplay.")
+			end
+		else
+			md:ToClientConsole(client, "ERROR: You must be on the Marine or Alien team to use this command.")
+		end
         md:ToClientConsole(client, "")
     end, true)
     lapsCommand:Help("Toggle the Laps tracker. Learn more: http://rr.tacticalgamer.com/Laps")
