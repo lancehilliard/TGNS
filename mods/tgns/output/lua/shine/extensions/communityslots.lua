@@ -132,25 +132,25 @@ local function AnnounceClientBumpToStrangers(playerName)
     TGNS.DoFor(strangerPlayers, function(p) tgnsMd:ToPlayerNotifyInfo(p, Shine.Plugins.communityslots:GetBumpMessage(playerName)) end)
 end
 
-local function AnnounceOtherServerOptionsToBumpedClient(client)
-    local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
-    if otherServerStaticInfo then
-        TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(getResponse)
-            if getResponse.success then
-                local otherServerDynamicInfo = getResponse.value
-                if otherServerDynamicInfo.HasRecentData then
-                    local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
-                    if otherServerRemainingPublicSlots >= 4 then
-                        local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
-                        tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
-                        tgnsMd:ToClientConsole(client, message)
-                        tgnsMd:ToAdminConsole(message)
-                    end
-                end
-            end
-        end)
-    end
-end
+// local function AnnounceOtherServerOptionsToBumpedClient(client)
+//     local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+//     if otherServerStaticInfo then
+//         TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(getResponse)
+//             if getResponse.success then
+//                 local otherServerDynamicInfo = getResponse.value
+//                 if otherServerDynamicInfo.HasRecentData then
+//                     local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
+//                     if otherServerRemainingPublicSlots >= 4 then
+//                         local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
+//                         tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+//                         tgnsMd:ToClientConsole(client, message)
+//                         tgnsMd:ToAdminConsole(message)
+//                     end
+//                 end
+//             end
+//         end)
+//     end
+// end
 
 local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
     Log(string.format("%s: Victim: %s Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS.GetClientNameSteamIdCombo(targetClient), TGNS.GetClientNameSteamIdCombo(joiningClient)))
@@ -598,7 +598,7 @@ local function sweep()
                     if secondsRemaining < 40 then
                         local p = TGNS.GetPlayer(c)
                         tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
-                        AnnounceOtherServerOptionsToBumpedClient(c)
+                        // AnnounceOtherServerOptionsToBumpedClient(c)
                         Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
                     end
                 else
@@ -679,28 +679,28 @@ function Plugin:Initialise()
             TGNS.AddTempGroup(client, "primerwithgames_group")
         end
     end)
-    TGNS.ScheduleActionInterval(15, function()
-        if canNotifyAboutOtherServerSlots then
-            local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
-            if humansCount > 0 and humansCount < 10 then
-                local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
-                if otherServerStaticInfo then
-                    TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(otherServerDynamicInfo)
-                        if otherServerDynamicInfo.HasRecentData then
-                            local otherServerPlayingPlayersCount = otherServerDynamicInfo.GetPlayingPlayersCount()
-                            local otherServerPublicSlotsRemaining = otherServerDynamicInfo.GetPublicSlotsRemaining()
-                            if otherServerPlayingPlayersCount > humansCount and otherServerPublicSlotsRemaining >= humansCount then
-                                tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
-                                tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
-                                canNotifyAboutOtherServerSlots = false
-                                TGNS.ScheduleAction(180, function() canNotifyAboutOtherServerSlots = true end)
-                            end
-                        end
-                    end)
-                end
-            end
-        end
-    end)
+    // TGNS.ScheduleActionInterval(15, function()
+    //     if canNotifyAboutOtherServerSlots then
+    //         local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
+    //         if humansCount > 0 and humansCount < 10 then
+    //             local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+    //             if otherServerStaticInfo then
+    //                 TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(otherServerDynamicInfo)
+    //                     if otherServerDynamicInfo.HasRecentData then
+    //                         local otherServerPlayingPlayersCount = otherServerDynamicInfo.GetPlayingPlayersCount()
+    //                         local otherServerPublicSlotsRemaining = otherServerDynamicInfo.GetPublicSlotsRemaining()
+    //                         if otherServerPlayingPlayersCount > humansCount and otherServerPublicSlotsRemaining >= humansCount then
+    //                             tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
+    //                             tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
+    //                             canNotifyAboutOtherServerSlots = false
+    //                             TGNS.ScheduleAction(180, function() canNotifyAboutOtherServerSlots = true end)
+    //                         end
+    //                     end
+    //                 end)
+    //             end
+    //         end
+    //     end
+    // end)
     physicalSlotsCount = Server.GetMaxPlayers()
     publicSlotsCount = 16
     communitySlotsCount = physicalSlotsCount - publicSlotsCount
