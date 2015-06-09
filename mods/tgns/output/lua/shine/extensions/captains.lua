@@ -523,22 +523,28 @@ function Plugin:EndGame(gamerules, winningTeam)
 			end
 			gameStarted = false
 			captainsGamesFinished = captainsGamesFinished + 1
-			local message = "Time for Round 2! Everyone switch teams!"
 			TGNS.DoForPairs(captainTeamNumbers, function(client, teamNumber)
 				captainTeamNumbers[client] = captainTeamNumbers[client] == 1 and 2 or 1
 			end)
+			local messageDisplayer
 			if captainsGamesFinished < 2 then
 				setTimeAtWhichToForceRoundStart()
+				messageDisplayer = function()
+					TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Time for Round 2! Switch to %s!", TGNS.GetOtherPlayingTeamName(TGNS.GetClientTeamName(c))))
+					end)
+				end
 			else
 				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 					disableCaptainsMode()
 					Shine.Plugins.mapvote:StartVote(true)
 				end)
-				message = "Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com"
+				messageDisplayer = function()
+					md:ToAllNotifyInfo("Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com")
+				end
 			end
-			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM - 1, function()
-				//swapTeamsAfterDelay(3)
-				md:ToAllNotifyInfo(message)
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM - 2, function()
+				messageDisplayer()
 			end)
 			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 4, function()
 				TGNS.DoFor(TGNS.GetPlayers(TGNS.GetStrangersClients(TGNS.GetPlayerList())), function(p)
