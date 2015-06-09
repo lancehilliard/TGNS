@@ -20,6 +20,11 @@ function TGNS.GetStopWatchTime(seconds)
 	return result
 end
 
+function TGNS.IsPlayerExo(player)
+	local result = player:isa("Exo")
+	return result
+end
+
 function TGNS.GetClientIndex(client)
 	local result = TGNS.GetPlayer(client):GetClientIndex()
 	return result
@@ -38,6 +43,29 @@ end
 function TGNS.GetCurrentHour()
 	local result = os.date("*t").hour
 	return result
+end
+
+function TGNS.RemoveMarinePlayerJetpack(player)
+	if TGNS.ClientIsMarine(TGNS.GetClient(player)) then
+	    local activeWeapon = player:GetActiveWeapon()
+	    local activeWeaponMapName = nil
+	    local health = player:GetHealth()
+	    
+	    if activeWeapon ~= nil then
+	        activeWeaponMapName = activeWeapon:GetMapName()
+	    end
+	    
+	    local marine = player:Replace(Marine.kMapName, player:GetTeamNumber(), true, Vector(player:GetOrigin()))
+	    
+	    marine:SetActiveWeapon(activeWeaponMapName)
+	    marine:SetHealth(health)
+	end
+end
+
+function TGNS.GiveMarinePlayerJetpack(player)
+	if TGNS.ClientIsMarine(TGNS.GetClient(player)) and TGNS.IsPlayerAlive(player) and not TGNS.IsPlayerExo(player) then
+		player:GiveJetpack()
+	end
 end
 
 function TGNS.AlertApplicationIconForPlayer(player)
