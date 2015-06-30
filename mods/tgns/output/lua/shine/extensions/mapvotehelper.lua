@@ -126,6 +126,18 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.ScheduleAction(5, function()
+		local originalVoteFunc = Shine.Commands.sh_vote.Func
+		Shine.Commands.sh_vote.Func = function(client, mapName)
+			local originalNotify = Shine.Plugins.mapvote.Notify
+			Shine.Plugins.mapvote.Notify = function(notifySelf, player, message, format, ...)
+				if message ~= "You %s %s (%s for this, %i total)" then
+					originalNotify(notifySelf, player, message, format, ...)
+				end
+			end
+			originalVoteFunc(client, mapName)
+			Shine.Plugins.mapvote.Notify = originalNotify
+		end
+
 		local originalNominateFunc = Shine.Commands.sh_nominate.Func
 		Shine.Commands.sh_nominate.Func = function(client, mapName)
 			local steamId = TGNS.GetClientSteamId(client)
