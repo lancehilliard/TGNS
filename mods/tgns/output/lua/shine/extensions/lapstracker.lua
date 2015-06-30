@@ -93,23 +93,24 @@ local function OnLocationChanged(player, locationName)
 				local trackLocationNames = trackData.locationNames
 				if locationName == TGNS.GetFirst(trackLocationNames) and not trackStartTimes[client][trackId] and #recentLocations[client] > 1 and recentLocations[client][#recentLocations[client]-1].locationName == trackLocationNames[#trackLocationNames-1] then
 					trackStartTimes[client][trackId] = TGNS.GetLast(recentLocations[client]).time
-						trackLowestTimes[client] = trackLowestTimes[client] or {}
-						local className = TGNS.GetPlayerClassName(player)
-						trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
-						if trackLowestTimes[client][trackId][className] == nil then
-							local url = string.format("%s&i=%s&t=%s&b=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(className))
-							TGNS.GetHttpAsync(url, function(lapsResponseJson)
-								local lapsResponse = json.decode(lapsResponseJson) or {}
-								if lapsResponse.success then
-									if lapsResponse.seconds > 0 then
-										trackLowestTimes[client][trackId][className] = lapsResponse.seconds
-										showLowestTime(client, trackId)
-									end
-								else
-									TGNS.DebugPrint(string.format("laps ERROR: Unable to access laps data for playerid %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetClientSteamId(client), lapsResponse.msg, lapsResponseJson, lapsResponse.stacktrace))
+					TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_START, {})
+					trackLowestTimes[client] = trackLowestTimes[client] or {}
+					local className = TGNS.GetPlayerClassName(player)
+					trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
+					if trackLowestTimes[client][trackId][className] == nil then
+						local url = string.format("%s&i=%s&t=%s&b=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(className))
+						TGNS.GetHttpAsync(url, function(lapsResponseJson)
+							local lapsResponse = json.decode(lapsResponseJson) or {}
+							if lapsResponse.success then
+								if lapsResponse.seconds > 0 then
+									trackLowestTimes[client][trackId][className] = lapsResponse.seconds
+									showLowestTime(client, trackId)
 								end
-							end)					
-						end
+							else
+								TGNS.DebugPrint(string.format("laps ERROR: Unable to access laps data for playerid %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetClientSteamId(client), lapsResponse.msg, lapsResponseJson, lapsResponse.stacktrace))
+							end
+						end)					
+					end
 				end
 			end)
 
@@ -178,17 +179,31 @@ local function OnLocationChanged(player, locationName)
 							end
 						end)
 						trackLowestTimes[client][trackId][className] = trackDuration <= (trackLowestTimes[client][trackId][className] or trackDuration) and trackDuration or trackLowestTimes[client][trackId][className]
+						if trackLowestTimes[client][trackId][className] < (lowestPreviousTime or 0) then
+							TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_BEST, {})
+						else
+							TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_START, {})
+						end
 						trackStartTimes[client][trackId] = TGNS.GetLast(recentLocations[client]).time
+					elseif trackLocationNames[1] ~= locationName then
+							TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_LEG, {})
 					end
 					showLowestTime(client, trackId)
 				else
 					if trackStartTimes[client][trackId] then
 						table.insert(advisories, {i=trackId,n=trackName,l=string.format("%s HALTED", trackName),r=string.format("Wrong Room (Needed: %s, not %s)", nextLocationNames[client][trackId].first, locationName), isBad=true})
+						TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_BAD, {})
 						Shine.ScreenText.End(97, client)
 					end
 					local trackDescriptor = string.format("To Start %s", trackName)
-					local routeDescriptor = string.format("Go to %s, then %s", trackData.locationNames[#trackData.locationNames-1], TGNS.GetFirst(trackData.locationNames))
-					table.insert(advisories, {i=trackId,n=trackName,l=trackDescriptor,r=routeDescriptor})
+					local isLaunchRoom = trackData.locationNames[#trackData.locationNames-1] == locationName
+					local routeDescriptor
+					if isLaunchRoom then
+						routeDescriptor = string.format("Go to %s", TGNS.GetFirst(trackData.locationNames))
+					else
+						routeDescriptor = string.format("Go to %s, then %s", trackData.locationNames[#trackData.locationNames-1], TGNS.GetFirst(trackData.locationNames))
+					end
+					table.insert(advisories, {i=trackId,n=trackName,l=trackDescriptor,r=routeDescriptor,isLaunchRoom=isLaunchRoom})
 					trackStartTimes[client][trackId] = false
 				end
 			end)
@@ -211,56 +226,96 @@ local function OnLocationChanged(player, locationName)
 				local channelId = LOWEST_CHANNEL_ID
 				local y = 0.6
 				TGNS.DoFor(advisories, function(a)
-					local r = a.isBad and 255 or 0
-					local g = a.isBad and 0 or 255
-					local b = ((not trackStartTimes[client][a.i]) and (not a.isBad)) and 255 or 0
+					local left_r
+					local left_g
+					local left_b
+					local right_r
+					local right_g
+					local right_b
+					if a.isBad then
+						left_r = 255
+						left_g = 0
+						left_b = 0
+						right_r = left_r
+						right_g = left_g
+						right_b = left_b
+					else
+						if trackStartTimes[client][a.i] then
+							left_r = 255
+							left_g = 255
+							left_b = 255
+							right_r = 0
+							right_g = 255
+							right_b = 0
+						else
+							left_r = 0
+							left_g = 255
+							left_b = 255
+							if a.isLaunchRoom then
+								right_r = 0
+								right_g = 255
+								right_b = 0
+							else
+								right_r = left_r
+								right_g = left_g
+								right_b = left_b
+							end
+						end
+					end
 					local size = trackStartTimes[client][a.i] and 3 or 1
 					local duration = #recentLocations[client] > 1 and MAXIMUM_ALLOWED_LOCATION_DURATION or 100000
-					Shine.ScreenText.Add(channelId, {X = 0.5, Y = y, Text = string.format("%s:", a.l), Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentMax, Size = size, FadeIn = 0, IgnoreFormat = true}, client)
+					Shine.ScreenText.Add(channelId, {X = 0.5, Y = y, Text = string.format("%s:", a.l), Duration = duration, R = left_r, G = left_g, B = left_b, Alignment = TGNS.ShineTextAlignmentMax, Size = size, FadeIn = 0, IgnoreFormat = true}, client)
 					channelId = channelId + 1
-					Shine.ScreenText.Add(channelId, {X = 0.5, Y = y, Text = string.format(" %s", a.r), Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentMin, Size = size, FadeIn = 0, IgnoreFormat = true}, client)
+					Shine.ScreenText.Add(channelId, {X = 0.5, Y = y, Text = string.format(" %s", a.r), Duration = duration, R = right_r, G = right_g, B = right_b, Alignment = TGNS.ShineTextAlignmentMin, Size = size, FadeIn = 0, IgnoreFormat = true}, client)
 					channelId = channelId + 1
 					y = y + 0.05
 				end)
 				clearTexts(client, channelId)
 				highestChannelId = channelId
 			end
-			Shine.ScreenText.Add(98, {X = 0.5, Y = 0.95, Text = "Hide these messages: sh_laps in console", Duration = MAXIMUM_ALLOWED_LOCATION_DURATION, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, client)
-			Shine.ScreenText.Add(99, {X = 0.5, Y = 0.05, Text = "http://rr.tacticalgamer.com/Laps", Duration = MAXIMUM_ALLOWED_LOCATION_DURATION, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, client)
+			local r = 168
+			local g = 168
+			local b = 168
+			Shine.ScreenText.Add(98, {X = 0.5, Y = 0.95, Text = "Hide these messages: sh_laps in console", Duration = MAXIMUM_ALLOWED_LOCATION_DURATION, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, client)
+			Shine.ScreenText.Add(99, {X = 0.5, Y = 0.05, Text = "http://rr.tacticalgamer.com/Laps", Duration = MAXIMUM_ALLOWED_LOCATION_DURATION, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, client)
 		end
 	end
 end
 
 function Plugin:CreateCommands()
     local lapsCommand = self:BindCommand( "sh_laps", nil, function(client)
+       	local player = TGNS.GetPlayer(client)
         md:ToClientConsole(client, "")
         md:ToClientConsole(client, "== LAPS ==")
 
 		if TGNS.ClientIsOnPlayingTeam(client) then
-    		if not TGNS.IsGameInProgress() then    		if #startingRoomNames > 0 then
-			    	enabled[client] = not enabled[client] == true
-			        if enabled[client] then
-			        	local player = TGNS.GetPlayer(client)
-				        md:ToClientConsole(client, string.format("You have %s Laps. Execute sh_laps again to %s it.", enabled[client] and "enabled" or "disabled", enabled[client] and "disable" or "enable"))
-				        md:ToClientConsole(client, "")
-				        md:ToClientConsole(client, "Laps is competitive time trials through stock NS2 maps. Following pre-defined room routes, you")
-				        md:ToClientConsole(client, "race against your own past times and those of other players. Each map has multiple tracks, each")
-				        md:ToClientConsole(client, "defined as a list of sequential room names. Try to move through each track as fast as possible!")
-				        md:ToClientConsole(client, "")
-				        md:ToClientConsole(client, "If you haven't yet seen http://rr.tacticalgamer.com/Laps, you might read the Help there before continuing.")
-				        md:ToClientConsole(client, "")
-				        md:ToClientConsole(client, "Otherwise, you're ready to race! Starting rooms are displayed on screen!")
-				        md:ToClientConsole(client, "")
-				        OnLocationChanged(player, player:GetLocationName())
-				        TGNS.GiveMarinePlayerJetpack(player)
-				    else
-						disableLaps(client, "console command", true)
-			        end
-	    		else
-	    			md:ToClientConsole(client, "ERROR: No tracks are defined for this map.")
-	    		end
+			if not TGNS.IsClientCommander(client) then
+	    		if not TGNS.IsGameInProgress() then    		if #startingRoomNames > 0 then
+				    	enabled[client] = not enabled[client] == true
+				        if enabled[client] then
+					        md:ToClientConsole(client, string.format("You have %s Laps. Execute sh_laps again to %s it.", enabled[client] and "enabled" or "disabled", enabled[client] and "disable" or "enable"))
+					        md:ToClientConsole(client, "")
+					        md:ToClientConsole(client, "Laps is competitive time trials through stock NS2 maps. Following pre-defined room routes, you")
+					        md:ToClientConsole(client, "race against your own past times and those of other players. Each map has multiple tracks, each")
+					        md:ToClientConsole(client, "defined as a list of sequential room names. Try to move through each track as fast as possible!")
+					        md:ToClientConsole(client, "")
+					        md:ToClientConsole(client, "If you haven't yet seen http://rr.tacticalgamer.com/Laps, you might read the Help there before continuing.")
+					        md:ToClientConsole(client, "")
+					        md:ToClientConsole(client, "Otherwise, you're ready to race! Starting rooms are displayed on screen!")
+					        md:ToClientConsole(client, "")
+					        OnLocationChanged(player, player:GetLocationName())
+					        TGNS.GiveMarinePlayerJetpack(player)
+					    else
+							disableLaps(client, "console command", true)
+				        end
+		    		else
+		    			md:ToClientConsole(client, "ERROR: No tracks are defined for this map.")
+		    		end
+				else
+					md:ToClientConsole(client, "ERROR: You may not enable Laps during gameplay.")
+				end
 			else
-				md:ToClientConsole(client, "ERROR: You may not enable Laps during gameplay.")
+				md:ToClientConsole(client, string.format("Exit the %s before executing sh_laps.", TGNS.GetTeamCommandStructureCommonName(TGNS.GetPlayerTeamNumber(player))))
 			end
 		else
 			md:ToClientConsole(client, "ERROR: You must be on the Marine or Alien team to use this command.")
@@ -299,6 +354,18 @@ function Plugin:Initialise()
 			end
 		end)
 	end)
+
+	local originalGetIsPlayerValidForCommander
+	originalGetIsPlayerValidForCommander = TGNS.ReplaceClassMethod("CommandStructure", "GetIsPlayerValidForCommander", function(playerValidSelf, player)
+		local client = TGNS.GetClient(player)
+		local result = originalGetIsPlayerValidForCommander(playerValidSelf, player)
+		if result and enabled[client] then
+			md:ToPlayerNotifyError(player, string.format("Execute sh_laps to disable Laps before entering the %s.", TGNS.GetTeamCommandStructureCommonName(TGNS.GetPlayerTeamNumber(player))))
+			result = false
+		end
+		return result
+	end)
+
 
     return true
 end

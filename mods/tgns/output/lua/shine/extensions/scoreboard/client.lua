@@ -22,6 +22,10 @@ local badgeLabels = {}
 local vrConfirmed = {}
 local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
 local approveSoundEventName = "sound/tgns.fev/scoreboard/approve"
+local badSoundEventName = "sound/tgns.fev/laps/bad"
+local legSoundEventName = "sound/tgns.fev/laps/leg"
+local bestSoundEventName = "sound/tgns.fev/laps/best"
+local startSoundEventName = "sound/tgns.fev/laps/start"
 local gameIsInProgress = false
 local serverSimpleName
 local squadNumbers={}
@@ -103,6 +107,10 @@ function Plugin:Initialise()
 
 	Client.PrecacheLocalSound(countdownSoundEventName)
 	Client.PrecacheLocalSound(approveSoundEventName)
+	Client.PrecacheLocalSound(badSoundEventName)
+	Client.PrecacheLocalSound(legSoundEventName)
+	Client.PrecacheLocalSound(bestSoundEventName)
+	Client.PrecacheLocalSound(startSoundEventName)
 
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
@@ -564,6 +572,22 @@ function Plugin:Initialise()
 
 	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
 		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.LAPS_BAD, function(message)
+		Shared.PlaySound(Client.GetLocalPlayer(), badSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.LAPS_LEG, function(message)
+		Shared.PlaySound(Client.GetLocalPlayer(), legSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.LAPS_BEST, function(message)
+		Shared.PlaySound(Client.GetLocalPlayer(), bestSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.LAPS_START, function(message)
+		Shared.PlaySound(Client.GetLocalPlayer(), startSoundEventName, 0.025)
 	end)
 
 	TGNS.HookNetworkMessage(Plugin.SERVER_SIMPLE_NAME, function(message)

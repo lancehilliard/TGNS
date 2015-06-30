@@ -17,8 +17,12 @@
 
 # And then whitelist mod sound files
 !mods/tgns/fmod/readme.txt
+!mods/tgns/fmod/assets/buttonclick.wav
 !mods/tgns/fmod/assets/countdown.wav
+!mods/tgns/fmod/assets/points_spent.wav
+!mods/tgns/fmod/assets/select.wav
 !mods/tgns/fmod/assets/tooltip.wav
+!mods/tgns/fmod/assets/you_win.wav
 !mods/tgns/fmod/tgns.fdp
 !mods/tgns/output/sound/tgns.fev
 !mods/tgns/output/sound/tgns.fsb

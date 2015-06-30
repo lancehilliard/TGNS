@@ -18,8 +18,8 @@ http://www.fmod.org/download/fmodex/tool/win/fmoddesigner43800win-installer.exe
 
 ) Build project
 
-) Create/Edit .soundinfo file(s) (to get sound length: open .fev file and view Length under Properties)
+) Move all output files (tgns.fev, tgns.fsb) to "output/sound/" directory of mod filesystem
 
-) Move all output files to "sound/" directory of mod filesystem
+) Create/Edit .soundinfo file(s) (to get sound length: open .fev file and view Length under Properties)
 
 Source: http://forums.unknownworlds.com/discussion/comment/2135769#Comment_2135769

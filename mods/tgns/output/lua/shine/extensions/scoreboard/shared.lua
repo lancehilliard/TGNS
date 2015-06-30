@@ -33,6 +33,10 @@ Plugin.WYZ = "scoreboard_WYZ"
 Plugin.SQUAD_ALLOWED = "scoreboard_SQUAD_ALLOWED"
 Plugin.SQUAD_REQUESTED = "scoreboard_SQUAD_REQUESTED"
 Plugin.SQUAD_CONFIRMED = "scoreboard_SQUAD_CONFIRMED"
+Plugin.LAPS_BAD = "scoreboard_LAPS_BAD"
+Plugin.LAPS_LEG = "scoreboard_LAPS_LEG"
+Plugin.LAPS_BEST = "scoreboard_LAPS_BEST"
+Plugin.LAPS_START = "scoreboard_LAPS_START"
 
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
@@ -66,6 +70,10 @@ TGNS.RegisterNetworkMessage(Plugin.WYZ, {});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_ALLOWED, {});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_REQUESTED, {c="integer",d="integer"});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_CONFIRMED, {c="integer",s="integer"});
+TGNS.RegisterNetworkMessage(Plugin.LAPS_BAD, {})
+TGNS.RegisterNetworkMessage(Plugin.LAPS_LEG, {})
+TGNS.RegisterNetworkMessage(Plugin.LAPS_BEST, {})
+TGNS.RegisterNetworkMessage(Plugin.LAPS_START, {})
 
 function Plugin:Initialise()
 	self.Enabled = true
