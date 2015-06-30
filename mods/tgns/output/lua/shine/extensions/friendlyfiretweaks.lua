@@ -30,7 +30,7 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	md = TGNSMessageDisplayer.Create("FF")
-	Shine.Hook.SetupClassHook( "LiveMixin", "TakeDamage", "TakeDamage", TakeDamage )
+	-- Shine.Hook.SetupClassHook( "LiveMixin", "TakeDamage", "TakeDamage", TakeDamage )
     return true
 end
 
