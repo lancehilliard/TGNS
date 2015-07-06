@@ -47,7 +47,7 @@ local function TellAdminsAboutPlayerMutes()
 	local playerMutes = GetPlayerMutes()
 	if #playerMutes > 0 then
 		local firstPlayerMute = TGNS.GetFirst(playerMutes)
-		md:ToAdminNotifyInfo(GetPlayerMuteMessage(firstPlayerMute))
+		md:ToAuthorizedNotifyInfo(GetPlayerMuteMessage(firstPlayerMute), "sh_mutes")
 		TGNS.DoFor(playerMutes, function(m)
 				md:ToAdminConsole(GetPlayerMuteMessage(m))
 		end)
