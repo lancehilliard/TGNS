@@ -177,7 +177,7 @@ function Plugin:ClientConnect(client)
 			end
 			local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
 			table.insert(fetchDurations, fetchDuration)
-			md:ToAdminConsole(string.format("%s (%s, %s)", loadResponse.success and "LOADED" or "ERROR", math.floor(fetchDuration), math.floor(TGNSAverageCalculator.CalculateFor(fetchDurations))))
+			--md:ToAdminConsole(string.format("%s (%s, %s)", loadResponse.success and "LOADED" or "ERROR", math.floor(fetchDuration), math.floor(TGNSAverageCalculator.CalculateFor(fetchDurations))))
 		end)
 	end
 end
