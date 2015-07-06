@@ -330,7 +330,7 @@ local function updateCaptainsReadyProgress(readyClient)
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
 			-- Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 2, 0))
 			if (Shared.GetTime() - (lastUpdateCaptainsReadyProgress[c] or 0) > 1) or c == readyClient then
-				Shine.ScreenText.Add(93, {X = 0.5, Y = 0.75, Text = descriptionOfWhatElseIsNeededToPlayCaptains, Duration = votesAllowedUntil and 120 or 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
+				Shine.ScreenText.Add(93, {X = 0.5, Y = 0.75, Text = descriptionOfWhatElseIsNeededToPlayCaptains, Duration = votesAllowedUntil and 120 or 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 				lastUpdateCaptainsReadyProgress[c] = Shared.GetTime()
 			end
 		end)
@@ -362,7 +362,7 @@ local function announceTimeRemaining()
 				end
 				local secondLineMessage = string.format("%s (%s vs %s)! %s", optinStatusAdvisory, firstCaptainName, secondCaptainName, timeLeftAdvisory)
 				-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, secondLineMessage, 10, 0, 255, 0, 1, 1, 0))
-				Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = secondLineMessage, Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+				Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = secondLineMessage, Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 			end)
 			TGNS.ScheduleAction(1, announceTimeRemaining)
 		else
@@ -370,7 +370,7 @@ local function announceTimeRemaining()
 				if not captainsModeEnabled then
 					TGNS.DoFor(TGNS.GetClientList(), function(c)
 						-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, "Captains vote expired.", 5, 255, 0, 0, 1, 1, 0))
-						Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = "Captains vote expired.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+						Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = "Captains vote expired.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 						-- Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
 						Shine.ScreenText.End(93, c)
 						-- Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
@@ -412,6 +412,12 @@ local function addReadyPlayerClient(client)
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			if #playingReadyCaptainClients < 2 then
 				md:ToPlayerNotifyError(player, "There's still room for another Captain!")
+			end
+			local readyRoomReadyPlayerClientNames = TGNS.Select(TGNS.Where(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c) return TGNS.Has(readyPlayerClients, c) end), TGNS.GetClientName)
+			if #readyRoomReadyPlayerClientNames > 0 and #readyRoomReadyPlayerClientNames <= 3 then
+				local namesDisplay = TGNS.Join(readyRoomReadyPlayerClientNames, ", ")
+				md:ToPlayerNotifyError(player, "If any of these players are trying to give you their opt-in slot, have them join Spectate:")
+				md:ToPlayerNotifyError(player, namesDisplay)
 			end
 		end
 	end
@@ -543,7 +549,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 					md:ToAllNotifyInfo("Both rounds of Captains Game finished! Thanks for playing! -- TacticalGamer.com")
 				end
 			end
-			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM - 2, function()
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM - 4, function()
 				messageDisplayer()
 			end)
 			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 4, function()
@@ -875,31 +881,37 @@ function Plugin:CreateCommands()
 		local player = TGNS.GetPlayer(client)
 		local ssoData = Shine.Plugins.spawnselectionoverrides:GetCurrentMapSpawnSelectionOverridesData()
 		local errorMessage
-		if (captainsModeEnabled and captainsGamesFinished == 0 and not TGNS.IsGameInProgress()) or TGNS.IsClientAdmin(client) then
-			if spawnSelectionIndex then
-				if spawnSelectionIndex >= 1 and spawnSelectionIndex <= #ssoData then
-					local spawnSelectionOverride = {}
-					table.insert(spawnSelectionOverride, ssoData[spawnSelectionIndex].spawnSelectionOverride)
-					Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverride)
-					setSpawnsSummaryText = ssoData[spawnSelectionIndex].summaryTextLineDelimited
-					local clientIsCaptain = (#captainClients > 0 and getPlayerChoiceCaptainClient(captainClients) == client) or (#captainClients > 1 and getTeamChoiceCaptainClient(captainClients) == client)
-					if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
-						local clientTeamNumber = TGNS.GetClientTeamNumber(client)
-						md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", TGNS.GetClientName(client), ssoData[spawnSelectionIndex].summaryText))
+		local teamChoiceCaptainClient = #captainClients > 0 and getTeamChoiceCaptainClient(captainClients) or nil
+		if teamChoiceCaptainClient == client or TGNS.IsClientAdmin(client) then
+			if (captainsModeEnabled and captainsGamesFinished == 0 and not TGNS.IsGameInProgress()) or TGNS.IsClientAdmin(client) then
+				if spawnSelectionIndex then
+					if spawnSelectionIndex >= 1 and spawnSelectionIndex <= #ssoData then
+						local spawnSelectionOverride = {}
+						table.insert(spawnSelectionOverride, ssoData[spawnSelectionIndex].spawnSelectionOverride)
+						Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverride)
+						setSpawnsSummaryText = ssoData[spawnSelectionIndex].summaryTextLineDelimited
+						local clientIsCaptain = (#captainClients > 0 and getPlayerChoiceCaptainClient(captainClients) == client) or (#captainClients > 1 and getTeamChoiceCaptainClient(captainClients) == client)
+						if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
+							local clientTeamNumber = TGNS.GetClientTeamNumber(client)
+							md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", TGNS.GetClientName(client), ssoData[spawnSelectionIndex].summaryText))
+						else
+							md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
+						end
 					else
-						md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
+						errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
 					end
 				else
-					errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
+					errorMessage = "You must specify a spawn selection override index number."
 				end
 			else
-				errorMessage = "You must specify a spawn selection override index number."
+				errorMessage = "You may manually set map spawns only before the first Captains round."
 			end
 		else
-			errorMessage = "You may manually set map spawns only before the first Captains round."
+			errorMessage = "You are not presently the Team Choice Captain. No spawns have been set."
 		end
 		if errorMessage then
 			-- print errorMessage
+			md:ToPlayerNotifyError(player, errorMessage)
 			md:ToClientConsole(client, string.format("ERROR: %s", errorMessage))
 			md:ToClientConsole(client, "usage: sh_setspawns <spawn selection override index number>")
 			md:ToClientConsole(client, " e.g.: sh_setspawns 1")
@@ -912,7 +924,7 @@ function Plugin:CreateCommands()
 				md:ToPlayerNotifyError(player, "There are no spawn selection overrides configured for this map.")
 			end
 		end
-	end)
+	end, true)
 	setSpawnsCommand:AddParam{ Type = "string", Optional = true }
 	setSpawnsCommand:Help("Set spawns for the next game. Execute without parameters for more help.")
 
@@ -1109,7 +1121,7 @@ function Plugin:Initialise()
 	local mayVoteYetChecker
 	mayVoteYetChecker = function()
 		if TGNS.GetSecondsSinceMapLoaded() < ALLOW_VOTE_MAXIMUM_LIMIT_IN_SECONDS then
-			if TGNS.GetNumberOfConnectingPlayers() == 0 then
+			if TGNS.GetNumberOfConnectingPlayers() <= 2 then
 				automaticVoteAllowAction()
 			else
 				TGNS.ScheduleAction(2, mayVoteYetChecker)
@@ -1200,7 +1212,7 @@ function Plugin:Initialise()
 
 	local originalServerSetPassword = Server.SetPassword
 	local function disallowPasswordAfterMidnightOnSaturdays()
-		if TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6 then
+		if (TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6) or (TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= 22) then
 				Server.SetPassword("")
 				Server.SetPassword = function()
 					TGNS.ScheduleAction(0, function()
