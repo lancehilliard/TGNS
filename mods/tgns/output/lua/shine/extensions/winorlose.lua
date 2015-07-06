@@ -163,9 +163,9 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 
 
 					-- Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, textLocationHeight, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
-					Shine.ScreenText.Add(71, {X = 0.5, Y = textLocationHeight, Text = bannerText, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+					Shine.ScreenText.Add(71, {X = 0.5, Y = textLocationHeight, Text = bannerText, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 4, FadeIn = 0, IgnoreFormat = true}, c)
 					-- Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, textLocationHeight + 0.04, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
-					Shine.ScreenText.Add(72, {X = 0.5, Y = textLocationHeight + 0.04, Text = chatMessage, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+					Shine.ScreenText.Add(72, {X = 0.5, Y = textLocationHeight + 0.04, Text = chatMessage, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					textLocationHeightAdditive = textLocationHeightAdditive > 0 and textLocationHeightAdditive - 0.05 or textLocationHeightAdditive
 					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.WINORLOSE_WARNING, {})
 				end)
