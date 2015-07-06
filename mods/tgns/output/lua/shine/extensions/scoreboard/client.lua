@@ -340,6 +340,17 @@ function Plugin:Initialise()
 		    local teamHeaderText = string.format("%s, with %d AFK)", truncatedTeamNameGUIItemText, totalAfkCount)
 		    teamNameGUIItem:SetText(teamHeaderText)
 		end
+
+		if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
+
+		    local teamInfo = GetEntitiesForTeam("TeamInfo", Client.GetLocalClientTeamNumber())
+		    local numResourceNodes = teamInfo[1]:GetNumResourceTowers()
+
+			local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractor" or "Harvester"
+	    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
+	    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
+		    teamInfoGUIItem:SetText(string.format("%s (%s)", originalTeamInfoGuiItemText, Pluralize(numResourceNodes, resourceNodesName)))
+		end
 	end
 
 	local originalGUIScoreboardSendKeyEvent = GUIScoreboard.SendKeyEvent
