@@ -261,7 +261,7 @@ end
 local function showBanner(headline)
 	TGNS.DoFor(TGNS.GetClientList(), function(c)
 		-- Shine:SendText(c, Shine.BuildScreenMessage(41, 0.5, 0.2, string.format("Captains?%s", headline), 5, 0, 255, 0, 1, 3, 0 ) )
-		Shine.ScreenText.Add(41, {X = 0.5, Y = 0.2, Text = string.format("Captains?%s", headline), Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+		Shine.ScreenText.Add(41, {X = 0.5, Y = 0.2, Text = string.format("Captains?%s", headline), Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 4, FadeIn = 0, IgnoreFormat = true}, c)
 	end)
 	bannerDisplayed = true
 end
