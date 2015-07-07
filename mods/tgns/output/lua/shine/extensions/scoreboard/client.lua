@@ -26,6 +26,7 @@ local badSoundEventName = "sound/tgns.fev/laps/bad"
 local legSoundEventName = "sound/tgns.fev/laps/leg"
 local bestSoundEventName = "sound/tgns.fev/laps/best"
 local startSoundEventName = "sound/tgns.fev/laps/start"
+local gameIsInProgressLastChanged
 local gameIsInProgress = false
 local serverSimpleName
 local squadNumbers={}
@@ -38,6 +39,11 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	prefixes[message.i] = message.p
 	isCaptainsCaptain[message.i] = message.c
 end)
+
+local function inProgressGameShouldProhibitSquadChanging(teamNumber)
+	local result = gameIsInProgress and (Shared.GetTime() - gameIsInProgressLastChanged > 30) and teamNumber == kAlienTeamType
+	return result
+end
 
 local function getTeamApproveTexture(teamNumber)
 	local result = string.format("ui/approve/chevron-team%s.dds", teamNumber)
@@ -307,7 +313,7 @@ function Plugin:Initialise()
 	        if playerSquadIcon then
 	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerSquadIcon)
 	        	playerSquadIcon:SetIsVisible(playerSquadIconShouldDisplay)
-	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or gameIsInProgress
+	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or inProgressGameShouldProhibitSquadChanging(teamNumber)
 		        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
 	        end
 
@@ -344,12 +350,14 @@ function Plugin:Initialise()
 		if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
 
 		    local teamInfo = GetEntitiesForTeam("TeamInfo", Client.GetLocalClientTeamNumber())
-		    local numResourceNodes = teamInfo[1]:GetNumResourceTowers()
+		    if teamInfo then
+			    local numResourceNodes = teamInfo[1]:GetNumResourceTowers()
 
-			local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractor" or "Harvester"
-	    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
-	    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
-		    teamInfoGUIItem:SetText(string.format("%s (%s)", originalTeamInfoGuiItemText, Pluralize(numResourceNodes, resourceNodesName)))
+				local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractor" or "Harvester"
+		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
+		    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
+			    teamInfoGUIItem:SetText(string.format("%s (%s)", originalTeamInfoGuiItemText, Pluralize(numResourceNodes, resourceNodesName)))
+		    end
 		end
 	end
 
@@ -451,13 +459,13 @@ function Plugin:Initialise()
 		            	end
 		            end
 		            local playerSquadIcon = playerItem["PlayerSquadIcon"]
-		            local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (Client.GetLocalClientTeamNumber() == kAlienTeamType and gameIsInProgress)
+		            local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or inProgressGameShouldProhibitSquadChanging(Client.GetLocalClientTeamNumber())
 		            if playerSquadIcon and playerSquadIcon:GetIsVisible() and GUIItemContainsPoint(playerSquadIcon, mouseX, mouseY) then
 		            	local squadNumberDelta = self.MovementModifierIsPressed and -1 or 1
 		            	if self.hoverMenu then
 		            		self.hoverMenu:Hide()
 		            	end
-		            	if (not playerSquadIconShouldBeDisabled) or (Client.GetLocalClientTeamNumber() == kAlienTeamType and not isSquading) then
+		            	if (not playerSquadIconShouldBeDisabled) then
 			                isSquading = true
 			                TGNS.SendNetworkMessage(Plugin.SQUAD_REQUESTED, {c=clientIndex,d=squadNumberDelta})
 		            	end
@@ -607,6 +615,9 @@ function Plugin:Initialise()
 
 	TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
 		gameIsInProgress = message.b
+		if gameIsInProgress then
+			gameIsInProgressLastChanged = Shared.GetTime()
+		end
 	end)
 
 	TGNS.HookNetworkMessage(Plugin.ALERT_ICON, function(message)
@@ -651,22 +662,22 @@ function Plugin:Initialise()
 
 
 
-	local originalGUIMinimapUpdate
-	originalGUIMinimapUpdate = Class_ReplaceMethod("GUIMinimap", "Update", function(minimapSelf, deltaTime)
-		local originalScoreboardGetPlayerRecord = Scoreboard_GetPlayerRecord
-		Scoreboard_GetPlayerRecord = function(clientIndex)
-			local playerRecord = originalScoreboardGetPlayerRecord(clientIndex)
-			if playerRecord and playerRecord.EntityTeamNumber and playerRecord.EntityTeamNumber == kMarineTeamType then
-				local squadNumber = squadNumbers[playerRecord.ClientIndex] or 0
-				if squadNumber ~= 0 then
-					playerRecord.Name = string.format("%s (Squad %s)", playerRecord.Name, squadNumber)
-				end
-			end
-			return playerRecord
-		end
-		originalGUIMinimapUpdate(minimapSelf, deltaTime)
-		Scoreboard_GetPlayerRecord = originalScoreboardGetPlayerRecord
-	end)
+	-- local originalGUIMinimapUpdate
+	-- originalGUIMinimapUpdate = Class_ReplaceMethod("GUIMinimap", "Update", function(minimapSelf, deltaTime)
+	-- 	local originalScoreboardGetPlayerRecord = Scoreboard_GetPlayerRecord
+	-- 	Scoreboard_GetPlayerRecord = function(clientIndex)
+	-- 		local playerRecord = originalScoreboardGetPlayerRecord(clientIndex)
+	-- 		if playerRecord and playerRecord.EntityTeamNumber and playerRecord.EntityTeamNumber == kMarineTeamType then
+	-- 			local squadNumber = squadNumbers[playerRecord.ClientIndex] or 0
+	-- 			if squadNumber ~= 0 then
+	-- 				playerRecord.Name = string.format("%s (Squad %s)", playerRecord.Name, squadNumber)
+	-- 			end
+	-- 		end
+	-- 		return playerRecord
+	-- 	end
+	-- 	originalGUIMinimapUpdate(minimapSelf, deltaTime)
+	-- 	Scoreboard_GetPlayerRecord = originalScoreboardGetPlayerRecord
+	-- end)
 
 
 
