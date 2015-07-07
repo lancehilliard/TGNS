@@ -338,7 +338,7 @@ local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
 	TGNS.ExecuteEventHooks("TotalPlayedGamesCountUpdated", client, totalGamesPlayedCache[steamId])
 end
 
-function Plugin:ClientConnect(client)
+local function refreshBalanceData(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
 		pdr:Load(steamId, function(loadResponse)
@@ -354,6 +354,10 @@ function Plugin:ClientConnect(client)
 	end
 end
 
+function Plugin:ClientConnect(client)
+	refreshBalanceData(client)
+end
+
 function Plugin:ClientConfirmConnect(client)
 	if not firstClientProcessed then
 		mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
@@ -363,6 +367,9 @@ function Plugin:ClientConfirmConnect(client)
 	if playerHasTooFewLocalScoresPerMinute then
 		local steamId = TGNS.GetClientSteamId(client)
 		-- TGNSNs2StatsProxy.AddSteamId(steamId)
+	end
+	if balanceCache[client] == nil then
+		refreshBalanceData(client)
 	end
 end
 
