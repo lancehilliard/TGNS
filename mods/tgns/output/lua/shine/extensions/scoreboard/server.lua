@@ -311,7 +311,7 @@ function Plugin:Initialise()
 			if targetClient and Shine:IsValidClient(targetClient) then
 				if client ~= targetClient then
 					local targetPlayer = TGNS.GetPlayer(targetClient)
-					if TGNS.PlayersAreTeammates(player, targetPlayer) and not TGNS.HasClientSignedPrimerWithGames(targetClient) and not vrConfirmed[targetClient] then
+					if (TGNS.PlayersAreTeammates(player, targetPlayer) or TGNS.IsPlayerSpectator(player)) and not TGNS.HasClientSignedPrimerWithGames(targetClient) and not vrConfirmed[targetClient] then
 						vrConfirmed[targetClient] = true
 						vrConfirmedBy[targetClient] = TGNS.GetClientName(client)
 						local sourceSteamId = TGNS.GetClientSteamId(client)
@@ -411,7 +411,7 @@ function Plugin:Initialise()
 		local squadNumberDelta = message.d
 		local targetClient = TGNS.GetClientById(targetClientIndex)
 		local md = TGNSMessageDisplayer.Create("SQUADS")
-		if TGNS.IsGameInProgress() and TGNS.ClientIsAlien(targetClient) then
+		if TGNS.IsGameInProgress() and TGNS.ClientIsAlien(targetClient) and TGNS.GetCurrentGameDurationInSeconds() > 30 then
 			md:ToPlayerNotifyError(player, "Aliens may not alter planned lifeform scoreboard icons during gameplay.")
 		else
 			local clientIsCaptain = Shine.Plugins.captains and Shine.Plugins.captains.IsClientCaptain and Shine.Plugins.captains:IsClientCaptain(client)
