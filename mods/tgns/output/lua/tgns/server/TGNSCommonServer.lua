@@ -13,6 +13,19 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
 	-- 	end)
 
+function TGNS.Karma(target, deltaName)
+	local result
+	local karmaPlugin = Shine.Plugins.karma
+	if karmaPlugin and karmaPlugin.Enabled then
+		if deltaName then
+			karmaPlugin:AddKarma(target, deltaName)
+		else
+			result = karmaPlugin:GetKarma(target)
+		end
+	end
+	return result
+end
+
 function TGNS.GetStopWatchTime(seconds)
 	local integralSeconds, fractionalSeconds = math.modf(seconds)
 	local milliseconds = math.floor(1000 * fractionalSeconds)
