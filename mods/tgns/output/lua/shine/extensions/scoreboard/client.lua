@@ -347,12 +347,11 @@ function Plugin:Initialise()
 		    teamNameGUIItem:SetText(teamHeaderText)
 		end
 
-		if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
+		if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
 
 		    local teamInfo = GetEntitiesForTeam("TeamInfo", Client.GetLocalClientTeamNumber())
-		    if teamInfo then
+		    if teamInfo and #teamInfo > 0 then
 			    local numResourceNodes = teamInfo[1]:GetNumResourceTowers()
-
 				local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractor" or "Harvester"
 		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
 		    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
