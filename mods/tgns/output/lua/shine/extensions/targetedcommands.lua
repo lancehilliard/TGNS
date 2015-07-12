@@ -61,6 +61,7 @@ local function approve(sourceClient, sourcePlayer, sourceSteamId, targetClient, 
 							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
 								local approveResponse = json.decode(approveResponseJson) or {}
 								if approveResponse.success then
+									TGNS.Karma(sourceSteamId, TGNS.HasNonEmptyValue(reason) and "ApprovingWithReason" or "Approving")
 									if Shine:IsValidClient(sourceClient) then
 										approvedClients[sourceSteamId][targetSteamId] = true
 										approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
