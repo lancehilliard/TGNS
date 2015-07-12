@@ -155,7 +155,14 @@ function Plugin:Initialise()
 
 					    		audit(718, playerData, function(playerDataAuditResponseJson)
 					    			local playerDataAuditResponse = json.decode(playerDataAuditResponseJson) or {}
-					    			if not playerDataAuditResponse.success then
+					    			if playerDataAuditResponse.success then
+					    				if playerData.CommanderSeconds > (gameData.DurationInSeconds / 2) and not gameData.IncludedBots then
+					    					TGNS.Karma(playerData.PlayerId, "Commanding")
+					    				end
+					    				if playerData.Captain then
+					    					TGNS.Karma(playerData.PlayerId, "BeingCaptain")
+					    				end
+					    			else
 					    				TGNS.DebugPrint(string.format("audit ERROR: Unable to audit playerData. msg: %s | stacktrace: %s", playerDataAuditResponse.msg, playerDataAuditResponse.stacktrace))
 					    				TGNS.PrintTable(playerData, "playerData", function(x) TGNS.DebugPrint(x) end)
 					    			end
