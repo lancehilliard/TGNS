@@ -3,6 +3,8 @@ local karmaCache = {}
 local httpFailureCount = {}
 local HttpFailureThreshold = 5
 local steamIdsWhichJoinedWithLowPopulation = {}
+local spectateKarmaProgress = {}
+local lastTeamExit = {}
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -80,6 +82,23 @@ function Plugin:ClientConnect(client)
 	onClientConnect(steamId)
 end
 
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	local client = TGNS.GetClient(player)
+	local steamId = TGNS.GetClientSteamId(client)
+	if TGNS.IsGameInProgress() and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
+		if TGNS.IsGameplayTeamNumber(oldTeamNumber) then
+			local teamExit = {}
+			teamExit.when = Shared.GetTime()
+			teamExit.teamNumber = oldTeamNumber
+			teamExit.teamSizeBeforeExit = #getHumanClients(TGNS.GetTeamClients(oldTeamNumber, TGNS.GetPlayerList())) + 1
+			lastTeamExit[client] = teamExit
+		end
+		if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#getHumanClients(TGNS.GetTeamClients(newTeamNumber)) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) then
+			TGNS.Karma(steamId, "FixingTeamSizes")
+		end
+	end
+end
+
 local function getTargetSteamId(target)
 	local result = IsNumber(target) and target or TGNS.GetClientSteamId(target:isa("Player") and TGNS.GetClient(target) or target)
 	return result
@@ -105,6 +124,22 @@ function Plugin:Initialise()
 				TGNS.Karma(c, "FullGamePlayed")
 			end)
 		end
+	end)
+
+	TGNS.ScheduleActionInterval(30, function()
+		local playerList = TGNS.GetPlayerList()
+		TGNS.DoFor(TGNS.GetSpectatorClients(playerList), function(c)
+			local numberOfPlayingClients = TGNS.GetPlayingClients(playerList)
+			if numberOfPlayingClients >= 16 then
+				local steamId = TGNS.GetClientSteamId(c)
+				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] or 0
+				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] + 1
+				if spectateKarmaProgress[steamId] >= 10 then
+					TGNS.Karma(steamId, "SpectatingWhenFull")
+					spectateKarmaProgress[steamId] = 0
+				end
+			end
+		end)
 	end)
     return true
 end
