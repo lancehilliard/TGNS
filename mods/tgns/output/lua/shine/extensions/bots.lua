@@ -237,6 +237,7 @@ function Plugin:CreateCommands()
 					if not pushSentForThisMap and TGNS.IsProduction() then
 						Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 						pushSentForThisMap = true
+						TGNS.Karma(client, "StartingBots")
 					end
 				end
 				local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
