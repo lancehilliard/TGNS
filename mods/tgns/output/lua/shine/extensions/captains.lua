@@ -897,6 +897,7 @@ function Plugin:CreateCommands()
 						else
 							md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
 						end
+						TGNS.Karma(client, "SetSpawns")
 					else
 						errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
 					end
