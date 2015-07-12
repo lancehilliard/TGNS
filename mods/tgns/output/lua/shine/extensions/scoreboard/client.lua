@@ -280,7 +280,7 @@ function Plugin:Initialise()
 	        if playerVrIcon then
 	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerVrIcon)
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
-	        	local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (TGNS.Contains(targetPrefix, "!") and not vrConfirmed[clientIndex])
+	        	local playerVrIconShouldBeDisabled = isVring or (TGNS.Contains(targetPrefix, "!") and not vrConfirmed[clientIndex])
 		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and getDisabledVrTexture(clientIndex) or getTeamVrTexture(clientIndex, teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
@@ -447,7 +447,7 @@ function Plugin:Initialise()
 		            	end
 		            end
 		            local playerVrIcon = playerItem["PlayerVrIcon"]
-		            local playerVrIconShouldBeDisabled = isVring or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)
+		            local playerVrIconShouldBeDisabled = isVring
 		            if playerVrIcon and playerVrIcon:GetIsVisible() and GUIItemContainsPoint(playerVrIcon, mouseX, mouseY) then
 		            	if self.hoverMenu then
 		            		self.hoverMenu:Hide()
