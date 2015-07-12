@@ -63,7 +63,7 @@ function Plugin:SendTeamScoresDatas()
 	local marineTeamScore = 0
 	local alienTeamName = "Alien Team"
 	local alienTeamScore = 0
-	local teamNameCreator = function(c) return string.format("Team %s", TGNS.GetClientName(c)) end
+	local teamNameCreator = function(c) return string.format("Team %s", TGNS.Truncate(TGNS.GetClientName(c), kMaxNameLength)) end
 	TGNS.DoFor(teamScoresDatas, function(d)
 		local client = TGNS.GetClientByNs2Id(d.i)
 		if client ~= nil then
@@ -237,7 +237,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
 					if c and not TGNS.IsClientStranger(c) then
 						local p = TGNS.GetPlayer(c)
-						local message = math.random() < 0.5 and "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!" or "Do you like to watch? Opt into FullSpec to join the server when it's full!"
+						local message = math.random() < 0.5 and "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!" or "Do you like to watch? Opt into FullSpec to join the server when it's full! http://rr.tacticalgamer.com/FullSpec/Manage"
 						md:ToPlayerNotifyInfo(p, message)
 					end
 				end)
@@ -325,7 +325,7 @@ function Plugin:Initialise()
 								TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to vouch NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, vouchResponse.msg, vouchResponseJson, vouchResponse.stacktrace))
 							end
 						end)
-
+						TGNS.Karma(sourceSteamId, "VouchingVoicecomm")
 						TGNS.ExecuteEventHooks("VrConfirmed", targetClient)
 						TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 							TGNS.SendNetworkMessageToPlayer(p, self.VR_CONFIRMED, {c=targetClientIndex})
