@@ -129,7 +129,7 @@ function Plugin:Initialise()
 	TGNS.ScheduleActionInterval(30, function()
 		local playerList = TGNS.GetPlayerList()
 		TGNS.DoFor(TGNS.GetSpectatorClients(playerList), function(c)
-			local numberOfPlayingClients = TGNS.GetPlayingClients(playerList)
+			local numberOfPlayingClients = #TGNS.GetPlayingClients(playerList)
 			if numberOfPlayingClients >= 16 then
 				local steamId = TGNS.GetClientSteamId(c)
 				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] or 0
