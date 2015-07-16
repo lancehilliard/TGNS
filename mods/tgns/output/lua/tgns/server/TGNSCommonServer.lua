@@ -378,7 +378,8 @@ function TGNS.IsPlayerAlive(player)
 end
 
 function TGNS.IsNumberWithNonZeroPositiveValue(candidate)
-	local result = type(candidate) == "number" and candidate > 0
+	candidate = tonumber(candidate)
+	local result = candidate and candidate > 0
 	return result
 end
 
@@ -1067,7 +1068,12 @@ function TGNS.IsTeamNumberSpectator(teamNumber)
 end
 
 function TGNS.IsPlayerSpectator(player)
-	local result = TGNS.IsTeamNumberSpectator(player:GetTeamNumber()) -- player:isa("Spectator")
+	local result = TGNS.IsTeamNumberSpectator(player:GetTeamNumber())
+	return result
+end
+
+function TGNS.IsClientSpectator(client)
+	local result = TGNS.PlayerAction(client, TGNS.IsPlayerSpectator)
 	return result
 end
 
