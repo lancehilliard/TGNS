@@ -50,7 +50,9 @@ local function tellMostRecentBadge(client)
 		local mostRecentBadgeResponse = json.decode(mostRecentBadgeResponseJson) or {}
 		if mostRecentBadgeResponse.success then
 			if TGNS.HasNonEmptyValue(mostRecentBadgeResponse.result.DisplayName) and TGNS.HasNonEmptyValue(mostRecentBadgeResponse.result.ID) and kBadges[string.format("tgns%s",mostRecentBadgeResponse.result.ID)] and Shine:IsValidClient(client) then
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Your most recent TGNS Badge: %s", mostRecentBadgeResponse.result.DisplayName))
+				local player = TGNS.GetPlayer(client)
+				md:ToPlayerNotifyInfo(player, string.format("Your most recent TGNS Badge: %s", mostRecentBadgeResponse.result.DisplayName))
+				md:ToPlayerNotifyInfo(player, "To manage TGNS Badges: Press M > TGNS Portal (and then click 'Badges' at the top of the page)")
 			end
 		else
 			TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access mostrecent badge data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, mostRecentBadgeResponse.msg, mostRecentBadgeResponseJson, mostRecentBadgeResponse.stacktrace))
