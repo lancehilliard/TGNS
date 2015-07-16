@@ -48,12 +48,12 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		local client = TGNS.GetClient(player)
 		local totalGames = Balance.GetTotalGamesPlayed(client)
 		if totalGames >= GAMES_TO_PLAY_BEFORE_GREETINGS then
-			if TGNS.IsClientStranger(client) and totalGames >= GAMES_TO_PLAY_BEFORE_FORUM_REMINDERS and not TGNS.IsGameInProgress() then
-				md:ToPlayerNotifyInfo(player, string.format("There's a message for you in your console (%s). Press ` to read it.", STRANGER_MESSAGE_CODE))
-				TGNS.DoFor(STRANGER_EXTENDED_WELCOME_LINES, function(l)
-					md:ToClientConsole(client, l)
-				end)
-			end
+			-- if TGNS.IsClientStranger(client) and totalGames >= GAMES_TO_PLAY_BEFORE_FORUM_REMINDERS and not TGNS.IsGameInProgress() then
+			-- 	md:ToPlayerNotifyInfo(player, string.format("There's a message for you in your console (%s). Press ` to read it.", STRANGER_MESSAGE_CODE))
+			-- 	TGNS.DoFor(STRANGER_EXTENDED_WELCOME_LINES, function(l)
+			-- 		md:ToClientConsole(client, l)
+			-- 	end)
+			-- end
 			if totalGames <= GAMES_COUNT_TO_NOTIFY_TEAMMATES then
 				local teamClients = TGNS.GetTeamClients(newTeamNumber, TGNS.GetPlayerList())
 				TGNS.DoFor(teamClients, function(c)
@@ -63,12 +63,12 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 					end
 				end)
 			end
-			if TGNS.IsPrimerOnlyClient(client) then
-				md:ToPlayerNotifyInfo(player, string.format("There's a message for you in your console (%s). Press ` to read it.", PRIMERONLY_MESSAGE_CODE))
-				TGNS.DoFor(PRIMERONLY_EXTENDED_WELCOME_LINES, function(l)
-					md:ToClientConsole(client, l)
-				end)
-			end
+			-- if TGNS.IsPrimerOnlyClient(client) then
+			-- 	md:ToPlayerNotifyInfo(player, string.format("There's a message for you in your console (%s). Press ` to read it.", PRIMERONLY_MESSAGE_CODE))
+			-- 	TGNS.DoFor(PRIMERONLY_EXTENDED_WELCOME_LINES, function(l)
+			-- 		md:ToClientConsole(client, l)
+			-- 	end)
+			-- end
 		end
 	end
 end
