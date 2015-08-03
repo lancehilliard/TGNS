@@ -31,6 +31,7 @@ local function showReport(transactions)
 	local topEarner = { net = 0, transactionsCount = 0 }
 	local topLoser = { net = 0, transactionsCount = 0 }
 	TGNS.DoForPairs(transactions, function(steamId, gameTransactions)
+		gameTransactions = TGNS.Select(gameTransactions, function(t) return t.type ~= 'playcredit' end)
 		local count = #gameTransactions
 		local amounts = TGNS.Select(gameTransactions, function(t) return t.amount end)
 		local net = TGNS.GetSumFor(amounts)
