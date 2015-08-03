@@ -248,7 +248,16 @@ end
 
 function TGNS.GetVoteableMapNames()
 	local result = {}
-	local mapCycleMapNames = TGNS.GetMapCycleMapNames()
+	local numberOfPlayers = Server.GetNumPlayersTotal()
+	local mapCycleMapNames = TGNS.SelectMapCycleMapNames(function(m)
+		local mapMin
+		if type(m) == "table" then
+			mapMin = m.min and m.min or 0
+		else
+			mapMin = 0
+		end
+		return mapMin <= numberOfPlayers
+	end)
 	if Shine.Plugins.mapvote and Shine.Plugins.mapvote.Enabled and not Shine.Plugins.mapvote.Config.GetMapsFromMapCycle then
 		TGNS.DoForPairs(Shine.Plugins.mapvote.Config.Maps, function(mapName, enabled)
 			if TGNS.Has(mapCycleMapNames, mapName) and enabled then
