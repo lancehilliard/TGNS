@@ -177,9 +177,16 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	if not (force or shineForce) then
 		if self:GetTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
 			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
-			if #alienHumanClients >= 1 and newTeamNumber ~= kMarineTeamType then
+			local marineHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kMarineTeamType and not TGNS.GetIsClientVirtual(c) end)
+			local numberOfAllowedAlienPlayers = 1
+			local errorMessage = "Marines must have 6 human players before the bot Aliens may have a second human player."
+			if #marineHumanClients >= 6 then
+				numberOfAllowedAlienPlayers = 2
+				errorMessage = "A maximum of two human players are allowed on the bot team."
+			end
+			if #alienHumanClients >= numberOfAllowedAlienPlayers and newTeamNumber ~= kMarineTeamType then
 			--if newTeamNumber ~= kMarineTeamType then
-				md:ToPlayerNotifyError(player, "Only one human player is allowed on the bot team.")
+				md:ToPlayerNotifyError(player, errorMessage)
 				return false
 			end
 		end
