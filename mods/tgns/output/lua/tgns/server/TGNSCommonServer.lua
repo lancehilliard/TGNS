@@ -246,7 +246,7 @@ function TGNS.AtLeastOneElementExists(elements)
 	return result
 end
 
-function TGNS.GetVoteableMapNames()
+function TGNS.GetVoteableMapNames(restrictToCurrentGroup)
 	local result = {}
 	local numberOfPlayers = Server.GetNumPlayersTotal()
 	local mapCycleMapNames = TGNS.SelectMapCycleMapNames(function(m)
@@ -266,6 +266,14 @@ function TGNS.GetVoteableMapNames()
 		end)
 	else
 		result = mapCycleMapNames
+	end
+	local mapGroup = Shine.Plugins.mapvote:GetMapGroup()
+	if mapGroup and mapGroup.maps and restrictToCurrentGroup then
+		TGNS.DoForReverse(result, function(r, i)
+			if not TGNS.Has(mapGroup.maps, r) then
+				table.remove(result, i)
+			end
+		end)
 	end
 	TGNS.SortAscending(result)
 	return result
