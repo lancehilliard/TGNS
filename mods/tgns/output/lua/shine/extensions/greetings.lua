@@ -106,7 +106,7 @@ function Plugin:Initialise()
     TGNS.ScheduleActionInterval(180, function()
     	if TGNS.ConvertSecondsToMinutes(TGNS.GetSecondsSinceMapLoaded()) < 16 then
     		TGNS.DoFor(TGNS.GetPlayers(TGNS.GetClientList(function(c) return TGNS.IsPrimerOnlyClient(c) and not Shine.Plugins.betterknownas:HasBkaName(c) end), TGNS.GetPlayerList()), function(p)
-    			md:ToPlayerNotifyInfo(p, "New reserved slots logic as of 1/1/2015. See 'Reserved Slots logic change' forum thread for details.")
+    			md:ToPlayerNotifyInfo(p, string.format("You (%s) do not have a reserved slot. See 'Reserved Slots logic change' forum thread for details.", TGNS.GetPlayerName(p)))
     		end)
     	end
     end)
