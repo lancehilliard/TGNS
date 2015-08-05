@@ -30,10 +30,12 @@ end
 local function showReport(transactions)
 	local topEarner = { net = 0, transactionsCount = 0 }
 	local topLoser = { net = 0, transactionsCount = 0 }
+	local totalSpent = 0
 	TGNS.DoForPairs(transactions, function(steamId, gameTransactions)
-		gameTransactions = TGNS.Select(gameTransactions, function(t) return t.type ~= 'playcredit' end)
+		gameTransactions = TGNS.Where(gameTransactions, function(t) return t.type ~= 'playcredit' end)
 		local count = #gameTransactions
 		local amounts = TGNS.Select(gameTransactions, function(t) return t.amount end)
+		totalSpent = totalSpent + TGNS.GetSumFor(TGNS.Where(amounts, function(a) return a < 0 end))
 		local net = TGNS.GetSumFor(amounts)
 		if (net > topEarner.net) or (topEarner.net == 0 and net == 0 and topEarner.transactionsCount <= count) then
 			topEarner = { net = net, steamId = steamId, transactionsCount = count }
@@ -47,13 +49,13 @@ local function showReport(transactions)
 		if top.steamId then
 			local topClient = TGNS.GetClientByNs2Id(top.steamId)
 			if topClient then
-				result = string.format("%s: %s", TGNS.GetClientName(topClient), math.abs(top.net))
+				result = string.format("%s: %s", TGNS.GetClientName(topClient), TGNS.RoundPositiveNumberDown(math.abs(top.net)))
 			end
 		end
 		return result
 	end
-	local topEarnerDisplay = topFormatter(topEarner)
-	local topLoserDisplay = topFormatter(topLoser)
+	local topEarnerDisplay = topEarner.net > 0 and topFormatter(topEarner) or nil
+	local topLoserDisplay = topLoser.net < 0 and topFormatter(topLoser) or nil
 	local topDisplay = nil
 	if topEarnerDisplay then
 		topDisplay = string.format("\n  Most Earned:\n    %s", topEarnerDisplay)
@@ -62,7 +64,7 @@ local function showReport(transactions)
 		topDisplay = string.format("%s\n  Most Lost:\n    %s", topDisplay and topDisplay or "", topLoserDisplay)
 	end
 	if topDisplay then
-		topDisplay = string.format("SpecBets BETA (last game):%s", topDisplay)
+		topDisplay = string.format("SpecBets BETA (total spent last game: %s):%s", TGNS.RoundPositiveNumberDown(math.abs(totalSpent)), topDisplay)
 		Shine.ScreenText.Add(62, {X = 0.2, Y = 0.75, Text = topDisplay, Duration = 60, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 1, IgnoreFormat = true})
 	end
 end
@@ -408,7 +410,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	elseif TGNS.IsClientSpectator(client) then
 		TGNS.ScheduleAction(6, function()
 			if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and playerBanks[steamId] > 0 then
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", playerBanks[steamId]))
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 			end
 		end)
 	end
