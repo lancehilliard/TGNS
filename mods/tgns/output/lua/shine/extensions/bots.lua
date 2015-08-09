@@ -1,5 +1,6 @@
 local PLAYER_COUNT_THRESHOLD = 14
 local BOT_COUNT_THRESHOLD = 25
+local MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS = 6
 local originalEndRoundOnTeamUnbalanceSetting = 0.4
 local originalForceEvenTeamsOnJoinSetting = true
 local originalAutoTeamBalanceSetting = { enabled_after_seconds = 10, enabled_on_unbalance_amount = 2 }
@@ -10,6 +11,8 @@ local originalkMarineRespawnTime = kMarineRespawnTime
 local originalkMatureHiveHealth = kMatureHiveHealth
 local originalkMatureHiveArmor = kMatureHiveArmor
 local originalGetGestateTechId = Egg.GetGestateTechId
+local originalOnosGetMaxSpeed = Onos.GetMaxSpeed
+local originalOnosChargeSpeed = Onos.kChargeSpeed
 local winOrLoseOccurredRecently
 local md
 local botAdvisory
@@ -20,6 +23,9 @@ local surrenderBotsIfConditionsAreRight = function() end
 local pushSentForThisMap = false
 local freeCragEntity
 local alienTeamResBonus = 0
+local whenLastOnosSpeedAdvisory
+local onosSpeedMultiplier = 1
+local onosSpeedMultiplierCalculator = function() end
 
 local Plugin = {}
 
@@ -57,21 +63,42 @@ local function setBotConfig()
 	kMatureHiveHealth = LiveMixin.kMaxHealth
 	kMatureHiveArmor = LiveMixin.kMaxArmor
 
-	Egg.GetGestateTechId = function()
-		local result = kTechId.Skulk
-		if math.random() < .005 then
-			local random = math.random()
-			if random < .25 then
-				result = kTechId.Gorge
-			elseif random < .5 then
-				result = kTechId.Lerk
-			elseif random < .75 then
-				result = kTechId.Fade
-			else
-				result = kTechId.Onos
+	Egg.GetGestateTechId = function(eggGetGestateTechIdSelf)
+		local result = originalGetGestateTechId(eggGetGestateTechIdSelf)
+		if result == kTechId.Skulk then
+			if math.random() < .005 then
+				local random = math.random()
+				if random < .25 then
+					result = kTechId.Gorge
+				elseif random < .5 then
+					result = kTechId.Lerk
+				elseif random < .75 then
+					result = kTechId.Fade
+				else
+					result = kTechId.Onos
+				end
 			end
 		end
 		return result
+	end
+
+	Onos.GetMaxSpeed = function(onosGetMaxSpeedSelf, possible)
+		local result = originalOnosGetMaxSpeed(onosGetMaxSpeedSelf, possible)
+		if onosSpeedMultiplier < 1 then
+			result = result * onosSpeedMultiplier
+			Onos.kChargeSpeed = Onos.kMaxSpeed
+		else
+			Onos.kChargeSpeed = originalOnosChargeSpeed
+		end
+		return result
+	end
+
+	onosSpeedMultiplierCalculator = function()
+		onosSpeedMultiplier = #TGNS.GetMarineClients(TGNS.GetPlayerList()) / MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS
+		if onosSpeedMultiplier < 1 then
+			local tweakModifier = 0.9
+			onosSpeedMultiplier = onosSpeedMultiplier * tweakModifier
+		end
 	end
 
 	TGNS.ScheduleAction(2, function()
@@ -124,6 +151,10 @@ local function setOriginalConfig()
 	kMatureHiveHealth = originalkMatureHiveHealth
 	kMatureHiveArmor = originalkMatureHiveArmor
 	Egg.GetGestateTechId = originalGetGestateTechId
+	Onos.GetMaxSpeed = originalOnosGetMaxSpeed
+	Onos.kChargeSpeed = originalOnosChargeSpeed
+	onosSpeedMultiplierCalculator = function() end
+	onosSpeedMultiplier = 1
 
 	if alltalk then
 		alltalk = false
@@ -179,8 +210,8 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
 			local marineHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kMarineTeamType and not TGNS.GetIsClientVirtual(c) end)
 			local numberOfAllowedAlienPlayers = 1
-			local errorMessage = "Marines must have 6 human players before the bot Aliens may have a second human player."
-			if #marineHumanClients >= 6 then
+			local errorMessage = string.format("Marines must have %s human players before the bot Aliens may have a second human player.", MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS)
+			if #marineHumanClients >= MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS then
 				numberOfAllowedAlienPlayers = 2
 				errorMessage = "A maximum of two human players are allowed on the bot team."
 			end
@@ -340,6 +371,17 @@ function Plugin:Initialise()
 
 	TGNS.ScheduleActionInterval(120, spawnReprieveAction)
 	TGNS.ScheduleActionInterval(10, function() surrenderBotsIfConditionsAreRight() end)
+	TGNS.ScheduleActionInterval(3, function()
+		onosSpeedMultiplierCalculator()
+		if onosSpeedMultiplier < 1 and (whenLastOnosSpeedAdvisory == nil or (Shared.GetTime() - whenLastOnosSpeedAdvisory) > 2) then
+			local message = string.format("Onos movement speed is\nreduced in bot games having\nfewer than %s Marines.\n\nModifier: %s", MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS, TGNS.RoundPositiveNumberDown(onosSpeedMultiplier, 2))
+			local onosPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return p:isa("Onos") end)
+			TGNS.DoFor(onosPlayers, function(p)
+				Shine.ScreenText.Add(36, {X = 0.75, Y = 0.65, Text = message, Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, TGNS.GetClient(p))
+			end)				
+			whenLastOnosSpeedAdvisory = Shared.GetTime()
+		end
+	end)
 
 	TGNS.RegisterEventHook("GameStarted", function()
 		if self:GetTotalNumberOfBots() > 0 then
