@@ -32,6 +32,9 @@ local serverSimpleName
 local squadNumbers={}
 local squadNumbersHudText
 local squadNumberLastSetTimes = {}
+local WELCOME_MESSAGES = { "Welcome to Tactical Gamer Natural Selection (TGNS)!",
+						  "If you enjoy mature, respectful play, please ask about our reserved slots.",
+						  "To learn more about TGNS, press 'M' and click 'Info'. Enjoy! :)" }
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -738,6 +741,74 @@ function Plugin:Initialise()
 			        end
 			    end
 		    end
+		end
+	end)
+
+	local originalGUIReadyRoomOrdersUninitialize
+	originalGUIReadyRoomOrdersUninitialize = Class_ReplaceMethod("GUIReadyRoomOrders", "Uninitialize", function(guiReadyRoomOrdersUninitializeSelf)
+		originalGUIReadyRoomOrdersUninitialize(guiReadyRoomOrdersUninitializeSelf)
+		if guiReadyRoomOrdersUninitializeSelf.logo then
+			GUI.DestroyItem(guiReadyRoomOrdersUninitializeSelf.logo)
+		end
+		guiReadyRoomOrdersUninitializeSelf.logo = nil
+    end)
+
+	local message
+	local welcomeIsFinished = true
+	local originalGUIReadyRoomOrdersUpdate
+	originalGUIReadyRoomOrdersUpdate = Class_ReplaceMethod("GUIReadyRoomOrders", "Update", function(guiReadyRoomOrdersUpdateSelf, deltaTime)
+		originalGUIReadyRoomOrdersUpdate(guiReadyRoomOrdersUpdateSelf, deltaTime)
+
+		if not welcomeIsFinished then
+			local kFadeInColor = Color(1, 1, 1, 1)
+			local kFadeOutColor = Color(1, 1, 1, 0)
+			local kWelcomeFadeInTime = 4
+			local kWelcomeFadeOutTime = 1
+			local kWelcomeStartFadeOutTime = 6
+			local kWelcomeTextReset = 8
+
+			if guiReadyRoomOrdersUpdateSelf.welcomeTextCount == nil then
+				local kLogoSize = GUIScale(Vector(1024, 120, 0))
+
+				guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
+				guiReadyRoomOrdersUpdateSelf.welcomeTextCount = 0
+
+				guiReadyRoomOrdersUpdateSelf.logo = GetGUIManager():CreateGraphicItem()
+				guiReadyRoomOrdersUpdateSelf.logo:SetSize(kLogoSize)
+				guiReadyRoomOrdersUpdateSelf.logo:SetPosition(Vector(-kLogoSize.x * 0.5, kLogoSize.y * 0.6, 0))
+				guiReadyRoomOrdersUpdateSelf.logo:SetAnchor(GUIItem.Middle, GUIItem.Top)
+				guiReadyRoomOrdersUpdateSelf.logo:SetTexture("ui/welcome/readyRoom1.dds")
+				guiReadyRoomOrdersUpdateSelf.logo:SetColor(kFadeOutColor)
+			else
+				local timeSinceStart = Shared.GetTime() - guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime
+				for i = 1, #WELCOME_MESSAGES do
+					if timeSinceStart > kWelcomeTextReset and i > guiReadyRoomOrdersUpdateSelf.welcomeTextCount then
+						message = WELCOME_MESSAGES[i]
+					    guiReadyRoomOrdersUpdateSelf.welcomeText:SetText(message)
+					    guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
+					    guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime = Shared.GetTime()
+					    guiReadyRoomOrdersUpdateSelf.welcomeTextCount = i
+					    break
+					end
+				end
+
+				if timeSinceStart <= kWelcomeFadeInTime then
+					local color = LerpColor(kFadeOutColor, kFadeInColor, Clamp(timeSinceStart / kWelcomeFadeInTime, 0, 1))
+				    guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(color)
+					if message == WELCOME_MESSAGES[1] then
+						guiReadyRoomOrdersUpdateSelf.logo:SetColor(color)
+					end
+				elseif timeSinceStart >= kWelcomeStartFadeOutTime then
+					guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(LerpColor(kFadeInColor, kFadeOutColor, Clamp((timeSinceStart - kWelcomeStartFadeOutTime) / kWelcomeFadeOutTime, 0, 1)))
+					if message == WELCOME_MESSAGES[#WELCOME_MESSAGES] and timeSinceStart >= kWelcomeFadeOutTime + kWelcomeTextReset then
+						local percentage = Clamp((timeSinceStart - (kWelcomeFadeOutTime + kWelcomeTextReset)) / kWelcomeFadeOutTime, 0, 1)
+						guiReadyRoomOrdersUpdateSelf.logo:SetColor(LerpColor(kFadeInColor, kFadeOutColor, percentage))
+						if percentage == 1 then
+							welcomeIsFinished = true -- thanks to / inspired by: https://steamcommunity.com/sharedfiles/filedetails/?id=132302678
+						end
+					end
+				end
+			end
 		end
 	end)
 
