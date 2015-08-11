@@ -5,11 +5,13 @@ local Plugin = {}
 function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create()
-	Server.HookNetworkMessage("VoteChangeMap", function(client)
-		local player = TGNS.GetPlayer(client)
-		md:ToPlayerNotifyError(player, "Built-in mapvoting is available when server mods fail to load.")
-		md:ToPlayerNotifyError(player, "Server mods loaded successfully, so vote starts are automated.")
-	end)
+    TGNS.ScheduleAction(5, function()
+		Server.HookNetworkMessage("VoteChangeMap", function(client)
+			local player = TGNS.GetPlayer(client)
+			md:ToPlayerNotifyError(player, "Built-in mapvoting is available when server mods fail to load.")
+			md:ToPlayerNotifyError(player, "Server mods loaded successfully, so vote starts are automated.")
+		end)
+    end)
     return true
 end
 
