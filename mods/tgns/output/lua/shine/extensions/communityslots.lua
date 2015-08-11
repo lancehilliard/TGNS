@@ -95,14 +95,35 @@ local function IsTargetProtectedCommander(targetClient)
     return result
 end
 
-local function FindVictimClient(joiningSteamId, playerList)
+local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaDelta)
     local result = nil
     local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningSteamId) end)
+    local clientsGivenImmunityViaKarma = {}
     if #bumpableClients > 0 then
         TGNS.SortDescending(bumpableClients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
+
+        local potentiallyImmuneClients = {}
+        if type(passingTheBumpKarmaDelta) == "number" then
+            TGNS.DoFor(bumpableClients, function(c)
+                if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
+                    table.insert(potentiallyImmuneClients)
+                else
+                    return true
+                end
+            end)
+        end
+        if #potentiallyImmuneClients > 0 and #potentiallyImmuneClients < #bumpableClients then
+            TGNS.DoForReverse(bumpableClients, function(c, i)
+                if TGNS.Has(potentiallyImmuneClients, c) then
+                    table.insert(clientsGivenImmunityViaKarma, c)
+                    -- table.remove(bumpableClients, i)
+                end
+            end)
+        end
+
         result = TGNS.GetFirst(bumpableClients)
     end
-    return result
+    return result, clientsGivenImmunityViaKarma
 end
 
 local function GetKickDetails(targetClient, joiningClient, playerList)
@@ -243,7 +264,10 @@ local function IsClientBumped(joiningClient)
         local playerList = GetPlayingPlayers(joiningClient)
         if ServerIsFull(playerList) then
             local joiningSteamId = TGNS.GetClientSteamId(joiningClient)
-            local victimClient = blacklistedClients[joiningClient] and nil or FindVictimClient(joiningSteamId, playerList)
+            local victimClient, clientsGivenImmunityViaKarma
+            if not blacklistedClients[joiningClient] then
+                victimClient, clientsGivenImmunityViaKarma = FindVictimClient(joiningSteamId, playerList, Shine.Plugins.karma.Config.Deltas["PassingTheBump"])
+            end
             local joiningName = TGNS.GetClientName(joiningClient)
             local blacklistAdvisoryClient
             if victimClient ~= nil then
@@ -255,6 +279,10 @@ local function IsClientBumped(joiningClient)
                 TGNS.ExecuteClientCommand(victimClient, "readyroom")
                 slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
                 TGNS.Karma(joiningClient, "Bumping")
+                TGNS.DoFor(clientsGivenImmunityViaKarma, function(c)
+                    md:ToAdminConsole(string.format("ADMINDEBUG (AND NOT YET ENABLED): %s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    -- TGNS.Karma(c, "PassingTheBump")
+                end)
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
                 --tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
