@@ -219,7 +219,7 @@ end
 local function onBetKill(steamId, killerClient, victimClient, amount, shouldPayout)
 	local killerName = TGNS.GetClientName(killerClient)
 	local victimName = TGNS.GetClientName(victimClient)
-	local message
+	local message, messageDisplayer
 	if shouldPayout then
 		local multipliedAmount = getAmountWithSkillMultiplier(killerClient, victimClient, amount)
 		local roundedMultipliedAmount = TGNS.RoundPositiveNumberDown(multipliedAmount)
@@ -227,12 +227,14 @@ local function onBetKill(steamId, killerClient, victimClient, amount, shouldPayo
 		persistTransaction(steamId, multipliedAmount, TGNS.GetClientSteamId(killerClient), TGNS.GetClientSteamId(victimClient), 'payout')
 		playerBanks[steamId] = playerBanks[steamId] + multipliedAmount
 		message = string.format("%s killed %s! You won %s on a %s bet (+%s)! You have %s.", killerName, victimName, roundedMultipliedAmount, amount, net, TGNS.RoundPositiveNumberDown(playerBanks[steamId]))
+		messageDisplayer = md.ToPlayerNotifyGreen
 	else
 		message = string.format("%s killed %s. %s for %s to kill %s did not pay out. You have %s.", killerName, victimName, amount, victimName, killerName, TGNS.RoundPositiveNumberDown(playerBanks[steamId]))
+		messageDisplayer = md.ToPlayerNotifyRed
 	end
 	local client = TGNS.GetClientByNs2Id(steamId)
 	if client then
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+		messageDisplayer(md, TGNS.GetPlayer(client), message)
 	end
 	persistTransaction(steamId, amount * -1, TGNS.GetClientSteamId(killerClient), TGNS.GetClientSteamId(victimClient), 'bet')
 end
