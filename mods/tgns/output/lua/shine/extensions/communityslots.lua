@@ -106,7 +106,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
         if type(passingTheBumpKarmaDelta) == "number" then
             TGNS.DoFor(bumpableClients, function(c)
                 if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
-                    table.insert(potentiallyImmuneClients)
+                    table.insert(potentiallyImmuneClients, c)
                 else
                     return true
                 end
