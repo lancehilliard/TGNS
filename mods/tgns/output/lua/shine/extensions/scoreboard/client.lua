@@ -754,7 +754,16 @@ function Plugin:Initialise()
     end)
 
 	local message
-	local welcomeIsFinished = true
+	local welcomeIsFinished
+
+	local originalGUIReadyRoomOrdersInitialize
+	originalGUIReadyRoomOrdersInitialize = Class_ReplaceMethod("GUIReadyRoomOrders", "Initialize", function(guiReadyRoomOrdersInitializeSelf)
+		originalGUIReadyRoomOrdersInitialize(guiReadyRoomOrdersInitializeSelf)
+		guiReadyRoomOrdersInitializeSelf.welcomeTextCount = nil
+		welcomeIsFinished = nil
+		message = nil
+    end)
+
 	local originalGUIReadyRoomOrdersUpdate
 	originalGUIReadyRoomOrdersUpdate = Class_ReplaceMethod("GUIReadyRoomOrders", "Update", function(guiReadyRoomOrdersUpdateSelf, deltaTime)
 		originalGUIReadyRoomOrdersUpdate(guiReadyRoomOrdersUpdateSelf, deltaTime)
@@ -768,16 +777,16 @@ function Plugin:Initialise()
 			local kWelcomeTextReset = 8
 
 			if guiReadyRoomOrdersUpdateSelf.welcomeTextCount == nil then
-				local kLogoSize = GUIScale(Vector(1024, 120, 0))
+				local kLogoSize = GUIScale(Vector(1024, 180, 0))
 
 				guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
 				guiReadyRoomOrdersUpdateSelf.welcomeTextCount = 0
 
 				guiReadyRoomOrdersUpdateSelf.logo = GetGUIManager():CreateGraphicItem()
 				guiReadyRoomOrdersUpdateSelf.logo:SetSize(kLogoSize)
-				guiReadyRoomOrdersUpdateSelf.logo:SetPosition(Vector(-kLogoSize.x * 0.5, kLogoSize.y * 0.6, 0))
+				guiReadyRoomOrdersUpdateSelf.logo:SetPosition(Vector(-kLogoSize.x * 0.5, kLogoSize.y * 0.3, 0))
 				guiReadyRoomOrdersUpdateSelf.logo:SetAnchor(GUIItem.Middle, GUIItem.Top)
-				guiReadyRoomOrdersUpdateSelf.logo:SetTexture("ui/welcome/readyRoom1.dds")
+				guiReadyRoomOrdersUpdateSelf.logo:SetTexture("ui/welcome/readyroom1.dds")
 				guiReadyRoomOrdersUpdateSelf.logo:SetColor(kFadeOutColor)
 			else
 				local timeSinceStart = Shared.GetTime() - guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime
