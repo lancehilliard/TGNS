@@ -35,6 +35,7 @@ local squadNumberLastSetTimes = {}
 local WELCOME_MESSAGES = { "Welcome to Tactical Gamer Natural Selection (TGNS)!",
 						  "If you enjoy mature, respectful play, please ask about our reserved slots.",
 						  "To learn more about TGNS, press 'M' and click 'Info'. Enjoy! :)" }
+local EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES = 25
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -809,8 +810,8 @@ function Plugin:Initialise()
 					end
 				elseif timeSinceStart >= kWelcomeStartFadeOutTime then
 					guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(LerpColor(kFadeInColor, kFadeOutColor, Clamp((timeSinceStart - kWelcomeStartFadeOutTime) / kWelcomeFadeOutTime, 0, 1)))
-					if message == WELCOME_MESSAGES[#WELCOME_MESSAGES] and timeSinceStart >= kWelcomeFadeOutTime + kWelcomeTextReset then
-						local percentage = Clamp((timeSinceStart - (kWelcomeFadeOutTime + kWelcomeTextReset)) / kWelcomeFadeOutTime, 0, 1)
+					if message == WELCOME_MESSAGES[#WELCOME_MESSAGES] and timeSinceStart >= kWelcomeFadeOutTime + kWelcomeTextReset + EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES then
+						local percentage = Clamp((timeSinceStart  - (kWelcomeFadeOutTime + kWelcomeTextReset + EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES)) / kWelcomeFadeOutTime, 0, 1)
 						guiReadyRoomOrdersUpdateSelf.logo:SetColor(LerpColor(kFadeInColor, kFadeOutColor, percentage))
 						if percentage == 1 then
 							welcomeIsFinished = true -- thanks to / inspired by: https://steamcommunity.com/sharedfiles/filedetails/?id=132302678
