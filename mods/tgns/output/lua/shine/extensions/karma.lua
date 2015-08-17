@@ -130,7 +130,7 @@ function Plugin:Initialise()
 		local playerList = TGNS.GetPlayerList()
 		TGNS.DoFor(TGNS.GetSpectatorClients(playerList), function(c)
 			local numberOfPlayingClients = #TGNS.GetPlayingClients(playerList)
-			if numberOfPlayingClients >= 16 then
+			if numberOfPlayingClients >= Shine.Plugins.communityslots.Config.PublicSlots then
 				local steamId = TGNS.GetClientSteamId(c)
 				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] or 0
 				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] + 1
