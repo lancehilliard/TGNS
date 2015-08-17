@@ -2,7 +2,7 @@ local badgeNames = {}
 local badges = {}
 local md = TGNSMessageDisplayer.Create("BADGES")
 local badgesModIsLoaded = false
-local targetClientBadgeLabels = {}
+-- local targetClientBadgeLabels = {}
 
 local Plugin = {}
 
@@ -11,11 +11,12 @@ local function tellTargetAboutSource(targetClient, sourceClient)
 	local sourceClientSteamId = TGNS.GetClientSteamId(sourceClient)
 	local sourceBadge = badges[sourceClientSteamId]
 	if badgeName and sourceBadge and kBadges[badgeName] then
+		SetFormalBadgeName(badgeName, string.format('%s (TGNS)\n%s', sourceBadge.DisplayName, sourceBadge.Description))
 		Server.SendNetworkMessage(targetClient, "Badge", { clientIndex = TGNS.GetClientId(sourceClient), badge = kBadges[badgeName] }, true)
-		if targetClientBadgeLabels[targetClient] ~= nil and not TGNS.Has(targetClientBadgeLabels[targetClient], badgeName) then
-			Server.SendNetworkMessage(targetClient, Shine.Plugins.scoreboard.BADGE_DISPLAY_LABEL, { n = badgeName, l = string.format('%s (TGNS)\n%s', sourceBadge.DisplayName, sourceBadge.Description) }, true)
-			table.insert(targetClientBadgeLabels[targetClient], badgeName)
-		end
+		-- if targetClientBadgeLabels[targetClient] ~= nil and not TGNS.Has(targetClientBadgeLabels[targetClient], badgeName) then
+		-- 	Server.SendNetworkMessage(targetClient, Shine.Plugins.scoreboard.BADGE_DISPLAY_LABEL, { n = badgeName, l = string.format('%s (TGNS)\n%s', sourceBadge.DisplayName, sourceBadge.Description) }, true)
+		-- 	table.insert(targetClientBadgeLabels[targetClient], badgeName)
+		-- end
 	end
 end
 
@@ -73,7 +74,7 @@ end
 
 function Plugin:ClientConfirmConnect(client)
 	if badgesModIsLoaded then
-		targetClientBadgeLabels[client] = {}
+		-- targetClientBadgeLabels[client] = {}
 		TGNS.ScheduleAction(1, function()
 			TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
 		end)
