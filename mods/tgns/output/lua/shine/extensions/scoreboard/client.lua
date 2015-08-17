@@ -18,7 +18,7 @@ local showOptionals = false
 local notes = {}
 local hasJetPacks = {}
 local showTeamMessages = true
-local badgeLabels = {}
+-- local badgeLabels = {}
 local vrConfirmed = {}
 local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
 local approveSoundEventName = "sound/tgns.fev/scoreboard/approve"
@@ -580,9 +580,9 @@ function Plugin:Initialise()
  --    	return result
 	-- end
 
-	TGNS.HookNetworkMessage(Plugin.BADGE_DISPLAY_LABEL, function(message)
-		badgeLabels[string.format("ui/badges/%s.dds", message.n)] = message.l
-	end)
+	-- TGNS.HookNetworkMessage(Plugin.BADGE_DISPLAY_LABEL, function(message)
+	-- 	badgeLabels[string.format("ui/badges/%s.dds", message.n)] = message.l
+	-- end)
 
 	local originalGUIHoverTooltipShow = GUIHoverTooltip.Show
 	GUIHoverTooltip.Show = function(self, displayTimeInSeconds)
