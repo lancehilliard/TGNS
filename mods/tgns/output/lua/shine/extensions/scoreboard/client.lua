@@ -568,17 +568,17 @@ function Plugin:Initialise()
 	end
 
 
-    local originalGetBadgeFormalName = GetBadgeFormalName
-    GetBadgeFormalName = function(name)
-    	local result = originalGetBadgeFormalName(name)
-    	if result == "Custom Badge" then
-    		local badgeLabel = badgeLabels[name]
-    		if badgeLabel then
-    			result = badgeLabel
-    		end
-    	end
-    	return result
-	end
+ --    local originalGetBadgeFormalName = GetBadgeFormalName
+ --    GetBadgeFormalName = function(name)
+ --    	local result = originalGetBadgeFormalName(name)
+ --    	if result == "Custom Badge" then
+ --    		local badgeLabel = badgeLabels[name]
+ --    		if badgeLabel then
+ --    			result = badgeLabel
+ --    		end
+ --    	end
+ --    	return result
+	-- end
 
 	TGNS.HookNetworkMessage(Plugin.BADGE_DISPLAY_LABEL, function(message)
 		badgeLabels[string.format("ui/badges/%s.dds", message.n)] = message.l
