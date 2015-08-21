@@ -37,6 +37,7 @@ Plugin.LAPS_BAD = "scoreboard_LAPS_BAD"
 Plugin.LAPS_LEG = "scoreboard_LAPS_LEG"
 Plugin.LAPS_BEST = "scoreboard_LAPS_BEST"
 Plugin.LAPS_START = "scoreboard_LAPS_START"
+Plugin.DESIGNATION = "scoreboard_DESIGNATION"
 
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
@@ -74,6 +75,7 @@ TGNS.RegisterNetworkMessage(Plugin.LAPS_BAD, {})
 TGNS.RegisterNetworkMessage(Plugin.LAPS_LEG, {})
 TGNS.RegisterNetworkMessage(Plugin.LAPS_BEST, {})
 TGNS.RegisterNetworkMessage(Plugin.LAPS_START, {})
+TGNS.RegisterNetworkMessage(Plugin.DESIGNATION, {c="string(2)"})
 
 function Plugin:Initialise()
 	self.Enabled = true

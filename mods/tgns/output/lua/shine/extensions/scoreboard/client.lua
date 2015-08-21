@@ -36,6 +36,8 @@ local WELCOME_MESSAGES = { "Welcome to Tactical Gamer Natural Selection (TGNS)!"
 						  "If you enjoy mature, respectful play, please ask about our reserved slots.",
 						  "To learn more about TGNS, press 'M' and click 'Info'. Enjoy! :)" }
 local EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES = 25
+local communityDesignationCharacter = '?'
+local welcomeBannerImageName
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -482,6 +484,11 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, function(message)
 		isApproved[message.c] = false
 	end)
+	TGNS.HookNetworkMessage(Plugin.DESIGNATION, function(message)
+		communityDesignationCharacter = message.c
+		local welcomeBannerImageNameModifier = communityDesignationCharacter == "S" and "_s" or (communityDesignationCharacter == "P" and "_p" or "")
+		welcomeBannerImageName = string.format("ui/welcome/readyroom1%s.dds", welcomeBannerImageNameModifier)
+	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, function(message)
 		isApproved[message.c] = true
 	end)
@@ -769,7 +776,7 @@ function Plugin:Initialise()
 	originalGUIReadyRoomOrdersUpdate = Class_ReplaceMethod("GUIReadyRoomOrders", "Update", function(guiReadyRoomOrdersUpdateSelf, deltaTime)
 		originalGUIReadyRoomOrdersUpdate(guiReadyRoomOrdersUpdateSelf, deltaTime)
 
-		if not welcomeIsFinished then
+		if welcomeBannerImageName and not welcomeIsFinished then
 			local kFadeInColor = Color(1, 1, 1, 1)
 			local kFadeOutColor = Color(1, 1, 1, 0)
 			local kWelcomeFadeInTime = 4
@@ -787,7 +794,7 @@ function Plugin:Initialise()
 				guiReadyRoomOrdersUpdateSelf.logo:SetSize(kLogoSize)
 				guiReadyRoomOrdersUpdateSelf.logo:SetPosition(Vector(-kLogoSize.x * 0.5, kLogoSize.y * 0.3, 0))
 				guiReadyRoomOrdersUpdateSelf.logo:SetAnchor(GUIItem.Middle, GUIItem.Top)
-				guiReadyRoomOrdersUpdateSelf.logo:SetTexture("ui/welcome/readyroom1.dds")
+				guiReadyRoomOrdersUpdateSelf.logo:SetTexture(welcomeBannerImageName)
 				guiReadyRoomOrdersUpdateSelf.logo:SetColor(kFadeOutColor)
 			else
 				local timeSinceStart = Shared.GetTime() - guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime
