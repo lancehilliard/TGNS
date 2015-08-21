@@ -254,6 +254,8 @@
 !mods/tgns/source/ui/query/contactcard-team1.psd
 !mods/tgns/source/ui/query/contactcard-team2.psd
 !mods/tgns/source/ui/welcome/readyroom1.psd
+!mods/tgns/source/ui/welcome/readyroom1_s.psd
+!mods/tgns/source/ui/welcome/readyroom1_p.psd
 
 # And then whitelist spec files
 
