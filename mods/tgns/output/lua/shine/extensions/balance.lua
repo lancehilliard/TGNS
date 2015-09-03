@@ -306,7 +306,7 @@ end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	if not (force or shineForce) then
-		if balanceInProgress and not TGNS.IsTeamNumberSpectator(newTeamNumber) then
+		if balanceInProgress and not (TGNS.IsTeamNumberSpectator(newTeamNumber) or TGNS.IsPlayerSpectator(player)) then
 			md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
 			return false
 		end
@@ -430,19 +430,19 @@ function Plugin:CreateCommands()
 	local balanceCommand = self:BindCommand("sh_forcebalance", "forcebalance", function(client) svBalance(client, true) end)
 	balanceCommand:Help("Balance players across teams (after forced RR).")
 
-	local commandersCommand = self:BindCommand("sh_comm", "comm", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "Commanders") end)
+	local commandersCommand = self:BindCommand("sh_comm", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "Commanders") end)
 	commandersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 	commandersCommand:Help("<player> Toggle player in Comm bucket")
 
-	local bestPlayersCommand = self:BindCommand("sh_best", "best", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BestPlayers") end)
+	local bestPlayersCommand = self:BindCommand("sh_best", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BestPlayers") end)
 	bestPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 	bestPlayersCommand:Help("<player> Toggle player in Best bucket")
 
-	local betterPlayersCommand = self:BindCommand("sh_better", "better", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BetterPlayers") end)
+	local betterPlayersCommand = self:BindCommand("sh_better", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BetterPlayers") end)
 	betterPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 	betterPlayersCommand:Help("<player> Toggle player in Better bucket")
 
-	local goodPlayersCommand = self:BindCommand("sh_good", "good", function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "GoodPlayers") end)
+	local goodPlayersCommand = self:BindCommand("sh_good", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "GoodPlayers") end)
 	goodPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 	goodPlayersCommand:Help("<player> Toggle player in Good bucket")
 end
