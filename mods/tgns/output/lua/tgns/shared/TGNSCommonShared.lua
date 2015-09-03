@@ -21,6 +21,20 @@ TGNS.ShineTextAlignmentMin = 0
 TGNS.ShineTextAlignmentCenter = 1
 TGNS.ShineTextAlignmentMax = 2
 
+function TGNS.GetTeamRgb(teamNumber)
+	local r, g, b
+	if teamNumber == kMarineTeamType or teamNumber == kAlienTeamType then
+		r = teamNumber == kMarineTeamType and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
+		g = teamNumber == kMarineTeamType and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+		b = teamNumber == kMarineTeamType and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
+	else
+		r = 255
+		g = 255
+		b = 255
+	end
+	return {R=r,G=g,B=b}
+end
+
 function TGNS.GetRandomizedElements(elements)
 	local result = {}
 	TGNS.DoFor(elements, function(e) table.insert(result, e) end)
