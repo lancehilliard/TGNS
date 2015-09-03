@@ -13,6 +13,16 @@ TGNS.PRIMER_GAMES_THRESHOLD = 10
 	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
 	-- 	end)
 
+function TGNS.GetEntityLocationName(entity)
+	local result = entity:GetLocationName()
+	return result
+end
+
+function TGNS.GetTeamCommandStructures(teamNumber)
+	local result = TGNS.GetEntitiesForTeam("CommandStructure", teamNumber)
+	return result
+end
+
 function TGNS.Karma(target, deltaName)
 	local result
 	local karmaPlugin = Shine.Plugins.karma
@@ -23,14 +33,14 @@ function TGNS.Karma(target, deltaName)
 			result = karmaPlugin:GetKarma(target)
 		end
 	end
-	return result
+	return result or 0
 end
 
 function TGNS.GetStopWatchTime(seconds)
 	local integralSeconds, fractionalSeconds = math.modf(seconds)
 	local milliseconds = math.floor(1000 * fractionalSeconds)
 	local result = string.format("%s:%03d", string.DigitalTime(seconds), milliseconds)
-	return result or 0
+	return result
 end
 
 function TGNS.IsPlayerExo(player)
@@ -55,6 +65,26 @@ end
 
 function TGNS.GetCurrentHour()
 	local result = os.date("*t").hour
+	return result
+end
+
+function TGNS.GetEntityHealth(entity)
+	local result = entity:GetHealth()
+	return result
+end
+
+function TGNS.SetEntityHealth(entity, health)
+	local result = entity:SetHealth(health)
+	return result
+end
+
+function TGNS.GetEntityArmor(entity)
+	local result = entity:GetArmor()
+	return result
+end
+
+function TGNS.SetEntityArmor(entity, armor)
+	local result = entity:SetArmor(armor)
 	return result
 end
 
@@ -207,10 +237,12 @@ function TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
 end
 
 function TGNS.GetTechPoints()
-	local result = {}
-    for _, techPoint in ientitylist(Shared.GetEntitiesWithClassname("TechPoint")) do
-        table.insert(result, techPoint)
-    end
+	local result = TGNS.GetEntitiesWithClassName("TechPoint")
+	return result
+end
+
+function TGNS.GetCommandStructures()
+	local result = TGNS.GetEntitiesWithClassName("CommandStructure")
 	return result
 end
 
@@ -394,6 +426,10 @@ function TGNS.IsPlayerAlive(player)
 	return result
 end
 
+function TGNS.IsClientAlive(client)
+	return TGNS.PlayerAction(client, TGNS.IsPlayerAlive)
+end
+
 function TGNS.IsNumberWithNonZeroPositiveValue(candidate)
 	candidate = tonumber(candidate)
 	local result = candidate and candidate > 0
@@ -505,6 +541,16 @@ end
 function TGNS.ToUpper(s)
 	local result = string.upper(s)
 	return result
+end
+
+function TGNS.ToTitle(s)
+	local result=""
+    for word in string.gfind(s, "%S+") do          
+        local first = string.sub(word,1,1)
+        result = (result .. string.upper(first) .. string.lower(string.sub(word,2)) .. ' ')
+    end
+    result = StringTrim(result)
+    return result
 end
 
 function TGNS.ConvertSecondsToMinutes(seconds)
@@ -651,12 +697,34 @@ function TGNS.DestroyEntity(entity)
 	DestroyEntity(entity)
 end
 
+function TGNS.GetEntitiesByName(className, name)
+	local result = {}
+	TGNS.DoFor(TGNS.GetEntitiesWithClassName(className), function(entity)
+	    local entMT = getmetatable(entity)
+	    local _, properties = entMT.__towatch(entity)
+	    TGNS.DoForPairs(properties, function(key, value)
+	    	if key == "name" and value == name then
+	    		table.insert(result, entity)
+	    	end
+	    end)
+	end)
+	return result
+end
+
 function TGNS.DestroyEntitiesExcept(entities, entityToKeep)
 	TGNS.DoFor(entities, function (e)
 		if e ~= entityToKeep then
 			TGNS.DestroyEntity(e)
 		end
 	end)
+end
+
+function TGNS.GetEntitiesWithClassName(className)
+	local result = {}
+    for _, entity in ientitylist(Shared.GetEntitiesWithClassname(className)) do
+        table.insert(result, entity)
+    end
+	return result
 end
 
 function TGNS.KillTeamEntitiesExcept(className, teamNumber, entityToKeep)
@@ -858,6 +926,14 @@ end
 function TGNS.ClientIsAlien(client)
 	local result = TGNS.GetClientTeamNumber(client) == kAlienTeamType
 	return result
+end
+
+function TGNS.PlayerIsMarine(player)
+	return TGNS.ClientAction(player, TGNS.ClientIsMarine)
+end
+
+function TGNS.PlayerIsAlien(player)
+	return TGNS.ClientAction(player, TGNS.ClientIsAlien)
 end
 
 function TGNS.ClientIsMarine(client)
@@ -1072,6 +1148,10 @@ function TGNS.GetTeamName(teamNumber)
 		result = "Spectator"
 	end
 	return result
+end
+
+function TGNS.IsClientReadyRoom(client)
+	return TGNS.PlayerAction(client, TGNS.IsPlayerReadyRoom)
 end
 
 function TGNS.IsPlayerReadyRoom(player)
@@ -1467,6 +1547,15 @@ end
 function TGNS.GetAlienPlayers(playerList)
 	local result = TGNS.GetPlayers(TGNS.GetAlienClients(playerList))
 	return result
+end
+
+function TGNS.GetPlayerLocationName(player)
+	local result = player:GetLocationName()
+	return result
+end
+
+function TGNS.GetClientLocationName(client)
+	return TGNS.PlayerAction(client, TGNS.GetPlayerLocationName)
 end
 
 function TGNS.GetStrangersClients(playerList)
