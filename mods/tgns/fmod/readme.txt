@@ -6,7 +6,7 @@ http://www.fmod.org/download/fmodex/tool/win/fmoddesigner43800win-installer.exe
 
 ) Create Event Group per TGNS plugin
 
-) Create Simple Event per plugin sound
+) Create Simple Event per plugin sound (http://audio.online-convert.com/convert-to-wav -- WAV; 22or44kHz; 16-bit; Mono)
 
 ) Set 'Playback Mode' to 'Oneshot'
 
