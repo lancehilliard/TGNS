@@ -385,7 +385,9 @@ function Plugin:Initialise()
 
 	TGNS.RegisterEventHook("GameStarted", function()
 		if self:GetTotalNumberOfBots() > 0 then
-			createFreeCragEntity()
+			if not TGNS.GetCurrentMapName() == "ns2_tgns_arclight" then
+				createFreeCragEntity()
+			end
 			GetGamerules():GetTeam(kAlienTeamType):AddTeamResources(100)
 			alienTeamResBonus = 0
 		end
