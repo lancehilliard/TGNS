@@ -192,6 +192,10 @@ function Plugin:Initialise()
 				kEggGenerationRate = 0
 				kMarineRespawnTime = kMarineRespawnTime / 2
 				prepareForNextGame(true)
+				TGNS.DoFor(TGNS.GetPlayers(TGNS.GetPlayingClients(TGNS.GetPlayerList())), function(p)
+					local spawnLocationName = TGNS.PlayerIsMarine(p) and "Marine Start" or "The Hive"
+					p:SetLocationName(spawnLocationName)
+				end)
 			end)
 
 			local isStartCommandStructure = function(e) return TGNS.EntityIsCommandStructure(e) and TGNS.GetEntityLocationName(e) ~= hillLocationName end
