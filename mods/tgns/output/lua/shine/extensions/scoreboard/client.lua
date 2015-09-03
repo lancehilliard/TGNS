@@ -26,6 +26,18 @@ local badSoundEventName = "sound/tgns.fev/laps/bad"
 local legSoundEventName = "sound/tgns.fev/laps/leg"
 local bestSoundEventName = "sound/tgns.fev/laps/best"
 local startSoundEventName = "sound/tgns.fev/laps/start"
+local hill1SoundEventName = "sound/tgns.fev/hill/1"
+local hill2SoundEventName = "sound/tgns.fev/hill/2"
+local hill3SoundEventName = "sound/tgns.fev/hill/3"
+local hill4SoundEventName = "sound/tgns.fev/hill/4"
+local hill5SoundEventName = "sound/tgns.fev/hill/5"
+local hill6SoundEventName = "sound/tgns.fev/hill/6"
+local hill7SoundEventName = "sound/tgns.fev/hill/7"
+local hill8SoundEventName = "sound/tgns.fev/hill/8"
+local hill9SoundEventName = "sound/tgns.fev/hill/9"
+local hill10SoundEventName = "sound/tgns.fev/hill/10"
+local hillPitOpenMarinesSoundEventName = "sound/tgns.fev/hill/ns1_marine_lets_move_out"
+local hillPitOpenAliensSoundEventName = "sound/tgns.fev/hill/ns1_alien_now_we_donce"
 local gameIsInProgressLastChanged
 local gameIsInProgress = false
 local serverSimpleName
@@ -123,6 +135,18 @@ function Plugin:Initialise()
 	Client.PrecacheLocalSound(legSoundEventName)
 	Client.PrecacheLocalSound(bestSoundEventName)
 	Client.PrecacheLocalSound(startSoundEventName)
+	Client.PrecacheLocalSound(hill1SoundEventName)
+	Client.PrecacheLocalSound(hill2SoundEventName)
+	Client.PrecacheLocalSound(hill3SoundEventName)
+	Client.PrecacheLocalSound(hill4SoundEventName)
+	Client.PrecacheLocalSound(hill5SoundEventName)
+	Client.PrecacheLocalSound(hill6SoundEventName)
+	Client.PrecacheLocalSound(hill7SoundEventName)
+	Client.PrecacheLocalSound(hill8SoundEventName)
+	Client.PrecacheLocalSound(hill9SoundEventName)
+	Client.PrecacheLocalSound(hill10SoundEventName)
+	Client.PrecacheLocalSound(hillPitOpenMarinesSoundEventName)
+	Client.PrecacheLocalSound(hillPitOpenAliensSoundEventName)
 
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
@@ -617,6 +641,39 @@ function Plugin:Initialise()
 
 	TGNS.HookNetworkMessage(Plugin.LAPS_START, function(message)
 		Shared.PlaySound(Client.GetLocalPlayer(), startSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.HILL_SOUND, function(message)
+		local soundEventName
+		if message.i == 1 then
+			soundEventName = hill1SoundEventName
+		elseif message.i == 2 then
+			soundEventName = hill2SoundEventName
+		elseif message.i == 3 then
+			soundEventName = hill3SoundEventName
+		elseif message.i == 4 then
+			soundEventName = hill4SoundEventName
+		elseif message.i == 5 then
+			soundEventName = hill5SoundEventName
+		elseif message.i == 6 then
+			soundEventName = hill6SoundEventName
+		elseif message.i == 7 then
+			soundEventName = hill7SoundEventName
+		elseif message.i == 8 then
+			soundEventName = hill8SoundEventName
+		elseif message.i == 9 then
+			soundEventName = hill9SoundEventName
+		elseif message.i == 10 then
+			soundEventName = hill10SoundEventName
+		elseif message.i == 11 then
+			soundEventName = hillPitOpenMarinesSoundEventName
+		elseif message.i == 12 then
+			soundEventName = hillPitOpenAliensSoundEventName
+		end
+
+		if soundEventName then
+			Shared.PlaySound(Client.GetLocalPlayer(), soundEventName, 0.025)
+		end
 	end)
 
 	TGNS.HookNetworkMessage(Plugin.SERVER_SIMPLE_NAME, function(message)
