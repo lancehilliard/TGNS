@@ -18,7 +18,7 @@ function TGNS.GetFirst(elements)
 	return result
 end
 
-function TGNS.SingleOrNil(elements, predicate)
+function TGNS.FirstOrNil(elements, predicate)
 	local result = nil
 	local matching = TGNS.Where(elements, predicate)
 	if #matching > 0 then
