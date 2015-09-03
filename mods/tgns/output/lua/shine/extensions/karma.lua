@@ -24,7 +24,7 @@ end
 local function refreshKarma(steamId)
 	httpFailureCount[steamId] = httpFailureCount[steamId] or 0
 	if httpFailureCount[steamId] < HttpFailureThreshold and TGNS.IsNumberWithNonZeroPositiveValue(steamId) then
-		local url = string.format("%s&i=%s&t=%s", TGNS.Config.KarmaEndpointBaseUrl, steamId, Shine.Plugins.karma.Config.DecayTimeInDays)
+		local url = string.format("%s&i=%s", TGNS.Config.KarmaEndpointBaseUrl, steamId)
 		TGNS.GetHttpAsync(url, function(karmaResponseJson)
 			local karmaResponse = json.decode(karmaResponseJson) or {}
 			if karmaResponse.success then
