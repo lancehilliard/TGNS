@@ -140,7 +140,7 @@ local function initScoreboardDecorations(client)
 end
 
 function Plugin:GetApprovalsCount(client)
-	local approvalCount = TGNS.SingleOrNil(approvalCounts, function(c) return c[1] == client end)
+	local approvalCount = TGNS.FirstOrNil(approvalCounts, function(c) return c[1] == client end)
 	local result = (client and approvalCount) and approvalCount[1] or 0
 	return result
 end
