@@ -662,7 +662,7 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
         local nonSpectatorPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) and not TGNS.GetIsClientVirtual(TGNS.GetClient(p)) end)
         if ServerIsFull(nonSpectatorPlayers) then
             local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
-            local joinerWillingToSpectate = TGNS.Has(fullSpecSteamIds, joiningSteamId) -- or TGNS.HasSteamIdSignedPrimer(joiningSteamId)
+            local joinerWillingToSpectate = TGNS.Has(fullSpecSteamIds, joiningSteamId) or TGNS.HasSteamIdSignedPrimer(joiningSteamId)
             result = bumpableClient ~= nil or (joinerWillingToSpectate and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < getMaximumEffectiveSpectatorCount())
         end
     end
