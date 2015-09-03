@@ -30,7 +30,7 @@ function TGNS.GetStopWatchTime(seconds)
 	local integralSeconds, fractionalSeconds = math.modf(seconds)
 	local milliseconds = math.floor(1000 * fractionalSeconds)
 	local result = string.format("%s:%03d", string.DigitalTime(seconds), milliseconds)
-	return result
+	return result or 0
 end
 
 function TGNS.IsPlayerExo(player)
