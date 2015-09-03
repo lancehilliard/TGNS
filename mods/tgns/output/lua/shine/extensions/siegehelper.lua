@@ -113,9 +113,9 @@ function Plugin:Initialise()
 	   			local returnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "returntele"))
 	   			local marineReturnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "marinereturntele"))
 	   			local alienReturnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "alienreturntele"))
-	   			debug(string.format("returnTele: %s", returnTele))
-	   			debug(string.format("marineReturnTele: %s", marineReturnTele))
-	   			debug(string.format("alienReturnTele: %s", alienReturnTele))
+	   			-- debug(string.format("returnTele: %s", returnTele))
+	   			-- debug(string.format("marineReturnTele: %s", marineReturnTele))
+	   			-- debug(string.format("alienReturnTele: %s", alienReturnTele))
 	   			if returnTele and marineReturnTele and alienReturnTele then
 		   			local originalReturnTeleOnTriggerEntered = returnTele.OnTriggerEntered
 		   			returnTele.OnTriggerEntered = function(teleporterSelf, enterEnt, triggerEnt)
@@ -137,13 +137,21 @@ function Plugin:Initialise()
    				end
 			end
 
+			-- debug("teleporters:")
+			-- TGNS.DoFor(TGNS.GetEntitiesWithClassName("TeleportTrigger"), function(teleporter)
+			-- 	Shared.Message(GetEntityInfo(teleporter))
+			-- end)
+
 			local configurePitBottomTeleporter = function()
-				TGNS.DoFor(TGNS.GetEntitiesByName("TeleportTrigger", "pitbottomtele"), function(teleporter)
+				TGNS.DoFor(TGNS.GetEntitiesByName("TeleportTrigger", "bottomfloortele"), function(teleporter)
 		   			local originalOnTriggerEntered = teleporter.OnTriggerEntered
 		   			teleporter.OnTriggerEntered = function(teleporterSelf, enterEnt, triggerEnt)
 		   				local client = TGNS.GetClient(enterEnt)
 				   		brieflySetWallwalkingValue(client, 3)
-				   		originalOnTriggerEntered(teleporterSelf, enterEnt, triggerEnt)
+				   		-- originalOnTriggerEntered(teleporterSelf, enterEnt, triggerEnt)
+				   		local destinationTeleporterName = TGNS.GetFirst(TGNS.GetRandomizedElements(TGNS.PlayerIsMarine(enterEnt) and {"MT1","MT2","MT3","MT4"} or {"AT1","AT2","AT3","AT4"}))
+				   		local destinationTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", destinationTeleporterName))
+				   		destinationTele:OnTriggerEntered(enterEnt, triggerEnt)		
 		   			end
 				end)
 			end
@@ -465,7 +473,7 @@ function Plugin:Initialise()
 							points = points <= maximumTeamPoints and points or maximumTeamPoints
 						end
 
-						table.insert(hillTextMessageDatas, {m=string.format("%s%s: %s (%s gathered%s)", teamNumber == kAlienTeamType and "\n" or "", TGNS.GetTeamName(teamNumber), math.ceil(points), onHillCount, (teamNumberToHarm ~= nil and teamNumberToHarm ~= teamNumber) and " and in control" or ""),t=teamNumber})
+						table.insert(hillTextMessageDatas, {m=string.format("%s%s: %s (%s %s)", teamNumber == kAlienTeamType and "\n" or "", TGNS.GetTeamName(teamNumber), math.ceil(points), onHillCount, (teamNumberToHarm ~= nil and teamNumberToHarm ~= teamNumber) and "controlling" or "gathered"),t=teamNumber})
 
 						if originalPoints ~= 0 and points == 0 then
 							TGNS.DoFor(TGNS.Where(TGNS.GetCommandStructures(), function(s) return TGNS.GetEntityLocationName(s) ~= hillLocationName and TGNS.StructureIsAlive(s) and s:GetTeamNumber() == teamNumber end), function(s)
