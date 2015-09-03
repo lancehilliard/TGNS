@@ -310,7 +310,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 					playerBanks[steamId] = playerBanks[steamId] - amount
 					local message
 					bet.amount = amount
-					local existingBet = TGNS.SingleOrNil(playerGameBets[steamId], function(b) return betPlayersAndTeamsMatch(b, bet) end)
+					local existingBet = TGNS.FirstOrNil(playerGameBets[steamId], function(b) return betPlayersAndTeamsMatch(b, bet) end)
 					if existingBet then
 						local originalAmount = existingBet.amount
 						local newAmount = existingBet.amount + amount
