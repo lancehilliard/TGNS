@@ -520,7 +520,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 					Shine.Plugins.scoreboard:SetTeamScoresData(c, captainsGamesWon[c])
 				end)
 			else
-				local winningCaptainClient = TGNS.SingleOrNil(TGNS.GetTeamClients(winningTeam:GetTeamNumber()), function(c) return TGNS.Has(captainClients, c) end)
+				local winningCaptainClient = TGNS.FirstOrNil(TGNS.GetTeamClients(winningTeam:GetTeamNumber()), function(c) return TGNS.Has(captainClients, c) end)
 				if winningCaptainClient ~= nil then
 					captainsGamesWon[winningCaptainClient] = captainsGamesWon[winningCaptainClient] or 0
 					captainsGamesWon[winningCaptainClient] = captainsGamesWon[winningCaptainClient] + 1
