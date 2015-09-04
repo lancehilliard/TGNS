@@ -291,6 +291,7 @@ function Plugin:Initialise()
 			-- end)
 
 			ServerSponitor.OnEndMatch = function(serverSponitorSelf, winningTeam) end
+			PlayerRanking.GetTrackServer = function(playerRankingSelf) return false end
 
 			ARC.Deploy = function(arcSelf, commander)
 				if commander then
