@@ -36,6 +36,7 @@ local hill7SoundEventName = "sound/tgns.fev/hill/7"
 local hill8SoundEventName = "sound/tgns.fev/hill/8"
 local hill9SoundEventName = "sound/tgns.fev/hill/9"
 local hill10SoundEventName = "sound/tgns.fev/hill/10"
+local armorDecay1SoundEventName = "sound/tgns.fev/harvesterdecay/armordecay1"
 local hillPitOpenMarinesSoundEventName = "sound/tgns.fev/hill/ns1_marine_lets_move_out"
 local hillPitOpenAliensSoundEventName = "sound/tgns.fev/hill/ns1_alien_now_we_donce"
 local gameIsInProgressLastChanged
@@ -50,6 +51,7 @@ local WELCOME_MESSAGES = { "Welcome to Tactical Gamer Natural Selection (TGNS)!"
 local EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES = 25
 local communityDesignationCharacter = '?'
 local welcomeBannerImageName
+local armorlessMatureHarvesterEntityIds = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -147,6 +149,7 @@ function Plugin:Initialise()
 	Client.PrecacheLocalSound(hill10SoundEventName)
 	Client.PrecacheLocalSound(hillPitOpenMarinesSoundEventName)
 	Client.PrecacheLocalSound(hillPitOpenAliensSoundEventName)
+	Client.PrecacheLocalSound(armorDecay1SoundEventName)
 
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
@@ -623,6 +626,10 @@ function Plugin:Initialise()
 		originalGUIHoverTooltipShow(self, displayTimeInSeconds)
 	end
 
+	 TGNS.HookNetworkMessage(Plugin.ARMORDECAY1, function(message)
+	 	Shared.PlaySound(Client.GetLocalPlayer(), armorDecay1SoundEventName, 0.025)
+	 end)
+
 	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
 		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
 	end)
@@ -885,6 +892,30 @@ function Plugin:Initialise()
 			end
 		end
 	end)
+
+	local purple = Color(.625, .125, 0.9375)
+	local darkKhaki = Color(0.73828125, 0.71484375, 0.41796875)
+	local khaki = Color(240/255,230/255,140/255)
+
+	TGNS.HookNetworkMessage(Plugin.ARMORLESS_HARVESTERS, function(message)
+		armorlessMatureHarvesterEntityIds = StringSplit(message.l, ",")
+	end)
+
+	local originalMapBlipGetMapBlipColor = MapBlip.GetMapBlipColor
+	MapBlip.GetMapBlipColor = function(self, minimap, item)
+		local result = originalMapBlipGetMapBlipColor(self, minimap, item)
+		if EnumToString(kMinimapBlipType, self.mapBlipType) == "Harvester" and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and not self:GetIsInCombat() then
+			for i = 1, #armorlessMatureHarvesterEntityIds do
+				local armorlessMatureHarvesterEntityId = armorlessMatureHarvesterEntityIds[i]
+				if tonumber(armorlessMatureHarvesterEntityId) == tonumber(self.ownerEntityId) then
+					result = khaki
+					break
+				end
+			end
+		end
+		return result
+	end
+
 
 	return true
 end
