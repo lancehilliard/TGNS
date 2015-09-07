@@ -174,7 +174,7 @@ local function removeBots(players, count)
 end
 
 local function showBotAdvisory(client)
-	if Shine:IsValidClient(client) then
+	if Shine:IsValidClient(client) and TGNS.IsProduction() then
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), botAdvisory)
 		md:ToClientConsole(client, "------------")
 		md:ToClientConsole(client, " TGNS BOTS")
