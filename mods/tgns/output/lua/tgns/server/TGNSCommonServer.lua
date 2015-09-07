@@ -677,8 +677,22 @@ function TGNS.GetPlayerResources(player)
 	return result
 end
 
+function TGNS.GetClientResources(client)
+	local player = TGNS.GetPlayer(client)
+	return TGNS.GetPlayerResources(player)
+end
+
+function TGNS.SetClientResources(client, value)
+	local player = TGNS.GetPlayer(client)
+	TGNS.SetPlayerResources(player, value)
+end
+
 function TGNS.SetPlayerResources(player, value)
 	player:SetResources(value)
+end
+
+function TGNS.AddClientResources(client, value)
+	TGNS.SetClientResources(client, TGNS.GetClientResources(client) + value)
 end
 
 function TGNS.AddPlayerResources(player, value)
@@ -1176,6 +1190,11 @@ end
 
 function TGNS.GetNumericValueOrZero(countable)
 	local result = countable == nil and 0 or countable
+	return result
+end
+
+function TGNS.GetTeamCommanderClient(teamNumber)
+	local result = TGNS.GetFirst(TGNS.Where(TGNS.GetTeamClients(teamNumber), TGNS.IsClientCommander))
 	return result
 end
 
