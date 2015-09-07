@@ -13,12 +13,18 @@ local playersAreAllowedOutOfBase = true
 local isWallWalkingPossible = {}
 local lastReturnTeleporterTime = {}
 local RETURN_TELEPORTER_COOLDOWN_IN_SECONDS = 10
+local MARINE_STARTING_POINTS = 1000
+local ALIEN_STARTING_POINTS = 1000
+local lastTubeOrigin = {}
+local teamNumberWhichCalledWinOrLose
+local originalkAdvancedArmoryResearchTime
 
 local function prepareForNextGame(countdownStarting)
-	pointsRemaining[kMarineTeamType] = 1000
-	pointsRemaining[kAlienTeamType] = 1000
+	pointsRemaining[kMarineTeamType] = MARINE_STARTING_POINTS
+	pointsRemaining[kAlienTeamType] = ALIEN_STARTING_POINTS
 	marinesOnHillCount = 0
 	aliensOnHillCount = 0
+	teamNumberWhichCalledWinOrLose = nil
 	if countdownStarting then
 		playersAreAllowedOutOfBase = false
 	end
@@ -72,14 +78,23 @@ function Plugin:CreateCommands()
 	end
 end
 
+function Plugin:IsArclight()
+	local result = TGNS.GetCurrentMapName() == "ns2_tgns_arclight"
+	return result
+end
+
+function Plugin:GetHillLocationName()
+	return "The Pit"
+end
+
 function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
     -- TGNS.ExecuteServerCommand(string.format("sh_alltalk %s", TGNS.Contains(TGNS.GetCurrentMapName(), "siege") and "on" or "off"))
 
 	prepareForNextGame()
-    pointsMax[kMarineTeamType] = 1000
-    pointsMax[kAlienTeamType] = 1000
+    pointsMax[kMarineTeamType] = MARINE_STARTING_POINTS
+    pointsMax[kAlienTeamType] = ALIEN_STARTING_POINTS
 
     TGNS.ScheduleAction(5, function()
 	    if not TGNS.IsProduction() then
@@ -100,14 +115,16 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.ScheduleAction(5, function()
-		if TGNS.GetCurrentMapName() == "ns2_tgns_arclight" then
-			local hillLocationName = "The Pit"
+		if self:IsArclight() then
+			local hillLocationName = self:GetHillLocationName()
 
 			local debug = function(message)
 				if not TGNS.IsProduction() then
 					Shared.Message(string.format("---------------------------------------------------- siegehelper: %s", message))
 				end
 			end
+
+			originalkAdvancedArmoryResearchTime = kAdvancedArmoryResearchTime
 
 			local configureReturnTeleporter = function()
 	   			local returnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "returntele"))
@@ -196,6 +213,10 @@ function Plugin:Initialise()
 					local spawnLocationName = TGNS.PlayerIsMarine(p) and "Marine Start" or "The Hive"
 					p:SetLocationName(spawnLocationName)
 				end)
+
+				-- kTechData = nil
+				-- ClearCachedTechData()
+				-- kAdvancedArmoryResearchTime = originalkAdvancedArmoryResearchTime * 0.33
 			end)
 
 			local isStartCommandStructure = function(e) return TGNS.EntityIsCommandStructure(e) and TGNS.GetEntityLocationName(e) ~= hillLocationName end
@@ -323,11 +344,33 @@ function Plugin:Initialise()
 	   			configureReturnTeleporter()
 			end)
 
+			local originalEmbryoSetGestationData = Embryo.SetGestationData
+			Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
+				originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
+				embryoSelf.gestationTime = 0.75
+			end
+
+			local originalHydraAttackTarget = Hydra.AttackTarget
+			Hydra.AttackTarget = function(hydraSelf)
+				originalHydraAttackTarget(hydraSelf)
+				local numberOfBuiltAliveHydrasInRange = 0
+				TGNS.DoForPairs(GetEntitiesForTeamWithinRange("Hydra", kAlienTeamType, hydraSelf:GetOrigin(), Hydra.kRange), function(index, hydra)
+					if TGNS.StructureIsBuilt(hydra) and TGNS.StructureIsAlive(hydra) then
+						numberOfBuiltAliveHydrasInRange = numberOfBuiltAliveHydrasInRange + 1
+					end
+				end)
+				local timeOfNextFireDelayInSeconds = 0
+				if numberOfBuiltAliveHydrasInRange > kHydrasPerHive then
+					timeOfNextFireDelayInSeconds = 0.3 * numberOfBuiltAliveHydrasInRange
+				end
+				hydraSelf.timeOfNextFire = hydraSelf.timeOfNextFire + timeOfNextFireDelayInSeconds
+			end
+
 			local function buildHelpText(client)
 				local teamNumber = TGNS.GetClientTeamNumber(client)
 				local otherTeamName = TGNS.GetOtherPlayingTeamName(TGNS.GetClientTeamName(client))
 				local otherTeamNamePossessive = otherTeamName and string.format("%s'", otherTeamName) or "other team's"
-				local result = string.format("Gather on %s's center platform to\ndrive down the %s points. Drive\nthem all the way down to zero points\nto win the round!", hillLocationName, otherTeamNamePossessive)
+				local result = string.format("Gather on %s's center platform\nto drive down the %s points.\nDrive them all the way down to\nzero points to win the round!\n\nAll points drop faster when:\n - teams are full (8v8), or\n - one team has surrendered!", hillLocationName, otherTeamNamePossessive)
 				return result
 			end
 
@@ -337,14 +380,28 @@ function Plugin:Initialise()
 				local rgb = TGNS.GetTeamRgb(TGNS.GetClientTeamNumber(client))
 				local playerIsAliveOnTheGroundInBase = TGNS.Has({"Marine Start", "The Hive"}, locationName) and TGNS.IsClientAlive(client) and not TGNS.IsClientCommander(client)
 				local playerIsDeadOnPlayingTeam = TGNS.ClientIsOnPlayingTeam(client) and not TGNS.IsClientAlive(client)
-				if playerIsAliveOnTheGroundInBase or playerIsDeadOnPlayingTeam or not TGNS.ClientIsOnPlayingTeam(client) then
+				if playerIsAliveOnTheGroundInBase or playerIsDeadOnPlayingTeam or not TGNS.ClientIsOnPlayingTeam(client) or not TGNS.IsGameInProgress() then
 					--debug(string.format("HelpText: %s: show", TGNS.GetClientName(client)))
 					Shine.ScreenText.Add(63, {X = 0.8, Y = 0.40, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
 				else
 				-- 	debug(string.format("HelpText: %s: hide", TGNS.GetClientName(client)))
 				 	Shine:RemoveText(client, { ID = 63 } )
 				end
+				if TGNS.IsClientReadyRoom(client) then
+					message =           "This map is a work in progress. It takes a \"king of the hill\" format, where you control a central, contested area to win.\n"
+					message = message .. string.format("On this map, that area is a central platform in %s, and you win by standing on this platform to drive down the points\n", Shine.Plugins.siegehelper:GetHillLocationName())
+					Shine.ScreenText.Add(68, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
+					message = "\n\nof the other team. Meanwhile, they're doing the same thing! The first team to drive the other team to zero points wins!"
+					Shine.ScreenText.Add(69, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
+				else
+					Shine:RemoveText(client, { ID = 68 } )
+					Shine:RemoveText(client, { ID = 69 } )
+				end
 			end
+
+			TGNS.RegisterEventHook("WinOrLoseCalled", function(teamNumber)
+				teamNumberWhichCalledWinOrLose = teamNumber
+			end)
 
 			TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
 				playersAreAllowedOutOfBase = true
@@ -394,19 +451,49 @@ function Plugin:Initialise()
 				configureOutOfBaseTeleporters()
 				configurePitBottomTeleporter()
 				local playerList = TGNS.GetPlayerList()
+				local playingClients = TGNS.GetPlayingClients(playerList)
+				local playingPlayers = TGNS.GetPlayers(playingClients)
 				local teamNumberToHarm
 				if TGNS.IsGameInProgress() then
+					local gameDurationInSeconds = TGNS.RoundPositiveNumberDown(TGNS.GetCurrentGameDurationInSeconds())
+					TGNS.DoFor(playingClients, function(c)
+				   		local p = TGNS.GetPlayer(c)
+			   			if gameDurationInSeconds < PRE_GAME_DURATION_IN_SECONDS and teamNumberWhichCalledWinOrLose == nil then
+							local secondsUntilTeleportersComeOnline = PRE_GAME_DURATION_IN_SECONDS - gameDurationInSeconds
+							-- local message = string.format("%s opens in %s. Tech up and/or plan your initial strategy!\nNiether team may drop a Command Structure in %s until it opens!", hillLocationName, Pluralize(secondsUntilTeleportersComeOnline, "second"), hillLocationName)
+							local message = string.format("%s opens in %s. Tech up and/or plan your initial strategy!", hillLocationName, Pluralize(secondsUntilTeleportersComeOnline, "second"))
+							showTeleporterText(message, c, 3)
+			   			else
+			   				if not playersAreAllowedOutOfBase then
+				   				playersAreAllowedOutOfBase = true
+			   					local soundIndex = TGNS.PlayerIsMarine(p) and 11 or 12
+			   					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.HILL_SOUND, {i=soundIndex})
+			   				end
+			   				if gameDurationInSeconds < PRE_GAME_DURATION_IN_SECONDS + 10 then
+								local message = string.format("%s is OPEN!", hillLocationName)
+								showTeleporterText(message, c, 3)
+			   				end
+			   			end
+			   			if TGNS.GetClientLocationName(c) == "tube" then
+			   				local currentTubeOrigin = p:GetOrigin()
+			   				if lastTubeOrigin[c] == currentTubeOrigin then
+				   				local bottomFloorTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "bottomfloortele"))
+				   				bottomFloorTele:OnTriggerEntered(p, bottomFloorTele)
+			   				end
+			   				lastTubeOrigin[c] = currentTubeOrigin
+			   			end
+					end)
 
+--[[
 					local gameDurationInSeconds = TGNS.RoundPositiveNumberDown(TGNS.GetCurrentGameDurationInSeconds())
 		   			if gameDurationInSeconds >= PRE_GAME_DURATION_IN_SECONDS and not playersAreAllowedOutOfBase then
 		   				playersAreAllowedOutOfBase = true
-		   				TGNS.DoFor(TGNS.GetPlayers(TGNS.GetPlayingClients(playerList)), function(p)
+		   				TGNS.DoFor(playingPlayers, function(p)
 		   					local soundIndex = TGNS.PlayerIsMarine(p) and 11 or 12
 		   					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.HILL_SOUND, {i=soundIndex})
 		   				end)
 		   			end
 
-					local playingClients = TGNS.GetPlayingClients(playerList)
 					if gameDurationInSeconds < PRE_GAME_DURATION_IN_SECONDS then
 						TGNS.DoFor(playingClients, function(c)
 							local secondsUntilTeleportersComeOnline = PRE_GAME_DURATION_IN_SECONDS - gameDurationInSeconds
@@ -425,7 +512,7 @@ function Plugin:Initialise()
 
 					-- local hillTechPoint = TGNS.GetFirst(TGNS.Where(TGNS.GetTechPoints(), function(t) return TGNS.GetEntityLocationName(t) == hillLocationName end))
 					-- hillTechPoint:SetIsVisible(gameDurationInSeconds >= PRE_GAME_DURATION_IN_SECONDS)
-
+]]
 
 					TGNS.DoFor(TGNS.Where(TGNS.GetEntitiesForTeam("Contamination", kAlienTeamType), function(e) return TGNS.GetEntityLocationName(e) == "Marine Start" end), function(e)
 						TGNS.DestroyEntity(e)
@@ -439,9 +526,9 @@ function Plugin:Initialise()
 				local lastAliensOnHillCount = aliensOnHillCount
 				marinesOnHillCount = #TGNS.Where(marinePlayers, function(p) return TGNS.GetPlayerLocationName(p) == hillLocationName and TGNS.IsPlayerAlive(p) end)
 				aliensOnHillCount = #TGNS.Where(alienPlayers, function(p) return TGNS.GetPlayerLocationName(p) == hillLocationName and TGNS.IsPlayerAlive(p) end)
-				if marinesOnHillCount > lastAliensOnHillCount then
+				if (marinesOnHillCount > lastAliensOnHillCount) or (teamNumberWhichCalledWinOrLose == kAlienTeamType) then
 					teamNumberToHarm = kAlienTeamType
-				elseif aliensOnHillCount > lastMarinesOnHillCount then
+				elseif (aliensOnHillCount > lastMarinesOnHillCount) or (teamNumberWhichCalledWinOrLose == kMarineTeamType) then
 					teamNumberToHarm = kMarineTeamType
 				end
 
@@ -465,12 +552,17 @@ function Plugin:Initialise()
 							if shouldDamage then
 								local teamPercentageThatIsDamaging = otherTeamOnHillCount / otherTeamTotalPlayerCount
 								damageAmount = damageAmount * teamPercentageThatIsDamaging
-								local level = 10 - (math.ceil(10 * teamPercentageThatIsDamaging) - 1)
-								local playersToPlaySoundTo = TGNS.IsProduction() and (teamNumberToHarm == kMarineTeamType and marinePlayers or alienPlayers) or playerList
-								TGNS.DoFor(playersToPlaySoundTo, function(p)
-									-- debug(string.format("Playing level %s to %s...", level, TGNS.GetPlayerName(p)))
-									TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.HILL_SOUND, {i=level})
-								end)
+								if teamNumberWhichCalledWinOrLose == teamNumberToHarm or #playingClients == 16 then
+									damageAmount = damageAmount * 2
+								end
+								if teamPercentageThatIsDamaging > 0 then
+									local level = 10 - (math.ceil(10 * teamPercentageThatIsDamaging) - 1)
+									local playersToPlaySoundTo = TGNS.IsProduction() and (teamNumberToHarm == kMarineTeamType and marinePlayers or alienPlayers) or playerList
+									TGNS.DoFor(playersToPlaySoundTo, function(p)
+										-- debug(string.format("Playing level %s to %s...", level, TGNS.GetPlayerName(p)))
+										TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.HILL_SOUND, {i=level})
+									end)
+								end
 							end
 
 							points = points - damageAmount
