@@ -17,7 +17,6 @@ local MARINE_STARTING_POINTS = 1000
 local ALIEN_STARTING_POINTS = 1000
 local lastTubeOrigin = {}
 local teamNumberWhichCalledWinOrLose
-local originalkAdvancedArmoryResearchTime
 
 local function prepareForNextGame(countdownStarting)
 	pointsRemaining[kMarineTeamType] = MARINE_STARTING_POINTS
@@ -124,7 +123,25 @@ function Plugin:Initialise()
 				end
 			end
 
-			originalkAdvancedArmoryResearchTime = kAdvancedArmoryResearchTime
+			kTechData = nil
+			ClearCachedTechData()
+			local marineUpgradeResearchTimeMultiplier = TGNS.IsProduction() and 0.5 or 0.05
+			kAdvancedArmoryResearchTime = kAdvancedArmoryResearchTime * marineUpgradeResearchTimeMultiplier
+			kGrenadeTechResearchTime = kGrenadeTechResearchTime * marineUpgradeResearchTimeMultiplier
+			kShotgunTechResearchTime = kShotgunTechResearchTime * marineUpgradeResearchTimeMultiplier
+			kNanoSnieldResearchTime = kNanoSnieldResearchTime * marineUpgradeResearchTimeMultiplier
+			kMineResearchTime = kMineResearchTime * marineUpgradeResearchTimeMultiplier
+			kJetpackTechResearchTime = kJetpackTechResearchTime * marineUpgradeResearchTimeMultiplier
+			kExosuitTechResearchTime = kExosuitTechResearchTime * marineUpgradeResearchTimeMultiplier
+			kDualRailgunTechResearchTime = kDualRailgunTechResearchTime * marineUpgradeResearchTimeMultiplier
+			kCatPackTechResearchTime = kCatPackTechResearchTime * marineUpgradeResearchTimeMultiplier
+			kWeapons1ResearchTime = kWeapons1ResearchTime * marineUpgradeResearchTimeMultiplier
+			kWeapons2ResearchTime = kWeapons2ResearchTime * marineUpgradeResearchTimeMultiplier
+			kWeapons3ResearchTime = kWeapons3ResearchTime * marineUpgradeResearchTimeMultiplier
+			kArmor1ResearchTime = kArmor1ResearchTime * marineUpgradeResearchTimeMultiplier
+			kArmor2ResearchTime = kArmor2ResearchTime * marineUpgradeResearchTimeMultiplier
+			kArmor3ResearchTime = kArmor3ResearchTime * marineUpgradeResearchTimeMultiplier
+			kStompEnergyCost = kStompEnergyCost * 2.0
 
 			local configureReturnTeleporter = function()
 	   			local returnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "returntele"))
@@ -213,10 +230,6 @@ function Plugin:Initialise()
 					local spawnLocationName = TGNS.PlayerIsMarine(p) and "Marine Start" or "The Hive"
 					p:SetLocationName(spawnLocationName)
 				end)
-
-				-- kTechData = nil
-				-- ClearCachedTechData()
-				-- kAdvancedArmoryResearchTime = originalkAdvancedArmoryResearchTime * 0.33
 			end)
 
 			local isStartCommandStructure = function(e) return TGNS.EntityIsCommandStructure(e) and TGNS.GetEntityLocationName(e) ~= hillLocationName end
@@ -300,6 +313,14 @@ function Plugin:Initialise()
 		    	return tower, commandStation
 			end
 
+			local originalResourceTowerCollectResources
+			originalResourceTowerCollectResources = TGNS.ReplaceClassMethod("ResourceTower", "CollectResources", function(resourceTowerSelf)
+				originalResourceTowerCollectResources(resourceTowerSelf)
+				local commanderClient = TGNS.GetTeamCommanderClient(resourceTowerSelf:GetTeamNumber())
+				if commanderClient then
+					TGNS.AddClientResources(commanderClient, kPlayerResPerInterval)
+				end
+			end)
 
 			-- local originalTechPointGetAttached
 			-- originalTechPointGetAttached = TGNS.ReplaceClassMethod("TechPoint", "GetAttached", function(techPointSelf)
@@ -424,13 +445,7 @@ function Plugin:Initialise()
 
 			local originalCommandStationGetCanRecycleOverride
 			originalCommandStationGetCanRecycleOverride = TGNS.ReplaceClassMethod("CommandStation", "GetCanRecycleOverride", function(commandStationSelf)
-				local result = originalCommandStationGetCanRecycleOverride(commandStationSelf)
-				if result and TGNS.GetEntityLocationName(commandStationSelf) ~= hillLocationName then
-					local marineCommanderPlayer = TGNS.GetPlayer(TGNS.GetFirst(TGNS.Where(TGNS.GetMarineClients(TGNS.GetPlayerList()), TGNS.IsClientCommander)))
-					md:ToPlayerNotifyError(marineCommanderPlayer, "You may not recycle the Command Station on this map.")
-					result = false
-				end
-				return result
+				return false
 			end)
 
 			local showHillTextMessages = function(messagesDatas, client, duration)
