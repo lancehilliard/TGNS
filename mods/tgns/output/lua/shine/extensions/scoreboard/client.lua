@@ -916,6 +916,10 @@ function Plugin:Initialise()
 		return result
 	end
 
+	if Shared.GetMapName() == "ns2_tgns_arclight" then
+		kStompEnergyCost = kStompEnergyCost * 2.0
+		CommandStation.GetCanRecycleOverride = function(commandStationSelf) return false end
+	end
 
 	return true
 end
