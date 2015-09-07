@@ -321,7 +321,7 @@ function Plugin:Initialise()
 
 						local vouchUrl = string.format("%s&i=%s&v=%s", TGNS.Config.VouchesEndpointBaseUrl, sourceSteamId, targetSteamId)
 						TGNS.GetHttpAsync(vouchUrl, function(vouchResponseJson)
-							local vouchResponse = json.decode(approveResponseJson) or {}
+							local vouchResponse = json.decode(vouchResponseJson) or {}
 							if not vouchResponse.success then
 								TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to vouch NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, vouchResponse.msg, vouchResponseJson, vouchResponse.stacktrace))
 							end
