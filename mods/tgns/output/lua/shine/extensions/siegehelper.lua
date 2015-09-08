@@ -11,12 +11,12 @@ local PRE_GAME_DURATION_IN_SECONDS = 60
 local REPLENISH_MULTIPLIER = 0.25
 local playersAreAllowedOutOfBase = true
 local isWallWalkingPossible = {}
-local lastReturnTeleporterTime = {}
-local RETURN_TELEPORTER_COOLDOWN_IN_SECONDS = 10
+local teleportOutOfBaseAllowedAt = {}
 local MARINE_STARTING_POINTS = 1000
 local ALIEN_STARTING_POINTS = 1000
 local lastTubeOrigin = {}
 local teamNumberWhichCalledWinOrLose
+local voidTheJumpSlowdownUntil = {}
 
 local function prepareForNextGame(countdownStarting)
 	pointsRemaining[kMarineTeamType] = MARINE_STARTING_POINTS
@@ -123,6 +123,16 @@ function Plugin:Initialise()
 				end
 			end
 
+			local getTeleportOutOfBaseAllowedAt = function(client)
+				local player = TGNS.GetPlayer(client)
+				local pointValue = TGNS.GetPlayerPointValue(player)
+				local damageScalar = 1 - player:GetHealthScalar()
+				local delayInSeconds = pointValue * damageScalar
+				-- debug(string.format("teleportOutOfBaseAllowedAt delayInSeconds: %s (%s x %s)", delayInSeconds, pointValue, damageScalar))
+				local result = Shared.GetTime() + delayInSeconds
+				return result
+			end
+
 			kTechData = nil
 			ClearCachedTechData()
 			local marineUpgradeResearchTimeMultiplier = TGNS.IsProduction() and 0.5 or 0.05
@@ -154,7 +164,8 @@ function Plugin:Initialise()
 		   			local originalReturnTeleOnTriggerEntered = returnTele.OnTriggerEntered
 		   			returnTele.OnTriggerEntered = function(teleporterSelf, enterEnt, triggerEnt)
 		   				local teamReturnTele = TGNS.PlayerIsMarine(enterEnt) and marineReturnTele or alienReturnTele
-		   				lastReturnTeleporterTime[TGNS.GetClient(enterEnt)] = Shared.GetTime()
+		   				local client = TGNS.GetClient(enterEnt)
+		   				teleportOutOfBaseAllowedAt[client] = getTeleportOutOfBaseAllowedAt(client)
 		   				teamReturnTele:OnTriggerEntered(enterEnt, triggerEnt)
 		   			end
 	   			end
@@ -202,9 +213,12 @@ function Plugin:Initialise()
 		   				local client = TGNS.GetClient(enterEnt)
 		   				-- debug(string.format("enterEnt: %s", TGNS.GetClientName(client)))
 		   				if playersAreAllowedOutOfBase then
-			   				lastReturnTeleporterTime[client] = lastReturnTeleporterTime[client] or 0
-			   				-- debug(string.format("lastReturnTeleporterTime[client]: %s", lastReturnTeleporterTime[client]))
-			   				local secondsUntilCanReturnToFight = RETURN_TELEPORTER_COOLDOWN_IN_SECONDS - math.floor(Shared.GetTime() - lastReturnTeleporterTime[client])
+			   				if TGNS.ClientIsMarine(client) then
+				   				voidTheJumpSlowdownUntil[client] = Shared.GetTime() + 2.0
+			   				end
+			   				teleportOutOfBaseAllowedAt[client] = teleportOutOfBaseAllowedAt[client] or 0
+			   				-- debug(string.format("teleportOutOfBaseAllowedAt[client]: %s", teleportOutOfBaseAllowedAt[client]))
+			   				local secondsUntilCanReturnToFight = math.floor(teleportOutOfBaseAllowedAt[client] - Shared.GetTime())
 		   					if secondsUntilCanReturnToFight <= 0 or not TGNS.IsGameInProgress() then
 				   				originalOnTriggerEntered(teleporterSelf, enterEnt, triggerEnt)
 				   				brieflySetWallwalkingValue(client, 3)
@@ -322,6 +336,16 @@ function Plugin:Initialise()
 				end
 			end)
 
+			local originalMarineModifyJumpLandSlowDown
+			originalMarineModifyJumpLandSlowDown = TGNS.ReplaceClassMethod("Marine", "ModifyJumpLandSlowDown", function(marineSelf, slowdownScalar)
+				local result = originalMarineModifyJumpLandSlowDown(marineSelf, slowdownScalar)
+				local client = TGNS.GetClient(marineSelf)
+				if Shared.GetTime() < (voidTheJumpSlowdownUntil[client] or 0) then
+					result = 0
+				end
+				return result
+			end)
+
 			-- local originalTechPointGetAttached
 			-- originalTechPointGetAttached = TGNS.ReplaceClassMethod("TechPoint", "GetAttached", function(techPointSelf)
 			-- 	local result = originalTechPointGetAttached(techPointSelf)
@@ -368,7 +392,9 @@ function Plugin:Initialise()
 			local originalEmbryoSetGestationData = Embryo.SetGestationData
 			Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
 				originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
-				embryoSelf.gestationTime = 0.75
+				if embryoSelf:GetLocationName() == "The Hive" then
+					embryoSelf.gestationTime = 0.75
+				end
 			end
 
 			local originalHydraAttackTarget = Hydra.AttackTarget
