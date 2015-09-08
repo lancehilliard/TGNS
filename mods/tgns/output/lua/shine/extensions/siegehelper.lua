@@ -123,6 +123,29 @@ function Plugin:Initialise()
 				end
 			end
 
+			local hillLocation = TGNS.GetFirst(GetLocationEntitiesNamed(hillLocationName))
+			local controllingOrigin = hillLocation:GetOrigin()
+			table.insert(kSkulkBrainActions, function(bot, brain)
+                local skulk = bot:GetPlayer()
+				local numberOfMarinesAliveAndNotInMarineStart = #TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.PlayerIsMarine(p) and TGNS.IsPlayerAlive(p) and TGNS.GetPlayerLocationName(p) ~= "Marine Start" end)
+				local weight = numberOfMarinesAliveAndNotInMarineStart > 0 and math.random() * 25 or 0
+				if skulk:GetHealthScalar() < 1 then
+					weight = weight / 3
+				end
+		        return { name = "arclight", weight = weight,
+		            perform = function(move)
+						local eyePos = skulk:GetEyePos()
+						local distance = eyePos:GetDistance(controllingOrigin)
+						if distance > 5 and distance < 7 then
+							move.commands = AddMoveCommand( move.commands, Move.Jump )
+						else
+			                bot:GetMotion():SetDesiredMoveTarget(Pathing.GetClosestPoint(controllingOrigin))
+			                bot:GetMotion():SetDesiredViewTarget(nil)
+						end
+		            end }		        
+		    end)
+
+
 			local getTeleportOutOfBaseAllowedAt = function(client)
 				local player = TGNS.GetPlayer(client)
 				local pointValue = TGNS.GetPlayerPointValue(player)
@@ -264,6 +287,14 @@ function Plugin:Initialise()
 					result = false
 				end
 				return result
+			end)
+
+		    local originalTeamInfoOnCommanderLogin
+			originalTeamInfoOnCommanderLogin = TGNS.ReplaceClassMethod("TeamInfo", "OnCommanderLogin", function(teamInfoSelf, commanderPlayer, forced)
+				originalCommanderPlayerSetResources = commanderPlayer.SetResources
+				commanderPlayer.SetResources = function() end
+				originalTeamInfoOnCommanderLogin(teamInfoSelf, commanderPlayer, forced)
+				commanderPlayer.SetResources = originalCommanderPlayerSetResources
 			end)
 
 			local alienMaxSpeedModifier = kCelerityAddSpeed
@@ -489,13 +520,22 @@ function Plugin:Initialise()
 			local commandStructureIsAliveOnHill = function(e) return TGNS.GetEntityLocationName(e) == hillLocationName and TGNS.StructureIsAlive(e) and TGNS.StructureIsBuilt(e) end
 			TGNS.ScheduleActionInterval(1, function()
 				-- debug("every second")
+
 				configureOutOfBaseTeleporters()
 				configurePitBottomTeleporter()
+
 				local playerList = TGNS.GetPlayerList()
+
+				local bottomFloorTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "bottomfloortele"))
+
 				local playingClients = TGNS.GetPlayingClients(playerList)
 				local playingPlayers = TGNS.GetPlayers(playingClients)
 				local teamNumberToHarm
 				if TGNS.IsGameInProgress() then
+					TGNS.DoFor(TGNS.Where(playerList, function(p) return TGNS.GetIsPlayerVirtual(p) and TGNS.Has({"Marine Start", "The Hive"}, TGNS.GetPlayerLocationName(p)) end), function(p)
+						bottomFloorTele:OnTriggerEntered(p, bottomFloorTele)
+					end)
+
 					local gameDurationInSeconds = TGNS.RoundPositiveNumberDown(TGNS.GetCurrentGameDurationInSeconds())
 					TGNS.DoFor(playingClients, function(c)
 				   		local p = TGNS.GetPlayer(c)
@@ -518,7 +558,6 @@ function Plugin:Initialise()
 			   			if TGNS.GetClientLocationName(c) == "tube" then
 			   				local currentTubeOrigin = p:GetOrigin()
 			   				if lastTubeOrigin[c] == currentTubeOrigin then
-				   				local bottomFloorTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "bottomfloortele"))
 				   				bottomFloorTele:OnTriggerEntered(p, bottomFloorTele)
 			   				end
 			   				lastTubeOrigin[c] = currentTubeOrigin
@@ -601,7 +640,8 @@ function Plugin:Initialise()
 									local playersToPlaySoundTo = TGNS.IsProduction() and (teamNumberToHarm == kMarineTeamType and marinePlayers or alienPlayers) or playerList
 									TGNS.DoFor(playersToPlaySoundTo, function(p)
 										-- debug(string.format("Playing level %s to %s...", level, TGNS.GetPlayerName(p)))
-										TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.HILL_SOUND, {i=level})
+										local shouldRepeat = points - damageAmount <= maximumTeamPoints * 0.33
+										TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.HILL_SOUND, {i=level,r=shouldRepeat})
 									end)
 								end
 							end
