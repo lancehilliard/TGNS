@@ -513,10 +513,6 @@ function TGNS.GetSimpleServerName()
 	return TGNS.Config.ServerSimpleName
 end
 
-function TGNS.ReplaceClassMethod(className, methodName, method)
-	return Shine.ReplaceClassMethod(className, methodName, method)
-end
-
 function TGNS.GetNextMapName()
 	local result = Shine.Plugins.mapvote:GetNextMap()
 	return result
@@ -599,6 +595,21 @@ end
 function TGNS.GetPlayerClassName(player)
 	local result = player:GetClassName()
 	return result
+end
+
+function TGNS.GetPlayerPointValue(player)
+	local pointValues = {
+      ["Marine"] = kMarinePointValue,
+      ["JetpackMarine"] = kJetpackPointValue,
+      ["Exo"] = kExosuitPointValue,
+      ["Skulk"] = kSkulkPointValue,
+      ["Gorge"] = kGorgePointValue,
+      ["Lerk"] = kLerkPointValue,
+      ["Fade"] = kFadePointValue,
+      ["Onos"] = kOnosPointValue
+    }
+    local result = pointValues[TGNS.GetPlayerClassName(player)]
+    return result
 end
 
 function TGNS.GetMarineWeaponsTotalPurchaseCost(player)

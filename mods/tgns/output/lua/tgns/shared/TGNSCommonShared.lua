@@ -21,6 +21,10 @@ TGNS.ShineTextAlignmentMin = 0
 TGNS.ShineTextAlignmentCenter = 1
 TGNS.ShineTextAlignmentMax = 2
 
+function TGNS.ReplaceClassMethod(className, methodName, method)
+	return Shine.ReplaceClassMethod(className, methodName, method)
+end
+
 function TGNS.GetTeamRgb(teamNumber)
 	local r, g, b
 	if teamNumber == kMarineTeamType or teamNumber == kAlienTeamType then

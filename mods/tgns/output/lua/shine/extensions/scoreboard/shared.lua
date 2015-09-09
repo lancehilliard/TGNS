@@ -38,7 +38,6 @@ Plugin.LAPS_LEG = "scoreboard_LAPS_LEG"
 Plugin.LAPS_BEST = "scoreboard_LAPS_BEST"
 Plugin.LAPS_START = "scoreboard_LAPS_START"
 Plugin.DESIGNATION = "scoreboard_DESIGNATION"
-Plugin.HILL_SOUND = "scoreboard_HILL_SOUND"
 Plugin.ARMORDECAY1 = "scoreboard_ARMORDECAY1"
 Plugin.ARMORLESS_HARVESTERS = "scoreboard_ARMORLESS_HARVESTERS"
 
@@ -78,7 +77,6 @@ TGNS.RegisterNetworkMessage(Plugin.LAPS_LEG, {})
 TGNS.RegisterNetworkMessage(Plugin.LAPS_BEST, {})
 TGNS.RegisterNetworkMessage(Plugin.LAPS_START, {})
 TGNS.RegisterNetworkMessage(Plugin.DESIGNATION, {c="string(2)"})
-TGNS.RegisterNetworkMessage(Plugin.HILL_SOUND, {i="integer"})
 TGNS.RegisterNetworkMessage(Plugin.ARMORDECAY1, {})
 TGNS.RegisterNetworkMessage(Plugin.ARMORLESS_HARVESTERS, {l="string(100)"})
 
