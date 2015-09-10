@@ -237,21 +237,33 @@ local function OnServerInitialise()
 	kArmor3ResearchTime = kArmor3ResearchTime * marineUpgradeResearchTimeMultiplier
 
 	local configureReturnTeleporter = function()
-			local returnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "returntele"))
-			local marineReturnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "marinereturntele"))
-			local alienReturnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "alienreturntele"))
-			-- debug(string.format("returnTele: %s", returnTele))
-			-- debug(string.format("marineReturnTele: %s", marineReturnTele))
-			-- debug(string.format("alienReturnTele: %s", alienReturnTele))
-			if returnTele and marineReturnTele and alienReturnTele then
+		local returnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "returntele"))
+		local marineReturnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "marinereturntele"))
+		local alienReturnTele = TGNS.GetFirst(TGNS.GetEntitiesByName("TeleportTrigger", "alienreturntele"))
+		-- debug(string.format("returnTele: %s", returnTele))
+		-- debug(string.format("marineReturnTele: %s", marineReturnTele))
+		-- debug(string.format("alienReturnTele: %s", alienReturnTele))
+		if returnTele and marineReturnTele and alienReturnTele then
    			local originalReturnTeleOnTriggerEntered = returnTele.OnTriggerEntered
    			returnTele.OnTriggerEntered = function(teleporterSelf, enterEnt, triggerEnt)
    				local teamReturnTele = TGNS.PlayerIsMarine(enterEnt) and marineReturnTele or alienReturnTele
    				local client = TGNS.GetClient(enterEnt)
    				teleportOutOfBaseAllowedAt[client] = getTeleportOutOfBaseAllowedAt(client)
    				teamReturnTele:OnTriggerEntered(enterEnt, triggerEnt)
+
+   				TGNS.ScheduleAction(teleportOutOfBaseAllowedAt[client] - Shared.GetTime(), function()
+   					if Shine:IsValidClient(client) then
+   						local player = TGNS.GetPlayer(client)
+						doForAllOutOfBaseTeleporters(function(teleporter)
+							local players = GetEntitiesWithinRange("Player", teleporter:GetOrigin(), 1)
+							if TGNS.Has(players, player) then
+								teleporter:OnTriggerEntered(player, teleporter)
+							end
+						end)
+   					end
+   				end)
    			end
-			end
+		end
 	end
 
 	-- local brieflySetWallwalkingValue = function(client, duration)
