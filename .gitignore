@@ -65,6 +65,7 @@
 !mods/tgns/output/lua/tgns/shared/TGNSComprehension.lua
 !mods/tgns/output/lua/tgns/shared/TGNSJsonEndpointTranscoder.lua
 !mods/tgns/output/lua/tgns/shared/TGNSJsonFileTranscoder.lua
+!mods/tgns/output/lua/tgns/shared/TGNSMaxSpeeds.lua
 !mods/tgns/output/lua/tgns/shared/TGNSMenuDisplayer.lua
 
 # And then whitelist Shine extension files
