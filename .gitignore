@@ -41,6 +41,9 @@
 !mods/tgns/output/sound/tgns.fsb
 !mods/tgns/output/sound/tgns.soundinfo
 
+# And then whitelist TGNS entry file
+!mods/tgns/output/lua/entry/TGNS.entry
+
 # And then whitelist TGNS common/shared files
 !mods/tgns/output/lua/tgns/TGNS.lua
 

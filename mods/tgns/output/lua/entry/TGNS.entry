@@ -1,0 +1,4 @@
+modEntry = [[
+	Predict: lua/tgns/TGNS.lua,
+	Priority: 1
+]]
