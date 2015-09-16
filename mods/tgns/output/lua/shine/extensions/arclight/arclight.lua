@@ -1,9 +1,10 @@
 local ArclightModsEnabled = true
+local ArclightMapName = "ns2_tgns_arclight"
 
 if ArclightModsEnabled then
 	Event.Hook("MapPostLoad", function()
-		if Shared.GetMapName() == "ns2_tgns_arclight" then
-			TGNS.SetAlienMaxSpeeds(kCelerityAddSpeed or 1.5)
+		if Shared.GetMapName() == ArclightMapName then
+			TGNS.ModifyAlienMaxSpeeds(function(maxSpeed) return maxSpeed + (kCelerityAddSpeed or 1.5) end)
 			kStompEnergyCost = kStompEnergyCost * 2
 		end
 	end)
@@ -81,7 +82,7 @@ if Server or Client then
 
 	if Server then
 		function Plugin:IsArclight()
-			local result = TGNS.GetCurrentMapName() == "ns2_tgns_arclight"
+			local result = TGNS.GetCurrentMapName() == ArclightMapName
 			return result
 		end
 
@@ -649,7 +650,7 @@ if Server or Client then
 		self.Enabled = ArclightModsEnabled
 
 		Shine.Timer.Simple(5, function()
-			if Shared.GetMapName() == "ns2_tgns_arclight" then
+			if Shared.GetMapName() == ArclightMapName then
 				if Client then OnClientInitialise() end
 				if Server then OnServerInitialise() end
 			end
