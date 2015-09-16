@@ -17,6 +17,7 @@
 
 # And then whitelist mod sound files
 !mods/tgns/fmod/readme.txt
+!mods/tgns/fmod/assets/armordecay1.wav
 !mods/tgns/fmod/assets/buttonclick.wav
 !mods/tgns/fmod/assets/countdown.wav
 !mods/tgns/fmod/assets/1.wav
