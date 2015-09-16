@@ -83,7 +83,7 @@ end
 
 local function onVoteSuccessful(teamNumber)
 	local teamName = TGNS.GetTeamName(teamNumber)
-	local threateningActionName = (Shine.Plugins.siegehelper and Shine.Plugins.siegehelper:IsArclight()) and "control the platform" or "attack"
+	local threateningActionName = (Shine.Plugins.arclight and Shine.Plugins.arclight:IsArclight()) and "control the platform" or "attack"
 	local chatMessage = string.sub(string.format("WinOrLose! %s surrendered and can't %s! End it in %s secs, or THEY WIN!", teamName, threateningActionName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
 	md:ToAllNotifyInfo(chatMessage)
 
@@ -108,15 +108,15 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 		if kCountdownTimeRemaining > 0 then
 			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 10) then
 				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
-				local threateningActionName = (Shine.Plugins.siegehelper and Shine.Plugins.siegehelper:IsArclight()) and "control the platform" or "attack"
+				local threateningActionName = (Shine.Plugins.arclight and Shine.Plugins.arclight:IsArclight()) and "control the platform" or "attack"
 				local chatMessage = string.format("%s can't %s. Game ends in %s seconds.", teamName, threateningActionName, kCountdownTimeRemaining)
 				local bannerLocationName = ""
 
 				local teamNameWhichMustWinOrLose = TGNS.GetTeamName(TGNS.GetOtherPlayingTeamNumber(teamNumberWhichWillWinIfWinLoseCountdownExpires))
 				local howToWinDescription = string.format("Kill the %s", TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires))
-				if Shine.Plugins.siegehelper and Shine.Plugins.siegehelper:IsArclight() then
+				if Shine.Plugins.arclight and Shine.Plugins.arclight:IsArclight() then
 					howToWinDescription = "Control the platform"
-					bannerLocationName = string.format(" in %s", Shine.Plugins.siegehelper:GetHillLocationName())
+					bannerLocationName = string.format(" in %s", Shine.Plugins.arclight:GetHillLocationName())
 				else
 					local commandStructures = TGNS.GetEntitiesForTeam("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires)
 					TGNS.DoFor(commandStructures, function(s)
@@ -454,7 +454,7 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 					else
 						TGNS.DoFor(TGNS.GetTeamClients(victimTeamNumber, TGNS.GetPlayerList()), function(c)
 							local comfortingText = string.format("the %s still stands", TGNS.ToLower(commandStructureCommonName))
-							if Shine.Plugins.siegehelper and Shine.Plugins.siegehelper:IsArclight() then
+							if Shine.Plugins.arclight and Shine.Plugins.arclight:IsArclight() then
 								comfortingText = "we still have points"
 							end
 							Shine.ScreenText.Add(73, {X = 0.5, Y = 0.7, Text = string.format("%s has fallen, yet %s!", TGNS.GetPlayerName(victimEntity), comfortingText), Duration = 6, R = victimRed, G = victimGreen, B = victimBlue, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
