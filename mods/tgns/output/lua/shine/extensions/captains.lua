@@ -561,7 +561,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 65, function()
 				if Shine.Plugins.mapvote:VoteStarted() then
 					md:ToAllNotifyInfo("Join us Friday nights for Captains Games! Passworded, scrim-style gameplay")
-					md:ToAllNotifyInfo("from ~7PM 'til. Read more in the TGNS Forums: http://rr.tacticalgamer.com/Community")
+					md:ToAllNotifyInfo("from ~8PM Central 'til. Read more in the TGNS Forums: http://rr.tacticalgamer.com/Community")
 				end
 			end)
 			readyCaptainClients = {}
