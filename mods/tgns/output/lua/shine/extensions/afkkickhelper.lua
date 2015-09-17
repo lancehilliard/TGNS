@@ -23,6 +23,8 @@ end
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
     if TGNS.IsPlayerReadyRoom(player) then
     	TGNS.MarkPlayerAFK(player)
+    elseif not (force or shineForce) then
+    	TGNS.ClearPlayerAFK(player)
     end
 end
 
