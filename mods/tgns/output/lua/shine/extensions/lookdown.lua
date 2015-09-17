@@ -9,11 +9,13 @@ end
 
 function Plugin:OnProcessMove(player, input)
 	if player then
-		local clientIndex = player:GetClientIndex()
 		local playerIsLookingDown = not TGNS.IsPlayerSpectator(player) and (input.pitch < 1.6 and input.pitch > 1.2)
-		if lastKnownStatuses[clientIndex] ~= playerIsLookingDown then
-			TGNS.ExecuteEventHooks("LookDownChanged", player, playerIsLookingDown)
-			lastKnownStatuses[clientIndex] = playerIsLookingDown
+		local clientIndex = player:GetClientIndex()
+		if clientIndex then
+			if lastKnownStatuses[clientIndex] ~= playerIsLookingDown then
+				TGNS.ExecuteEventHooks("LookDownChanged", player, playerIsLookingDown)
+				lastKnownStatuses[clientIndex] = playerIsLookingDown
+			end
 		end
 	end
 end
