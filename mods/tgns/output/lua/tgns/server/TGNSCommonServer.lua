@@ -819,6 +819,11 @@ function TGNS.MarkPlayerAFK(player)
 	end
 end
 
+function TGNS.ClearPlayerAFK(player)
+	local client = TGNS.GetClient(player)
+	Shine.Plugins.afkkick:ResetAFKTime(client)
+end
+
 function TGNS.IsClientAFK(client)
 	return TGNS.IsPlayerAFK(TGNS.GetPlayer(client))
 end
@@ -1402,7 +1407,7 @@ end
 
 function TGNS.DisconnectClient(client, reason)
 	pcall(function()
-		client.disconnectreason = reason
+		client.DisconnectReason = reason
 		Server.DisconnectClient(client)
 	end)
 end
