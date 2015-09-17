@@ -472,15 +472,17 @@ if Server or Client then
 			-- 	debug(string.format("HelpText: %s: hide", TGNS.GetClientName(client)))
 			 	Shine:RemoveText(client, { ID = 63 } )
 			end
-			if TGNS.IsClientReadyRoom(client) then
-				message =           "This map is a work in progress. It takes a \"king of the hill\" format, where you control a central, contested area to win.\n"
-				message = message .. string.format("On this map, that area is a central platform in %s, and you win by standing on this platform to drive down the points\n", Shine.Plugins.arclight:GetHillLocationName())
-				Shine.ScreenText.Add(68, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
-				message = "\n\nof the other team. Meanwhile, they're doing the same thing! The first team to drive the other team to zero points wins!"
-				Shine.ScreenText.Add(69, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
-			else
-				Shine:RemoveText(client, { ID = 68 } )
-				Shine:RemoveText(client, { ID = 69 } )
+			if not Shine.Plugins.mapvote:VoteStarted() then
+				if TGNS.IsClientReadyRoom(client) then
+					message =           "This map is a work in progress. It takes a \"king of the hill\" format, where you control a central, contested area to win.\n"
+					message = message .. string.format("On this map, that area is a central platform in %s, and you win by standing on this platform to drive down the points\n", Shine.Plugins.arclight:GetHillLocationName())
+					Shine.ScreenText.Add(68, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
+					message = "\n\nof the other team. Meanwhile, they're doing the same thing! The first team to drive the other team to zero points wins!"
+					Shine.ScreenText.Add(69, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
+				else
+					Shine:RemoveText(client, { ID = 68 } )
+					Shine:RemoveText(client, { ID = 69 } )
+				end
 			end
 		end
 
@@ -500,7 +502,11 @@ if Server or Client then
 
 		TGNS.RegisterEventHook("PostJoinTeam", function(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 			local client = TGNS.GetClient(player)
-			showHelpText(client)
+			TGNS.ScheduleAction(2, function()
+				if Shine:IsValidClient(client) then
+					showHelpText(client)
+				end
+			end)
 		end)
 
 		TGNS.RegisterEventHook("ClientConfirmConnect", function(client)
