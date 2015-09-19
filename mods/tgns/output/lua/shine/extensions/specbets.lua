@@ -12,7 +12,10 @@ local Plugin = {}
 local MinumumHiveSkillRank = 150
 
 local function clientCanBePartOfBet(client)
-	local result = TGNS.ClientIsOnPlayingTeam(client) or not TGNS.IsProduction()
+	local result = TGNS.ClientIsOnPlayingTeam(client) and not TGNS.GetIsClientVirtual(client)
+	if not TGNS.IsProduction() then
+		result = true
+	end
 	return result
 end
 
@@ -131,7 +134,7 @@ local function getBetClient(predicate, opponentClient)
 				resultError = string.format("%s doesn't have a high enough Hive Skill Rank to be included in bets.", clientName)
 			end
 		else
-			resultError = string.format("%s must be on the Marine or Alien team.", clientName)
+			resultError = string.format("%s must be a human player on the Marine or Alien team.", clientName)
 		end
 	else
 		local teamAddendum
@@ -345,6 +348,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 		end
 	end
 	if errorMessage then
+		md:ToPlayerNotifyInfo(player, string.format("You have %s.", TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 		md:ToPlayerNotifyError(player, errorMessage)
 		-- todo show some kind of 'get help' message
 	end
