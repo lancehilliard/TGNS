@@ -977,11 +977,14 @@ function Plugin:PlayerSay(client, networkMessage)
 						if message == "ready" then
 							shouldSuppressChatMessageDisplay = readyTeams[playerTeamName]
 							if teamsAreSufficientlyBalanced then
+								local readyTeamName = TGNS.GetPlayerTeamName(TGNS.GetPlayer(client))
+								local notificationMessage = string.format("%s has readied the %s!", TGNS.GetClientName(client), readyTeamName)
 								if not readyTeams[playerTeamName] then
 									timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + 30									
+									notificationMessage = string.format("%s Timer reduced! Plan fast, %s!", notificationMessage, TGNS.GetOtherPlayingTeamName(readyTeamName))
 								end
+								TGNS.ScheduleAction(0, function() md:ToAllNotifyInfo(notificationMessage) end)
 								readyTeams[playerTeamName] = true
-								TGNS.ScheduleAction(0, function() md:ToAllNotifyInfo(string.format("%s has readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(TGNS.GetPlayer(client)))) end)
 							else
 								TGNS.ScheduleAction(0, function() md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Ready halted: Team counts must match (or be off by only one) to play.") end)
 							end
