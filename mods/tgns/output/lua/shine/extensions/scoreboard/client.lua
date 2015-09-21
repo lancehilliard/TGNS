@@ -58,6 +58,15 @@ TGNS.HookNetworkMessage(Plugin.ALERT_ICON, function(message)
 	end
 end)
 
+TGNS.HookNetworkMessage(Plugin.SQUAD_CONFIRMED, function(message)
+	squadNumberLastSetTimes[message.c] = Shared.GetTime()
+	squadNumbers[message.c] = message.s
+end)
+
+TGNS.HookNetworkMessage(Plugin.VR_CONFIRMED, function(message)
+	vrConfirmed[message.c] = true
+end)
+
 local function inProgressGameShouldProhibitSquadChanging(teamNumber)
 	local result = gameIsInProgress and (Shared.GetTime() - gameIsInProgressLastChanged > 30) and teamNumber == kAlienTeamType
 	return result
@@ -504,13 +513,6 @@ function Plugin:Initialise()
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, function(message)
 		isApproved[message.c] = true
-	end)
-	TGNS.HookNetworkMessage(Plugin.VR_CONFIRMED, function(message)
-		vrConfirmed[message.c] = true
-	end)
-	TGNS.HookNetworkMessage(Plugin.SQUAD_CONFIRMED, function(message)
-		squadNumberLastSetTimes[message.c] = Shared.GetTime()
-		squadNumbers[message.c] = message.s
 	end)
 	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
 		isApproved = {}
