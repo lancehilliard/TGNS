@@ -271,6 +271,7 @@ local function getAdjustedNumberOfNeededReadyPlayerClients(playingClients)
 	local numberOfNeededReadyPlayerClients = #playingClients - 2
 	if not rolandHasBeenUsed then
 		numberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients >= minimumReadyPlayerClients and numberOfNeededReadyPlayerClients or minimumReadyPlayerClients
+		numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(numberOfNeededReadyPlayerClients * .82)
 	end
 	local result = numberOfNeededReadyPlayerClients <= MAX_NON_CAPTAIN_PLAYERS and numberOfNeededReadyPlayerClients or MAX_NON_CAPTAIN_PLAYERS
 	return result
@@ -976,6 +977,9 @@ function Plugin:PlayerSay(client, networkMessage)
 						if message == "ready" then
 							shouldSuppressChatMessageDisplay = readyTeams[playerTeamName]
 							if teamsAreSufficientlyBalanced then
+								if not readyTeams[playerTeamName] then
+									timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + 30									
+								end
 								readyTeams[playerTeamName] = true
 								TGNS.ScheduleAction(0, function() md:ToAllNotifyInfo(string.format("%s has readied the %s!", TGNS.GetClientName(client), TGNS.GetPlayerTeamName(TGNS.GetPlayer(client)))) end)
 							else
