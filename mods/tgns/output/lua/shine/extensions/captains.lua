@@ -980,8 +980,12 @@ function Plugin:PlayerSay(client, networkMessage)
 								local readyTeamName = TGNS.GetPlayerTeamName(TGNS.GetPlayer(client))
 								local notificationMessage = string.format("%s has readied the %s!", TGNS.GetClientName(client), readyTeamName)
 								if not readyTeams[playerTeamName] then
-									timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + 30									
-									notificationMessage = string.format("%s Timer reduced! Plan fast, %s!", notificationMessage, TGNS.GetOtherPlayingTeamName(readyTeamName))
+									local forceRoundStartTimeSecondsToAllowRemaining = 30
+									local bufferTimeInSeconds = 5
+									if timeAtWhichToForceRoundStart - TGNS.GetSecondsSinceMapLoaded() > forceRoundStartTimeSecondsToAllowRemaining + bufferTimeInSeconds then
+										timeAtWhichToForceRoundStart = TGNS.GetSecondsSinceMapLoaded() + forceRoundStartTimeSecondsToAllowRemaining
+										notificationMessage = string.format("%s Timer reduced! Plan fast, %s!", notificationMessage, TGNS.GetOtherPlayingTeamName(readyTeamName))
+									end
 								end
 								TGNS.ScheduleAction(0, function() md:ToAllNotifyInfo(notificationMessage) end)
 								readyTeams[playerTeamName] = true
