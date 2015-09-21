@@ -114,6 +114,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
                 if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
                     table.insert(potentiallyImmuneClients, c)
                 else
+                    slotsDebugMd:ToAdminConsole(string.format("ADMINDEBUG (AND NOT YET ENABLED): %s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
                     return true
                 end
             end)
@@ -443,7 +444,7 @@ end
 function Plugin:ClientConfirmConnect(client)
     local chatMessage
     if TGNS.IsClientSM(client) then
-        chatMessage = "Supporting Member! Thank you! Your help makes our two servers possible!"
+        chatMessage = "Supporting Member! Thank you! Your help makes TG's servers possible!"
     elseif TGNS.HasClientSignedPrimerWithGames(client) then
         chatMessage = string.format("TGNS Primer signer! Join the full server when >%s strangers are playing!", Shine.Plugins.communityslots.Config.MinimumStrangers)
     else
