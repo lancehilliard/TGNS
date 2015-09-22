@@ -630,9 +630,22 @@ if Server or Client then
 							end
 						end
 
+						local maximumAllowedPoints = maximumTeamPoints
+						local gameDurationInMinutes = math.floor(TGNS.ConvertSecondsToMinutes(TGNS.GetCurrentGameDurationInSeconds()))
+						local excessMinutesThreshold = 10
+						local maximumPenaltyPercentage = .9
+						if gameDurationInMinutes > excessMinutesThreshold then
+							local excessMinutes = gameDurationInMinutes - excessMinutesThreshold
+							local maxPointsPenaltyPercentage = excessMinutes / 10
+							maxPointsPenaltyPercentage = maxPointsPenaltyPercentage <= maximumPenaltyPercentage and maxPointsPenaltyPercentage or maximumPenaltyPercentage
+							local maxPointsPenaltyAmount = maximumTeamPoints * maxPointsPenaltyPercentage
+							maximumAllowedPoints = maximumTeamPoints - maxPointsPenaltyAmount
+							-- Shared.Message(string.format("%s %s %s %s %s", gameDurationInMinutes, excessMinutes, maxPointsPenaltyPercentage, maxPointsPenaltyAmount, maximumAllowedPoints))
+						end
+
 						points = points - damageAmount
 						points = points >= 0 and points or 0
-						points = points <= maximumTeamPoints and points or maximumTeamPoints
+						points = points <= maximumAllowedPoints and points or maximumAllowedPoints
 					end
 
 					table.insert(hillTextMessageDatas, {m=string.format("%s%s: %s (%s %s)", teamNumber == kAlienTeamType and "\n" or "", TGNS.GetTeamName(teamNumber), math.ceil(points), onHillCount, (teamNumberToHarm ~= nil and teamNumberToHarm ~= teamNumber) and "controlling" or "gathered"),t=teamNumber})
