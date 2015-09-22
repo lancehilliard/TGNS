@@ -1,6 +1,9 @@
 local originalGetCanPlayerHearPlayer
 local md
-local specmodes
+local specmodes = {}
+local specpriority = {}
+local whenSpecWasLastHeard = {}
+
 local modeDescriptions = {["0"] = "Chat Advisory OFF; Voicecomm: All"
 	, ["1"] = "Chat Advisory OFF; Voicecomm: Marines only"
 	, ["2"] = "Chat Advisory OFF; Voicecomm: Aliens only"
@@ -10,6 +13,7 @@ local modeDescriptions = {["0"] = "Chat Advisory OFF; Voicecomm: All"
 
 local pdr = TGNSPlayerDataRepository.Create("specmode", function(data)
 	data.specmode = data.specmode ~= nil and data.specmode or nil
+	data.specpriority = data.specpriority ~= nil and data.specpriority or nil
 	return data
 end)
 
@@ -20,6 +24,23 @@ local function listenerSpectatorShouldHearSpeaker(listenerPlayer, speakerPlayer)
 	local playerIsOnGameplayTeamThatPlayerCanHear = (TGNS.PlayerIsOnPlayingTeam(speakerPlayer) and (specmode == 3 or specmode == TGNS.GetPlayerTeamNumber(speakerPlayer)))
 	local bothPlayersAreSpectatorsAndPlayerCanHearSpectators = TGNS.IsPlayerSpectator(listenerPlayer) and TGNS.IsPlayerSpectator(speakerPlayer) and specmode == 4
 	local result = playerCanHearAllVoices or playerIsOnGameplayTeamThatPlayerCanHear or bothPlayersAreSpectatorsAndPlayerCanHearSpectators
+	
+	local adjustForSpecPriority = function()
+		if result then
+			if TGNS.IsPlayerSpectator(listenerPlayer) then
+				if TGNS.IsPlayerSpectator(speakerPlayer) then
+					whenSpecWasLastHeard[listenerClient] = Shared.GetTime()
+				else
+					whenSpecWasLastHeard[listenerClient] = whenSpecWasLastHeard[listenerClient] or 0
+					if specpriority[listenerClient] and Shared.GetTime() - whenSpecWasLastHeard[listenerClient] < 0.5 then
+						result = false
+					end
+				end
+			end
+		end
+	end
+	adjustForSpecPriority()
+
 	return result
 end
 
@@ -35,6 +56,7 @@ function Plugin:ClientConfirmConnect(client)
 		if Shine:IsValidClient(client) then
 			if loadResponse.success then
 				specmodes[client] = loadResponse.value.specmode
+				specpriority[client] = loadResponse.value.specpriority
 			else
 				Shared.Message("specmode ERROR: Unable to access data.")
 			end
@@ -49,7 +71,11 @@ local function showCurrentSpecMode(player, showIfNil)
 		currentSpecMode = currentSpecMode or 0
 	end
 	if currentSpecMode then
-		md:ToPlayerNotifyInfo(player, string.format("Current sh_specmode: %s (%s)", currentSpecMode, modeDescriptions[tostring(currentSpecMode)]))
+		local message = string.format("Current sh_specmode: %s (%s%s)", currentSpecMode, modeDescriptions[tostring(currentSpecMode)], specpriority[client] and currentSpecMode <= 3 and ", with Spectator Voice Interruptions (SVI)" or "")
+		md:ToPlayerNotifyInfo(player, message)
+		if not specpriority[client] then
+			md:ToPlayerNotifyInfo(player, "SVI (Spectator Voicecomm Interruptions) interrupts all voicecomms when fellow Spectators speak! Toggle it in the menu.")
+		end
 	end
 end
 
@@ -63,22 +89,34 @@ function Plugin:CreateCommands()
     local modCommand = self:BindCommand( "sh_specmode", "specmode", function(client, modeCandidate)
     	local player = TGNS.GetPlayer(client)
     	local mode = tonumber(modeCandidate)
-    	if mode == nil or mode < 0 or mode > 5 then
+    	if mode == nil or mode < 0 or mode > 6 then
     		showUsage(player)
     	else
-    		specmodes[client] = mode
+    		if mode == 6 then
+    			local currentSpecMode = specmodes[client] or 0
+    			if currentSpecMode > 3 and not specpriority[client] then
+    				md:ToPlayerNotifyError(player, "Before enabling SVI, you must first configure Spec Voicecomms to include Spectators in the voicecomms you hear.")
+    			else
+    				specpriority[client] = not specpriority[client]
+    			end
+    		else
+	    		specmodes[client] = mode
+    		end
     		local steamId = TGNS.GetClientSteamId(client)
 			pdr:Load(steamId, function(loadResponse)
 				if loadResponse.success then
 					local data = loadResponse.value
 					data.specmode = mode
+					data.specpriority = specpriority[client]
 					pdr:Save(data, function(saveResponse)
 						if not saveResponse.success then
 							Shared.Message("specmode ERROR: Unable to save data.")
 						end
 					end)
 				else
-					taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
+					if Shine:IsValidClient(client) then
+						md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access specmode data.")
+					end
 					Shared.Message("taglines ERROR: Unable to access data.")
 				end
 			end)
@@ -91,7 +129,6 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
-	specmodes = {}
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
 		local result
 		if TGNS.IsPlayerSpectator(listenerPlayer) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.IsEitherPlayerInSidebar and Shine.Plugins.sidebar:IsEitherPlayerInSidebar(listenerPlayer, speakerPlayer)) then
