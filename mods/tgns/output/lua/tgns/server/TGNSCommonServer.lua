@@ -25,12 +25,14 @@ end
 
 function TGNS.Karma(target, deltaName)
 	local result
-	local karmaPlugin = Shine.Plugins.karma
-	if karmaPlugin and karmaPlugin.Enabled then
-		if deltaName then
-			karmaPlugin:AddKarma(target, deltaName)
-		else
-			result = karmaPlugin:GetKarma(target)
+	if target then
+		local karmaPlugin = Shine.Plugins.karma
+		if karmaPlugin and karmaPlugin.Enabled then
+			if deltaName then
+				karmaPlugin:AddKarma(target, deltaName)
+			else
+				result = karmaPlugin:GetKarma(target)
+			end
 		end
 	end
 	return result or 0
