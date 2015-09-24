@@ -106,7 +106,7 @@ function Plugin:CreateCommands()
 			pdr:Load(steamId, function(loadResponse)
 				if loadResponse.success then
 					local data = loadResponse.value
-					data.specmode = mode
+					data.specmode = specmodes[client]
 					data.specpriority = specpriority[client]
 					pdr:Save(data, function(saveResponse)
 						if not saveResponse.success then
