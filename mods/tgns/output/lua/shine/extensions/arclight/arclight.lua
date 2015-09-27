@@ -284,7 +284,7 @@ if Server or Client then
 			   				originalOnTriggerEntered(teleporterSelf, enterEnt, triggerEnt)
 			   				-- brieflySetWallwalkingValue(client, 3)
 	   					else
-	   						md:ToPlayerNotifyInfo(enterEnt, string.format("You recently teleported back to base. Wait %s seconds before returning to %s.", secondsUntilCanReturnToFight, hillLocationName))
+	   						-- md:ToPlayerNotifyInfo(enterEnt, string.format("You recently teleported back to base. Wait %s seconds before returning to %s.", secondsUntilCanReturnToFight, hillLocationName))
 	   					end
 	   				else
 		   			 	md:ToPlayerNotifyInfo(enterEnt, string.format("You cannot yet enter %s.", hillLocationName))
@@ -540,6 +540,24 @@ if Server or Client then
 			local playingPlayers = TGNS.GetPlayers(playingClients)
 			local teamNumberToHarm
 			if TGNS.IsGameInProgress() then
+				TGNS.DoFor(TGNS.Where(playerList, function(p) return TGNS.Has({"Marine Start", "The Hive"}, TGNS.GetPlayerLocationName(p)) end), function(p)
+					if TGNS.GetIsPlayerVirtual(p) then
+						bottomFloorTele:OnTriggerEntered(p, bottomFloorTele)
+					else
+						local c = TGNS.GetClient(p)
+						if not TGNS.IsClientCommander(c) then
+							teleportOutOfBaseAllowedAt[c] = teleportOutOfBaseAllowedAt[c] or 0
+							local secondsUntilTeleportOutOfBaseAllowed = math.floor(teleportOutOfBaseAllowedAt[c] - Shared.GetTime())
+							if secondsUntilTeleportOutOfBaseAllowed > -3 then
+								local message = string.format("You may return to %s %s", hillLocationName, secondsUntilTeleportOutOfBaseAllowed > 0 and string.format("in: %s", Pluralize(secondsUntilTeleportOutOfBaseAllowed, "second")) or "NOW!")
+								local rgb = TGNS.GetTeamRgb(TGNS.GetClientTeamNumber(c))
+								Shine.ScreenText.Add(68, {X = 0.5, Y = 0.25, Text = message, Duration = 1.5, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+							end
+						end
+					end
+				end)
+
+
 				TGNS.DoFor(TGNS.Where(playerList, function(p) return TGNS.GetIsPlayerVirtual(p) and TGNS.Has({"Marine Start", "The Hive"}, TGNS.GetPlayerLocationName(p)) end), function(p)
 					bottomFloorTele:OnTriggerEntered(p, bottomFloorTele)
 				end)
