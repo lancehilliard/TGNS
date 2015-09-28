@@ -105,6 +105,7 @@ if Server or Client then
 		local HILL_POSSESSION_POINT_DELTA = 3
 		local pointsRemaining = {}
 		local pointsMax = {}
+		local maxPointsPenaltyAmount = {}
 		local marinesOnHillCount
 		local aliensOnHillCount
 		local PRE_GAME_DURATION_IN_SECONDS = 60
@@ -120,6 +121,9 @@ if Server or Client then
 		local function prepareForNextGame(countdownStarting)
 			pointsRemaining[kMarineTeamType] = MARINE_STARTING_POINTS
 			pointsRemaining[kAlienTeamType] = ALIEN_STARTING_POINTS
+			maxPointsPenaltyAmount[kMarineTeamType] = 0
+			maxPointsPenaltyAmount[kAlienTeamType] = 0
+
 			marinesOnHillCount = 0
 			aliensOnHillCount = 0
 			teamNumberWhichCalledWinOrLose = nil
@@ -626,10 +630,12 @@ if Server or Client then
 					local teamTotalPlayerCount = teamNumber == kMarineTeamType and #marinePlayers or #alienPlayers
 					local otherTeamTotalPlayerCount = teamNumber == kMarineTeamType and #alienPlayers or #marinePlayers
 					local originalPoints = points
+					local maximumTeamPoints = pointsMax[teamNumber]
+					local maximumAllowedPoints = maximumTeamPoints - math.floor(maxPointsPenaltyAmount[teamNumber])
+					local maxPointsPenaltyMaxAmount = (maximumTeamPoints * 0.9)
 					if TGNS.IsGameInProgress() then
 						local shouldDamage = teamNumber == teamNumberToHarm
 						local damageRate = 4.0
-						local maximumTeamPoints = pointsMax[teamNumber]
 						local damageAmount = maximumTeamPoints * (damageRate / 100) * (shouldDamage and 1 or -REPLENISH_MULTIPLIER)
 						if shouldDamage then
 							local teamPercentageThatIsDamaging = otherTeamOnHillCount / otherTeamTotalPlayerCount
@@ -648,25 +654,17 @@ if Server or Client then
 							end
 						end
 
-						local maximumAllowedPoints = maximumTeamPoints
-						local gameDurationInMinutes = math.floor(TGNS.ConvertSecondsToMinutes(TGNS.GetCurrentGameDurationInSeconds()))
-						local excessMinutesThreshold = 10
-						local maximumPenaltyPercentage = .9
-						if gameDurationInMinutes > excessMinutesThreshold then
-							local excessMinutes = gameDurationInMinutes - excessMinutesThreshold
-							local maxPointsPenaltyPercentage = excessMinutes / 10
-							maxPointsPenaltyPercentage = maxPointsPenaltyPercentage <= maximumPenaltyPercentage and maxPointsPenaltyPercentage or maximumPenaltyPercentage
-							local maxPointsPenaltyAmount = maximumTeamPoints * maxPointsPenaltyPercentage
-							maximumAllowedPoints = maximumTeamPoints - maxPointsPenaltyAmount
-							-- Shared.Message(string.format("%s %s %s %s %s", gameDurationInMinutes, excessMinutes, maxPointsPenaltyPercentage, maxPointsPenaltyAmount, maximumAllowedPoints))
-						end
-
+						local maxPointsPenalty = (damageAmount * (shouldDamage and 0.1 or 0.05))
+						maxPointsPenaltyAmount[teamNumber] = maxPointsPenaltyAmount[teamNumber] + maxPointsPenalty
+						maxPointsPenaltyAmount[teamNumber] = maxPointsPenaltyAmount[teamNumber] >= 0 and maxPointsPenaltyAmount[teamNumber] or 0
+						maxPointsPenaltyAmount[teamNumber] = maxPointsPenaltyAmount[teamNumber] <= maxPointsPenaltyMaxAmount and maxPointsPenaltyAmount[teamNumber] or maxPointsPenaltyMaxAmount
+						maximumAllowedPoints = maximumTeamPoints - math.floor(maxPointsPenaltyAmount[teamNumber])
 						points = points - damageAmount
 						points = points >= 0 and points or 0
 						points = points <= maximumAllowedPoints and points or maximumAllowedPoints
 					end
 
-					table.insert(hillTextMessageDatas, {m=string.format("%s%s: %s (%s %s)", teamNumber == kAlienTeamType and "\n" or "", TGNS.GetTeamName(teamNumber), math.ceil(points), onHillCount, (teamNumberToHarm ~= nil and teamNumberToHarm ~= teamNumber) and "controlling" or "gathered"),t=teamNumber})
+					table.insert(hillTextMessageDatas, {m=string.format("%s%s: %s/%s (%s %s)", teamNumber == kAlienTeamType and "\n" or "", TGNS.GetTeamName(teamNumber), math.ceil(points), math.ceil(maximumAllowedPoints), onHillCount, (teamNumberToHarm ~= nil and teamNumberToHarm ~= teamNumber) and "controlling" or "gathered"),t=teamNumber})
 
 					if originalPoints ~= 0 and points == 0 then
 						TGNS.DoFor(TGNS.Where(TGNS.GetCommandStructures(), function(s) return TGNS.GetEntityLocationName(s) ~= hillLocationName and TGNS.StructureIsAlive(s) and s:GetTeamNumber() == teamNumber end), function(s)
