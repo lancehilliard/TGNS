@@ -170,6 +170,14 @@ function Plugin:Initialise()
 				originalForceMapVoteFunc(client)
 			end
 		end
+
+		local originalExtendMap = Shine.Plugins.mapvote.ExtendMap
+		Shine.Plugins.mapvote.ExtendMap = function(mapVoteSelf, time, nextMap)
+			originalExtendMap(mapVoteSelf, time, nextMap)
+			Shine:RemoveText(nil, { ID = 66 } )
+			Shine:RemoveText(nil, { ID = 67 } )
+			Shine:RemoveText(nil, { ID = 68 } )
+		end
 	end)
 
     return true
