@@ -100,6 +100,12 @@ if Server or Client then
 	end
 
 	local function OnServerInitialise()
+		Shine.Plugins.mapvote.Config.AlwaysExtend = true
+		Shine.Plugins.mapvote.Config.AllowExtend = true
+		Shine.Plugins.mapvote.CanExtend = function(mapVoteSelf) return true end
+		Shine.Plugins.mapvote.Config.ForcedMaps[ArclightMapName] = true
+		Shine.Plugins.mapvote.ForcedMapCount = 1
+
 		local md = TGNSMessageDisplayer.Create()
 		local hillPoints = 0
 		local HILL_POSSESSION_POINT_DELTA = 3
