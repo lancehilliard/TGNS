@@ -895,10 +895,10 @@ function Plugin:CreateCommands()
 						if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
 							local clientTeamNumber = TGNS.GetClientTeamNumber(client)
 							md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", TGNS.GetClientName(client), ssoData[spawnSelectionIndex].summaryText))
+							TGNS.Karma(client, "SetSpawns")
 						else
 							md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
 						end
-						TGNS.Karma(client, "SetSpawns")
 					else
 						errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
 					end
