@@ -120,8 +120,9 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients)
 		local humanClients = getHumanClients(clients)
 		if #humanClients >= 8 then
+			local deltaName = (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) and "FullCaptainsRoundPlayed" or "FullGamePlayed"
 			TGNS.DoFor(humanClients, function(c)
-				TGNS.Karma(c, "FullGamePlayed")
+				TGNS.Karma(c, deltaName)
 			end)
 		end
 	end)
