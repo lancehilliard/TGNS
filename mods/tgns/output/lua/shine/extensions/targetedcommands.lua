@@ -5,6 +5,7 @@ local approvedClients = {}
 local approveReceivedTotal = {}
 local approveSentTotal = {}
 local vrConfirmedWhen = {}
+local hasEarnedApprovingWithReasonKarma = {}
 
 local function CreateCommand(consoleCommandName, chatCommandName, messageChannel, isValidTargetClient, isNotValidTargetTemplate, onInputValidated, isReasonRequired, helpText)
 	local result = {}
@@ -61,7 +62,14 @@ local function approve(sourceClient, sourcePlayer, sourceSteamId, targetClient, 
 							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
 								local approveResponse = json.decode(approveResponseJson) or {}
 								if approveResponse.success then
-									TGNS.Karma(sourceSteamId, TGNS.HasNonEmptyValue(reason) and "ApprovingWithReason" or "Approving")
+									if TGNS.HasNonEmptyValue(reason) then
+										if not hasEarnedApprovingWithReasonKarma[sourceSteamId] then
+											TGNS.Karma(sourceSteamId, "ApprovingWithReason")
+											hasEarnedApprovingWithReasonKarma[sourceSteamId] = true
+										end
+									else
+										TGNS.Karma(sourceSteamId, "Approving")
+									end
 									if Shine:IsValidClient(sourceClient) then
 										approvedClients[sourceSteamId][targetSteamId] = true
 										approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
