@@ -2,6 +2,7 @@ local md = TGNSMessageDisplayer.Create()
 local mapNominations = {}
 local mapSetSelected = false
 local gamesPlayedOnCurrentMap = 0
+local earnedVoteKarma = {}
 
 local function show(mapVoteSummaries, totalVotes)
 	local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
@@ -132,6 +133,11 @@ function Plugin:Initialise()
 			Shine.Plugins.mapvote.Notify = function(notifySelf, player, message, format, ...)
 				if message ~= "You %s %s (%s for this, %i total)" then
 					originalNotify(notifySelf, player, message, format, ...)
+				end
+				local steamId = TGNS.GetClientSteamId(client)
+				if not earnedVoteKarma[steamId] then
+					TGNS.Karma(client, "MapVoting")
+					earnedVoteKarma[steamId] = true
 				end
 			end
 			originalVoteFunc(client, mapName)
