@@ -271,6 +271,22 @@ local function svBalance(client, forcePlayersToReadyRoom)
 			balanceInProgress = true
 			lastBalanceStartTimeInSeconds = Shared.GetTime()
 			TGNS.ScheduleAction(5, function() BeginBalance(player) end)
+			-- TGNS.ScheduleAction(5, function()
+			-- 	local originalGetAllPlayers = Shine.GetAllPlayers
+			-- 	Shine.GetAllPlayers = function(shineSelf)
+			-- 		local playersForNewGame = Shine.Plugins.communityslots:GetPlayersForNewGame()
+			-- 		local players = {}
+			-- 		local count = 0
+			-- 		TGNS.DoFor(playersForNewGame, function(p)
+			-- 			count = count + 1
+			-- 			players[count] = p
+			-- 		end)
+			-- 		return players, count
+			-- 	end
+			-- 	Shine.Plugins.voterandom:ShuffleTeams()
+			-- 	Shine.GetAllPlayers = originalGetAllPlayers
+			-- end)
+
 		else
 			md:ToPlayerNotifyError(player, "Balance cannot be used during a game.")
 		end
@@ -568,6 +584,14 @@ function Plugin:Initialise()
  --    	selfx.GetNumPlayers = originalGetNumPlayers
  --    	return tower, commandStation
 	-- end
+
+	-- TGNS.ScheduleAction(5, function()
+	-- 	local showBalanceCommandAdvisory = function(client)
+	-- 		md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Primer signers may use sh_balance to send players to teams.")
+	-- 	end
+	-- 	Shine.Commands.sh_voterandom.Func = showBalanceCommandAdvisory
+	-- 	Shine.Commands.sh_enablerandom.Func = showBalanceCommandAdvisory
+	-- end)
 
     return true
 end
