@@ -1,3 +1,5 @@
+local ADMINONLY_CHANNEL_DECORATOR = " (ADMINS)"
+
 local function GetChannelOrTgns(channel)
 	local result = TGNS.HasNonEmptyValue(channel) and channel or "TGNS"
 	return result
@@ -99,14 +101,14 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 
 	function result:ToAdminChat(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			TGNS.PlayerAction(c, function(p) SendChatMessage(p, message, self.messagesChannel) end)
+			TGNS.PlayerAction(c, function(p) SendChatMessage(p, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR)) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To admin chat: %s", message))
 	end
 
 	function result:ToAdminConsole(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			SendConsoleMessage(c, message, self.messagesChannel)
+			SendConsoleMessage(c, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR))
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To admin console: %s", message))
 	end
@@ -237,14 +239,14 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 
 	function result:ToAdminNotifyInfo(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel, infoPrefixRed, infoPrefixGreen, infoPrefixBlue) end)
+			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR), infoPrefixRed, infoPrefixGreen, infoPrefixBlue) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyinfo: %s", message))
 	end
 
 	function result:ToAdminNotifyError(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-			TGNS.PlayerAction(c, function(p) NotifyError(p, message, self.messagesChannel) end)
+			TGNS.PlayerAction(c, function(p) NotifyError(p, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR)) end)
 		end)
 		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyerror: %s", message))
 	end
