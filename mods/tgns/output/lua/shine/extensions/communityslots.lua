@@ -44,9 +44,6 @@ local function IsTargetProtectedStranger(targetClient, playerList)
     local strangersClients = TGNS.GetStrangersClients(playerList)
     local strangersClientsWithFewerThanTenGames = TGNS.Where(strangersClients, function(c) return Balance.GetTotalGamesPlayed(c) < TGNS.PRIMER_GAMES_THRESHOLD end)
     local result = IsClientAmongLongestPlayed(strangersClientsWithFewerThanTenGames, targetClient, Shine.Plugins.communityslots.Config.MinimumStrangers)
-    -- if result then
-    --     tgnsMd:ToAdminConsole(string.format("%s is protected Stranger.", TGNS.GetClientName(targetClient)))
-    -- end
     return result
 end
 
@@ -58,9 +55,6 @@ end
 local function IsTargetProtectedPrimerOnly(targetClient, playerList)
     local candidateClients = TGNS.Where(TGNS.GetPrimerOnlyClients(playerList), function(c) return clientSatisfiesBkaRequirement(c) end)
     local result = IsClientAmongLongestPlayed(candidateClients, targetClient, Shine.Plugins.communityslots.Config.MinimumPrimerOnlys)
-    -- if result then
-    --     tgnsMd:ToAdminConsole(string.format("%s is protected PrimerOnly.", TGNS.GetClientName(targetClient)))
-    -- end
     return result
 end
 
@@ -114,7 +108,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
                 if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
                     table.insert(potentiallyImmuneClients, c)
                 else
-                    slotsDebugMd:ToAdminConsole(string.format("ADMINDEBUG (AND NOT YET ENABLED): %s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    slotsDebugMd:ToAdminConsole(string.format("NOW ENABLED: %s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
                     return true
                 end
             end)
@@ -123,7 +117,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
             TGNS.DoForReverse(bumpableClients, function(c, i)
                 if TGNS.Has(potentiallyImmuneClients, c) then
                     table.insert(clientsGivenImmunityViaKarma, c)
-                    -- table.remove(bumpableClients, i)
+                    table.remove(bumpableClients, i)
                 end
             end)
         end
@@ -287,12 +281,12 @@ local function IsClientBumped(joiningClient)
                 slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
                 TGNS.Karma(joiningClient, "Bumping")
                 TGNS.DoFor(clientsGivenImmunityViaKarma, function(c)
-                    slotsDebugMd:ToAdminConsole(string.format("ADMINDEBUG (AND NOT YET ENABLED): %s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
-                    -- TGNS.Karma(c, "PassingTheBump")
+                    slotsDebugMd:ToAdminConsole(string.format("NOW ENABLED: %s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    TGNS.Karma(c, "PassingTheBump")
                 end)
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
-                --tgnsMd:ToAdminConsole(string.format("%s was bumped by %s.", victimName, joiningName))
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
+                tgnsMd:ToClientConsole(string.format("%s %s protected by good Karma. Learn more in the Required Reading's Reserved Slots (Advanced Logic) section.", Pluralize(#clientsGivenImmunityViaKarma, "player"), #clientsGivenImmunityViaKarma == 1 and "was" or "were"))
                 if blacklistedClients[victimClient] then
                     blacklistAdvisoryClient = victimClient
                 end
@@ -302,7 +296,6 @@ local function IsClientBumped(joiningClient)
                 slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, joiningClient, "JOINER"))
                 onPreJoinerKick(joiningClient,joiningPlayer,playerList)
                 TGNS.ExecuteClientCommand(joiningClient, "readyroom")
-                --tgnsMd:ToAdminConsole(string.format("%s was bumped (prevented from joining a team).", joiningName))
                 result = true
                 if blacklistedClients[joiningClient] then
                     blacklistAdvisoryClient = joiningClient
@@ -432,7 +425,6 @@ function Plugin:ClientConnect(joiningClient)
             end
         end)
     else
-        --TGNSConnectedTimesTracker.SetClientConnectedTimeInSeconds(joiningClient)
         local pbr = TGNSPlayerBlacklistRepository.Create("communityslots")
         pbr:IsClientBlacklisted(joiningClient, function(isBlacklisted)
             blacklistedClients[joiningClient] = isBlacklisted
@@ -469,9 +461,6 @@ end
 
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
     UpdateReservedSlotAmount()
-    -- if not TGNS.GetIsClientVirtual(client) then
-    --     tgnsMd:ToAdminConsole(string.format("%s took a slot.", TGNS.GetClientName(client)))
-    -- end
 end)
 
 function Plugin:EndGame(gamerules, winningTeam)
@@ -574,13 +563,10 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
         end
         if cancel then
             tgnsMd:ToPlayerNotifyError(player, string.format("Teams are full (%s). You might be able to join Spectate.", fullGameDescriptor))
-            --tgnsMd:ToAdminConsole(string.format("%s was not allowed to JoinTeam.", TGNS.GetPlayerName(player)))
             TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
         else
             if not (force or shineForce) and not TGNS.GetIsClientVirtual(joiningClient) then
                 if victimTeamNumber ~= nil and newTeamNumber ~= victimTeamNumber then
-                    -- cancel = true
-                    -- TGNS.SendToTeam(player, victimTeamNumber)
                     tgnsMd:ToPlayerNotifyInfo(player, string.format("You were placed on %s to preserve %s.", TGNS.GetTeamName(victimTeamNumber), fullGameDescriptor))
                     if Shine.Plugins.teamres and Shine.Plugins.teamres.Enabled then
                         Shine.Plugins.teamres:JoinTeam(gamesrules, player, victimTeamNumber, force, shineForce)
@@ -590,7 +576,6 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
             end
         end
     elseif newTeamNumber == kSpectatorIndex then
-        -- SMs may spec mid-game; anyone may spec pre-game (limit enforced)
         if not (force or shineForce) then
             local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumEffectiveSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
