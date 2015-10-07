@@ -2,9 +2,9 @@ local md = TGNSMessageDisplayer.Create()
 local karmaCache = {}
 local httpFailureCount = {}
 local HttpFailureThreshold = 5
-local steamIdsWhichJoinedWithLowPopulation = {}
 local spectateKarmaProgress = {}
 local lastTeamExit = {}
+local seedingTempfilePath = "config://tgns/temp/seeding.json"
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -61,18 +61,31 @@ end
 
 local function onClientConnect(steamId)
 	refreshKarma(steamId)
-	if Server.GetNumPlayersTotal() < 8 and Shared.GetTime() > 120 then
-		getHumanClients(TGNS.GetClientList())
+	if Server.GetNumPlayersTotal() <= 8 and Shared.GetTime() > 60 then
+		local seeders = Shine.LoadJSONFile(seedingTempfilePath) or {}
+		local humanClients = getHumanClients(TGNS.GetClientList())
 		TGNS.DoFor(humanClients, function(c)
 			local csteamId = TGNS.GetClientSteamId(c)
-			if not TGNS.Has(steamIdsWhichJoinedWithLowPopulation, csteamId) then
-				table.insert(steamIdsWhichJoinedWithLowPopulation, csteamId)
+			if not TGNS.Has(seeders, csteamId) then
+				table.insert(seeders, csteamId)
 			end
 		end)
-	elseif Server.GetNumPlayersTotal() >= 14 then
-		TGNS.DoFor(steamIdsWhichJoinedWithLowPopulation, function(s)
-			TGNS.RemoveAllMatching(steamIdsWhichJoinedWithLowPopulation, s)
-			TGNS.Karma(s, "Seeding")
+		Shine.SaveJSONFile(seeders, seedingTempfilePath)
+	end
+end
+
+function Plugin:EndGame(gamerules, winningTeam)
+	if Server.GetNumPlayersTotal() >= 12 then
+		local humanClients = getHumanClients(TGNS.GetClientList())
+		local humanSteamIds = TGNS.Select(humanClients, TGNS.GetClientSteamId)
+		TGNS.ScheduleAction(2, function()
+			local seeders = Shine.LoadJSONFile(seedingTempfilePath) or {}
+			TGNS.DoFor(humanSteamIds, function(s)
+				if TGNS.Has(seeders, s) then
+					TGNS.Karma(s, "Seeding")
+				end
+			end)
+			Shine.SaveJSONFile({}, seedingTempfilePath)
 		end)
 	end
 end
