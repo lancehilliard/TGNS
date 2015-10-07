@@ -286,7 +286,7 @@ local function IsClientBumped(joiningClient)
                 end)
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
                 tgnsMd:ToPlayerNotifyInfo(victimPlayer, "You got bumped by reserved slots. You might be able to Spectate.")
-                tgnsMd:ToClientConsole(string.format("%s %s protected by good Karma. Learn more in the Required Reading's Reserved Slots (Advanced Logic) section.", Pluralize(#clientsGivenImmunityViaKarma, "player"), #clientsGivenImmunityViaKarma == 1 and "was" or "were"))
+                tgnsMd:ToClientConsole(victimClient, string.format("%s %s protected by good Karma. Learn more in the Required Reading's Reserved Slots (Advanced Logic) section.", Pluralize(#clientsGivenImmunityViaKarma, "player"), #clientsGivenImmunityViaKarma == 1 and "was" or "were"))
                 if blacklistedClients[victimClient] then
                     blacklistAdvisoryClient = victimClient
                 end
