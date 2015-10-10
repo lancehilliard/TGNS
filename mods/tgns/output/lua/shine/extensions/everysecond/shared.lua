@@ -1,12 +1,19 @@
-local timeOfLastHookCallInSeconds = 0
+local timeOfLastEverySecondHookCallInSeconds = 0
+local timeOfLastEveryMinuteHookCallInSeconds = 0
 
 local Plugin = {}
 
 function Plugin:Think()
-	local secondsSinceLastHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastHookCallInSeconds
-	if secondsSinceLastHookCall >= 1 then
-		TGNS.ExecuteEventHooks("OnEverySecond", secondsSinceLastHookCall)
-		timeOfLastHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
+	local secondsSinceLastEverySecondHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEverySecondHookCallInSeconds
+	if secondsSinceLastEverySecondHookCall >= 1 then
+		TGNS.ExecuteEventHooks("OnEverySecond", secondsSinceLastEverySecondHookCall)
+		timeOfLastEverySecondHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
+	end
+
+	local secondsSinceLastEveryMinuteHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEveryMinuteHookCallInSeconds
+	if secondsSinceLastEveryMinuteHookCall >= TGNS.ConvertMinutesToSeconds(1) then
+		TGNS.ExecuteEventHooks("OnEveryMinute", secondsSinceLastEveryMinuteHookCall)
+		timeOfLastEveryMinuteHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
 	end
 end
 
