@@ -106,7 +106,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			teamExit.teamSizeBeforeExit = #getHumanClients(TGNS.GetTeamClients(oldTeamNumber, TGNS.GetPlayerList())) + 1
 			lastTeamExit[client] = teamExit
 		end
-		if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#getHumanClients(TGNS.GetTeamClients(newTeamNumber)) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) then
+		if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#getHumanClients(TGNS.GetTeamClients(newTeamNumber)) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) and #TGNS.GetPlayerList() >= 8 then
 			TGNS.Karma(steamId, "FixingTeamSizes")
 		end
 	end
