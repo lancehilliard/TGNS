@@ -11,9 +11,9 @@ local function resetAfk(client)
 end
 
 local function getAfkThresholdInSeconds()
-	local isEarlyGame = TGNS.IsGameInCountdown() or (TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() < 30)
-	local result = isEarlyGame and 15 or 60
-	return result, isEarlyGame
+	local isEarlyOrPreGame = (TGNS.GetCurrentGameDurationInSeconds() or 0) < 30
+	local result = isEarlyOrPreGame and 15 or 60
+	return result, isEarlyOrPreGame
 end
 
 local Plugin = {}
@@ -65,8 +65,8 @@ function Plugin:Initialise()
 
 	local processAfkPlayers
 	processAfkPlayers = function()
-		local afkThresholdInSeconds, isEarlyGame = getAfkThresholdInSeconds();
-		TGNS.ScheduleAction(isEarlyGame and 1 or 15, processAfkPlayers)
+		local afkThresholdInSeconds, isEarlyOrPreGame = getAfkThresholdInSeconds();
+		TGNS.ScheduleAction(isEarlyOrPreGame and 1 or 15, processAfkPlayers)
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
 			if TGNS.IsPlayerAFK(p) then
