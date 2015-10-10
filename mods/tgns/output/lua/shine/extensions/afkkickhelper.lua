@@ -1,11 +1,18 @@
 local isAfkResetEnabled
 local md
-local afkThresholdInMinutes = 1
+local lastWarnTimes = {}
+local lastMoveTimes = {}
 
 local function resetAfk(client)
 	if isAfkResetEnabled and client then
 		Shine.Plugins.afkkick:ResetAFKTime(client)
 	end
+end
+
+local function getAfkThresholdInSeconds()
+	local isEarlyGame = TGNS.IsGameInCountdown() or (TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() < 30)
+	local result = isEarlyGame and 15 or 60
+	return result, isEarlyGame
 end
 
 local Plugin = {}
@@ -40,27 +47,38 @@ function Plugin:Initialise()
 		return originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
 	end)
 
-	TGNS.ScheduleActionInterval(15, function()
-		TGNS.DoFor(TGNS.GetClientList(), function(c)
+	local processAfkPlayers
+	processAfkPlayers = function()
+		local afkThresholdInSeconds, isEarlyGame = getAfkThresholdInSeconds();
+		TGNS.ScheduleAction(isEarlyGame and 1 or 15, processAfkPlayers)
+		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
 			if TGNS.IsPlayerAFK(p) then
 				local lastMoveTime = Shine.Plugins.afkkick:GetLastMoveTime(c)
-				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= TGNS.ConvertMinutesToSeconds(afkThresholdInMinutes)) and TGNS.ClientIsOnPlayingTeam(c) then
-					md:ToPlayerNotifyInfo(p, string.format("AFK %s minute. Move to avoid being sent to Ready Room.", afkThresholdInMinutes))
+				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= afkThresholdInSeconds) and TGNS.ClientIsOnPlayingTeam(c) then
+					local lastWarnTime = lastWarnTimes[c] or 0
+					if Shared.GetTime() - lastWarnTime > 10 then
+						md:ToPlayerNotifyInfo(p, string.format("AFK %s. Move to avoid being sent to Ready Room.", Pluralize(afkThresholdInSeconds, "second")))
+						lastWarnTimes[c] = Shared.GetTime()
+					end
 					TGNS.ScheduleAction(6, function()
 						if Shine:IsValidClient(c) then
 							p = TGNS.GetPlayer(c)
 							if TGNS.IsPlayerAFK(p) then
-								md:ToPlayerNotifyInfo(p, string.format("AFK %s minute. Moved to Ready Room.", afkThresholdInMinutes))
-								TGNS.SendToTeam(p, kTeamReadyRoom, true)
+								local lastMoveTime = lastMoveTimes[c] or 0
+								if Shared.GetTime() - lastMoveTime > 10 then
+									md:ToPlayerNotifyInfo(p, string.format("AFK %s. Moved to Ready Room.", Pluralize(afkThresholdInSeconds, "second")))
+									TGNS.SendToTeam(p, kTeamReadyRoom, true)
+									lastMoveTimes[c] = Shared.GetTime()
+								end
 							end
 						end
 					end)
 				end
 			end
 		end)
-	end)
-
+	end
+	TGNS.ScheduleAction(15, processAfkPlayers)
     return true
 end
 
