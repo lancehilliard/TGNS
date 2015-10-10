@@ -347,7 +347,12 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 		-- 	return false
 		-- 	--return true, kMarineTeamType
 		-- end
+
 	end
+    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
+	if TGNS.IsPlayerSpectator(player) and TGNS.IsPlayerAFK(player) and serverIsUpdatingToReadyRoom then
+    	return false
+   	end
 end
 
 local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
