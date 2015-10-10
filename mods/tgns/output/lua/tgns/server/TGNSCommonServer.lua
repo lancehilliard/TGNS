@@ -3,7 +3,7 @@ local scheduledActions = {}
 local scheduledActionsErrorCounts = {}
 local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
-local AFK_IDLE_THRESHOLD_SECONDS = 20
+local AFK_IDLE_THRESHOLD_SECONDS = 15
 
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
@@ -60,13 +60,18 @@ function TGNS.GetNumberOfConnectingPlayers()
 	return result
 end
 
-function TGNS.GetAbbreviatedDayOfWeek()
-	local result = os.date("%a")
+function TGNS.GetAbbreviatedDayOfWeek(useUtcTime)
+	local result = os.date((useUtcTime and "!" or "") .. "%a")
 	return result
 end
 
-function TGNS.GetCurrentHour()
-	local result = os.date("*t").hour
+function TGNS.GetCurrentHour(useUtcTime)
+	local result = os.date((useUtcTime and "!" or "") .. "*t").hour
+	return result
+end
+
+function TGNS.GetCurrentMinute()
+	local result = os.date("*t").min
 	return result
 end
 
@@ -503,6 +508,12 @@ end
 
 function TGNS.GetPlayerScore(player)
 	local result = player:GetScore()
+	return result
+end
+
+function TGNS.GetHumanClientList(predicate)
+	local clients = TGNS.GetClientList(predicate)
+	local result = TGNS.Where(clients, function(c) return not TGNS.GetIsClientVirtual(c) end)
 	return result
 end
 
