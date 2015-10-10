@@ -41,6 +41,8 @@ local OPTIN_VOTE_DURATION = 90
 local lastUpdateCaptainsReadyProgress = {}
 local infiniteTimeRemainingDisplayStarted
 local hasEarnedSetSpawnsKarma = {}
+local hasEarnedCaptainsNightPunctualityKarma = {}
+local CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME = 18
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -1252,6 +1254,18 @@ function Plugin:Initialise()
 			disallowPasswordAfterMidnightOnSaturdays()
 		end
 	end)
+
+	TGNS.RegisterEventHook("OnEveryMinute", function()
+		if TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() == CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME and TGNS.GetCurrentMinute() <= 1 then
+			TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
+				if not hasEarnedCaptainsNightPunctualityKarma[c] then
+					TGNS.Karma(c, "CaptainsNightPunctuality")
+					hasEarnedCaptainsNightPunctualityKarma[c] = true
+				end
+			end)
+		end
+	end)
+
 
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
 		if votesAllowedUntil ~= nil and votesAllowedUntil > TGNS.GetSecondsSinceMapLoaded() and #TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end) == 2 then
