@@ -26,6 +26,8 @@ local alienTeamResBonus = 0
 local whenLastOnosSpeedAdvisory
 local onosSpeedMultiplier = 1
 local onosSpeedMultiplierCalculator = function() end
+local startingBotsKarmaThrottleInMinutes = 10
+local startingBotsKarmaLastGiven = {}
 
 local Plugin = {}
 
@@ -233,6 +235,7 @@ end
 
 function Plugin:CreateCommands()
 	local botsCommand = self:BindCommand( "sh_bots", "bots", function(client, countModifier)
+		local steamId = TGNS.GetClientSteamId(client)
 		countModifier = tonumber(countModifier)
 		local errorMessage
 		local players = TGNS.GetPlayerList()
@@ -275,7 +278,11 @@ function Plugin:CreateCommands()
 					if not pushSentForThisMap and TGNS.IsProduction() then
 						Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 						pushSentForThisMap = true
-						TGNS.Karma(client, "StartingBots")
+
+						if startingBotsKarmaLastGiven[steamId] == nil or (Shared.GetTime() - startingBotsKarmaLastGiven[steamId] >= TGNS.ConvertMinutesToSeconds(startingBotsKarmaThrottleInMinutes)) then
+							TGNS.Karma(steamId, "StartingBots")
+							startingBotsKarmaLastGiven[steamId] = Shared.GetTime()
+						end
 					end
 				end
 				local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
