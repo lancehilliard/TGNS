@@ -2,6 +2,7 @@ local isAfkResetEnabled
 local md
 local lastWarnTimes = {}
 local lastMoveTimes = {}
+local mayEarnRemovedFromPlayByAfkKarma = {}
 
 local function resetAfk(client)
 	if isAfkResetEnabled and client then
@@ -28,7 +29,14 @@ function Plugin:PlayerSay(client, networkMessage)
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	local client = TGNS.GetClient(player)
     if TGNS.IsPlayerReadyRoom(player) then
+    	if TGNS.IsGameplayTeamNumber(oldTeamNumber) and TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 30 and TGNS.IsPlayerAFK(player) then
+    		if mayEarnRemovedFromPlayByAfkKarma[client] then
+	    		TGNS.Karma(client, "RemovedFromPlayByAFK")
+	    		mayEarnRemovedFromPlayByAfkKarma[client] = false
+    		end
+    	end
     	TGNS.MarkPlayerAFK(player)
     elseif not (force or shineForce) then
     	TGNS.ClearPlayerAFK(player)
@@ -38,6 +46,14 @@ end
 function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create("AFK")
+
+	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
+		local client = TGNS.GetClient(player)
+		if not playerIsAfk then
+			mayEarnRemovedFromPlayByAfkKarma[client] = true
+		end
+	end)
+
     TGNS.ScheduleAction(5, function()
     	isAfkResetEnabled = Shine.Plugins.afkkick and Shine.Plugins.afkkick.Enabled and Shine.Plugins.afkkick.ResetAFKTime
     end)
