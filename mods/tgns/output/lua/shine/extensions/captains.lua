@@ -40,6 +40,7 @@ local PLAN_DISPLAY_LENGTH = 9
 local OPTIN_VOTE_DURATION = 90
 local lastUpdateCaptainsReadyProgress = {}
 local infiniteTimeRemainingDisplayStarted
+local hasEarnedSetSpawnsKarma = {}
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -895,7 +896,11 @@ function Plugin:CreateCommands()
 						if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
 							local clientTeamNumber = TGNS.GetClientTeamNumber(client)
 							md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", TGNS.GetClientName(client), ssoData[spawnSelectionIndex].summaryText))
-							TGNS.Karma(client, "SetSpawns")
+							local steamId = TGNS.GetClientSteamId(client)
+							if not hasEarnedSetSpawnsKarma[steamId] then
+								TGNS.Karma(steamId, "SetSpawns")
+								hasEarnedSetSpawnsKarma[steamId] = true
+							end
 						else
 							md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
 						end
@@ -1053,9 +1058,14 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 		    	end
 		    end
 		    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
-			if TGNS.IsPlayerSpectator(player) and captainsGamesFinished == 1 and serverIsUpdatingToReadyRoom then
-		    	cancel = true
-		   	end
+		    if serverIsUpdatingToReadyRoom and captainsGamesFinished == 1 then
+		    	if TGNS.IsPlayerSpectator(player) then
+		    		cancel = true
+		    	elseif TGNS.PlayerIsOnPlayingTeam(player) then
+		    		local otherTeamNumber = TGNS.GetOtherPlayingTeamNumber(TGNS.GetPlayerTeamNumber(player))
+		    		return true, otherTeamNumber
+		    	end
+		    end
 		end
 		if cancel then
 			return false
