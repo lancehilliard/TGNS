@@ -158,3 +158,13 @@ function TGNS.DoForReverse(elements, elementAction)
 		DoFor(elements, elementAction, #elements, 1, -1)
 	end
 end
+
+function TGNS.ConvertSecondsToMinutes(seconds)
+	local result = seconds / 60
+	return result
+end
+
+function TGNS.ConvertMinutesToSeconds(minutes)
+	local result = minutes * 60
+	return result
+end

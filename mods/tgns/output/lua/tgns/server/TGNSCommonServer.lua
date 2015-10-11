@@ -562,16 +562,6 @@ function TGNS.ToTitle(s)
     return result
 end
 
-function TGNS.ConvertSecondsToMinutes(seconds)
-	local result = seconds / 60
-	return result
-end
-
-function TGNS.ConvertMinutesToSeconds(minutes)
-	local result = minutes * 60
-	return result
-end
-
 function TGNS.SwitchToMap(mapName)
 	MapCycle_ChangeMap(mapName)
 end
