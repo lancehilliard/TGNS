@@ -50,9 +50,15 @@ end
 
 local Plugin = {}
 
-function Plugin:GetClientSviEnabled(client)
-	local result = specpriority[client] == true
+function Plugin:GetIsUsingSvi(client)
+	local currentSpecMode = specmodes[client] or 0
+	local result = (currentSpecMode == 0 and specpriority[client]) or currentSpecMode == 4
 	return result
+end
+
+local function announceSvi(client)
+	local isUsingSvi = Shine.Plugins.speclisten:GetIsUsingSvi(client)
+	TGNS.ExecuteEventHooks("SviChanged", client, isUsingSvi)
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -62,7 +68,7 @@ function Plugin:ClientConfirmConnect(client)
 			if loadResponse.success then
 				specmodes[client] = loadResponse.value.specmode
 				specpriority[client] = loadResponse.value.specpriority
-				TGNS.ExecuteEventHooks("SviChanged", client, specpriority[client])
+				announceSvi(client)
 			else
 				Shared.Message("specmode ERROR: Unable to access data.")
 			end
@@ -100,11 +106,10 @@ function Plugin:CreateCommands()
     	else
     		if mode == 6 then
     			local currentSpecMode = specmodes[client] or 0
-    			if currentSpecMode > 3 and not specpriority[client] then
+    			if not TGNS.Has({0,4}, currentSpecMode) and not specpriority[client] then
     				md:ToPlayerNotifyError(player, "Before enabling SVI, you must first configure Spec Voicecomms to include Spectators in the voicecomms you hear.")
     			else
     				specpriority[client] = not specpriority[client]
-    				TGNS.ExecuteEventHooks("SviChanged", client, specpriority[client])
     			end
     		else
 	    		specmodes[client] = mode
@@ -128,6 +133,7 @@ function Plugin:CreateCommands()
 				end
 			end)
     	end
+    	announceSvi(client)
     	showCurrentSpecMode(player, true)
     end, true)
     modCommand:AddParam{ Type = "string", TakeRestofLine = true, Optional = true }

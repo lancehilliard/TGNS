@@ -43,14 +43,14 @@ local armorlessMatureHarvesterEntityIds = {}
 local startedChattingOrMenuingAt = 0
 local recentChattingOrMenuingAnnouncedAt = 0
 local wasChattingOrMenuing = false
-local hasSviEnabled = {}
+local isUsingSvi = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
 	isCaptainsCaptain[message.i] = message.c
-	hasSviEnabled[message.i] = message.s
+	isUsingSvi[message.i] = message.s
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -235,8 +235,9 @@ function Plugin:Initialise()
 				end
 			end)
 
-			if hasSviEnabled[Client.GetLocalClientIndex()] and hasSviEnabled[clientIndex] and Client.GetLocalClientTeamNumber() == kSpectatorIndex and player.Status:GetText():find("Spectator") and not player.Status:GetText():find("(SVI)") then
-				player.Status:SetText("Spec(SVI)")
+			if teamNumber == 0 and player.Status:GetText():find("Spec") then
+				local shouldShowSvi = isUsingSvi[Client.GetLocalClientIndex()] and isUsingSvi[clientIndex] and Client.GetLocalClientTeamNumber() == kSpectatorIndex
+				player.Status:SetText(shouldShowSvi and "Spec(SVI)" or "Spectator")
 			end
 
 			if not player.PlayerNoteItem then
