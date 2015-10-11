@@ -609,7 +609,7 @@ function Plugin:Initialise()
 	local originalGUIHoverTooltipShow = GUIHoverTooltip.Show
 	GUIHoverTooltip.Show = function(self, displayTimeInSeconds)
 		if self.tooltip and self.tooltip.GetText and self.tooltip:GetText():find("TGNS") then
-			displayTimeInSeconds = 2
+			displayTimeInSeconds = nil
 		end
 		originalGUIHoverTooltipShow(self, displayTimeInSeconds)
 	end
