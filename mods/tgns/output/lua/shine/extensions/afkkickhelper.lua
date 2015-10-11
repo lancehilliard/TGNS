@@ -31,7 +31,7 @@ end
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
     if TGNS.IsPlayerReadyRoom(player) then
-    	if TGNS.IsGameplayTeamNumber(oldTeamNumber) and TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 30 and TGNS.IsPlayerAFK(player) then
+    	if TGNS.IsGameplayTeamNumber(oldTeamNumber) and TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 30 and TGNS.IsPlayerAFK(player) and #TGNS.GetPlayingClients(TGNS.GetPlayerList()) >= 7 and (not (force or shineForce)) then
     		if mayEarnRemovedFromPlayByAfkKarma[client] then
 	    		TGNS.Karma(client, "RemovedFromPlayByAFK")
 	    		mayEarnRemovedFromPlayByAfkKarma[client] = false
@@ -66,6 +66,7 @@ function Plugin:Initialise()
 	local processAfkPlayers
 	processAfkPlayers = function()
 		local afkThresholdInSeconds, isEarlyOrPreGame = getAfkThresholdInSeconds();
+		local afkScenarioDescriptor = isEarlyOrPreGame and " (pre/early game)" or ""
 		TGNS.ScheduleAction(isEarlyOrPreGame and 1 or 15, processAfkPlayers)
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
@@ -74,7 +75,7 @@ function Plugin:Initialise()
 				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= afkThresholdInSeconds) and TGNS.ClientIsOnPlayingTeam(c) then
 					local lastWarnTime = lastWarnTimes[c] or 0
 					if Shared.GetTime() - lastWarnTime > 10 then
-						md:ToPlayerNotifyInfo(p, string.format("AFK %s. Move to avoid being sent to Ready Room.", Pluralize(afkThresholdInSeconds, "second")))
+						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid being sent to Ready Room.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor))
 						lastWarnTimes[c] = Shared.GetTime()
 					end
 					TGNS.ScheduleAction(6, function()
@@ -83,7 +84,7 @@ function Plugin:Initialise()
 							if TGNS.IsPlayerAFK(p) then
 								local lastMoveTime = lastMoveTimes[c] or 0
 								if Shared.GetTime() - lastMoveTime > 10 then
-									md:ToPlayerNotifyInfo(p, string.format("AFK %s. Moved to Ready Room.", Pluralize(afkThresholdInSeconds, "second")))
+									md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Moved to Ready Room.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor))
 									TGNS.SendToTeam(p, kTeamReadyRoom, true)
 									lastMoveTimes[c] = Shared.GetTime()
 								end
