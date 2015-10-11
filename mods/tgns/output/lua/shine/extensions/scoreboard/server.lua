@@ -327,7 +327,9 @@ function Plugin:Initialise()
 							end
 						end)
 						TGNS.Karma(sourceSteamId, "VouchingVoicecomm")
-						TGNS.Karma(targetSteamId, "ConfirmingYouCanHearVoicecomm")
+						if TGNS.IsClientStranger(targetClient) and Balance.GetTotalGamesPlayed(targetClient) <= 20 then
+							TGNS.Karma(targetSteamId, "ConfirmingYouCanHearVoicecomm")
+						end
 						TGNS.ExecuteEventHooks("VrConfirmed", targetClient)
 						TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 							TGNS.SendNetworkMessageToPlayer(p, self.VR_CONFIRMED, {c=targetClientIndex})
