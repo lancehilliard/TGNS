@@ -50,6 +50,11 @@ end
 
 local Plugin = {}
 
+function Plugin:GetClientSviEnabled(client)
+	local result = specpriority[client] == true
+	return result
+end
+
 function Plugin:ClientConfirmConnect(client)
 	local steamId = TGNS.GetClientSteamId(client)
 	pdr:Load(steamId, function(loadResponse)
@@ -57,6 +62,7 @@ function Plugin:ClientConfirmConnect(client)
 			if loadResponse.success then
 				specmodes[client] = loadResponse.value.specmode
 				specpriority[client] = loadResponse.value.specpriority
+				TGNS.ExecuteEventHooks("SviChanged", client, specpriority[client])
 			else
 				Shared.Message("specmode ERROR: Unable to access data.")
 			end
@@ -98,6 +104,7 @@ function Plugin:CreateCommands()
     				md:ToPlayerNotifyError(player, "Before enabling SVI, you must first configure Spec Voicecomms to include Spectators in the voicecomms you hear.")
     			else
     				specpriority[client] = not specpriority[client]
+    				TGNS.ExecuteEventHooks("SviChanged", client, specpriority[client])
     			end
     		else
 	    		specmodes[client] = mode

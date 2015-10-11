@@ -55,7 +55,8 @@ local function GetReadyPlayerList()
 end
 
 local function SendNetworkMessage(sourcePlayer, targetPlayer)
-	TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(TGNS.GetClient(sourcePlayer), "captains_group")})
+	local sourceClient = TGNS.GetClient(sourcePlayer)
+	TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetClientSviEnabled(sourceClient)})
 end
 
 function Plugin:SendTeamScoresDatas()
@@ -280,6 +281,9 @@ function Plugin:Initialise()
     self:CreateCommands()
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
 		self:AnnouncePlayerPrefix(player)
+	end)
+	TGNS.RegisterEventHook("SviChanged", function(client, sviEnabled)
+		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
 	TGNS.RegisterEventHook("ClientGroupsChanged", function(client)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
