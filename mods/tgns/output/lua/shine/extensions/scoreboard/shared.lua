@@ -40,6 +40,7 @@ Plugin.LAPS_START = "scoreboard_LAPS_START"
 Plugin.DESIGNATION = "scoreboard_DESIGNATION"
 Plugin.ARMORDECAY1 = "scoreboard_ARMORDECAY1"
 Plugin.ARMORLESS_HARVESTERS = "scoreboard_ARMORLESS_HARVESTERS"
+Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY = "scoreboard_CHATTING_OR_MENUING_STARTED_RECENTLY"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -79,6 +80,7 @@ TGNS.RegisterNetworkMessage(Plugin.LAPS_START, {})
 TGNS.RegisterNetworkMessage(Plugin.DESIGNATION, {c="string(2)"})
 TGNS.RegisterNetworkMessage(Plugin.ARMORDECAY1, {})
 TGNS.RegisterNetworkMessage(Plugin.ARMORLESS_HARVESTERS, {l="string(100)"})
+TGNS.RegisterNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
 
 function Plugin:Initialise()
 	self.Enabled = true

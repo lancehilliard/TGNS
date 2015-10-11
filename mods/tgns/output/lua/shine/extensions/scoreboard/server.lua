@@ -303,6 +303,10 @@ function Plugin:Initialise()
 		end)
 	end)
 
+	TGNS.HookNetworkMessage(self.CHATTING_OR_MENUING_STARTED_RECENTLY, function(client)
+		TGNS.ClearPlayerAFK(TGNS.GetPlayer(client))
+	end)
+
 	TGNS.HookNetworkMessage(self.APPROVE_REQUESTED, function(client, message)
 		local md = TGNSMessageDisplayer.Create("APPROVE")
 		local targetClientIndex = message.c

@@ -40,6 +40,9 @@ local EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES = 25
 local communityDesignationCharacter = '?'
 local welcomeBannerImageName
 local armorlessMatureHarvesterEntityIds = {}
+local startedChattingOrMenuingAt = 0
+local recentChattingOrMenuingAnnouncedAt = 0
+local wasChattingOrMenuing = false
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -863,6 +866,28 @@ function Plugin:Initialise()
 	end
 
 	return true
+end
+
+-- local startedChattingOrMenuingAt = 0
+-- local recentChattingOrMenuingAnnouncedAt = 0
+-- local wasChattingOrMenuing = false
+
+function Plugin:Think()
+	local chatBoxIsEnabled, chatbox = Shine:IsExtensionEnabled("chatbox")
+	local chatboxIsEnabledAndVisible = chatBoxIsEnabled and chatbox.Visible
+	local isChattingOrMenuing = ChatUI_EnteringChatMessage() or MainMenu_GetIsOpened() or (not Client.GetIsWindowFocused()) or chatboxIsEnabledAndVisible
+	if isChattingOrMenuing then
+		if not wasChattingOrMenuing then
+			startedChattingOrMenuingAt = Shared.GetTime()
+		end
+		local secondsSinceStartedChattingOrMenuing = math.floor(Shared.GetTime() - startedChattingOrMenuingAt)
+		local secondsSinceRecentChattingOrMenuingAnnounced = math.floor(Shared.GetTime() - recentChattingOrMenuingAnnouncedAt)
+		if secondsSinceStartedChattingOrMenuing <= 15 and secondsSinceRecentChattingOrMenuingAnnounced >= 1 then
+			TGNS.SendNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
+			recentChattingOrMenuingAnnouncedAt = Shared.GetTime()
+		end
+	end
+	wasChattingOrMenuing = isChattingOrMenuing
 end
 
 function Plugin:Cleanup()
