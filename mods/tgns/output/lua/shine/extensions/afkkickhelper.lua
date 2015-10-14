@@ -77,6 +77,16 @@ function Plugin:Initialise()
 					if Shared.GetTime() - lastWarnTime > 10 then
 						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid being sent to Ready Room.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor))
 						lastWarnTimes[c] = Shared.GetTime()
+						local playAfkPingSoundToClient = function(level)
+							if Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and TGNS.ClientIsOnPlayingTeam(c) then
+								TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.arclight.HILL_SOUND, {i=level})
+							end
+						end
+						TGNS.ScheduleAction(1, function() playAfkPingSoundToClient(6) end)
+						TGNS.ScheduleAction(2, function() playAfkPingSoundToClient(5) end)
+						TGNS.ScheduleAction(3, function() playAfkPingSoundToClient(4) end)
+						TGNS.ScheduleAction(4, function() playAfkPingSoundToClient(3) end)
+						TGNS.ScheduleAction(5, function() playAfkPingSoundToClient(2) end)
 					end
 					TGNS.ScheduleAction(6, function()
 						if Shine:IsValidClient(c) then
