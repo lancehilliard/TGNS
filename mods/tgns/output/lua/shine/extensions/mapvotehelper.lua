@@ -120,6 +120,7 @@ function Plugin:Initialise()
 			Shine.Plugins.mapvote.StartVote = function( plugin, NextMap, Force )
 				originalStartVote( plugin, NextMap, Force )
 				if Shine.Plugins.mapvote:VoteStarted() then
+					TGNS.DoFor(TGNS.GetPlayerList(), TGNS.AlertApplicationIconForPlayer)
 					showAll()
 				end
 			end
