@@ -248,13 +248,15 @@ local function GetBumpSummary(playerList, bumpingClient, bumpedClient, joinerOrV
     local supportingMembersCount = #TGNS.GetSmClients(playerList)
     local primerOnlysCount = #TGNS.GetPrimerOnlyClients(playerList)
     local strangersCount = #TGNS.GetStrangersClients(playerList)
+    local aliensCount = #TGNS.GetAlienClients(playerList)
+    local marinesCount = #TGNS.GetMarineClients(playerList)
     local bumpingClientName = TGNS.GetClientName(bumpingClient)
     local bumpedClientName = TGNS.GetClientName(bumpedClient)
     local bumpingClientCommunityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpingClient)
     local bumpedClientCommunityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
     local bumpedClientPlayedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(bumpedClient) or 0
     local bumpedClientPlayedDurationClock = TGNS.SecondsToClock(bumpedClientPlayedTimeInSeconds)
-    local result = string.format("%s %s bumping %s %s> %s after %s with S:%s P:%s ?:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount)
+    local result = string.format("%s %s bumping %s %s> %s after %s with S:%s P:%s ?:%s A:%s M:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount, aliensCount, marinesCount)
     return result
 end
 
