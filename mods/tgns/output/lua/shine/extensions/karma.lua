@@ -135,7 +135,10 @@ function Plugin:Initialise()
 		if #humanClients >= 8 then
 			local deltaName = (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) and "FullCaptainsRoundPlayed" or "FullGamePlayed"
 			TGNS.DoFor(humanClients, function(c)
-				TGNS.Karma(c, deltaName)
+				local steamId = TGNS.GetClientSteamId(c)
+				TGNS.ScheduleAction(10, function()
+					TGNS.Karma(steamId, deltaName)
+				end)
 			end)
 		end
 	end)
