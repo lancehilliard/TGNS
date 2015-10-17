@@ -11,9 +11,9 @@ local function resetAfk(client)
 end
 
 local function getAfkThresholdInSeconds()
-	local isEarlyOrPreGame = (TGNS.GetCurrentGameDurationInSeconds() or 0) < 30
-	local result = isEarlyOrPreGame and 15 or 60
-	return result, isEarlyOrPreGame
+	local isEarlyOrPreGameAndServerIsHighPopulation = (TGNS.GetCurrentGameDurationInSeconds() or 0) < 30 and #TGNS.GetPlayingClients(TGNS.GetPlayerList()) >= Shine.Plugins.communityslots.Config.PublicSlots - 2
+	local result = isEarlyOrPreGameAndServerIsHighPopulation and 15 or 60
+	return result, isEarlyOrPreGameAndServerIsHighPopulation
 end
 
 local Plugin = {}
@@ -65,9 +65,9 @@ function Plugin:Initialise()
 
 	local processAfkPlayers
 	processAfkPlayers = function()
-		local afkThresholdInSeconds, isEarlyOrPreGame = getAfkThresholdInSeconds();
-		local afkScenarioDescriptor = isEarlyOrPreGame and " (pre/early game)" or ""
-		TGNS.ScheduleAction(isEarlyOrPreGame and 1 or 15, processAfkPlayers)
+		local afkThresholdInSeconds, isEarlyOrPreGameAndServerIsHighPopulation = getAfkThresholdInSeconds();
+		local afkScenarioDescriptor = isEarlyOrPreGameAndServerIsHighPopulation and " (pre/early game)" or ""
+		TGNS.ScheduleAction(isEarlyOrPreGameAndServerIsHighPopulation and 1 or 15, processAfkPlayers)
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
 			if TGNS.IsPlayerAFK(p) then
