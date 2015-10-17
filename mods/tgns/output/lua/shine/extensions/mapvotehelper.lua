@@ -137,7 +137,9 @@ function Plugin:Initialise()
 				end
 				local steamId = TGNS.GetClientSteamId(client)
 				if not earnedVoteKarma[steamId] then
-					TGNS.Karma(client, "MapVoting")
+					TGNS.ScheduleAction(10, function()
+						TGNS.Karma(steamId, "MapVoting")
+					end)
 					earnedVoteKarma[steamId] = true
 				end
 			end
