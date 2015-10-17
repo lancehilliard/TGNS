@@ -318,7 +318,7 @@ end
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if not balanceInProgress and not preventTeamJoinMessagesDueToRecentEndGame and (TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber)) and not TGNS.GetIsClientVirtual(client) then
-		local playerList = TGNS.PlayerList()
+		local playerList = TGNS.GetPlayerList()
 		local marinesCount = #TGNS.GetMarineClients(playerList)
 		local aliensCount = #TGNS.GetAlienClients(playerList)
 		md:ToAllConsole(string.format("%s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
