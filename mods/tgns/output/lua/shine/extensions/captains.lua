@@ -1191,9 +1191,12 @@ function Plugin:Initialise()
 	end)
 
 	local originalGetCanJoinTeamNumber
-	originalGetCanJoinTeamNumber = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanJoinTeamNumber", function(self, teamNumber)
-		local result = captainsModeEnabled and true or originalGetCanJoinTeamNumber(self, teamNumber)
-		return result
+	originalGetCanJoinTeamNumber = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanJoinTeamNumber", function(gamerulesSelf, player, teamIndex)
+		local allowed, reason = originalGetCanJoinTeamNumber(gamerulesSelf, player, teamIndex)
+		if captainsModeEnabled then
+			allowed = true
+		end
+		return allowed, reason
 	end)
 
 	local originalResetGame
