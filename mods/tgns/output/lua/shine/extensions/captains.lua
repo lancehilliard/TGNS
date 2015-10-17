@@ -46,12 +46,12 @@ local CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME = 18
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
-	TGNS.DoFor(captainClients, function(c)
-		if Shine:IsValidClient(c) then
-			TGNS.RemoveTempGroup(c, "captains_group")
-			TGNS.RemoveTempGroup(c, "teamchoicecaptain_group")
-		end
-	end)
+	-- TGNS.DoFor(captainClients, function(c)
+	-- 	if Shine:IsValidClient(c) then
+	-- 		TGNS.RemoveTempGroup(c, "captains_group")
+	-- 		TGNS.RemoveTempGroup(c, "teamchoicecaptain_group")
+	-- 	end
+	-- end)
 end
 
 local function getTeamChoiceCaptainClient(clients)
