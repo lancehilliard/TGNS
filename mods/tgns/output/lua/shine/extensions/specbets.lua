@@ -95,7 +95,7 @@ local function persistTransaction(steamId, amount, killerId, victimId, type)
 	TGNS.GetHttpAsync(url, function(betResponseJson)
 		local betResponse = json.decode(betResponseJson) or {}
 		if not betResponse.success then
-			TGNS.DebugPrint(string.format("bets ERROR: Unable to save bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", transaction.steamId, betResponse.msg, betResponseJson, betResponse.stacktrace))
+			TGNS.DebugPrint(string.format("bets ERROR: Unable to save bets data for NS2ID %s. url: %s | msg: %s | response: %s | stacktrace: %s", transaction.steamId, url, betResponse.msg, betResponseJson, betResponse.stacktrace))
 		end
 	end)
 
