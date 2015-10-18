@@ -12,6 +12,9 @@ end
 
 local function getAfkThresholdInSeconds()
 	local isEarlyOrPreGameAndServerIsHighPopulation = (TGNS.GetCurrentGameDurationInSeconds() or 0) < 30 and #TGNS.GetPlayingClients(TGNS.GetPlayerList()) >= Shine.Plugins.communityslots.Config.PublicSlots - 2
+	if not TGNS.IsProduction() then
+		isEarlyOrPreGameAndServerIsHighPopulation = true
+	end
 	local result = isEarlyOrPreGameAndServerIsHighPopulation and 15 or 60
 	return result, isEarlyOrPreGameAndServerIsHighPopulation
 end
