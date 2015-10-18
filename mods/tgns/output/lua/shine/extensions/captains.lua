@@ -1195,6 +1195,7 @@ function Plugin:Initialise()
 		local allowed, reason = originalGetCanJoinTeamNumber(gamerulesSelf, player, teamIndex)
 		if captainsModeEnabled then
 			allowed = true
+			reason = nil
 		end
 		return allowed, reason
 	end)
