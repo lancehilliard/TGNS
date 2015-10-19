@@ -48,13 +48,16 @@ local function showTimeRemaining()
 					    	originalTeamInfoReset(teamInfoSelf)
 					    	if GetGamerules():GetGameState() == kGameState.NotStarted then
 					    		local teamNumber = teamInfoSelf:GetTeamNumber()
-						    	local players = teamInfoSelf.team:GetPlayers()
-						    	if #players > 0 then
-							    	if teamInfoSelf.lastCommLoginTime == 0 then
-							    		table.insert(clientsToTakeStartingPersonalResourcesFrom, TGNS.GetClient(TGNS.GetFirst(TGNS.GetRandomizedElements(players))))
-							    		teamInfoSelf.lastCommLoginTime = Shared.GetTime()
+					    		local teamHasCommander = #TGNS.Where(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), TGNS.IsClientCommander) > 0
+					    		if not teamHasCommander then
+							    	local players = teamInfoSelf.team:GetPlayers()
+							    	if #players > 0 then
+								    	if teamInfoSelf.lastCommLoginTime == 0 then
+								    		table.insert(clientsToTakeStartingPersonalResourcesFrom, TGNS.GetClient(TGNS.GetFirst(TGNS.GetRandomizedElements(players))))
+								    		teamInfoSelf.lastCommLoginTime = Shared.GetTime()
+								    	end
 							    	end
-						    	end
+					    		end
 					    	end
 						end
 						TGNS.ForceGameStart()
@@ -86,7 +89,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 				Shine.ScreenText.Add(51, {X = 0.5, Y = 0.45, Text = "Countdown halted.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
 			end
 		else
-			local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerOnlyClients(TGNS.GetPlayers(playingClients))
+			local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
 			local percentPrimerSignersAmongPlayingClients = numberOfPrimerSignersAmongPlayingClients / numberOfPlayingClients
 			local serverIsHighPopulationAndMostlyPrimerSigners = numberOfPlayingClients >= Shine.Plugins.communityslots.Config.PublicSlots - 2 and percentPrimerSignersAmongPlayingClients >= 0.82
 			if serverIsHighPopulationAndMostlyPrimerSigners or not TGNS.IsProduction() then
