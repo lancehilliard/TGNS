@@ -1608,6 +1608,12 @@ function TGNS.GetPrimerOnlyClients(playerList)
 	return result
 end
 
+function TGNS.GetPrimerWithGamesClients(playerList)
+	local predicate = function(client, player) return TGNS.HasClientSignedPrimerWithGames(client) end
+	local result = TGNS.GetMatchingClients(playerList, predicate)
+	return result
+end
+
 function TGNS.GetSmClients(playerList)
 	local predicate = function(client, player) return TGNS.IsClientSM(client) end
 	local result = TGNS.GetMatchingClients(playerList, predicate)
