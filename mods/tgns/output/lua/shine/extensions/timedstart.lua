@@ -3,6 +3,7 @@ local timerInProgress
 local countdownSeconds = 60
 local secondsRemaining
 local gameEndedRecently
+local fifteenSecondAfkTimerWasLastAdvertisedAt = 0
 
 local Plugin = {}
 
@@ -22,8 +23,9 @@ local function showTimeRemaining()
 			if secondsRemaining >= 1 then
 				local duration = secondsRemaining < 3 and 5 or 1.5
 				local secondsRemainingDescription = secondsRemaining <= 3 and "a few" or secondsRemaining
-				local message = string.format("Game will force-start in %s seconds.\nPlease don't AFK right before game start.\n\n\n\nPer team with no Commander at game\nstart, one randomly selected player will\nbegin without any personal resources.", secondsRemainingDescription)
+				local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nPer team with no Commander at game\nstart, one randomly selected player will\nbegin without any personal resources.", secondsRemainingDescription)
 				Shine.ScreenText.Add(51, {X = 0.5, Y = 0.40, Text = message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
+				fifteenSecondAfkTimerWasLastAdvertisedAt = Shared.GetTime()
 
 				local warnPlayers = function(level, shouldRepeat)
 					local playingClients = TGNS.GetPlayingClients(playerList)
@@ -75,6 +77,10 @@ local function showTimeRemaining()
 			end
 		end
 	end
+end
+
+function Plugin:GetWhenFifteenSecondAfkTimerWasLastAdvertised()
+	return fifteenSecondAfkTimerWasLastAdvertisedAt
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
