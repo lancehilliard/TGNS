@@ -11,7 +11,7 @@ local function resetAfk(client)
 end
 
 local function getAfkThresholdInSeconds()
-	local isEarlyOrPreGameAndServerIsHighPopulation = (TGNS.GetCurrentGameDurationInSeconds() or 0) < 30 and #TGNS.GetPlayingClients(TGNS.GetPlayerList()) >= Shine.Plugins.communityslots.Config.PublicSlots - 2
+	local isEarlyOrPreGameAndServerIsHighPopulation = Shared.GetTime() - Shine.Plugins.timedstart:GetWhenFifteenSecondAfkTimerWasLastAdvertised() > 30
 	if not TGNS.IsProduction() then
 		isEarlyOrPreGameAndServerIsHighPopulation = true
 	end
