@@ -11,12 +11,12 @@ local function resetAfk(client)
 end
 
 local function getAfkThresholdInSeconds()
-	local isEarlyOrPreGameAndServerIsHighPopulation = Shared.GetTime() - Shine.Plugins.timedstart:GetWhenFifteenSecondAfkTimerWasLastAdvertised() > 30
+	local isAggressive = Shared.GetTime() - Shine.Plugins.timedstart:GetWhenFifteenSecondAfkTimerWasLastAdvertised() < 30
 	if not TGNS.IsProduction() then
-		isEarlyOrPreGameAndServerIsHighPopulation = true
+		isAggressive = true
 	end
-	local result = isEarlyOrPreGameAndServerIsHighPopulation and 15 or 60
-	return result, isEarlyOrPreGameAndServerIsHighPopulation
+	local result = isAggressive and 15 or 60
+	return result, isAggressive
 end
 
 local Plugin = {}
@@ -68,9 +68,9 @@ function Plugin:Initialise()
 
 	local processAfkPlayers
 	processAfkPlayers = function()
-		local afkThresholdInSeconds, isEarlyOrPreGameAndServerIsHighPopulation = getAfkThresholdInSeconds();
-		local afkScenarioDescriptor = isEarlyOrPreGameAndServerIsHighPopulation and " (pre/early game)" or ""
-		TGNS.ScheduleAction(isEarlyOrPreGameAndServerIsHighPopulation and 1 or 15, processAfkPlayers)
+		local afkThresholdInSeconds, isAggressive = getAfkThresholdInSeconds();
+		local afkScenarioDescriptor = isAggressive and " (pre/early game)" or ""
+		TGNS.ScheduleAction(isAggressive and 1 or 15, processAfkPlayers)
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
 			if TGNS.IsPlayerAFK(p) then
