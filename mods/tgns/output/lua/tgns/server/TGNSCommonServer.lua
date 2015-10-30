@@ -721,6 +721,14 @@ function TGNS.RemoveAllMatching(elements, element)
 	end)
 end
 
+function TGNS.RemoveAllWhere(elements, predicate)
+	TGNS.DoForReverse(elements, function(e, index)
+		if predicate == nil or predicate(e) then
+			table.remove(elements, index)
+		end
+	end)
+end
+
 function TGNS.DestroyEntity(entity)
 	DestroyEntity(entity)
 end
@@ -1222,7 +1230,7 @@ function TGNS.IsClientCommander(client)
 	if client ~= nil then
 		local player = client:GetControllingPlayer()
 		if player ~= nil then
-			result = player:GetIsCommander()
+			result = player:isa("Commander")
 		end
 	end
 	return result
