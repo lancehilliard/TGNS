@@ -1217,7 +1217,7 @@ function Plugin:Initialise()
 		-- end)
 	end)
 
-	TGNS.ScheduleAction(10, function()
+	TGNS.ScheduleAction(7, function()
 		local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
 		TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
 			local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
