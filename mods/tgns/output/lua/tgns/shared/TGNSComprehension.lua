@@ -55,7 +55,7 @@ end
 function TGNS.Where(elements, predicate)
 	local result = {}
 	TGNS.DoFor(elements, function(e)
-		if predicate ~= nil and predicate(e) then
+		if predicate == nil or predicate(e) then
 			table.insert(result, e)
 		end
 	end)
