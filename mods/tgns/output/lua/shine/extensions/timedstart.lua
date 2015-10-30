@@ -50,7 +50,7 @@ local function showTimeRemaining()
 					    	originalTeamInfoReset(teamInfoSelf)
 					    	if GetGamerules():GetGameState() == kGameState.NotStarted then
 					    		local teamNumber = teamInfoSelf:GetTeamNumber()
-					    		local teamHasCommander = #TGNS.Where(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), TGNS.IsClientCommander) > 0
+					    		local teamHasCommander = GetTeamHasCommander(teamNumber)
 					    		if not teamHasCommander then
 							    	local players = teamInfoSelf.team:GetPlayers()
 							    	if #players > 0 then
