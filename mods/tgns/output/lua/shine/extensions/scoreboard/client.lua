@@ -368,7 +368,7 @@ function Plugin:Initialise()
 				end
 			end
 
-			if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 then
+			if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 and not player.Status:GetText():find("Spec") then
 				player["Background"]:SetColor(Color(17/255,115/255,17/255))
 			end
 
