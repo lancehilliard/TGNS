@@ -699,11 +699,6 @@ function Plugin:Initialise()
         return data
     end)
     TGNS.ScheduleAction(2, refreshFullSpecData)
-    TGNS.RegisterEventHook("TotalPlayedGamesCountUpdated", function(client, totalGamesPlayedCount)
-        if not TGNS.ClientIsInGroup(client, "primerwithgames_group") and TGNS.HasClientSignedPrimerWithGames(client) then
-            TGNS.AddTempGroup(client, "primerwithgames_group")
-        end
-    end)
     // TGNS.ScheduleActionInterval(15, function()
     //     if canNotifyAboutOtherServerSlots then
     //         local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
