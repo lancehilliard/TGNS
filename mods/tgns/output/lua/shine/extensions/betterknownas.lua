@@ -4,7 +4,8 @@ local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
 local warned = {}
 local bkas = {}
 local steamPlayerDatas = {}
-local fetchDurations = {}
+--local fetchDurations = {}
+local batchBkas = {}
 
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
@@ -154,8 +155,8 @@ function Plugin:IsPlayingWithoutBkaName(player)
 end
 
 function Plugin:ClientConnect(client)
-	local connectMomentInSeconds = TGNS.GetSecondsSinceEpoch()
-	local md = TGNSMessageDisplayer.Create(string.format("BKAFETCHADMINDEBUG %s", TGNS.GetClientSteamId(client)))
+	--local connectMomentInSeconds = TGNS.GetSecondsSinceEpoch()
+	local md = TGNSMessageDisplayer.Create(string.format("BKACLIENTCONNECTFETCH %s", TGNS.GetClientSteamId(client)))
 	if not TGNS.GetIsClientVirtual(client) then
 		local ns2id = TGNS.GetClientSteamId(client)
 		local steamApiProfileUrl = TGNS.GetSteamApiProfileUrlFromNs2Id(ns2id)
@@ -166,19 +167,25 @@ function Plugin:ClientConnect(client)
 				steamPlayerDatas[ns2id] = steamPlayerData
 			end
 		end)
-		pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
-			if loadResponse.success then
-				local bkaData = loadResponse.value
-				if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
-					bkas[client] = bkaData.BKA
+		bkas[client] = batchBkas[ns2id]
+		if bkas[client] == nil then
+			pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
+				if loadResponse.success then
+					local bkaData = loadResponse.value
+					if bkaData ~= nil and bkaData.BKA ~= nil and string.len(bkaData.BKA) > 0 then
+						bkas[client] = bkaData.BKA
+						if Shine:IsValidClient(client) then
+							md:ToAdminConsole(string.format("Fetched '%s' BKA when %s connected (why wasn't it loaded at map load?).", bkas[client], TGNS.GetClientName(client)))
+						end
+					end
+				else
+					Shared.Message("betterknownas ERROR: unable to access data")
 				end
-			else
-				Shared.Message("betterknownas ERROR: unable to access data")
-			end
-			local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
-			table.insert(fetchDurations, fetchDuration)
-			--md:ToAdminConsole(string.format("%s (%s, %s)", loadResponse.success and "LOADED" or "ERROR", math.floor(fetchDuration), math.floor(TGNSAverageCalculator.CalculateFor(fetchDurations))))
-		end)
+				--local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
+				--table.insert(fetchDurations, fetchDuration)
+				--md:ToAdminConsole(string.format("%s (%s, %s)", loadResponse.success and "LOADED" or "ERROR", math.floor(fetchDuration), math.floor(TGNSAverageCalculator.CalculateFor(fetchDurations))))
+			end)
+		end
 	end
 end
 
@@ -369,6 +376,26 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
+
+	local batchLoadBkas
+	batchLoadBkas = function()
+		if TGNS.Config and TGNS.Config.BkaEndpointBaseUrl then
+			TGNS.GetHttpAsync(TGNS.Config.BkaEndpointBaseUrl, function(bkaResponseJson)
+				local bkaResponse = json.decode(bkaResponseJson) or {}
+				if bkaResponse.success then
+					TGNS.DoFor(bkaResponse.result, function(d)
+						batchBkas[d.id] = d.bka
+					end)
+				else
+					TGNS.DebugPrint(string.format("bka ERROR: Unable to access bka data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), bkaResponse.msg, bkaResponseJson, bkaResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, batchLoadBkas)
+		end
+	end
+	batchLoadBkas()
+
     return true
 end
 
