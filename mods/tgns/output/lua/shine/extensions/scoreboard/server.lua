@@ -132,6 +132,21 @@ local function initScoreboardDecorations(client)
 					end
 					TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(c),s=squadNumbers[c]})
 					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(client),s=squadNumbers[client]})
+
+
+					local recentCaptainsData = Shine.Plugins.captains:GetRecentCaptainsData()
+					local recentCaptainClientIndexes = {}
+					TGNS.DoFor(recentCaptainsData, function(d)
+						local recentCaptainClient = TGNS.GetClientByNs2Id(d.steamId)
+						if recentCaptainClient then
+							local recentCaptainClientIndex = TGNS.GetClientIndex(recentCaptainClient)
+							table.insert(recentCaptainClientIndexes, recentCaptainClientIndex)
+						end
+					end)
+					if #recentCaptainClientIndexes > 0 then
+						local recentCaptainClientIndexesString = TGNS.Join(recentCaptainClientIndexes, ",")
+						TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.RECENT_CAPTAINS, {c=recentCaptainClientIndexesString})
+					end
 				end
 			end)
 			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_RECEIVED_TOTAL, {t=approvedReceivedTotal})
@@ -487,17 +502,23 @@ function Plugin:Initialise()
 	 	Shine.Plugins.afkkick.PostPlayerInfoUpdate = function(self, playerInfo, player) end
  	end)
 
- 	TGNS.ScheduleAction(2, function()
-		local vouchesUrl = string.format("%s&h=3", TGNS.Config.VouchesEndpointBaseUrl)
-		TGNS.GetHttpAsync(vouchesUrl, function(vouchesResponseJson)
-			local vouchesResponse = json.decode(vouchesResponseJson) or {}
-			if vouchesResponse.success then
-				vouches = vouchesResponse.result
-			else
-				TGNS.DebugPrint(string.format("vouches ERROR: Unable to access vouches data. msg: %s | response: %s | stacktrace: %s", vouchesResponse.msg, vouchesResponseJson, vouchesResponse.stacktrace))
-			end
-		end)
- 	end)
+ 	local getRecentVouchData
+ 	getRecentVouchData = function()
+	 	if TGNS.Config and TGNS.Config.VouchesEndpointBaseUrl then
+			local vouchesUrl = string.format("%s&h=3", TGNS.Config.VouchesEndpointBaseUrl)
+			TGNS.GetHttpAsync(vouchesUrl, function(vouchesResponseJson)
+				local vouchesResponse = json.decode(vouchesResponseJson) or {}
+				if vouchesResponse.success then
+					vouches = vouchesResponse.result
+				else
+					TGNS.DebugPrint(string.format("vouches ERROR: Unable to access vouches data. msg: %s | response: %s | stacktrace: %s", vouchesResponse.msg, vouchesResponseJson, vouchesResponse.stacktrace))
+				end
+			end)
+	 	else
+	 		TGNS.ScheduleAction(0, getRecentVouchData)
+	 	end
+ 	end
+ 	getRecentVouchData();
 
  	local originalSelectableMixinSetHotGroupNumber = SelectableMixin.SetHotGroupNumber
  	SelectableMixin.SetHotGroupNumber = function(mixinSelf, hotGroupNumber)

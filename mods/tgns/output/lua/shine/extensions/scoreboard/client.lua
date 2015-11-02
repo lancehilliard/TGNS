@@ -45,6 +45,7 @@ local wasInUntrackableAfkActivity = false
 local isUsingSvi = {}
 local hasAfkRelevantActivity
 local afkRelevantActivityAnnouncedAt = 0
+local recentCaptainsClientIndexes = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -367,6 +368,10 @@ function Plugin:Initialise()
 				end
 			end
 
+			if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 then
+				player["Background"]:SetColor(Color(17/255,115/255,17/255))
+			end
+
 			if self.hoverMenu then
 				self.hoverMenu:RemoveButtonByText("Mute text")
 				if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) then
@@ -516,6 +521,9 @@ function Plugin:Initialise()
 	end
 	TGNS.HookNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, function(message)
 		isApproved[message.c] = false
+	end)
+	TGNS.HookNetworkMessage(Plugin.RECENT_CAPTAINS, function(message)
+		recentCaptainsClientIndexes = TGNS.Split(",", message.c)
 	end)
 	TGNS.HookNetworkMessage(Plugin.DESIGNATION, function(message)
 		communityDesignationCharacter = message.c
