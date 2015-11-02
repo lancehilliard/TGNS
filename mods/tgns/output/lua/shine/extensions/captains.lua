@@ -553,7 +553,6 @@ function Plugin:EndGame(gamerules, winningTeam)
 			else
 				local updateRecentCaptainsData = function()
 					recentCaptainsData = Shine.LoadJSONFile(recentCaptainsTempfilePath) or {}
-					TGNS.RemoveAllWhere(recentCaptainsData, function(d) return TGNS.GetSecondsSinceEpoch() - d.gameEnded > TGNS.ConvertHoursToSeconds(4) end)
 					TGNS.DoFor(readyCaptainClients, function(c)
 						if Shine:IsValidClient(c) then
 							table.insert(recentCaptainsData, {steamId=TGNS.GetClientSteamId(c),gameEnded=TGNS.GetSecondsSinceEpoch()})
@@ -1157,6 +1156,7 @@ function Plugin:Initialise()
     self.Enabled = true
 
 	recentCaptainsData = Shine.LoadJSONFile(recentCaptainsTempfilePath) or {}
+	TGNS.RemoveAllWhere(recentCaptainsData, function(d) return TGNS.GetSecondsSinceEpoch() - d.gameEnded >= TGNS.ConvertHoursToSeconds(4) end)
 	TGNS.SortDescending(recentCaptainsData, function(d) return d.gameEnded end)
 	recentCaptainPlayerIds = TGNS.Select(TGNS.Take(recentCaptainsData, 2), function(d) return d.steamId end)
 
