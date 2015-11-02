@@ -263,7 +263,7 @@ local function svBalance(client, forcePlayersToReadyRoom)
 	else
 		local gameState = GetGamerules():GetGameState()
 		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
-			md:ToAllNotifyInfo(string.format("%s is sending players to teams.", TGNS.GetClientName(client)))
+			md:ToAllNotifyInfo(string.format("%s is sending players to teams. Chat 'switch' if you want the other team.", TGNS.GetClientName(client)))
 			local playingClients = TGNS.GetPlayingClients(TGNS.GetPlayerList())
 			if forcePlayersToReadyRoom then
 				TGNS.DoFor(playingClients, function(c) TGNS.ExecuteClientCommand(c, "readyroom") end)
