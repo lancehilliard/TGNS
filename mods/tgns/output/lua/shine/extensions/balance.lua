@@ -25,6 +25,8 @@ end
 local npdr
 local preventTeamJoinMessagesDueToRecentEndGame
 local harvesterDecayEnabled = false
+local balanceTempfilePath = "config://tgns/temp/balance.json"
+local balanceCacheData = {}
 
 local pdr = TGNSPlayerDataRepository.Create("balance", balanceDataInitializer)
 
@@ -362,22 +364,31 @@ end
 local function updateTotalGamesPlayedCache(client, totalGamesPlayed)
 	local steamId = TGNS.GetClientSteamId(client)
 	totalGamesPlayedCache[steamId] = totalGamesPlayed
-	TGNS.ExecuteEventHooks("TotalPlayedGamesCountUpdated", client, totalGamesPlayedCache[steamId])
+    if not TGNS.ClientIsInGroup(client, "primerwithgames_group") and TGNS.HasClientSignedPrimerWithGames(client) then
+        TGNS.AddTempGroup(client, "primerwithgames_group")
+    end
 end
 
 local function refreshBalanceData(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
-		pdr:Load(steamId, function(loadResponse)
-			if loadResponse.success then
-				if Shine:IsValidClient(client) then
-					updateTotalGamesPlayedCache(client, loadResponse.value.total)
-					balanceCache[client] = loadResponse.value
+		local balanceCacheDataForClient = TGNS.FirstOrNil(balanceCacheData, function(d) return d.steamId == steamId end)
+		if balanceCacheDataForClient then
+			updateTotalGamesPlayedCache(client, balanceCacheDataForClient.data.total)
+			balanceCache[client] = balanceCacheDataForClient.data
+		end
+		if balanceCache[client] == nil then
+			pdr:Load(steamId, function(loadResponse)
+				if loadResponse.success then
+					if Shine:IsValidClient(client) then
+						updateTotalGamesPlayedCache(client, loadResponse.value.total)
+						balanceCache[client] = loadResponse.value
+					end
+				else
+					Shared.Message("balance ERROR: unable to access data")
 				end
-			else
-				Shared.Message("balance ERROR: unable to access data")
-			end
-		end)
+			end)
+		end
 	end
 end
 
@@ -499,6 +510,14 @@ function Plugin:Initialise()
 							if Shine:IsValidClient(c) then
 								updateTotalGamesPlayedCache(c, balance.total)
 								balanceCache[c] = loadResponse.value
+								
+
+
+								balanceCacheData = Shine.LoadJSONFile(balanceTempfilePath) or {}
+								TGNS.RemoveAllWhere(balanceCacheData, function(d) return d.steamId == steamId end)
+								table.insert(balanceCacheData, {lastCachedWhen=TGNS.GetSecondsSinceEpoch(),steamId=steamId,data=balanceCache[c]})
+								Shine.SaveJSONFile(balanceCacheData, balanceTempfilePath)
+
 							end
 						else
 							Shared.Message("balance ERROR: unable to save data")
@@ -601,6 +620,11 @@ function Plugin:Initialise()
 	-- 	Shine.Commands.sh_voterandom.Func = showBalanceCommandAdvisory
 	-- 	Shine.Commands.sh_enablerandom.Func = showBalanceCommandAdvisory
 	-- end)
+
+	balanceCacheData = Shine.LoadJSONFile(balanceTempfilePath) or {}
+	TGNS.RemoveAllWhere(balanceCacheData, function(d) return TGNS.GetSecondsSinceEpoch() - d.lastCachedWhen > TGNS.ConvertDaysToSeconds(14) end)
+	Shine.SaveJSONFile(balanceCacheData, balanceTempfilePath)
+
 
     return true
 end
