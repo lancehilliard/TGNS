@@ -40,12 +40,24 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 			local adminMessage = string.format("Kicking %s: %s", targetName, reason)
 			if not TGNS.GetIsClientVirtual(client) then
 				md:ToAdminConsole(adminMessage)
-				md:ToClientConsole(client, reason)
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, string.format("Kick reason: %s", reason))
 				if repeatOffensesIsCauseForBan then
 					md:ToClientConsole(client, "Note: Too many kicks may create a temporary ban.")
 					namesOfPlayersKickedForOffenses[targetSteamId] = targetName
 				end
 				md:ToClientConsole(client, "Contact TGNS administration (CAA): http://rr.tacticalgamer.com/Community")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
+				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
 			end
 			TGNS.ScheduleAction(kickDelayInSeconds, function()
 				if repeatOffensesIsCauseForBan then
