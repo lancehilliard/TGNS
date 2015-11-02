@@ -129,6 +129,11 @@ local function setBotConfig()
 			winOrLoseOccurredRecently = true
 			TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
 			Shine.Plugins.push:Push("tgns-seeded", "TGNS seeded!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+			Shine.Plugins.mapvote.Config.AlwaysExtend = true
+			Shine.Plugins.mapvote.Config.AllowExtend = true
+			Shine.Plugins.mapvote.CanExtend = function(mapVoteSelf) return true end
+			Shine.Plugins.mapvote.Config.ForcedMaps[TGNS.GetCurrentMapName()] = true
+			Shine.Plugins.mapvote.ForcedMapCount = 1
 		end
 	end
 
