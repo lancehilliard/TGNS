@@ -43,6 +43,8 @@ local infiniteTimeRemainingDisplayStarted
 local hasEarnedSetSpawnsKarma = {}
 local hasEarnedCaptainsNightPunctualityKarma = {}
 local CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME = 18
+local recentCaptainsData = {}
+local recentCaptainsTempfilePath = "config://tgns/temp/recentcaptains.json"
 
 local function disableCaptainsMode()
 	captainsModeEnabled = false
@@ -506,6 +508,10 @@ function Plugin:CheckGameStart(gamerules)
 	//return result
 end
 
+function Plugin:GetRecentCaptainsData()
+	return recentCaptainsData
+end
+
 function Plugin:UpdatePregame(gamerules)
 	//local result = true
 	if captainsModeEnabled and TGNS.IsGameInPreGame() then
@@ -545,6 +551,18 @@ function Plugin:EndGame(gamerules, winningTeam)
 					end)
 				end
 			else
+				local updateRecentCaptainsData = function()
+					recentCaptainsData = Shine.LoadJSONFile(recentCaptainsTempfilePath) or {}
+					TGNS.RemoveAllWhere(recentCaptainsData, function(d) return TGNS.GetSecondsSinceEpoch() - d.gameEnded > TGNS.ConvertHoursToSeconds(4) end)
+					TGNS.DoFor(readyCaptainClients, function(c)
+						if Shine:IsValidClient(c) then
+							table.insert(recentCaptainsData, {steamId=TGNS.GetClientSteamId(c),gameEnded=TGNS.GetSecondsSinceEpoch()})
+						end
+					end)
+					Shine.SaveJSONFile(recentCaptainsData, recentCaptainsTempfilePath)
+				end
+				updateRecentCaptainsData()
+
 				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 					disableCaptainsMode()
 					Shine.Plugins.mapvote:StartVote(true)
@@ -1137,6 +1155,11 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
+
+	recentCaptainsData = Shine.LoadJSONFile(recentCaptainsTempfilePath) or {}
+	TGNS.SortDescending(recentCaptainsData, function(d) return d.gameEnded end)
+	recentCaptainPlayerIds = TGNS.Select(TGNS.Take(recentCaptainsData, 2), function(d) return d.steamId end)
+
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
 	self:CreateCommands()
 
@@ -1217,26 +1240,32 @@ function Plugin:Initialise()
 		-- end)
 	end)
 
-	TGNS.ScheduleAction(7, function()
-		local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
-		TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
-			local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
-			if recentCaptainPlayerIdsResponse.success then
-				if #recentCaptainPlayerIdsResponse.recentcaptains > 0 then
-					TGNS.DoFor(recentCaptainPlayerIdsResponse.recentcaptains, function(i)
-						table.insert(recentCaptainPlayerIds, i)
-					end)
+	local fetchRecentCaptainPlayerIds
+	fetchRecentCaptainPlayerIds = function()
+		if TGNS.Config and TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl then
+			local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
+			TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
+				local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
+				if recentCaptainPlayerIdsResponse.success then
+					-- if #recentCaptainPlayerIdsResponse.recentcaptains > 0 then
+					-- 	TGNS.DoFor(recentCaptainPlayerIdsResponse.recentcaptains, function(i)
+					-- 		table.insert(recentCaptainPlayerIds, i)
+					-- 	end)
+					-- end
+					if #recentCaptainPlayerIdsResponse.recentplayers > 0 then
+						TGNS.DoFor(recentCaptainPlayerIdsResponse.recentplayers, function(i)
+							table.insert(recentPlayerPlayerIds, i)
+						end)
+					end
+				else
+					TGNS.DebugPrint(string.format("captains ERROR: Unable to access recentcaptainplayerids data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), recentCaptainPlayerIdsResponse.msg, recentCaptainPlayerIdsResponseJson, recentCaptainPlayerIdsResponse.stacktrace))
 				end
-				if #recentCaptainPlayerIdsResponse.recentplayers > 0 then
-					TGNS.DoFor(recentCaptainPlayerIdsResponse.recentplayers, function(i)
-						table.insert(recentPlayerPlayerIds, i)
-					end)
-				end
-			else
-				TGNS.DebugPrint(string.format("captains ERROR: Unable to access recentcaptainplayerids data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), recentCaptainPlayerIdsResponse.msg, recentCaptainPlayerIdsResponseJson, recentCaptainPlayerIdsResponse.stacktrace))
-			end
-		end)
-	end)
+			end)
+		else
+			TGNS.ScheduleAction(0, fetchRecentCaptainPlayerIds)
+		end
+	end
+	fetchRecentCaptainPlayerIds()
 
 	local originalServerSetPassword = Server.SetPassword
 	local function disallowPasswordAfterMidnightOnSaturdays()
