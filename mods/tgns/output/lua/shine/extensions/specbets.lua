@@ -73,16 +73,18 @@ local function showReport(transactions)
 end
 
 local function refreshPlayerBank(steamId)
-	playerBanks[steamId] = 0
-	local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
-	TGNS.GetHttpAsync(url, function(betResponseJson)
-		local betResponse = json.decode(betResponseJson) or {}
-		if betResponse.success then
-			playerBanks[steamId] = betResponse.result
-		else
-			TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace))
-		end
-	end)
+	if playerBanks[steamId] == nil then
+		playerBanks[steamId] = 0
+		local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
+		TGNS.GetHttpAsync(url, function(betResponseJson)
+			local betResponse = json.decode(betResponseJson) or {}
+			if betResponse.success then
+				playerBanks[steamId] = betResponse.result
+			else
+				TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace))
+			end
+		end)
+	end
 end
 
 local function persistTransaction(steamId, amount, killerId, victimId, type)
@@ -414,6 +416,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	if TGNS.ClientIsOnPlayingTeam(client) then
 		refundBets(client)
 	elseif TGNS.IsClientSpectator(client) then
+		refreshPlayerBank(steamId)
 		TGNS.ScheduleAction(6, function()
 			if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and playerBanks[steamId] > 0 then
 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
@@ -423,8 +426,6 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:ClientConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	refreshPlayerBank(steamId)
 end
 
 function Plugin:ClientConfirmConnect(client)
@@ -445,6 +446,7 @@ function Plugin:Initialise()
 					amount = amount * 1.2
 				end
 				persistTransaction(steamId, amount, nil, nil, 'playcredit')
+				playerBanks[steamId] = playerBanks[steamId] or 0
 				playerBanks[steamId] = playerBanks[steamId] + amount
 			end)
 		end
