@@ -174,6 +174,11 @@ function TGNS.ConvertHoursToSeconds(hours)
 	return result
 end
 
+function TGNS.ConvertDaysToSeconds(days)
+	local result = TGNS.ConvertHoursToSeconds(days * 24)
+	return result
+end
+
 function TGNS.Join(list, delimiter)
 	local result = ""
 	TGNS.DoFor(list, function(item, index)
