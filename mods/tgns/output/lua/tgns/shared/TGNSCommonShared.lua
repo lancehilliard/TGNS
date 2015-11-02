@@ -168,3 +168,39 @@ function TGNS.ConvertMinutesToSeconds(minutes)
 	local result = minutes * 60
 	return result
 end
+
+function TGNS.ConvertHoursToSeconds(hours)
+	local result = TGNS.ConvertMinutesToSeconds(hours * 60)
+	return result
+end
+
+function TGNS.Join(list, delimiter)
+	local result = ""
+	TGNS.DoFor(list, function(item, index)
+		result = string.format("%s%s%s", result, index > 1 and delimiter or "", item)
+	end)
+	return result
+end
+
+function TGNS.Split(d,p)
+  local t, ll
+  t={}
+  ll=0
+  if(#p == 1) then return {p} end
+    while true do
+      l=string.find(p,d,ll,true) -- find the next d in the string
+      if l~=nil then -- if "not not" found then..
+        table.insert(t, string.sub(p,ll,l-1)) -- Save it in our array.
+        ll=l+1 -- save just after where we found it for searching next time.
+      else
+        table.insert(t, string.sub(p,ll)) -- Save what's left in our array.
+        break -- Break at end, as it should be, according to the lua manual.
+      end
+    end
+  return t
+end
+
+function TGNS.Has(elements, element)
+	local result = TGNS.Any(elements, function(e) return element == e end)
+	return result
+end

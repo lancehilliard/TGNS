@@ -253,24 +253,6 @@ function TGNS.GetCommandStructures()
 	return result
 end
 
-function TGNS.Split(d,p)
-  local t, ll
-  t={}
-  ll=0
-  if(#p == 1) then return {p} end
-    while true do
-      l=string.find(p,d,ll,true) -- find the next d in the string
-      if l~=nil then -- if "not not" found then..
-        table.insert(t, string.sub(p,ll,l-1)) -- Save it in our array.
-        ll=l+1 -- save just after where we found it for searching next time.
-      else
-        table.insert(t, string.sub(p,ll)) -- Save what's left in our array.
-        break -- Break at end, as it should be, according to the lua manual.
-      end
-    end
-  return t
-end
-
 function TGNS.GetTechPointLocationNames()
 	local result = TGNS.Select(TGNS.GetTechPoints(), function(t) return t:GetLocationName() end)
 	return result
@@ -941,14 +923,6 @@ function TGNS.SendToTeam(player, teamNumber, force)
 	return GetGamerules():JoinTeam(player, teamNumber, force)
 end
 
-function TGNS.Join(list, delimiter)
-	local result = ""
-	TGNS.DoFor(list, function(item, index)
-		result = string.format("%s%s%s", result, index > 1 and delimiter or "", item)
-	end)
-	return result
-end
-
 function TGNS.GetPlayerTeamName(player)
 	local result = TGNS.GetTeamName(TGNS.GetPlayerTeamNumber(player))
 	return result
@@ -1479,11 +1453,6 @@ function TGNS.AllPlayers(doThis)
 	end
 end
 
-function TGNS.Has(elements, element)
-	local result = TGNS.Any(elements, function(e) return element == e end)
-	return result
-end
-
 function TGNS.GetClient(player)
 	local result = Server.GetOwner(player)
 	return result
@@ -1821,6 +1790,7 @@ end
 
  TGNS.ScheduleAction(1, function()
  	TGNS.Config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
+ 	TGNS.ExecuteEventHooks("TGNSConfigLoaded")
  end)
 
 -- TGNS.ScheduleAction(2, function() Shared.Message(string.format("All: %s", TGNS.Join(TGNS.GetMapCycleMapNames(), ","))) end)
