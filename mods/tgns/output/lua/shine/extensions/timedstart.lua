@@ -46,12 +46,14 @@ local function showTimeRemaining()
 					TGNS.ScheduleAction(0.5, function()
 						local clientsToTakeStartingPersonalResourcesFrom = {}
 					    local originalTeamInfoReset = TeamInfo.Reset
+					    local teamHasCommander = {}
+					    teamHasCommander[kMarineTeamType] = GetTeamHasCommander(kMarineTeamType)
+					    teamHasCommander[kAlienTeamType] = GetTeamHasCommander(kAlienTeamType)
 					    TeamInfo.Reset = function(teamInfoSelf)
 					    	originalTeamInfoReset(teamInfoSelf)
 					    	if GetGamerules():GetGameState() == kGameState.NotStarted then
 					    		local teamNumber = teamInfoSelf:GetTeamNumber()
-					    		local teamHasCommander = GetTeamHasCommander(teamNumber)
-					    		if not teamHasCommander then
+					    		if not teamHasCommander[teamNumber] then
 							    	local players = teamInfoSelf.team:GetPlayers()
 							    	if #players > 0 then
 								    	if teamInfoSelf.lastCommLoginTime == 0 then
@@ -112,7 +114,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 	secondsRemaining = countdownSeconds
 	timerInProgress = false
 	gameEndedRecently = true
-	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM + 1, function()
 		gameEndedRecently = false
 	end)
 end
