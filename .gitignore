@@ -143,6 +143,7 @@
 !mods/tgns/output/lua/shine/extensions/targetedcommands.lua
 !mods/tgns/output/lua/shine/extensions/teamres.lua
 !mods/tgns/output/lua/shine/extensions/teamroles.lua
+!mods/tgns/output/lua/shine/extensions/teamswitch.lua
 !mods/tgns/output/lua/shine/extensions/teamticker.lua
 !mods/tgns/output/lua/shine/extensions/tempgroups.lua
 !mods/tgns/output/lua/shine/extensions/tgnsbadges.lua
