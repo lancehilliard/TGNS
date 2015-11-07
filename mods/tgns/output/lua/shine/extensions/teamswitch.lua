@@ -12,8 +12,9 @@ function Plugin:PlayerSay(client, networkMessage)
 	if isTrade then
 		local teamNumber = TGNS.GetClientTeamNumber(client)
 		local clientIsPlaying = TGNS.IsGameplayTeamNumber(teamNumber)
-		if TGNS.IsGameInCountdown() or TGNS.IsGameInProgress() then
-			errorMessage = "Team switching is not automated during gameplay."
+		if TGNS.IsGameInCountdown() or TGNS.IsGameInProgress() or (Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()) then
+			local captainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
+			errorMessage = string.format("Team switching is not automated during %sgameplay.", captainsModeEnabled and "Captains " or "")
 		else
 			if clientIsPlaying then
 				if teamOnly then
