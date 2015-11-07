@@ -408,12 +408,13 @@ local function addReadyPlayerClient(client)
 		updateCaptainsReadyProgress(client)
 	else
 		local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
+		local player = TGNS.GetPlayer(client)
 		if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
 			table.insertunique(readyPlayerClients, client)
+			TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
 			TGNS.RemoveAllMatching(readyCaptainClients, client)
 			updateCaptainsReadyProgress(client)
 		else
-			local player = TGNS.GetPlayer(client)
 			md:ToPlayerNotifyError(player, "Too many people have already opted in to play.")
 			local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 			if #playingReadyCaptainClients < 2 then
@@ -456,11 +457,12 @@ local function addReadyCaptainClient(client)
 			showVoteTimingHelperMessages(string.format("Both captains are opted-in! %s seconds for opt-ins by:", RESTRICTED_OPTIN_DURATION_IN_SECONDS))
 			showVoteTimingHelperMessages("- SMs, recent Captains, and anyone who did not play in the most recent Captains round")
 			TGNS.ScheduleAction(RESTRICTED_OPTIN_DURATION_IN_SECONDS, function()
-				showVoteTimingHelperMessages(string.format("%s seconds have passed.", RESTRICTED_OPTIN_DURATION_IN_SECONDS))
+				showVoteTimingHelperMessages(string.format("%s seconds have passed. Anyone else may opt-in!", RESTRICTED_OPTIN_DURATION_IN_SECONDS))
 			end)
 			momentWhenSecondCaptainOptedIn = momentWhenSecondCaptainOptedIn or TGNS.GetSecondsSinceMapLoaded()
 		end
 	end
+		TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
 	updateCaptainsReadyProgress(client)
 end
 
@@ -805,7 +807,7 @@ function Plugin:CreateCommands()
 		local steamId = TGNS.GetClientSteamId(client)
 		local clientWasNonCaptainPlayerInRecentCaptainsGame = TGNS.Has(recentPlayerPlayerIds, steamId) and not TGNS.Has(recentCaptainPlayerIds, steamId)
 		local clientLeftTeamJustSecondsAgo = momentsWhenLastLeftPlayingTeam[client] ~= nil and momentsWhenLastLeftPlayingTeam[client] >= TGNS.GetSecondsSinceMapLoaded() - RESTRICTED_OPTIN_DURATION_IN_SECONDS
-		local optInEarly = function(optingInClient)
+		local optInEarly = function(optingInClient, failureMessage)
 			local optingInSteamId = TGNS.GetClientSteamId(optingInClient)
 			local isSm = TGNS.IsClientSM(optingInClient)
 			local isRecentCaptain = TGNS.Has(recentCaptainPlayerIds, optingInSteamId)
@@ -819,9 +821,12 @@ function Plugin:CreateCommands()
 					-- else
 						readyPlayerClients = readyPlayerClients or {}
 						table.insertunique(readyPlayerClients, optingInClient)
+						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(optingInClient), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
 					-- end
 				end
 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), string.format("You will be automatically opted-in when votes are allowed. Thank you for being a %s!", isSm and "Supporting Member" or "recent Captain"))
+			else
+				md:ToPlayerNotifyError(TGNS.GetPlayer(optingInClient), failureMessage)
 			end
 		end
 
@@ -834,8 +839,7 @@ function Plugin:CreateCommands()
 		elseif (not rolandHasBeenUsed) and (not TGNS.PlayerIsOnPlayingTeam(player)) and captainsModeEnabled and captainsModeWasEnabledJustSecondsAgo and not clientLeftTeamJustSecondsAgo then
 			md:ToPlayerNotifyError(player, string.format("Wait %s seconds to let those who were on a team opt-in.", RESTRICTED_OPTIN_DURATION_IN_SECONDS))
 		elseif mayVoteYet ~= true and votesAllowedUntil ~= math.huge and not TGNS.IsGameInProgress() then
-			md:ToPlayerNotifyError(player, "Captains voting is restricted now. SMs and recent Captains may opt-in early during this time.")
-			optInEarly(client)
+			optInEarly(client, "Captains voting is restricted now. SMs and recent Captains may opt-in early during this time.")
 		elseif Shine.Plugins.mapvote:VoteStarted() then
 			md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
 		elseif not captainsModeEnabled and votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
@@ -848,8 +852,7 @@ function Plugin:CreateCommands()
 				md:ToPlayerNotifyError(player, "You may not undo your opt-in to be a Captain.")
 			else
 				if not captainsModeEnabled and #playingReadyCaptainClients < 2 then
-					md:ToPlayerNotifyError(player, string.format("Two captains (%s so far) must opt-in first. SMs and recent Captains may opt-in early during this time.", #playingReadyCaptainClients))
-					optInEarly(client)
+					optInEarly(client, string.format("Two captains (%s so far) must opt-in first. SMs and recent Captains may opt-in early during this time.", #playingReadyCaptainClients))
 				else
 					if (not TGNS.IsClientSM(client)) and clientWasNonCaptainPlayerInRecentCaptainsGame and (momentWhenSecondCaptainOptedIn == nil or momentWhenSecondCaptainOptedIn > TGNS.GetSecondsSinceMapLoaded() - RESTRICTED_OPTIN_DURATION_IN_SECONDS) then
 						md:ToPlayerNotifyError(player, "Wait for others to opt-in (console for details). SMs and recent Captains may opt-in early during this time.")
