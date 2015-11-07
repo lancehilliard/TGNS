@@ -1,5 +1,6 @@
 local PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS = 1814400
 local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
+local PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD = 20
 
 local warned = {}
 local bkas = {}
@@ -76,6 +77,59 @@ function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pre
 			whoisMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access data.")
 		end
 	end)
+end
+
+function Plugin:PlayerFailsBkaPrerequisite(player)
+	local result = false
+	local client = TGNS.GetClient(player)
+	if client then
+		local totalGamesPlayedCount = Balance.GetTotalGamesPlayed(client)
+		if totalGamesPlayedCount >= PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and not Shine.Plugins.betterknownas:IsPlayingWithBkaName(client) then
+			result = true
+		end
+		-- if not TGNS.IsProduction() then
+		-- 	result = true
+		-- end
+	end
+	return result
+end
+
+local function getBkaPrerequisiteChatAdvisoryMessage()
+	local result = string.format("%s+ games played on server. Persistent player name required to play. Use sh_name -- see console (`) for details.", PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD)
+	return result
+end
+
+function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
+	if not (force or shineForce) then
+		if TGNS.IsGameplayTeamNumber(newTeamNumber) and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(player) then
+			local client = TGNS.GetClient(player)
+			local md = TGNSMessageDisplayer.Create()
+			md:ToPlayerNotifyError(player, getBkaPrerequisiteChatAdvisoryMessage())
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "=================================================================================")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "You tried to join a team, but there's a problem:")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, string.format("You've played %s+ games on TGNS. It's time to register your", PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD))
+			              md:ToClientConsole(client, "persistent player name (your \"BKA\") using the sh_name command.")
+			md:ToClientConsole(client, "")
+			              md:ToClientConsole(client, "Type sh_name in your console and follow the instructions.")
+			md:ToClientConsole(client, "")
+			              md:ToClientConsole(client, "Once sh_name reports your player name as matching your BKA, you're all set!")
+			md:ToClientConsole(client, "")
+			              md:ToClientConsole(client, "If you need help, use admin chat (@) or CAA: http://rr.tacticalgamer.com/Community")
+			              md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "")
+			md:ToClientConsole(client, "=================================================================================")
+			return false
+		end
+	end
 end
 
 local function ShowUsage(client, targetSteamId)
@@ -226,10 +280,10 @@ function Plugin:CreateCommands()
 
 	local missingBkasCommand = self:BindCommand( "sh_missingbkas", nil, function(client)
 		local md = TGNSMessageDisplayer.Create("BKAS")
-		local clients = TGNS.GetClientList(TGNS.IsPrimerOnlyClient)
+		local clients = TGNS.GetClientList(function(c) return TGNS.IsPrimerOnlyClient(c) or (Balance.GetTotalGamesPlayed(c) >= PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD) end)
 		TGNS.SortAscending(clients, function(c) return string.format("%s%s", self:IsPlayingWithBkaName(c) and "aaaaa" or "zzzzz", TGNS.GetClientName(c)) end)
 		md:ToClientConsole(client, "")
-		md:ToClientConsole(client, "Primer Only BKAs:")
+		md:ToClientConsole(client, string.format("Primer Only (or %s+ games) BKAs:", PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD))
 		TGNS.DoFor(clients, function(c)
 			md:ToClientConsole(client, string.format("%s: %s: %s", self:IsPlayingWithBkaName(c) and "MATCH" or "NO MATCH", TGNS.GetClientName(c), bkas[c]))
 		end)
@@ -275,7 +329,7 @@ function Plugin:CreateCommands()
 	bkaCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true}
 	bkaCommand:Help( "<target> <bka> Adds a BKA name to the target.")
 
-	local nameCommand = self:BindCommand( "sh_name", nil, function(client, newBkaName)
+	local nameCommand = self:BindCommand( "sh_name", "name", function(client, newBkaName)
 		local md = TGNSMessageDisplayer.Create("BKA")
 		local steamId = TGNS.GetClientSteamId(client)
 		pdr:Load(steamId, function(loadResponse)
@@ -294,14 +348,20 @@ function Plugin:CreateCommands()
 				end
 				local showSummary = function(client)
 					md:ToClientConsole(client, "------------------------------------------")
-					md:ToClientConsole(client, string.format("Your current BKA: %s", bkas[client]))
+					md:ToClientConsole(client, string.format("Your current BKA: %s", bkas[client] or ""))
 					md:ToClientConsole(client, string.format("Your current player name: %s", TGNS.GetClientName(client)))
-					md:ToClientConsole(client, string.format("Your current BKA %s match your current player name.", self:IsPlayingWithBkaName(client) and "does" or "does not"))
+					md:ToClientConsole(client, string.format("Your current BKA %s your current player name.", self:IsPlayingWithBkaName(client) and "matches" or "does not match"))
 					md:ToClientConsole(client, "------------------------------------------")
 				end
 				if bkaChangeError then
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
+					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
+					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
+					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
+					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
+					md:ToClientConsole(client, "")
 					md:ToClientConsole(client, "Usage: sh_name <name>")
+					md:ToClientConsole(client, "")
 					showSummary(client)
 					md:ToClientConsole(client, "You can get help with this command in our Contact an Admin forum.")
 					md:ToClientConsole(client, "Also, any full admin can fix any BKA you've set for yourself in error. Just ask!")
@@ -313,13 +373,22 @@ function Plugin:CreateCommands()
 						OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
 						showSummary(client)
 					else
-						md:ToClientConsole(client, string.format("WHOA! You're setting your Better Known As name, with a %s cooldown before you can edit it again!", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
-						md:ToClientConsole(client, "Your Better Known As name stays with you if you later choose a different player name.")
-						md:ToClientConsole(client, "Any player may view your Better Known As at any time with the sh_whois command.")
-						md:ToClientConsole(client, string.format("If you're sure '%s' is what you want, execute this same command again.", newBkaName))
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, "WHOA! You're not quite done yet!")
+						md:ToClientConsole(client, string.format("You're setting your Better Known As name, with a %s cooldown before you can edit it again!", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE))
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, string.format("If you're sure '%s' is what you want, execute this same command again:", newBkaName))
+						md:ToClientConsole(client, "")
+						md:ToClientConsole(client, string.format("sh_name %s", newBkaName))
+						md:ToClientConsole(client, "")
 						warned[client] = newBkaName
 					end
 				end
+				md:ToClientConsole(client, "")
 			else
 				md:ToClientConsole(client, "ERROR: Unable to access sh_name data. sh_name not changed.")
 				Shared.Message("betterknownas ERROR: Unable to access data.")
@@ -370,6 +439,11 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 			local steamId = TGNS.GetClientSteamId(client)
 			AddAka(steamId, newName, false)
 		end
+	end
+	if TGNS.PlayerIsOnPlayingTeam(player) and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(player) then
+		local md = TGNSMessageDisplayer.Create()
+		md:ToPlayerNotifyError(player, getBkaPrerequisiteChatAdvisoryMessage())
+		TGNS.SendToTeam(player, kTeamReadyRoom, true)
 	end
 end
 
