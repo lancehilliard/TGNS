@@ -5,6 +5,8 @@ local HttpFailureThreshold = 5
 local spectateKarmaProgress = {}
 local lastTeamExit = {}
 local seedingTempfilePath = "config://tgns/temp/seeding.json"
+local karmaTempfilePath = "config://tgns/temp/karma.json"
+local karmaCacheData = {}
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -22,18 +24,24 @@ local function getHumanClients(clients)
 end
 
 local function refreshKarma(steamId)
-	httpFailureCount[steamId] = httpFailureCount[steamId] or 0
-	if httpFailureCount[steamId] < HttpFailureThreshold and TGNS.IsNumberWithNonZeroPositiveValue(steamId) then
-		local url = string.format("%s&i=%s", TGNS.Config.KarmaEndpointBaseUrl, steamId)
-		TGNS.GetHttpAsync(url, function(karmaResponseJson)
-			local karmaResponse = json.decode(karmaResponseJson) or {}
-			if karmaResponse.success then
-				karmaCache[steamId] = karmaResponse.result
-			else
-				httpFailureCount[steamId] = httpFailureCount[steamId] + 1
-				TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace))
-			end
-		end)
+	local karmaCacheDataForClient = TGNS.FirstOrNil(karmaCacheData, function(d) return d.steamId == steamId end)
+	if karmaCacheDataForClient then
+		karmaCache[steamId] = karmaCacheDataForClient.data
+	end
+	if karmaCache[steamId] == nil then
+		httpFailureCount[steamId] = httpFailureCount[steamId] or 0
+		if httpFailureCount[steamId] < HttpFailureThreshold and TGNS.IsNumberWithNonZeroPositiveValue(steamId) then
+			local url = string.format("%s&i=%s", TGNS.Config.KarmaEndpointBaseUrl, steamId)
+			TGNS.GetHttpAsync(url, function(karmaResponseJson)
+				local karmaResponse = json.decode(karmaResponseJson) or {}
+				if karmaResponse.success then
+					karmaCache[steamId] = karmaResponse.result
+				else
+					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
+					TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace))
+				end
+			end)
+		end
 	end
 end
 
@@ -49,7 +57,12 @@ local function addKarma(steamId, deltaName)
 			local url = string.format("%s&i=%s&n=%s&d=%s", TGNS.Config.KarmaEndpointBaseUrl, steamId, TGNS.UrlEncode(deltaName), delta)
 			TGNS.GetHttpAsync(url, function(karmaResponseJson)
 				local karmaResponse = json.decode(karmaResponseJson) or {}
-				if not karmaResponse.success then
+				if karmaResponse.success then
+					karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
+					TGNS.RemoveAllWhere(karmaCacheData, function(d) return d.steamId == steamId end)
+					table.insert(karmaCacheData, {lastCachedWhen=TGNS.GetSecondsSinceEpoch(),steamId=steamId,data=karmaCache[steamId]})
+					Shine.SaveJSONFile(karmaCacheData, karmaTempfilePath)
+				else
 					karmaCache[steamId] = karmaCache[steamId] - delta
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
 					TGNS.DebugPrint(string.format("karma ERROR: Unable to save %s delta (%s) for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", deltaName, delta, steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace))
@@ -158,6 +171,11 @@ function Plugin:Initialise()
 			end
 		end)
 	end)
+
+	karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
+	TGNS.RemoveAllWhere(karmaCacheData, function(d) return TGNS.GetSecondsSinceEpoch() - d.lastCachedWhen > TGNS.ConvertDaysToSeconds(14) end)
+	Shine.SaveJSONFile(karmaCacheData, karmaTempfilePath)
+
     return true
 end
 
