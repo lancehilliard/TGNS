@@ -21,6 +21,7 @@ local showTeamMessages = true
 -- local badgeLabels = {}
 local vrConfirmed = {}
 local countdownSoundEventName = "sound/tgns.fev/winorlose/countdown"
+local tooltipSoundEventName = "sound/NS2.fev/common/hud_on"
 local approveSoundEventName = "sound/tgns.fev/scoreboard/approve"
 local badSoundEventName = "sound/tgns.fev/laps/bad"
 local legSoundEventName = "sound/tgns.fev/laps/leg"
@@ -46,6 +47,7 @@ local isUsingSvi = {}
 local hasAfkRelevantActivity
 local afkRelevantActivityAnnouncedAt = 0
 local recentCaptainsClientIndexes = {}
+local failsBkaPrerequisite = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -53,6 +55,7 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	prefixes[message.i] = message.p
 	isCaptainsCaptain[message.i] = message.c
 	isUsingSvi[message.i] = message.s
+	failsBkaPrerequisite[message.i] = message.b
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -146,6 +149,7 @@ function Plugin:Initialise()
 	self.Enabled = true
 
 	Client.PrecacheLocalSound(countdownSoundEventName)
+	Client.PrecacheLocalSound(tooltipSoundEventName)
 	Client.PrecacheLocalSound(approveSoundEventName)
 	Client.PrecacheLocalSound(badSoundEventName)
 	Client.PrecacheLocalSound(legSoundEventName)
@@ -240,6 +244,10 @@ function Plugin:Initialise()
 			if teamNumber == 0 and player.Status:GetText():find("Spec") then
 				local shouldShowSvi = isUsingSvi[Client.GetLocalClientIndex()] and isUsingSvi[clientIndex] and Client.GetLocalClientTeamNumber() == kSpectatorIndex
 				player.Status:SetText(shouldShowSvi and "Spec(SVI)" or "Spectator")
+			end
+
+			if teamNumber == 0 and failsBkaPrerequisite[Client.GetLocalClientIndex()] then
+				player.Name:SetColor(Color(0/255,191/255,255/255))
 			end
 
 			if not player.PlayerNoteItem then
@@ -636,6 +644,10 @@ function Plugin:Initialise()
 
 	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
 		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
+	end)
+
+	TGNS.HookNetworkMessage(Plugin.TOOLTIP_SOUND, function(message)
+		Shared.PlaySound(Client.GetLocalPlayer(), tooltipSoundEventName, 20.525)
 	end)
 
 	TGNS.HookNetworkMessage(Plugin.LAPS_BAD, function(message)

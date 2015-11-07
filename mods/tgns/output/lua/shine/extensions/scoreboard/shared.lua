@@ -42,8 +42,9 @@ Plugin.ARMORDECAY1 = "scoreboard_ARMORDECAY1"
 Plugin.ARMORLESS_HARVESTERS = "scoreboard_ARMORLESS_HARVESTERS"
 Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY = "scoreboard_CHATTING_OR_MENUING_STARTED_RECENTLY"
 Plugin.RECENT_CAPTAINS = "scoreboard_RECENT_CAPTAINS"
+Plugin.TOOLTIP_SOUND = "scoreboard_TOOLTIP_SOUND"
 
-TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean"})
+TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean", b="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_RESET, {})
@@ -83,6 +84,7 @@ TGNS.RegisterNetworkMessage(Plugin.ARMORDECAY1, {})
 TGNS.RegisterNetworkMessage(Plugin.ARMORLESS_HARVESTERS, {l="string(100)"})
 TGNS.RegisterNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
 TGNS.RegisterNetworkMessage(Plugin.RECENT_CAPTAINS, {c="string(500)"})
+TGNS.RegisterNetworkMessage(Plugin.TOOLTIP_SOUND, {})
 
 function Plugin:Initialise()
 	self.Enabled = true
