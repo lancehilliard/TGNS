@@ -246,7 +246,7 @@ function Plugin:Initialise()
 				player.Status:SetText(shouldShowSvi and "Spec(SVI)" or "Spectator")
 			end
 
-			if teamNumber == 0 and failsBkaPrerequisite[Client.GetLocalClientIndex()] then
+			if teamNumber == 0 and failsBkaPrerequisite[clientIndex] then
 				player.Name:SetColor(Color(0/255,191/255,255/255))
 			end
 
