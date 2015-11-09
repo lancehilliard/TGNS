@@ -337,7 +337,8 @@ function Plugin:CreateCommands()
 				local bkaData = loadResponse.value
 				local bkaChangeError
 				local timeRemainingBeforePlayerMayChangeOwnBkaInSeconds = bkaData.BKAPlayerModifiedAtInSeconds + PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS - TGNS.GetSecondsSinceEpoch()
-				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 then
+				local newBkaIsOldBkaExceptQuotes = (newBkaName and bkaData.BKA) and ((TGNS.Replace(newBkaName, "\"", "") == bkaData.BKA) or (TGNS.Replace(bkaData.BKA, "\"", "") == newBkaName)) or false
+				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 and not newBkaIsOldBkaExceptQuotes then
 					bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
 				else
 					if newBkaName == nil or newBkaName == "" then
