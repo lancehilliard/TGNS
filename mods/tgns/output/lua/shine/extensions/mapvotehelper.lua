@@ -118,6 +118,12 @@ function Plugin:Initialise()
 
 			local originalStartVote = Shine.Plugins.mapvote.StartVote
 			Shine.Plugins.mapvote.StartVote = function( plugin, NextMap, Force )
+
+				if Server.GetNumPlayersTotal() <= 10 and Shine.Plugins.arclight and Shine.Plugins.arclight.GetArclightMapname then
+					Shine.Plugins.mapvote.Config.ForcedMaps[Shine.Plugins.arclight:GetArclightMapname()] = true
+					Shine.Plugins.mapvote.ForcedMapCount = 1
+				end
+
 				originalStartVote( plugin, NextMap, Force )
 				if Shine.Plugins.mapvote:VoteStarted() then
 					TGNS.DoFor(TGNS.GetPlayerList(), TGNS.AlertApplicationIconForPlayer)
