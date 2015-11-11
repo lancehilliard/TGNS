@@ -330,18 +330,20 @@ function Plugin:CreateCommands()
 	bkaCommand:Help( "<target> <bka> Adds a BKA name to the target.")
 
 	local nameCommand = self:BindCommand( "sh_name", "name", function(client, newBkaName)
+		newBkaName = newBkaName or ""
 		local md = TGNSMessageDisplayer.Create("BKA")
 		local steamId = TGNS.GetClientSteamId(client)
+		md:ToClientConsole(client, "Loading BKA info. Please wait. This might take several seconds if the map has just finished loading.")
 		pdr:Load(steamId, function(loadResponse)
 			if loadResponse.success then
 				local bkaData = loadResponse.value
 				local bkaChangeError
 				local timeRemainingBeforePlayerMayChangeOwnBkaInSeconds = bkaData.BKAPlayerModifiedAtInSeconds + PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS - TGNS.GetSecondsSinceEpoch()
-				local newBkaIsOldBkaExceptQuotes = (newBkaName and bkaData.BKA) and ((TGNS.Replace(newBkaName, "\"", "") == bkaData.BKA) or (TGNS.Replace(bkaData.BKA, "\"", "") == newBkaName)) or false
-				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 and not newBkaIsOldBkaExceptQuotes then
+				local newBkaIsOldBkaExceptQuotes = (TGNS.HasNonEmptyValue(newBkaName) and TGNS.HasNonEmptyValue(bkaData.BKA)) and ((TGNS.Replace(newBkaName, "\"", "") == bkaData.BKA) or (TGNS.Replace(bkaData.BKA, "\"", "") == newBkaName)) or false
+				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 and TGNS.HasNonEmptyValue(newBkaName) and not newBkaIsOldBkaExceptQuotes then
 					bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
 				else
-					if newBkaName == nil or newBkaName == "" then
+					if not TGNS.HasNonEmptyValue(newBkaName) then
 						bkaChangeError = "You did not specify a new Better Known As name."
 					elseif newBkaName == "clear" then
 						bkaChangeError = "You specified a Better Known As name that is not allowed."
@@ -355,6 +357,7 @@ function Plugin:CreateCommands()
 					md:ToClientConsole(client, "------------------------------------------")
 				end
 				if bkaChangeError then
+					md:ToAdminConsole(string.format("%s had error with sh_name: %s", TGNS.GetClientName(client), bkaChangeError))
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
@@ -372,8 +375,10 @@ function Plugin:CreateCommands()
 						bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
 						bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
 						OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
+						md:ToAdminConsole(string.format("%s set BKA successfully.", TGNS.GetClientName(client)))
 						showSummary(client)
 					else
+						md:ToAdminConsole(string.format("%s needs to repeat same input for BKA to take effect.", TGNS.GetClientName(client)))
 						md:ToClientConsole(client, "")
 						md:ToClientConsole(client, "")
 						md:ToClientConsole(client, "")

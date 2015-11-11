@@ -81,6 +81,10 @@ if Server or Client then
 	end
 
 	if Server then
+		function Plugin:GetArclightMapname()
+			return ArclightMapName
+		end
+
 		function Plugin:IsArclight()
 			local result = TGNS.GetCurrentMapName() == ArclightMapName
 			return result
