@@ -27,6 +27,7 @@ local preventTeamJoinMessagesDueToRecentEndGame
 local harvesterDecayEnabled = false
 local balanceTempfilePath = "config://tgns/temp/balance.json"
 local balanceCacheData = {}
+local lastTeamNumbers = {}
 
 local pdr = TGNSPlayerDataRepository.Create("balance", balanceDataInitializer)
 
@@ -326,6 +327,13 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		md:ToAllConsole(string.format("%s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
 		TGNS.DebugPrint(string.format("%s: %s -> %s (Marines: %s; Aliens: %s)", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player), marinesCount, aliensCount))
 	end
+	lastTeamNumbers[client] = newTeamNumber
+end
+
+function Plugin:ClientDisconnect(client)
+	if client then
+	    md:ToAllConsole(string.format("%s: %s -> Disconnect", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(lastTeamNumbers[client])))
+	end
 end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
@@ -393,6 +401,7 @@ local function refreshBalanceData(client)
 end
 
 function Plugin:ClientConnect(client)
+	lastTeamNumbers[client] = 0
 	refreshBalanceData(client)
 end
 
