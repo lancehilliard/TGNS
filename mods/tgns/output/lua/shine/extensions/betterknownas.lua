@@ -371,12 +371,16 @@ function Plugin:CreateCommands()
 					md:ToClientConsole(client, "Also, any full admin can fix any BKA you've set for yourself in error. Just ask!")
 				else
 					if warned[client] == newBkaName then
-						TGNS.ExecuteClientCommand(client, string.format("name %s", newBkaName))
+						TGNS.SendClientCommand(client, string.format("name %s", newBkaName))
 						bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
 						bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
-						OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
-						md:ToAdminConsole(string.format("%s set BKA successfully.", TGNS.GetClientName(client)))
-						showSummary(client)
+						TGNS.ScheduleAction(1, function()
+							if Shine:IsValidClient(client) then
+								OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
+								md:ToAdminConsole(string.format("%s set BKA successfully.", TGNS.GetClientName(client)))
+								showSummary(client)
+							end
+						end)
 					else
 						md:ToAdminConsole(string.format("%s needs to repeat same input for BKA to take effect.", TGNS.GetClientName(client)))
 						md:ToClientConsole(client, "")
