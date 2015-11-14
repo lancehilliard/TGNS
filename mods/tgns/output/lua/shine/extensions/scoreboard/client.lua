@@ -62,6 +62,11 @@ TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
 	showCustomNumbersColumn = message.t
 end)
 
+TGNS.HookNetworkMessage(Plugin.RECENT_CAPTAINS, function(message)
+	recentCaptainsClientIndexes = TGNS.Split(",", message.c)
+end)
+
+
 TGNS.HookNetworkMessage(Plugin.ALERT_ICON, function(message)
 	if Client.WindowNeedsAttention then
 		Client.WindowNeedsAttention()
@@ -530,9 +535,6 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, function(message)
 		isApproved[message.c] = false
 	end)
-	TGNS.HookNetworkMessage(Plugin.RECENT_CAPTAINS, function(message)
-		recentCaptainsClientIndexes = TGNS.Split(",", message.c)
-	end)
 	TGNS.HookNetworkMessage(Plugin.DESIGNATION, function(message)
 		communityDesignationCharacter = message.c
 		local welcomeBannerImageNameModifier = communityDesignationCharacter == "S" and "_s" or (communityDesignationCharacter == "P" and "_p" or "")
@@ -817,55 +819,73 @@ function Plugin:Initialise()
 	originalGUIReadyRoomOrdersUpdate = Class_ReplaceMethod("GUIReadyRoomOrders", "Update", function(guiReadyRoomOrdersUpdateSelf, deltaTime)
 		originalGUIReadyRoomOrdersUpdate(guiReadyRoomOrdersUpdateSelf, deltaTime)
 
-		if welcomeBannerImageName and not welcomeIsFinished then
-			local kFadeInColor = Color(1, 1, 1, 1)
-			local kFadeOutColor = Color(1, 1, 1, 0)
+		local displayBannerImageName
+		if failsBkaPrerequisite[Client.GetLocalClientIndex()] then
+			displayBannerImageName = "ui/welcome/bka_advisory.dds"
+		elseif welcomeBannerImageName and not welcomeIsFinished then
+			displayBannerImageName = welcomeBannerImageName
+		end
+
+		local kFadeInColor = Color(1, 1, 1, 1)
+		local kFadeOutColor = Color(1, 1, 1, 0)
+		if displayBannerImageName then
+			local displayBannerImageNameIsWelcomeBannerImageName = displayBannerImageName == welcomeBannerImageName
 			local kWelcomeFadeInTime = 4
 			local kWelcomeFadeOutTime = 1
 			local kWelcomeStartFadeOutTime = 6
 			local kWelcomeTextReset = 8
+			local kLogoSize = GUIScale(Vector(1024, 180, 0))
 
-			if guiReadyRoomOrdersUpdateSelf.welcomeTextCount == nil then
-				local kLogoSize = GUIScale(Vector(1024, 180, 0))
-
-				guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
-				guiReadyRoomOrdersUpdateSelf.welcomeTextCount = 0
-
+			if not guiReadyRoomOrdersUpdateSelf.logo then
 				guiReadyRoomOrdersUpdateSelf.logo = GetGUIManager():CreateGraphicItem()
 				guiReadyRoomOrdersUpdateSelf.logo:SetSize(kLogoSize)
 				guiReadyRoomOrdersUpdateSelf.logo:SetPosition(Vector(-kLogoSize.x * 0.5, kLogoSize.y * 0.3, 0))
 				guiReadyRoomOrdersUpdateSelf.logo:SetAnchor(GUIItem.Middle, GUIItem.Top)
-				guiReadyRoomOrdersUpdateSelf.logo:SetTexture(welcomeBannerImageName)
 				guiReadyRoomOrdersUpdateSelf.logo:SetColor(kFadeOutColor)
-			else
-				local timeSinceStart = Shared.GetTime() - guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime
-				for i = 1, #WELCOME_MESSAGES do
-					if timeSinceStart > kWelcomeTextReset and i > guiReadyRoomOrdersUpdateSelf.welcomeTextCount then
-						message = WELCOME_MESSAGES[i]
-					    guiReadyRoomOrdersUpdateSelf.welcomeText:SetText(message)
-					    guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
-					    guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime = Shared.GetTime()
-					    guiReadyRoomOrdersUpdateSelf.welcomeTextCount = i
-					    break
-					end
-				end
+			end
 
-				if timeSinceStart <= kWelcomeFadeInTime then
-					local color = LerpColor(kFadeOutColor, kFadeInColor, Clamp(timeSinceStart / kWelcomeFadeInTime, 0, 1))
-				    guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(color)
-					if message == WELCOME_MESSAGES[1] then
-						guiReadyRoomOrdersUpdateSelf.logo:SetColor(color)
+			guiReadyRoomOrdersUpdateSelf.logo:SetTexture(displayBannerImageName)
+
+			if displayBannerImageNameIsWelcomeBannerImageName then
+				if guiReadyRoomOrdersUpdateSelf.welcomeTextCount == nil then
+					guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
+					guiReadyRoomOrdersUpdateSelf.welcomeTextCount = 0
+				else
+					local timeSinceStart = Shared.GetTime() - guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime
+					for i = 1, #WELCOME_MESSAGES do
+						if timeSinceStart > kWelcomeTextReset and i > guiReadyRoomOrdersUpdateSelf.welcomeTextCount then
+							message = WELCOME_MESSAGES[i]
+						    guiReadyRoomOrdersUpdateSelf.welcomeText:SetText(message)
+						    guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(kFadeOutColor)
+						    guiReadyRoomOrdersUpdateSelf.welcomeTextStartTime = Shared.GetTime()
+						    guiReadyRoomOrdersUpdateSelf.welcomeTextCount = i
+						    break
+						end
 					end
-				elseif timeSinceStart >= kWelcomeStartFadeOutTime then
-					guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(LerpColor(kFadeInColor, kFadeOutColor, Clamp((timeSinceStart - kWelcomeStartFadeOutTime) / kWelcomeFadeOutTime, 0, 1)))
-					if message == WELCOME_MESSAGES[#WELCOME_MESSAGES] and timeSinceStart >= kWelcomeFadeOutTime + kWelcomeTextReset + EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES then
-						local percentage = Clamp((timeSinceStart  - (kWelcomeFadeOutTime + kWelcomeTextReset + EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES)) / kWelcomeFadeOutTime, 0, 1)
-						guiReadyRoomOrdersUpdateSelf.logo:SetColor(LerpColor(kFadeInColor, kFadeOutColor, percentage))
-						if percentage == 1 then
-							welcomeIsFinished = true -- thanks to / inspired by: https://steamcommunity.com/sharedfiles/filedetails/?id=132302678
+
+					if timeSinceStart <= kWelcomeFadeInTime then
+						local color = LerpColor(kFadeOutColor, kFadeInColor, Clamp(timeSinceStart / kWelcomeFadeInTime, 0, 1))
+					    guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(color)
+						if message == WELCOME_MESSAGES[1] then
+							guiReadyRoomOrdersUpdateSelf.logo:SetColor(color)
+						end
+					elseif timeSinceStart >= kWelcomeStartFadeOutTime then
+						guiReadyRoomOrdersUpdateSelf.welcomeText:SetColor(LerpColor(kFadeInColor, kFadeOutColor, Clamp((timeSinceStart - kWelcomeStartFadeOutTime) / kWelcomeFadeOutTime, 0, 1)))
+						if message == WELCOME_MESSAGES[#WELCOME_MESSAGES] and timeSinceStart >= kWelcomeFadeOutTime + kWelcomeTextReset + EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES then
+							local percentage = Clamp((timeSinceStart  - (kWelcomeFadeOutTime + kWelcomeTextReset + EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES)) / kWelcomeFadeOutTime, 0, 1)
+							guiReadyRoomOrdersUpdateSelf.logo:SetColor(LerpColor(kFadeInColor, kFadeOutColor, percentage))
+							if percentage == 1 then
+								welcomeIsFinished = true -- thanks to / inspired by: https://steamcommunity.com/sharedfiles/filedetails/?id=132302678
+							end
 						end
 					end
 				end
+			else
+				guiReadyRoomOrdersUpdateSelf.logo:SetColor(kFadeInColor)
+			end
+		else
+			if guiReadyRoomOrdersUpdateSelf.logo then
+				guiReadyRoomOrdersUpdateSelf.logo:SetColor(kFadeOutColor)
 			end
 		end
 	end)
