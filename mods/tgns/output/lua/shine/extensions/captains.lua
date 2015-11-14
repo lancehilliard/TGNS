@@ -1161,6 +1161,7 @@ function Plugin:Initialise()
 	recentCaptainsData = Shine.LoadJSONFile(recentCaptainsTempfilePath) or {}
 	TGNS.RemoveAllWhere(recentCaptainsData, function(d) return TGNS.GetSecondsSinceEpoch() - d.gameEnded >= TGNS.ConvertHoursToSeconds(4) end)
 	TGNS.SortDescending(recentCaptainsData, function(d) return d.gameEnded end)
+	Shine.SaveJSONFile(recentCaptainsData, recentCaptainsTempfilePath)
 	recentCaptainPlayerIds = TGNS.Select(TGNS.Take(recentCaptainsData, 2), function(d) return d.steamId end)
 
 	md = TGNSMessageDisplayer.Create("CAPTAINS")
