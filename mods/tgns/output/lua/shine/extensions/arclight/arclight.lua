@@ -104,11 +104,17 @@ if Server or Client then
 	end
 
 	local function OnServerInitialise()
-		Shine.Plugins.mapvote.Config.AlwaysExtend = true
-		Shine.Plugins.mapvote.Config.AllowExtend = true
-		Shine.Plugins.mapvote.CanExtend = function(mapVoteSelf) return true end
-		Shine.Plugins.mapvote.Config.ForcedMaps[ArclightMapName] = true
-		Shine.Plugins.mapvote.ForcedMapCount = 1
+		local winOrLoseForcedRecently
+
+		local configExtend = function(allowExtend)
+			Shine.Plugins.mapvote.Config.AlwaysExtend = allowExtend
+			Shine.Plugins.mapvote.Config.AllowExtend = allowExtend
+			Shine.Plugins.mapvote.CanExtend = function(mapVoteSelf) return allowExtend end
+			Shine.Plugins.mapvote.Config.ForcedMaps[ArclightMapName] = allowExtend
+			Shine.Plugins.mapvote.ForcedMapCount = allowExtend and 1 or 0
+		end
+		configExtend(true)
+
 
 		local md = TGNSMessageDisplayer.Create()
 		local hillPoints = 0
@@ -127,6 +133,24 @@ if Server or Client then
 		local lastTubeOrigin = {}
 		local teamNumberWhichCalledWinOrLose
 		local voidTheJumpSlowdownUntil = {}
+
+		local surrenderWeakerTeamIfConditionsAreRight = function()
+			local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
+			local playerThreshold = Shine.Plugins.communityslots.Config.PublicSlots
+			if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= playerThreshold and TGNS.IsGameInProgress() and not winOrLoseForcedRecently then
+				pointsRemaining[kMarineTeamType] = pointsRemaining[kMarineTeamType] or 0
+				pointsRemaining[kAlienTeamType] = pointsRemaining[kAlienTeamType] or 0
+				local surrenderingTeamNumber = pointsRemaining[kMarineTeamType] < pointsRemaining[kAlienTeamType] and kMarineTeamType or kAlienTeamType
+				local surrenderingTeamName = TGNS.GetTeamName(surrenderingTeamNumber)
+				md:ToAllNotifyInfo(string.format("Server has seeded to %s+ players. %s surrender!", playerThreshold, surrenderingTeamName))
+				Shine.Plugins.winorlose:CallWinOrLose(surrenderingTeamNumber)
+				winOrLoseForcedRecently = true
+				configExtend(false)
+				TGNS.ScheduleAction(75, function() winOrLoseForcedRecently = false end)
+			end
+		end
+		TGNS.ScheduleActionInterval(10, surrenderWeakerTeamIfConditionsAreRight)
+
 
 		local function prepareForNextGame(countdownStarting)
 			pointsRemaining[kMarineTeamType] = MARINE_STARTING_POINTS
@@ -506,6 +530,11 @@ if Server or Client then
 
 		TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
 			playersAreAllowedOutOfBase = true
+			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+				if winOrLoseForcedRecently then
+					Shine.Plugins.mapvote:StartVote(true)
+				end
+			end)
 		end)
 
 		TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
