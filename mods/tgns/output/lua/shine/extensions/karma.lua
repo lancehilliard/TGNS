@@ -92,15 +92,21 @@ function Plugin:EndGame(gamerules, winningTeam)
 		local humanClients = getHumanClients(TGNS.GetClientList())
 		local humanSteamIds = TGNS.Select(humanClients, TGNS.GetClientSteamId)
 		TGNS.ScheduleAction(2, function()
+			local seedKarmaGiven
 			local seeders = Shine.LoadJSONFile(seedingTempfilePath) or {}
 			TGNS.DoFor(humanSteamIds, function(s)
 				if TGNS.Has(seeders, s) then
 					TGNS.Karma(s, "Seeding")
+					seedKarmaGiven = true
 				end
 			end)
 			Shine.SaveJSONFile({}, seedingTempfilePath)
+			if seedKarmaGiven then
+				Shine.Plugins.push:Push("tgns-seeded", "TGNS seeded!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+			end
 		end)
 	end
+
 end
 
 function Plugin:ClientConnect(client)
