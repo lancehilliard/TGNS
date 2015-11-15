@@ -52,7 +52,7 @@ function Plugin:Initialise()
 
 	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
 		local client = TGNS.GetClient(player)
-		if not playerIsAfk then
+		if client and not playerIsAfk then
 			mayEarnRemovedFromPlayByAfkKarma[client] = true
 		end
 	end)
