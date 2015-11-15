@@ -325,7 +325,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		local marinesCount = #TGNS.GetMarineClients(playerList)
 		local aliensCount = #TGNS.GetAlienClients(playerList)
 		md:ToAllConsole(string.format("%s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
-		TGNS.DebugPrint(string.format("%s: %s -> %s (Marines: %s; Aliens: %s)", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player), marinesCount, aliensCount))
+		-- TGNS.DebugPrint(string.format("%s: %s -> %s (Marines: %s; Aliens: %s)", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player), marinesCount, aliensCount))
 	end
 	lastTeamNumbers[client] = newTeamNumber
 end
