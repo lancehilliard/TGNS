@@ -1,3 +1,6 @@
+Plugin.HasConfig = true
+Plugin.ConfigName = "adminmenu.json"
+
 local commandInProgress = {}
 local currentPage = {}
 

@@ -48,6 +48,8 @@ local hasAfkRelevantActivity
 local afkRelevantActivityAnnouncedAt = 0
 local recentCaptainsClientIndexes = {}
 local failsBkaPrerequisite = {}
+local hasWelder = {}
+local hasMines = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -56,6 +58,8 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	isCaptainsCaptain[message.i] = message.c
 	isUsingSvi[message.i] = message.s
 	failsBkaPrerequisite[message.i] = message.b
+	hasWelder[message.i] = message.w
+	hasMines[message.i] = message.m
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -225,7 +229,8 @@ function Plugin:Initialise()
 	        	,{n="PlayerApproveIcon",t=APPROVE_TEXTURE_DISABLED,x=-49}
 	        	,{n="PlayerQueryIcon",t=QUERY_TEXTURE_DISABLED,x=-69}
 	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,x=-89}
-
+	        	,{n="PlayerWelderIcon",t="ui/badges/marines/Welder.dds",x=-109}
+	        	,{n="PlayerMinesIcon",t="ui/badges/marines/Mines.dds",x=-129}
 	    	}
 
 			TGNS.DoFor(icons, function(i)
@@ -266,7 +271,7 @@ function Plugin:Initialise()
 			end
 
 
-			local guiItemsWhichShouldPreventNs2PlusHighlight = {}
+			-- local guiItemsWhichShouldPreventNs2PlusHighlight = {}
 			local playerIsBot = playerRecord.Ping == 0
 
 	        local playerApproveIcon = player["PlayerApproveIcon"]
@@ -279,6 +284,8 @@ function Plugin:Initialise()
 	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
         	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
         	local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
+        	local playerWelderIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasWelder[clientIndex])
+        	local playerMinesIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasMines[clientIndex])
 
         	local targetPrefix = prefixes[clientIndex] or ""
 	        if playerVrIconShouldDisplay then
@@ -294,6 +301,8 @@ function Plugin:Initialise()
 		        playerVrIconShouldDisplay = true
 	        	playerNoteItemShouldDisplay = true
 	        	playerApproveStatusItemShouldDisplay = true
+	        	playerWelderIconShouldDisplay = true
+	        	playerMinesIconShouldDisplay = true
         	end
 
         	if player.SteamFriend then
@@ -319,29 +328,43 @@ function Plugin:Initialise()
 			addOffsetIf(playerApproveIconShouldDisplay)
 			addOffsetIf(playerQueryIconShouldDisplay)
 			addOffsetIf(playerVrIconShouldDisplay)
+			addOffsetIf(playerWelderIconShouldDisplay)
+			addOffsetIf(playerMinesIconShouldDisplay)
 
 			playerNoteItemPosition.x = playerNoteItemPosition.x - xOffset - 5
 		    playerNoteItemPosition.y = playerNoteItemPosition.y + 7
 			player.PlayerNoteItem:SetPosition(playerNoteItemPosition)
 
 	        if playerApproveIcon then
-	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveIcon)
+	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveIcon)
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
 	        end
 	        local playerVrIcon = player["PlayerVrIcon"]
 	        if playerVrIcon then
-	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerVrIcon)
+	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerVrIcon)
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
 	        	local playerVrIconShouldBeDisabled = isVring or (TGNS.Contains(targetPrefix, "!") and not vrConfirmed[clientIndex])
 		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and getDisabledVrTexture(clientIndex) or getTeamVrTexture(clientIndex, teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
-	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerQueryIcon)
+	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerQueryIcon)
 	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
 		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and QUERY_TEXTURE_DISABLED or getTeamQueryTexture(teamNumber))
 	        end
+	        local playerWelderIcon = player["PlayerWelderIcon"]
+	        if playerWelderIcon then
+	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerWelderIcon)
+	        	playerWelderIcon:SetIsVisible(playerWelderIconShouldDisplay)
+	        end
+	        local playerMinesIcon = player["PlayerMinesIcon"]
+	        if playerMinesIcon then
+	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerMinesIcon)
+	        	playerMinesIcon:SetIsVisible(playerMinesIconShouldDisplay)
+	        end
+
+
 		    local color = GUIScoreboard.kSpectatorColor
 		    if teamNumber == kTeam1Index then
 		        color = GUIScoreboard.kBlueColor
@@ -350,7 +373,7 @@ function Plugin:Initialise()
 		    end
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
-	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveStatusItem)
+	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveStatusItem)
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
 	        	playerApproveStatusItem:SetColor(color)
@@ -364,22 +387,22 @@ function Plugin:Initialise()
 	        end
 	        local playerSquadIcon = player["PlayerSquadIcon"]
 	        if playerSquadIcon then
-	        	table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerSquadIcon)
+	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerSquadIcon)
 	        	playerSquadIcon:SetIsVisible(playerSquadIconShouldDisplay)
 	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or inProgressGameShouldProhibitSquadChanging(teamNumber)
 		        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
 	        end
 
-			if MouseTracker_GetIsVisible() then
-				local mouseX, mouseY = Client.GetCursorPosScreen()
-				for i = 1, #guiItemsWhichShouldPreventNs2PlusHighlight do
-					local guiItem = guiItemsWhichShouldPreventNs2PlusHighlight[i]
-					if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
-						player["Background"]:SetColor(updateTeam["Color"])
-						break
-					end
-				end
-			end
+			-- if MouseTracker_GetIsVisible() then
+			-- 	local mouseX, mouseY = Client.GetCursorPosScreen()
+			-- 	for i = 1, #guiItemsWhichShouldPreventNs2PlusHighlight do
+			-- 		local guiItem = guiItemsWhichShouldPreventNs2PlusHighlight[i]
+			-- 		if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
+			-- 			player["Background"]:SetColor(updateTeam["Color"])
+			-- 			break
+			-- 		end
+			-- 	end
+			-- end
 
 			if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 and not player.Status:GetText():find("Spec") then
 				player["Background"]:SetColor(Color(17/255,115/255,17/255))

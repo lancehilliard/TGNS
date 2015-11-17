@@ -1,8 +1,6 @@
 Script.Load("lua/tgns/TGNS.lua")
 
 local Plugin = {}
-Plugin.HasConfig = true
-Plugin.ConfigName = "adminmenu.json"
 
 Plugin.ADMIN_MENU_REQUESTED = "adminMenu_ADMIN_MENU_REQUESTED"
 Plugin.MENU_DATA = "adminMenu_MENU_DATA"

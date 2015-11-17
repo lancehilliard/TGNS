@@ -1,3 +1,6 @@
+Plugin.HasConfig = true
+Plugin.ConfigName = "scoreboard.json"
+
 local changers = {}
 local clientsReadyForScoreboardData = {}
 local approvalCounts = {}
@@ -55,8 +58,12 @@ local function GetReadyPlayerList()
 end
 
 local function SendNetworkMessage(sourcePlayer, targetPlayer)
-	local sourceClient = TGNS.GetClient(sourcePlayer)
-	TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer))})
+	if sourcePlayer and targetPlayer then
+		local sourceClient = TGNS.GetClient(sourcePlayer)
+		local sourcePlayerHasWelder = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(Welder.kMapName) ~= nil
+		local sourcePlayerHasMines = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(LayMines.kMapName) ~= nil
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines})
+	end
 end
 
 function Plugin:SendTeamScoresDatas()
@@ -529,6 +536,23 @@ function Plugin:Initialise()
  			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
  				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(mixinClient),s=squadNumbers[mixinClient]})
  			end)		
+ 		end
+ 	end
+
+ 	local originalWeaponOwnerMixinAddWeapon = WeaponOwnerMixin.AddWeapon
+ 	WeaponOwnerMixin.AddWeapon = function(weaponOwnerMixinSelf, weapon, setActive)
+ 		local result = originalWeaponOwnerMixinAddWeapon(weaponOwnerMixinSelf, weapon, setActive)
+ 		if weapon:isa("Welder") or weapon:isa("LayMines") then
+	 		self:AnnouncePlayerPrefix(weaponOwnerMixinSelf)
+ 		end
+ 		return result
+ 	end
+
+ 	local originalWeaponOwnerMixinRemoveWeapon = WeaponOwnerMixin.RemoveWeapon
+ 	WeaponOwnerMixin.RemoveWeapon = function(weaponOwnerMixinSelf, weapon)
+ 		originalWeaponOwnerMixinRemoveWeapon(weaponOwnerMixinSelf, weapon)
+ 		if weapon:isa("Welder") or weapon:isa("LayMines") then
+	 		self:AnnouncePlayerPrefix(weaponOwnerMixinSelf)
  		end
  	end
 
