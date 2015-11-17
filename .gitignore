@@ -278,6 +278,9 @@
 !mods/tgns/source/ui/welcome/readyroom1_s.psd
 !mods/tgns/source/ui/welcome/readyroom1_p.psd
 
+!mods/tgns/source/ui/badges/marines/Welder.psd
+!mods/tgns/source/ui/badges/marines/Mines.psd
+
 # And then whitelist spec files
 
 !specs/lib/lemock.lua
