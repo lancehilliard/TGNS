@@ -298,6 +298,7 @@ function Plugin:Initialise()
         	local playerClusterGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasClusterGrenade[clientIndex])
         	local playerGasGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasGasGrenade[clientIndex])
         	local playerPulseGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasPulseGrenade[clientIndex])
+        	local playerNote = notes[clientIndex]
 
         	local targetPrefix = prefixes[clientIndex] or ""
 	        if playerVrIconShouldDisplay then
@@ -318,6 +319,7 @@ function Plugin:Initialise()
 	        	playerClusterGrenadeIconShouldDisplay = true
 	        	playerGasGrenadeIconShouldDisplay = true
 	        	playerPulseGrenadeIconShouldDisplay = true
+	        	playerNote = "test"
         	end
 
         	if player.SteamFriend then
@@ -415,7 +417,7 @@ function Plugin:Initialise()
 	        local playerNoteItem = player["PlayerNoteItem"]
 	        if playerNoteItem then
 	        	playerNoteItem:SetIsVisible(playerNoteItemShouldDisplay)
-	        	playerNoteItem:SetText(string.format("%s", notes[clientIndex] and notes[clientIndex] or ""))
+	        	playerNoteItem:SetText(string.format("%s", playerNote and playerNote or ""))
 	        	playerNoteItem:SetColor(color)
 	        end
 	        local playerSquadIcon = player["PlayerSquadIcon"]
