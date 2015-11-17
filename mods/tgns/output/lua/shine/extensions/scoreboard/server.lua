@@ -62,7 +62,10 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourceClient = TGNS.GetClient(sourcePlayer)
 		local sourcePlayerHasWelder = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(Welder.kMapName) ~= nil
 		local sourcePlayerHasMines = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(LayMines.kMapName) ~= nil
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines})
+		local sourcePlayerHasClusterGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(ClusterGrenadeThrower.kMapName.kMapName) ~= nil
+		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName.kMapName) ~= nil
+		local sourcePlayerHasPulseGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(PulseGrenadeThrower.kMapName.kMapName) ~= nil
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades})
 	end
 end
 
@@ -539,10 +542,15 @@ function Plugin:Initialise()
  		end
  	end
 
+ 	local isShownOnMarineScoreboard = function(weapon)
+ 		local result = weapon:isa("Welder") or weapon:isa("LayMines") or weapon:isa("ClusterGrenade") or weapon:isa("GasGrenade") or weapon:isa("PulseGrenade")
+ 		return result
+	end
+
  	local originalWeaponOwnerMixinAddWeapon = WeaponOwnerMixin.AddWeapon
  	WeaponOwnerMixin.AddWeapon = function(weaponOwnerMixinSelf, weapon, setActive)
  		local result = originalWeaponOwnerMixinAddWeapon(weaponOwnerMixinSelf, weapon, setActive)
- 		if weapon:isa("Welder") or weapon:isa("LayMines") then
+ 		if isShownOnMarineScoreboard(weapon) then
 	 		self:AnnouncePlayerPrefix(weaponOwnerMixinSelf)
  		end
  		return result
@@ -551,7 +559,7 @@ function Plugin:Initialise()
  	local originalWeaponOwnerMixinRemoveWeapon = WeaponOwnerMixin.RemoveWeapon
  	WeaponOwnerMixin.RemoveWeapon = function(weaponOwnerMixinSelf, weapon)
  		originalWeaponOwnerMixinRemoveWeapon(weaponOwnerMixinSelf, weapon)
- 		if weapon:isa("Welder") or weapon:isa("LayMines") then
+ 		if isShownOnMarineScoreboard(weapon) then
 	 		self:AnnouncePlayerPrefix(weaponOwnerMixinSelf)
  		end
  	end

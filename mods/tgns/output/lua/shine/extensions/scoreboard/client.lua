@@ -50,6 +50,9 @@ local recentCaptainsClientIndexes = {}
 local failsBkaPrerequisite = {}
 local hasWelder = {}
 local hasMines = {}
+local hasClusterGrenade = {}
+local hasGasGrenade = {}
+local hasPulseGrenade = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 
@@ -60,6 +63,9 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	failsBkaPrerequisite[message.i] = message.b
 	hasWelder[message.i] = message.w
 	hasMines[message.i] = message.m
+	hasClusterGrenade[message.i] = message.cg
+	hasGasGrenade[message.i] = message.gg
+	hasPulseGrenade[message.i] = message.pg
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -231,6 +237,9 @@ function Plugin:Initialise()
 	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,x=-89}
 	        	,{n="PlayerWelderIcon",t="ui/badges/marines/Welder.dds",x=-109}
 	        	,{n="PlayerMinesIcon",t="ui/badges/marines/Mines.dds",x=-129}
+	        	,{n="PlayerClusterGrenadeIcon",t="ui/badges/marines/Cluster.dds",x=-149}
+	        	,{n="PlayerGasGrenadeIcon",t="ui/badges/marines/Gas.dds",x=-169}
+	        	,{n="PlayerPulseGrenadeIcon",t="ui/badges/marines/Pulse.dds",x=-189}
 	    	}
 
 			TGNS.DoFor(icons, function(i)
@@ -286,6 +295,9 @@ function Plugin:Initialise()
         	local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
         	local playerWelderIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasWelder[clientIndex])
         	local playerMinesIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasMines[clientIndex])
+        	local playerClusterGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasClusterGrenade[clientIndex])
+        	local playerGasGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasGasGrenade[clientIndex])
+        	local playerPulseGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasPulseGrenade[clientIndex])
 
         	local targetPrefix = prefixes[clientIndex] or ""
 	        if playerVrIconShouldDisplay then
@@ -303,6 +315,9 @@ function Plugin:Initialise()
 	        	playerApproveStatusItemShouldDisplay = true
 	        	playerWelderIconShouldDisplay = true
 	        	playerMinesIconShouldDisplay = true
+	        	playerClusterGrenadeIconShouldDisplay = true
+	        	playerGasGrenadeIconShouldDisplay = true
+	        	playerPulseGrenadeIconShouldDisplay = true
         	end
 
         	if player.SteamFriend then
@@ -330,6 +345,9 @@ function Plugin:Initialise()
 			addOffsetIf(playerVrIconShouldDisplay)
 			addOffsetIf(playerWelderIconShouldDisplay)
 			addOffsetIf(playerMinesIconShouldDisplay)
+			addOffsetIf(playerClusterGrenadeIconShouldDisplay)
+			addOffsetIf(playerGasGrenadeIconShouldDisplay)
+			addOffsetIf(playerPulseGrenadeIconShouldDisplay)
 
 			playerNoteItemPosition.x = playerNoteItemPosition.x - xOffset - 5
 		    playerNoteItemPosition.y = playerNoteItemPosition.y + 7
@@ -362,6 +380,21 @@ function Plugin:Initialise()
 	        if playerMinesIcon then
 	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerMinesIcon)
 	        	playerMinesIcon:SetIsVisible(playerMinesIconShouldDisplay)
+	        end
+	        local playerClusterGrenadeIcon = player["PlayerClusterGrenadeIcon"]
+	        if playerClusterGrenadeIcon then
+	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerClusterGrenadeIcon)
+	        	playerClusterGrenadeIcon:SetIsVisible(playerClusterGrenadeIconShouldDisplay)
+	        end
+	        local playerGasGrenadeIcon = player["PlayerGasGrenadeIcon"]
+	        if playerGasGrenadeIcon then
+	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerGasGrenadeIcon)
+	        	playerGasGrenadeIcon:SetIsVisible(playerGasGrenadeIconShouldDisplay)
+	        end
+	        local playerPulseGrenadeIcon = player["PlayerPulseGrenadeIcon"]
+	        if playerPulseGrenadeIcon then
+	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerPulseGrenadeIcon)
+	        	playerPulseGrenadeIcon:SetIsVisible(playerPulseGrenadeIconShouldDisplay)
 	        end
 
 
