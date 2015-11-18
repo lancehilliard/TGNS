@@ -62,9 +62,9 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourceClient = TGNS.GetClient(sourcePlayer)
 		local sourcePlayerHasWelder = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(Welder.kMapName) ~= nil
 		local sourcePlayerHasMines = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(LayMines.kMapName) ~= nil
-		local sourcePlayerHasClusterGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(ClusterGrenadeThrower.kMapName.kMapName) ~= nil
-		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName.kMapName) ~= nil
-		local sourcePlayerHasPulseGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(PulseGrenadeThrower.kMapName.kMapName) ~= nil
+		local sourcePlayerHasClusterGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(ClusterGrenadeThrower.kMapName) ~= nil
+		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName) ~= nil
+		local sourcePlayerHasPulseGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(PulseGrenadeThrower.kMapName) ~= nil
 		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades})
 	end
 end
@@ -543,7 +543,7 @@ function Plugin:Initialise()
  	end
 
  	local isShownOnMarineScoreboard = function(weapon)
- 		local result = weapon:isa("Welder") or weapon:isa("LayMines") or weapon:isa("ClusterGrenade") or weapon:isa("GasGrenade") or weapon:isa("PulseGrenade")
+ 		local result = weapon:isa("Welder") or weapon:isa("LayMines") or weapon:isa("GrenadeThrower")
  		return result
 	end
 
