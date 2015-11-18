@@ -727,31 +727,6 @@ function Plugin:Initialise()
 		return result
 	end
 
-
- --    local originalGetBadgeFormalName = GetBadgeFormalName
- --    GetBadgeFormalName = function(name)
- --    	local result = originalGetBadgeFormalName(name)
- --    	if result == "Custom Badge" then
- --    		local badgeLabel = badgeLabels[name]
- --    		if badgeLabel then
- --    			result = badgeLabel
- --    		end
- --    	end
- --    	return result
-	-- end
-
-	-- TGNS.HookNetworkMessage(Plugin.BADGE_DISPLAY_LABEL, function(message)
-	-- 	badgeLabels[string.format("ui/badges/%s.dds", message.n)] = message.l
-	-- end)
-
-	-- local originalGUIHoverTooltipShow = GUIHoverTooltip.Show
-	-- GUIHoverTooltip.Show = function(self, displayTimeInSeconds)
-	-- 	if self.tooltip and self.tooltip.GetText and self.tooltip:GetText():find("TGNS") then
-	-- 		displayTimeInSeconds = nil
-	-- 	end
-	-- 	originalGUIHoverTooltipShow(self, displayTimeInSeconds)
-	-- end
-
 	local originalGUIHoverTooltipHide = GUIHoverTooltip.Hide
 	GUIHoverTooltip.Hide = function(self, hideTime, hideProtectedText)
 		if self.protectedText then
