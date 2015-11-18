@@ -55,6 +55,8 @@ local hasGasGrenade = {}
 local hasPulseGrenade = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
+local guiItemTooltipText
+local hoverBadge
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
@@ -176,11 +178,34 @@ function Plugin:Initialise()
 	GUIScoreboard.Update = function(self, deltaTime)
 		originalGUIScoreboardUpdate(self, deltaTime)
 
-		for index, team in ipairs(self.teams) do
-	        if self.visible then
+        if self.visible then
+
+        	guiItemTooltipText = nil
+        	hoverBadge = nil
+
+			for index, team in ipairs(self.teams) do
 	            self:UpdateTeam(team)
-	        end
-	    end
+		    end
+
+
+            if guiItemTooltipText and self.badgeNameTooltip and not self.hoverMenu.background:GetIsVisible() and not MainMenu_GetIsOpened() then
+				self.badgeNameTooltip:SetText(guiItemTooltipText)
+				self.badgeNameTooltip.protectedText = guiItemTooltipText
+                self.badgeNameTooltip:Show(0)
+            else
+                if not hoverBadge then
+	                self.badgeNameTooltip:Hide(nil, true)
+                end
+            end
+
+
+        else
+	    	if self.badgeNameTooltip and self.badgeNameTooltip.background:GetIsVisible() then
+	    		self.badgeNameTooltip:Hide(0, true)
+			end
+        end
+
+
 	end
 
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
@@ -231,15 +256,26 @@ function Plugin:Initialise()
 	        end
 
    	        local icons = {
-	        	{n="PlayerSquadIcon",t=SQUAD_TEXTURE_DISABLED,x=-25}
-	        	,{n="PlayerApproveIcon",t=APPROVE_TEXTURE_DISABLED,x=-49}
-	        	,{n="PlayerQueryIcon",t=QUERY_TEXTURE_DISABLED,x=-69}
-	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,x=-89}
-	        	,{n="PlayerWelderIcon",t="ui/badges/marines/Welder.dds",x=-109}
-	        	,{n="PlayerMinesIcon",t="ui/badges/marines/Mines.dds",x=-129}
-	        	,{n="PlayerClusterGrenadeIcon",t="ui/badges/marines/Cluster.dds",x=-149}
-	        	,{n="PlayerGasGrenadeIcon",t="ui/badges/marines/Gas.dds",x=-169}
-	        	,{n="PlayerPulseGrenadeIcon",t="ui/badges/marines/Pulse.dds",x=-189}
+	        	{n="PlayerSquadIcon",t=SQUAD_TEXTURE_DISABLED,x=-25,l=function(teamNumber)
+			        local circleName = "Player Circle"
+			        local circleCycleName = "squads and lifeforms"
+			        if teamNumber == kMarineTeamType then
+			        	circleName = "Squad Circle"
+			        	circleCycleName = "squad assignments"
+			        elseif teamNumber == kAlienTeamType then
+			        	circleName = "Lifeform Circle"
+			        	circleCycleName = "planned lifeforms"
+			        end
+	        		return circleName .. "\n\nClick to cycle through\n" .. circleCycleName .. "."
+	        	end}
+	        	,{n="PlayerApproveIcon",t=APPROVE_TEXTURE_DISABLED,x=-49,l="Approve Chevron\n\nClick to approve this player for any reason!\n\nAlso: if a player has an unchecked Voicecomm Vouch Bubble,\nclick this when you're SURE they can hear team voicecomm.\nThis lets the whole team see that the player has been vouched!"}
+	        	,{n="PlayerQueryIcon",t=QUERY_TEXTURE_DISABLED,x=-69,l="Contact Card\n\nClick to see player\nidentity information."}
+	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,x=-89,l="Voicecomm Vouch Bubble\n\nClick to warn anyone not\nresponding to team voicecomm.\n\nAlso: a checkmark in the bubble means someone already\nvouched that this player can hear team voicecomm."}
+	        	,{n="PlayerWelderIcon",t="ui/badges/marines/Welder.dds",x=-109,l="Welder\n\nThis player has a Welder."}
+	        	,{n="PlayerMinesIcon",t="ui/badges/marines/Mines.dds",x=-129,l="Mines\n\nThis player has Mines."}
+	        	,{n="PlayerPulseGrenadeIcon",t="ui/badges/marines/Pulse.dds",x=-149,l="Pulse Grenades\n\nThis player has Pulse Grenades."}
+	        	,{n="PlayerGasGrenadeIcon",t="ui/badges/marines/Gas.dds",x=-169,l="Gas Grenades\n\nThis player has Gas Grenades."}
+	        	,{n="PlayerClusterGrenadeIcon",t="ui/badges/marines/Cluster.dds",x=-189,l="Cluster Grenades\n\nThis player has Cluster Grenades."}
 	    	}
 
 			TGNS.DoFor(icons, function(i)
@@ -252,6 +288,7 @@ function Plugin:Initialise()
 				    icon:SetAnchor(GUIItem.Left, GUIItem.Center)
 				    icon:SetPosition(position)
 				    icon:SetTexture(i.t)
+				    icon.tooltipText = i.l
 				    player[i.n] = icon
 				    player.Background:AddChild(icon)
 				    if player.IconTable then
@@ -280,7 +317,7 @@ function Plugin:Initialise()
 			end
 
 
-			-- local guiItemsWhichShouldPreventNs2PlusHighlight = {}
+			local guiItems = {}
 			local playerIsBot = playerRecord.Ping == 0
 
 	        local playerApproveIcon = player["PlayerApproveIcon"]
@@ -356,46 +393,46 @@ function Plugin:Initialise()
 			player.PlayerNoteItem:SetPosition(playerNoteItemPosition)
 
 	        if playerApproveIcon then
-	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveIcon)
+	        	table.insert(guiItems, playerApproveIcon)
 	        	playerApproveIcon:SetIsVisible(playerApproveIconShouldDisplay)
 		        playerApproveIcon:SetTexture(isApproved[clientIndex] and APPROVE_TEXTURE_DISABLED or getTeamApproveTexture(teamNumber))
 	        end
 	        local playerVrIcon = player["PlayerVrIcon"]
 	        if playerVrIcon then
-	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerVrIcon)
+	        	table.insert(guiItems, playerVrIcon)
 	        	playerVrIcon:SetIsVisible(playerVrIconShouldDisplay)
 	        	local playerVrIconShouldBeDisabled = isVring or (TGNS.Contains(targetPrefix, "!") and not vrConfirmed[clientIndex])
 		        playerVrIcon:SetTexture(playerVrIconShouldBeDisabled and getDisabledVrTexture(clientIndex) or getTeamVrTexture(clientIndex, teamNumber))
 	        end
 	        local playerQueryIcon = player["PlayerQueryIcon"]
 	        if playerQueryIcon then
-	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerQueryIcon)
+	        	table.insert(guiItems, playerQueryIcon)
 	        	playerQueryIcon:SetIsVisible(playerQueryIconShouldDisplay)
 		        playerQueryIcon:SetTexture(isQuerying[clientIndex] and QUERY_TEXTURE_DISABLED or getTeamQueryTexture(teamNumber))
 	        end
 	        local playerWelderIcon = player["PlayerWelderIcon"]
 	        if playerWelderIcon then
-	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerWelderIcon)
+	        	table.insert(guiItems, playerWelderIcon)
 	        	playerWelderIcon:SetIsVisible(playerWelderIconShouldDisplay)
 	        end
 	        local playerMinesIcon = player["PlayerMinesIcon"]
 	        if playerMinesIcon then
-	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerMinesIcon)
+	        	table.insert(guiItems, playerMinesIcon)
 	        	playerMinesIcon:SetIsVisible(playerMinesIconShouldDisplay)
 	        end
 	        local playerClusterGrenadeIcon = player["PlayerClusterGrenadeIcon"]
 	        if playerClusterGrenadeIcon then
-	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerClusterGrenadeIcon)
+	        	table.insert(guiItems, playerClusterGrenadeIcon)
 	        	playerClusterGrenadeIcon:SetIsVisible(playerClusterGrenadeIconShouldDisplay)
 	        end
 	        local playerGasGrenadeIcon = player["PlayerGasGrenadeIcon"]
 	        if playerGasGrenadeIcon then
-	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerGasGrenadeIcon)
+	        	table.insert(guiItems, playerGasGrenadeIcon)
 	        	playerGasGrenadeIcon:SetIsVisible(playerGasGrenadeIconShouldDisplay)
 	        end
 	        local playerPulseGrenadeIcon = player["PlayerPulseGrenadeIcon"]
 	        if playerPulseGrenadeIcon then
-	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerPulseGrenadeIcon)
+	        	table.insert(guiItems, playerPulseGrenadeIcon)
 	        	playerPulseGrenadeIcon:SetIsVisible(playerPulseGrenadeIconShouldDisplay)
 	        end
 
@@ -408,7 +445,7 @@ function Plugin:Initialise()
 		    end
 	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
 	        if playerApproveStatusItem then
-	        	-- table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerApproveStatusItem)
+	        	table.insert(guiItems, playerApproveStatusItem)
 	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
 	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
 	        	playerApproveStatusItem:SetColor(color)
@@ -422,22 +459,30 @@ function Plugin:Initialise()
 	        end
 	        local playerSquadIcon = player["PlayerSquadIcon"]
 	        if playerSquadIcon then
-	        	--table.insert(guiItemsWhichShouldPreventNs2PlusHighlight, playerSquadIcon)
+	        	table.insert(guiItems, playerSquadIcon)
 	        	playerSquadIcon:SetIsVisible(playerSquadIconShouldDisplay)
 	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or inProgressGameShouldProhibitSquadChanging(teamNumber)
 		        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
 	        end
 
-			-- if MouseTracker_GetIsVisible() then
-			-- 	local mouseX, mouseY = Client.GetCursorPosScreen()
-			-- 	for i = 1, #guiItemsWhichShouldPreventNs2PlusHighlight do
-			-- 		local guiItem = guiItemsWhichShouldPreventNs2PlusHighlight[i]
-			-- 		if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
-			-- 			player["Background"]:SetColor(updateTeam["Color"])
-			-- 			break
-			-- 		end
-			-- 	end
-			-- end
+			if MouseTracker_GetIsVisible() and not guiItemTooltipText and not hoverBadge then
+				local mouseX, mouseY = Client.GetCursorPosScreen()
+				for i = 1, #guiItems do
+					local guiItem = guiItems[i]
+					if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
+						guiItemTooltipText = type(guiItem.tooltipText) == "function" and guiItem.tooltipText(teamNumber) or guiItem.tooltipText
+						break
+					end
+				end
+                for i = 1, #player.BadgeItems do
+                    local badgeItem = player.BadgeItems[i]
+                    if GUIItemContainsPoint(badgeItem, mouseX, mouseY) and badgeItem:GetIsVisible() then
+                        hoverBadge = true
+                        break
+                    end
+                end
+
+			end
 
 			if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 and not player.Status:GetText():find("Spec") then
 				player["Background"]:SetColor(Color(17/255,115/255,17/255))
@@ -690,12 +735,24 @@ function Plugin:Initialise()
 	-- 	badgeLabels[string.format("ui/badges/%s.dds", message.n)] = message.l
 	-- end)
 
-	local originalGUIHoverTooltipShow = GUIHoverTooltip.Show
-	GUIHoverTooltip.Show = function(self, displayTimeInSeconds)
-		if self.tooltip and self.tooltip.GetText and self.tooltip:GetText():find("TGNS") then
-			displayTimeInSeconds = nil
+	-- local originalGUIHoverTooltipShow = GUIHoverTooltip.Show
+	-- GUIHoverTooltip.Show = function(self, displayTimeInSeconds)
+	-- 	if self.tooltip and self.tooltip.GetText and self.tooltip:GetText():find("TGNS") then
+	-- 		displayTimeInSeconds = nil
+	-- 	end
+	-- 	originalGUIHoverTooltipShow(self, displayTimeInSeconds)
+	-- end
+
+	local originalGUIHoverTooltipHide = GUIHoverTooltip.Hide
+	GUIHoverTooltip.Hide = function(self, hideTime, hideProtectedText)
+		if self.protectedText then
+			if self.tooltip and self.tooltip.GetText and self.tooltip:GetText() == self.protectedText and hideProtectedText then
+				originalGUIHoverTooltipHide(self, hideTime)
+				self.protectedText = nil
+			end
+		else
+			originalGUIHoverTooltipHide(self, hideTime)
 		end
-		originalGUIHoverTooltipShow(self, displayTimeInSeconds)
 	end
 
 	 TGNS.HookNetworkMessage(Plugin.ARMORDECAY1, function(message)
