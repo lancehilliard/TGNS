@@ -280,6 +280,9 @@
 
 !mods/tgns/source/ui/badges/marines/Welder.psd
 !mods/tgns/source/ui/badges/marines/Mines.psd
+!mods/tgns/source/ui/badges/marines/Cluster.psd
+!mods/tgns/source/ui/badges/marines/Gas.psd
+!mods/tgns/source/ui/badges/marines/Pulse.psd
 
 # And then whitelist spec files
 
