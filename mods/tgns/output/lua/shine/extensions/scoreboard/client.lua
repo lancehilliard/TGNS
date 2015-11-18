@@ -268,25 +268,33 @@ function Plugin:Initialise()
 			        end
 	        		return circleName .. "\n\nClick to cycle through\n" .. circleCycleName .. "."
 	        	end}
-	        	,{n="PlayerApproveIcon",t=APPROVE_TEXTURE_DISABLED,x=-49,l="Approve Chevron\n\nClick to approve this player for any reason!\n\nAlso: if a player has an unchecked Voicecomm Vouch Bubble,\nclick this when you're SURE they can hear team voicecomm.\nThis lets the whole team see that the player has been vouched!"}
-	        	,{n="PlayerQueryIcon",t=QUERY_TEXTURE_DISABLED,x=-69,l="Contact Card\n\nClick to see player\nidentity information."}
-	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,x=-89,l="Voicecomm Vouch Bubble\n\nClick to warn anyone not\nresponding to team voicecomm.\n\nAlso: a checkmark in the bubble means someone already\nvouched that this player can hear team voicecomm."}
-	        	,{n="PlayerWelderIcon",t="ui/badges/marines/Welder.dds",x=-109,l="Welder\n\nThis player has a Welder."}
-	        	,{n="PlayerMinesIcon",t="ui/badges/marines/Mines.dds",x=-129,l="Mines\n\nThis player has Mines."}
-	        	,{n="PlayerPulseGrenadeIcon",t="ui/badges/marines/Pulse.dds",x=-149,l="Pulse Grenades\n\nThis player has Pulse Grenades."}
-	        	,{n="PlayerGasGrenadeIcon",t="ui/badges/marines/Gas.dds",x=-169,l="Gas Grenades\n\nThis player has Gas Grenades."}
-	        	,{n="PlayerClusterGrenadeIcon",t="ui/badges/marines/Cluster.dds",x=-189,l="Cluster Grenades\n\nThis player has Cluster Grenades."}
+	        	,{n="PlayerApproveIcon",t=APPROVE_TEXTURE_DISABLED,l="Approve Chevron\n\nClick to approve this player for any reason!\n\nAlso: if a player has an unchecked Voicecomm Vouch Bubble,\nclick this when you're SURE they can hear team voicecomm.\nThis lets the whole team see that the player has been vouched!"}
+	        	,{n="PlayerQueryIcon",t=QUERY_TEXTURE_DISABLED,l="Contact Card\n\nClick to see player\nidentity information."}
+	        	,{n="PlayerVrIcon",t=VR_TEXTURE_DISABLED,l="Voicecomm Vouch Bubble\n\nClick to warn anyone not\nresponding to team voicecomm.\n\nAlso: a checkmark in the bubble means someone already\nvouched that this player can hear team voicecomm."}
+	        	,{n="PlayerWelderIcon",t="ui/badges/marines/Welder.dds",x=-140,l="Welder\n\nThis player has a Welder."}
+	        	,{n="PlayerMinesIcon",t="ui/badges/marines/Mines.dds",x=-160,l="Mines\n\nThis player has Mines."}
+	        	,{n="PlayerPulseGrenadeIcon",t="ui/badges/marines/Pulse.dds",x=-180,l="Pulse Grenades\n\nThis player has Pulse Grenades."}
+	        	,{n="PlayerGasGrenadeIcon",t="ui/badges/marines/Gas.dds",x=-180,l="Gas Grenades\n\nThis player has Gas Grenades."}
+	        	,{n="PlayerClusterGrenadeIcon",t="ui/badges/marines/Cluster.dds",x=-180,l="Cluster Grenades\n\nThis player has Cluster Grenades."}
 	    	}
 
 			TGNS.DoFor(icons, function(i)
-				if not player[i.n] then
+				if player[i.n] then
+					if i.x then
+						local icon = player[i.n]
+						local iconPosition = icon:GetPosition()
+						local statusPosition = player.Status:GetPosition()
+						iconPosition.x = statusPosition.x + i.x
+						icon:SetPosition(iconPosition)
+					end
+				else
 				    local icon = GUIManager:CreateGraphicItem()
-				    local position = player.Status:GetPosition()
-				    position.x = position.x + i.x
-				    position.y = position.y + (i.y or -10)
+				    --local position = player.Status:GetPosition()
+				    --position.x = position.x + i.x
+				    --position.y = position.y + (i.y or -10)
 				    icon:SetSize(Vector(20, 20, 0))
 				    icon:SetAnchor(GUIItem.Left, GUIItem.Center)
-				    icon:SetPosition(position)
+				    -- icon:SetPosition(position)
 				    icon:SetTexture(i.t)
 				    icon.tooltipText = i.l
 				    player[i.n] = icon
@@ -329,7 +337,7 @@ function Plugin:Initialise()
 	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
 	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
         	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
-        	local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
+        	--local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
         	local playerWelderIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasWelder[clientIndex])
         	local playerMinesIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasMines[clientIndex])
         	local playerClusterGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasClusterGrenade[clientIndex])
@@ -350,13 +358,13 @@ function Plugin:Initialise()
 		        playerQueryIconShouldDisplay = true
 		        playerVrIconShouldDisplay = true
 	        	playerNoteItemShouldDisplay = true
-	        	playerApproveStatusItemShouldDisplay = true
+	        	--playerApproveStatusItemShouldDisplay = true
 	        	playerWelderIconShouldDisplay = true
 	        	playerMinesIconShouldDisplay = true
 	        	playerClusterGrenadeIconShouldDisplay = true
 	        	playerGasGrenadeIconShouldDisplay = true
 	        	playerPulseGrenadeIconShouldDisplay = true
-	        	playerNote = "test"
+	        	playerNote = playerNote or "test"
         	end
 
         	if player.SteamFriend then
@@ -382,11 +390,12 @@ function Plugin:Initialise()
 			addOffsetIf(playerApproveIconShouldDisplay)
 			addOffsetIf(playerQueryIconShouldDisplay)
 			addOffsetIf(playerVrIconShouldDisplay)
-			addOffsetIf(playerWelderIconShouldDisplay)
-			addOffsetIf(playerMinesIconShouldDisplay)
-			addOffsetIf(playerClusterGrenadeIconShouldDisplay)
-			addOffsetIf(playerGasGrenadeIconShouldDisplay)
-			addOffsetIf(playerPulseGrenadeIconShouldDisplay)
+
+			-- addOffsetIf(playerWelderIconShouldDisplay)
+			-- addOffsetIf(playerMinesIconShouldDisplay)
+			-- addOffsetIf(playerClusterGrenadeIconShouldDisplay)
+			-- addOffsetIf(playerGasGrenadeIconShouldDisplay)
+			-- addOffsetIf(playerPulseGrenadeIconShouldDisplay)
 
 			playerNoteItemPosition.x = playerNoteItemPosition.x - xOffset - 5
 		    playerNoteItemPosition.y = playerNoteItemPosition.y + 7
@@ -443,13 +452,13 @@ function Plugin:Initialise()
 		    elseif teamNumber == kTeam2Index then
 		        color = GUIScoreboard.kRedColor
 		    end
-	        local playerApproveStatusItem = player["PlayerApproveStatusItem"]
-	        if playerApproveStatusItem then
-	        	table.insert(guiItems, playerApproveStatusItem)
-	        	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
-	        	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
-	        	playerApproveStatusItem:SetColor(color)
-	        end
+	        -- local playerApproveStatusItem = player["PlayerApproveStatusItem"]
+	        -- if playerApproveStatusItem then
+	        -- 	table.insert(guiItems, playerApproveStatusItem)
+	        -- 	playerApproveStatusItem:SetIsVisible(playerApproveStatusItemShouldDisplay)
+	        -- 	playerApproveStatusItem:SetText(tostring(approveSentTotal) .. ":" .. tostring(approveReceivedTotal))
+	        -- 	playerApproveStatusItem:SetColor(color)
+	        -- end
 
 	        local playerNoteItem = player["PlayerNoteItem"]
 	        if playerNoteItem then
