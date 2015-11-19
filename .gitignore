@@ -283,6 +283,8 @@
 !mods/tgns/source/ui/badges/marines/Cluster.psd
 !mods/tgns/source/ui/badges/marines/Gas.psd
 !mods/tgns/source/ui/badges/marines/Pulse.psd
+!mods/tgns/source/ui/badges/aliens/ClosedTunnel.psd
+!mods/tgns/source/ui/badges/aliens/OpenTunnel.psd
 
 # And then whitelist spec files
 

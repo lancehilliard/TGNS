@@ -10,6 +10,7 @@ local teamScoresDatas = {}
 local vouches = {}
 local squadNumbers = {}
 local NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS = 180
+local tunnelDescriptions = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -65,7 +66,8 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourcePlayerHasClusterGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(ClusterGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerHasPulseGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(PulseGrenadeThrower.kMapName) ~= nil
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades})
+		local sourcePlayerTunnelDescription = tunnelDescriptions[sourcePlayer:GetClientIndex()] or ""
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades,t=sourcePlayerTunnelDescription})
 	end
 end
 
@@ -562,6 +564,39 @@ function Plugin:Initialise()
  		if isShownOnMarineScoreboard(weapon) then
 	 		self:AnnouncePlayerPrefix(weaponOwnerMixinSelf)
  		end
+ 	end
+
+ 	local OnTunnelExitAddedOrRemoved = function(tunnelSelf, exit, original)
+ 		original(tunnelSelf, exit)
+ 		local unnamedLocationName = "<Unnamed Location>"
+ 		local exitLocationNames = {}
+ 		if tunnelSelf.exitAId and tunnelSelf.exitAId ~= Entity.invalidId then
+ 			local location = GetLocationForPoint(tunnelSelf.exitAEntityPosition)
+			local locationName = location and (location:GetName() and location:GetName() or unnamedLocationName) or unnamedLocationName
+			table.insert(exitLocationNames, locationName)
+ 		end
+ 		if tunnelSelf.exitBId and tunnelSelf.exitBId ~= Entity.invalidId then
+ 			local location = GetLocationForPoint(tunnelSelf.exitBEntityPosition)
+			local locationName = location and (location:GetName() and location:GetName() or unnamedLocationName) or unnamedLocationName
+			table.insert(exitLocationNames, locationName)
+ 		end
+ 		if #exitLocationNames == 2 and tunnelSelf.timeExitBChanged < tunnelSelf.timeExitAChanged then
+ 			exitLocationNames = {exitLocationNames[2], exitLocationNames[1]}
+ 		end
+ 		local tunnelDescription = TGNS.Join(exitLocationNames, " / ")
+ 		local client = TGNS.GetClientByNs2Id(tunnelSelf.ownerClientId)
+ 		local clientIndex = TGNS.GetClientIndex(client)
+ 		tunnelDescriptions[clientIndex] = tunnelDescription
+ 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+ 	end
+
+ 	local originalTunnelAddExit = Tunnel.AddExit
+ 	Tunnel.AddExit = function(tunnelSelf, exit)
+ 		OnTunnelExitAddedOrRemoved(tunnelSelf, exit, originalTunnelAddExit)
+ 	end
+ 	local originalTunnelRemoveExit = Tunnel.RemoveExit
+ 	Tunnel.RemoveExit = function(tunnelSelf, exit)
+ 		OnTunnelExitAddedOrRemoved(tunnelSelf, exit, originalTunnelRemoveExit)
  	end
 
 	return true

@@ -57,6 +57,7 @@ local hasPulseGrenade = {}
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 local guiItemTooltipText
 local hoverBadge
+local tunnelDescriptions = {}
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
@@ -68,6 +69,7 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	hasClusterGrenade[message.i] = message.cg
 	hasGasGrenade[message.i] = message.gg
 	hasPulseGrenade[message.i] = message.pg
+	tunnelDescriptions[message.i] = message.t
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -92,6 +94,12 @@ end)
 
 TGNS.HookNetworkMessage(Plugin.VR_CONFIRMED, function(message)
 	vrConfirmed[message.c] = true
+end)
+
+TGNS.HookNetworkMessage(Plugin.PLAYER_NOTE, function(message)
+	local clientIndex = message.c
+	local note = message.n
+	notes[clientIndex] = note
 end)
 
 local function inProgressGameShouldProhibitSquadChanging(teamNumber)
@@ -255,8 +263,63 @@ function Plugin:Initialise()
 		        player["Number"]:SetColor(numberColor)
 	        end
 
+			local playerIsBot = playerRecord.Ping == 0
+
+	        local tunnelIconTexture = nil
+	        local tunnelDescription = tunnelDescriptions[clientIndex] or ""
+	        if TGNS.HasNonEmptyValue(tunnelDescription) then
+	        	tunnelIconTexture = "ui/badges/aliens/ClosedTunnel.dds"
+	        	if TGNS.Contains(tunnelDescription, " / ") then
+		        	tunnelIconTexture = "ui/badges/aliens/OpenTunnel.dds"
+	        	end
+	        end
+
+	        local playerSquadIconShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType)) and not playerIsBot
+	        local playerApproveIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
+	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
+	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
+        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
+        	--local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
+        	local playerWelderIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasWelder[clientIndex])
+        	local playerMinesIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasMines[clientIndex])
+        	local playerClusterGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasClusterGrenade[clientIndex])
+        	local playerGasGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasGasGrenade[clientIndex])
+        	local playerPulseGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasPulseGrenade[clientIndex])
+        	local playerTunnelIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and TGNS.HasNonEmptyValue(tunnelDescription))
+        	local playerNote = notes[clientIndex]
+
+        	local targetPrefix = prefixes[clientIndex] or ""
+	        if playerVrIconShouldDisplay then
+        		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
+        		targetPrefixFiltered = TGNS.Replace(targetPrefixFiltered, "*", "")
+        		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
+	        end
+
+        	if Shared.GetDevMode() then
+		        playerSquadIconShouldDisplay = true
+		        playerApproveIconShouldDisplay = true
+		        playerQueryIconShouldDisplay = true
+		        playerVrIconShouldDisplay = true
+		        if teamNumber == kMarineTeamType or teamNumber == kAlienTeamType then
+		        	playerNoteItemShouldDisplay = true
+		        	if teamNumber == kMarineTeamType then
+			        	playerWelderIconShouldDisplay = true
+			        	playerMinesIconShouldDisplay = true
+			        	playerClusterGrenadeIconShouldDisplay = true
+			        	playerGasGrenadeIconShouldDisplay = true
+			        	playerPulseGrenadeIconShouldDisplay = true
+			        elseif teamNumber == kAlienTeamType then
+			        	playerTunnelIconShouldDisplay = true
+			        	tunnelDescription = "Here / There"
+			        	tunnelIconTexture = "ui/badges/aliens/OpenTunnel.dds"
+		        	end
+		        end
+	        	--playerApproveStatusItemShouldDisplay = true
+	        	playerNote = playerNote or "test"
+        	end
+
    	        local icons = {
-	        	{n="PlayerSquadIcon",t=SQUAD_TEXTURE_DISABLED,x=-25,l=function(teamNumber)
+	        	{n="PlayerSquadIcon",t=SQUAD_TEXTURE_DISABLED,x=-25,l=function(clientIndex, teamNumber)
 			        local circleName = "Player Circle"
 			        local circleCycleName = "squads and lifeforms"
 			        if teamNumber == kMarineTeamType then
@@ -276,16 +339,26 @@ function Plugin:Initialise()
 	        	,{n="PlayerPulseGrenadeIcon",t="ui/badges/marines/Pulse.dds",x=-180,l="Pulse Grenades\n\nThis player has Pulse Grenades."}
 	        	,{n="PlayerGasGrenadeIcon",t="ui/badges/marines/Gas.dds",x=-180,l="Gas Grenades\n\nThis player has Gas Grenades."}
 	        	,{n="PlayerClusterGrenadeIcon",t="ui/badges/marines/Cluster.dds",x=-180,l="Cluster Grenades\n\nThis player has Cluster Grenades."}
+	        	,{n="PlayerTunnelIcon",t=tunnelIconTexture,x=-140,l=function(clientIndex, teamNumber)
+	        		local tunnelDescription = tunnelDescriptions[clientIndex] or ""
+	        		return string.format("Gorge Tunnel\n\nThis player has a Gorge Tunnel.\n\nIt's %s in:\n\n%s%s", TGNS.Contains(tunnelDescription, " / ") and "OPEN" or "CLOSED", tunnelDescription, TGNS.Contains(tunnelDescription, " / ") and "\n\nNote: The first entrance listed above is older and\nwill be destroyed if this player drops another." or "")
+	        	end}
 	    	}
 
 			TGNS.DoFor(icons, function(i)
 				if player[i.n] then
-					if i.x then
-						local icon = player[i.n]
-						local iconPosition = icon:GetPosition()
-						local statusPosition = player.Status:GetPosition()
-						iconPosition.x = statusPosition.x + i.x
-						icon:SetPosition(iconPosition)
+					local icon = player[i.n]
+					if icon:GetIsVisible() then
+						if i.x then
+							local iconPosition = icon:GetPosition()
+							local statusPosition = player.Status:GetPosition()
+							iconPosition.x = statusPosition.x + i.x
+							icon:SetPosition(iconPosition)
+						end
+						if i.t ~= icon.lastTexture then
+						    icon:SetTexture(i.t)
+						    icon.lastTexture = i.t
+						end
 					end
 				else
 				    local icon = GUIManager:CreateGraphicItem()
@@ -296,6 +369,7 @@ function Plugin:Initialise()
 				    icon:SetAnchor(GUIItem.Left, GUIItem.Center)
 				    -- icon:SetPosition(position)
 				    icon:SetTexture(i.t)
+				    icon.lastTexture = i.t
 				    icon.tooltipText = i.l
 				    player[i.n] = icon
 				    player.Background:AddChild(icon)
@@ -326,46 +400,7 @@ function Plugin:Initialise()
 
 
 			local guiItems = {}
-			local playerIsBot = playerRecord.Ping == 0
-
 	        local playerApproveIcon = player["PlayerApproveIcon"]
-
-
-
-	        local playerSquadIconShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType)) and not playerIsBot
-	        local playerApproveIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
-	        local playerQueryIconShouldDisplay = ((clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
-	        local playerVrIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber())) and (clientIndex ~= Client.GetLocalClientIndex()) and (not playerIsBot) and showOptionals)
-        	local playerNoteItemShouldDisplay = (teamNumber == kMarineTeamType or teamNumber == kAlienTeamType) and ((teamNumber == Client.GetLocalClientTeamNumber()) or (PlayerUI_GetIsSpecating() and Client.GetLocalClientTeamNumber() ~= kMarineTeamType and Client.GetLocalClientTeamNumber() ~= kAlienTeamType))
-        	--local playerApproveStatusItemShouldDisplay = (clientIndex == Client.GetLocalClientIndex() and showOptionals)
-        	local playerWelderIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasWelder[clientIndex])
-        	local playerMinesIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasMines[clientIndex])
-        	local playerClusterGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasClusterGrenade[clientIndex])
-        	local playerGasGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasGasGrenade[clientIndex])
-        	local playerPulseGrenadeIconShouldDisplay = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and hasPulseGrenade[clientIndex])
-        	local playerNote = notes[clientIndex]
-
-        	local targetPrefix = prefixes[clientIndex] or ""
-	        if playerVrIconShouldDisplay then
-        		local targetPrefixFiltered = TGNS.Replace(targetPrefix, "!", "")
-        		targetPrefixFiltered = TGNS.Replace(targetPrefixFiltered, "*", "")
-        		playerVrIconShouldDisplay = not TGNS.HasNonEmptyValue(targetPrefixFiltered)
-	        end
-
-        	if Shared.GetDevMode() then
-		        playerSquadIconShouldDisplay = true
-		        playerApproveIconShouldDisplay = true
-		        playerQueryIconShouldDisplay = true
-		        playerVrIconShouldDisplay = true
-	        	playerNoteItemShouldDisplay = true
-	        	--playerApproveStatusItemShouldDisplay = true
-	        	playerWelderIconShouldDisplay = true
-	        	playerMinesIconShouldDisplay = true
-	        	playerClusterGrenadeIconShouldDisplay = true
-	        	playerGasGrenadeIconShouldDisplay = true
-	        	playerPulseGrenadeIconShouldDisplay = true
-	        	playerNote = playerNote or "test"
-        	end
 
         	if player.SteamFriend then
 			    local steamFriendPosition = player.Ping:GetPosition()
@@ -444,6 +479,11 @@ function Plugin:Initialise()
 	        	table.insert(guiItems, playerPulseGrenadeIcon)
 	        	playerPulseGrenadeIcon:SetIsVisible(playerPulseGrenadeIconShouldDisplay)
 	        end
+	        local playerTunnelIcon = player["PlayerTunnelIcon"]
+	        if playerTunnelIcon then
+	        	table.insert(guiItems, playerTunnelIcon)
+	        	playerTunnelIcon:SetIsVisible(playerTunnelIconShouldDisplay)
+	        end
 
 
 		    local color = GUIScoreboard.kSpectatorColor
@@ -479,7 +519,7 @@ function Plugin:Initialise()
 				for i = 1, #guiItems do
 					local guiItem = guiItems[i]
 					if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
-						guiItemTooltipText = type(guiItem.tooltipText) == "function" and guiItem.tooltipText(teamNumber) or guiItem.tooltipText
+						guiItemTooltipText = type(guiItem.tooltipText) == "function" and guiItem.tooltipText(clientIndex, teamNumber) or guiItem.tooltipText
 						break
 					end
 				end
@@ -682,12 +722,6 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
 		showOptionals = message.t
 	end)
-	TGNS.HookNetworkMessage(Plugin.PLAYER_NOTE, function(message)
-		local clientIndex = message.c
-		local note = message.n
-		notes[clientIndex] = note
-	end)
-
 	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK, function(message)
 		hasJetPacks[message.c] = message.h
 	end)
