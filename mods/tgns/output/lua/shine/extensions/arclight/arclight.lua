@@ -81,6 +81,7 @@ if Server or Client then
 	end
 
 	if Server then
+
 		function Plugin:GetArclightMapname()
 			return ArclightMapName
 		end
@@ -104,6 +105,7 @@ if Server or Client then
 	end
 
 	local function OnServerInitialise()
+
 		local winOrLoseForcedRecently
 
 		local configExtend = function(allowExtend)
@@ -136,13 +138,13 @@ if Server or Client then
 
 		local surrenderWeakerTeamIfConditionsAreRight = function()
 			local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
-			local playerThreshold = Shine.Plugins.communityslots.Config.PublicSlots
-			if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= playerThreshold and TGNS.IsGameInProgress() and not winOrLoseForcedRecently then
+			
+			if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= Shine.Plugins.communityslots.Config.PublicSlots and TGNS.IsGameInProgress() and not winOrLoseForcedRecently then
 				pointsRemaining[kMarineTeamType] = pointsRemaining[kMarineTeamType] or 0
 				pointsRemaining[kAlienTeamType] = pointsRemaining[kAlienTeamType] or 0
 				local surrenderingTeamNumber = pointsRemaining[kMarineTeamType] < pointsRemaining[kAlienTeamType] and kMarineTeamType or kAlienTeamType
 				local surrenderingTeamName = TGNS.GetTeamName(surrenderingTeamNumber)
-				md:ToAllNotifyInfo(string.format("Server has seeded to %s+ players. %s surrender!", playerThreshold, surrenderingTeamName))
+				md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players). %s have fewer points and surrender.", Shine.Plugins.communityslots.Config.PublicSlots, surrenderingTeamName))
 				Shine.Plugins.winorlose:CallWinOrLose(surrenderingTeamNumber)
 				winOrLoseForcedRecently = true
 				configExtend(false)
@@ -531,7 +533,8 @@ if Server or Client then
 		TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
 			playersAreAllowedOutOfBase = true
 			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
-				if winOrLoseForcedRecently then
+				local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
+				if winOrLoseForcedRecently or numberOfNonAfkHumans >= Shine.Plugins.communityslots.Config.PublicSlots then
 					Shine.Plugins.mapvote:StartVote(true)
 				end
 			end)
@@ -552,8 +555,31 @@ if Server or Client then
 			end)
 		end)
 
+		local function showOrientationAdvisory(client)
+			if Shine:IsValidClient(client) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
+				local chatAdvisory = string.format("Server switches to NS upon %s non-AFK players. Console for details.", Shine.Plugins.communityslots.Config.PublicSlots)
+
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), chatAdvisory)
+				md:ToClientConsole(client, "---------------")
+				md:ToClientConsole(client, " TGNS ARCLIGHT ")
+				md:ToClientConsole(client, "---------------")
+				md:ToClientConsole(client, string.format("Arclight is used on TGNS to seed the server to %s non-AFK players.", Shine.Plugins.communityslots.Config.PublicSlots))
+				md:ToClientConsole(client, string.format("When the server reaches %s non-AFK players, the losing team surrenders and normal NS2 play begins.", Shine.Plugins.communityslots.Config.PublicSlots))
+				md:ToClientConsole(client, string.format("During Arclight play: bases are inaccessible -- all fighting happens in %s.", hillLocationName))
+				md:ToClientConsole(client, string.format("During Arclight play: Stand on the platform in %s to drive down the other team's points and win!", hillLocationName))
+				md:ToClientConsole(client, "During Arclight play: marines spawn and research upgrades more quickly")
+				md:ToClientConsole(client, "During Arclight play: aliens spawn, evolve, and travel more quickly")
+				md:ToClientConsole(client, "")
+			end
+		end
+
 		TGNS.RegisterEventHook("ClientConfirmConnect", function(client)
 			showHelpText(client)
+			showOrientationAdvisory(client)
+			TGNS.ScheduleAction(5, function() showOrientationAdvisory(client) end)
+			TGNS.ScheduleAction(12, function() showOrientationAdvisory(client) end)
+			TGNS.ScheduleAction(20, function() showOrientationAdvisory(client) end)
+			TGNS.ScheduleAction(40, function() showOrientationAdvisory(client) end)
 		end)
 
 		local showHillTextMessages = function(messagesDatas, client, duration)
