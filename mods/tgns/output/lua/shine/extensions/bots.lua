@@ -124,7 +124,7 @@ local function setBotConfig()
 	surrenderBotsIfConditionsAreRight = function()
 		local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
 		if Shine.Plugins.bots:GetTotalNumberOfBots() > 0 and numberOfNonAfkHumans >= PLAYER_COUNT_THRESHOLD and TGNS.IsGameInProgress() and not winOrLoseOccurredRecently then
-			md:ToAllNotifyInfo(string.format("Server has seeded to %s+ players. Bots surrender! Killing bots does not lower the WinOrLose timer.", PLAYER_COUNT_THRESHOLD))
+			md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players). Bots surrender! Killing bots does not lower the WinOrLose timer.", PLAYER_COUNT_THRESHOLD))
 			Shine.Plugins.winorlose:CallWinOrLose(kAlienTeamType)
 			winOrLoseOccurredRecently = true
 			TGNS.ScheduleAction(65, function() winOrLoseOccurredRecently = false end)
@@ -189,7 +189,6 @@ local function showBotAdvisory(client)
 		md:ToClientConsole(client, string.format("When the server reaches %s non-AFK human players, the aliens surrender and humans-only NS2 play begins.", PLAYER_COUNT_THRESHOLD))
 		md:ToClientConsole(client, "During TGNS bots play: marines spawn more quickly than in normal NS2 play")
 		md:ToClientConsole(client, "During TGNS bots play: marines receive personal resources more quickly than in normal NS2 play")
-		md:ToClientConsole(client, "During TGNS bots play: marines spawn more quickly than in normal NS2 play")
 		md:ToClientConsole(client, "During TGNS bots play: marines receive catpacks when killing bots")
 		md:ToClientConsole(client, "During TGNS bots play: marines receive a clip of ammo when killing bots")
 		md:ToClientConsole(client, "During TGNS bots play: alien hives have more health")
@@ -328,7 +327,7 @@ function Plugin:CreateCommands()
 		else
 			PLAYER_COUNT_THRESHOLD = max
 			md:ToPlayerNotifyInfo(player, string.format("Bots player threshold set to %s.", max))
-			botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS after %s players join. Console for details.", PLAYER_COUNT_THRESHOLD)
+			botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS upon %s non-AFK players. Console for details.", PLAYER_COUNT_THRESHOLD)
 		end
 	end)
 	humansMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
@@ -370,7 +369,7 @@ function Plugin:Initialise()
 	md = TGNSMessageDisplayer.Create("BOTS")
 	TGNS.ScheduleAction(10, setOriginalConfig)
 	self:CreateCommands()
-	botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS after %s players join. Console for details.", PLAYER_COUNT_THRESHOLD)
+	botAdvisory = string.format("Alltalk enabled during bots. Server switches to NS upon %s non-AFK players. Console for details.", PLAYER_COUNT_THRESHOLD)
 
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
 		local result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
