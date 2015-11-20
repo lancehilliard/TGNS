@@ -246,9 +246,11 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
+	tunnelDescriptions = {}
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK_RESET, {})
 		TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=false})
+		self:AnnouncePlayerPrefix(p)
 	end)
 	TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
