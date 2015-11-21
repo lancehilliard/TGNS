@@ -762,7 +762,7 @@ function Plugin:Initialise()
 
 	local originalGUIHoverTooltipHide = GUIHoverTooltip.Hide
 	GUIHoverTooltip.Hide = function(self, hideTime, hideProtectedText)
-		if self.protectedText then
+		if self.protectedText and MouseTracker_GetIsVisible() then
 			if self.tooltip and self.tooltip.GetText and self.tooltip:GetText() == self.protectedText and hideProtectedText then
 				originalGUIHoverTooltipHide(self, hideTime)
 				self.protectedText = nil
