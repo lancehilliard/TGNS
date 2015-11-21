@@ -884,7 +884,7 @@ function Plugin:Initialise()
 					unit = u
 				end
 			end)
-			if unit then
+			if unit and unit.GetClientIndex then
 				local clientIndex = unit:GetClientIndex()
 				local squadNumber = squadNumbers[clientIndex]
 				if squadNumber and squadNumber ~= 0 and not Client.GetLocalPlayer():GetIsMinimapVisible() then
