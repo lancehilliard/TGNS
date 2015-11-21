@@ -972,7 +972,22 @@ function Plugin:CreateCommands()
 		votesAllowedUntil = nil
 		rolandHasBeenUsed = true
 		local player = TGNS.GetPlayer(client)
-		md:ToPlayerNotifyInfo(player, "Captains votes disallowed until sh_allowcaptainsvotes.")
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			local c = TGNS.GetClient(p)
+			local earlyOptInEntitlementDescriptor
+			if TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(c)) then
+				earlyOptInEntitlementDescriptor = "a recent Captain"
+			elseif TGNS.IsClientSM(c) then
+				earlyOptInEntitlementDescriptor = "an SM"
+			end
+			local message = "Captains will resume soon."
+			if earlyOptInEntitlementDescriptor then
+				message = string.format("%s Opt-in early NOW (thanks for being %s!).", message, earlyOptInEntitlementDescriptor)
+			else
+				message = string.format("%s Recent Captains and SMs: opt-in early now.", message)
+			end
+			md:ToPlayerNotifyInfo(p, message)
+		end)
 		automaticVoteAllowAction = function() end
 	end)
 	voteRestrictCommand:Help("Disallow Captains votes.")
@@ -1144,7 +1159,7 @@ function Plugin:ClientConfirmConnect(client)
 			if captainsModeEnabled then
 				message = getCaptainsGameStateDescription()
 			elseif TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(client)) and votesAllowedUntil == nil then
-				message = "Thanks for being a Captain recently! Opt-in anytime with sh_iwantcaptains, if you like."
+				message = "Thanks for being a Captain recently! Recent Captains opt-in before other players."
 			end
 			if TGNS.HasNonEmptyValue(message) then
 				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
