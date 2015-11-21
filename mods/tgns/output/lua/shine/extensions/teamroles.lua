@@ -66,7 +66,7 @@ local roles = {
 		, function(client) return false end
 		, function(client)
 			local totalGamesPlayed = Balance.GetTotalGamesPlayed(client)
-			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and Shine.Plugins.betterknownas:IsPlayingWithBkaName(client) and not TGNS.IsClientAdmin(client) and not TGNS.IsClientGuardian(client)
+			return TGNS.HasClientSignedPrimerWithGames(client) and totalGamesPlayed >= 40 and Shine.Plugins.betterknownas:IsPlayingWithBkaName(client) and not TGNS.IsClientAdmin(client)
 		end
 		, function(client)
 			local approvalsCount = Shine.Plugins.scoreboard:GetApprovalsCount(client)
@@ -81,6 +81,7 @@ local function GetCandidateClient(teamPlayers, role)
 	if teamIsEligible then
 		local clientsAlreadyInTheRole = TGNS.GetMatchingClients(teamPlayers, function(c,p) return role.IsClientOneOf(c) end)
 		if #clientsAlreadyInTheRole < 2 then
+			teamPlayers = TGNS.Where(teamPlayers, function(p) return not TGNS.ClientAction(p, role.IsClientOneOf) end)
 			TGNS.SortAscending(teamPlayers, function(p) return TGNS.ClientAction(p, function(c) return role:IsClientPreferred(c) end) and math.huge or role:GetClientRank(c) end)
 			result = TGNS.GetLastMatchingClient(teamPlayers, function(c,p)
 				return role:IsClientEligible(c)
