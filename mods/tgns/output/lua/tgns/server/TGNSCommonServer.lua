@@ -407,7 +407,8 @@ function TGNS.Ban(client, targetClient, durationInMinutes, reason)
 	local targetSteamId = TGNS.GetClientSteamId(targetClient)
 	local targetName = TGNS.GetClientName(targetClient)
 	local bannedBy = TGNS.GetClientNameSteamIdCombo(client)
-	Shine.Plugins.ban:AddBan(targetSteamId, targetName, durationInMinutes * 60, bannedBy, reason)
+	local banningId = TGNS.GetClientSteamId(client)
+	Shine.Plugins.ban:AddBan(targetSteamId, targetName, durationInMinutes * 60, bannedBy, banningId, reason)
 end
 
 function TGNS.IsPlayerAlive(player)
