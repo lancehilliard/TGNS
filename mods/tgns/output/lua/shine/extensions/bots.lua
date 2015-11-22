@@ -37,6 +37,15 @@ local function createFreeCragEntity()
 	local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
 	freeCragEntity = CreateEntity("crag", pos, kAlienTeamType)
 	freeCragEntity:SetConstructionComplete()
+
+	-- local originalGetMaxSpeed = freeCragEntity.GetMaxSpeed
+	-- freeCragEntity.GetMaxSpeed = function(cragSelf)
+	-- 	local result = originalGetMaxSpeed(cragSelf)
+	-- 	return result * 3
+	-- end
+	-- freeCragEntity:GiveOrder(kTechId.Move, nil, hive:GetOrigin(), nil, true, true) 
+
+
 end
 
 function Plugin:GetTotalNumberOfBots()
@@ -395,7 +404,7 @@ function Plugin:Initialise()
 
 	TGNS.RegisterEventHook("GameStarted", function()
 		if self:GetTotalNumberOfBots() > 0 then
-			if not TGNS.GetCurrentMapName() == "ns2_tgns_arclight" then
+			if TGNS.GetCurrentMapName() ~= "ns2_tgns_arclight" then
 				createFreeCragEntity()
 			end
 			GetGamerules():GetTeam(kAlienTeamType):AddTeamResources(100)
