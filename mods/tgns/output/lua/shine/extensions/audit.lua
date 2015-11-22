@@ -1,5 +1,6 @@
 local EMPTY_VALUE = "NULL"
 local currentGame
+local lastGestationData = {}
 
 local function initCurrentGameObject()
 	currentGame = {}
@@ -8,6 +9,20 @@ local function initCurrentGameObject()
 	currentGame["clients"] = {}
 	currentGame["WeldHealth"] = {}
 	currentGame["HealSpray"] = {}
+	currentGame["ClassDurations"] = {}
+end
+
+local function addClientClassDuration(client)
+	if client then
+		local lastGestation = lastGestationData[client]
+		if lastGestation and lastGestation.what and lastGestation.when and currentGame then
+			local classDuration = Shared.GetTime() - lastGestation.when
+			currentGame["ClassDurations"][client] = currentGame["ClassDurations"][client] or {}
+			local currentGameClassSeconds = currentGame["ClassDurations"][client][lastGestation.what] or 0
+			currentGame["ClassDurations"][client][lastGestation.what] = currentGameClassSeconds + classDuration
+			lastGestationData[client] = nil
+		end
+	end
 end
 
 local function audit(statementId, data, callback)
@@ -41,34 +56,39 @@ end
 
 function Plugin:OnEntityKilled(gamerules, victim, attacker, inflictor, point, dir)
 	if attacker and inflictor and victim then
-		local className = victim:GetClassName()
-		if className == "Marine" then
+		local victimClassName = victim:GetClassName()
+		if victimClassName == "Marine" then
 			local primaryWeapon = victim.GetWeaponInHUDSlot and victim:GetWeaponInHUDSlot(1)
 			if primaryWeapon then
 				if primaryWeapon:isa("Shotgun") then
-					className = "ShotgunMarine"
+					victimClassName = "ShotgunMarine"
 				elseif primaryWeapon:isa("Flamethrower") then
-					className = "FlamethrowerMarine"
+					victimClassName = "FlamethrowerMarine"
 				elseif primaryWeapon:isa("GrenadeLauncher") then
-					className = "GranadeLauncherMarine"
+					victimClassName = "GranadeLauncherMarine"
 				end
 			end
-		elseif className == "Exo" then
-			className = victim.layout
+		elseif victimClassName == "Exo" then
+			victimClassName = victim.layout
 		end
-		currentGame["classKillCounts"][className] = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"][className]) + 1
+		currentGame["classKillCounts"][victimClassName] = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"][victimClassName]) + 1
 	end
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	local client = TGNS.GetClient(player)
 	if TGNS.IsGameplayTeamNumber(newTeamNumber) then
-		local client = TGNS.GetClient(player)
 		if TGNS.GetIsClientVirtual(client) then
 			currentGame["includedBots"] = true
 		else
 			table.insertunique(currentGame["clients"], client)
 		end
 	end
+	addClientClassDuration(client)
+end
+
+function Plugin:ClientDisconnect(client)
+	addClientClassDuration(client)
 end
 
 function Plugin:Initialise()
@@ -153,6 +173,13 @@ function Plugin:Initialise()
 					    		playerData.WeldGave = TGNS.GetNumericValueOrZero(currentGame["WeldHealth"][c])
 					    		playerData.HealSprayGave = TGNS.GetNumericValueOrZero(currentGame["HealSpray"][c])
 
+								addClientClassDuration(c)
+					    		currentGame["ClassDurations"][c] = currentGame["ClassDurations"][c] or {}
+					    		playerData.GorgeSeconds = currentGame["ClassDurations"][c][kTechId.Gorge] or 0
+					    		playerData.LerkSeconds = currentGame["ClassDurations"][c][kTechId.Lerk] or 0
+					    		playerData.FadeSeconds = currentGame["ClassDurations"][c][kTechId.Fade] or 0
+					    		playerData.OnosSeconds = currentGame["ClassDurations"][c][kTechId.Onos] or 0
+
 					    		audit(718, playerData, function(playerDataAuditResponseJson)
 					    			local playerDataAuditResponse = json.decode(playerDataAuditResponseJson) or {}
 					    			if playerDataAuditResponse.success then
@@ -188,6 +215,22 @@ function Plugin:Initialise()
 			currentGame[name][client] = TGNS.GetNumericValueOrZero(currentGame[name][client]) + addAmount
 		end
 	end)
+
+	local originalEmbryoSetGestationData = Embryo.SetGestationData
+	Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
+		originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
+		local client = TGNS.GetClient(embryoSelf)
+		TGNS.DoFor(techIds, function(t)
+			lastGestationData[client] = {when=Shared.GetTime(),what=t}
+		end)
+	end
+
+	local originalPlayerOnKill = Player.OnKill
+	Player.OnKill = function(playerSelf, killer, doer, point, direction)
+		originalPlayerOnKill(playerSelf, killer, doer, point, direction)
+		local client = TGNS.GetClient(playerSelf)
+		addClientClassDuration(client)
+	end
 
     return true
 end
