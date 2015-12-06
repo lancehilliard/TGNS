@@ -315,7 +315,12 @@ function Plugin:Initialise()
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
 	TGNS.RegisterEventHook("ClientGroupsChanged", function(client)
-		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+		if client and Shine:IsValidClient(client) then
+			local player = TGNS.GetPlayer(client)
+			if player then
+				self:AnnouncePlayerPrefix(player)
+			end
+		end
 	end)
 	TGNS.RegisterEventHook("BkaChanged", function(client)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
@@ -587,9 +592,11 @@ function Plugin:Initialise()
  		end
  		local tunnelDescription = TGNS.Join(exitLocationNames, " / ")
  		local client = TGNS.GetClientByNs2Id(tunnelSelf.ownerClientId)
- 		local clientIndex = TGNS.GetClientIndex(client)
- 		tunnelDescriptions[clientIndex] = tunnelDescription
- 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+ 		if client then
+	 		local clientIndex = TGNS.GetClientIndex(client)
+	 		tunnelDescriptions[clientIndex] = tunnelDescription
+	 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+ 		end
  	end
 
  	local originalTunnelAddExit = Tunnel.AddExit

@@ -1,4 +1,5 @@
 local Plugin = Plugin
+local kPlayerBadgeIconSize = 20
 local prefixes = {}
 local isCaptainsCaptain = {}
 local isApproved = {}
@@ -58,6 +59,9 @@ local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 local guiItemTooltipText
 local hoverBadge
 local tunnelDescriptions = {}
+
+local lastTeamNumber = {}
+local lastUpdatedTeamNumbers = 0
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
@@ -170,6 +174,27 @@ function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
 	initializeSquadHudText()
 end
 
+function Plugin:GetFailsBkaPrerequisite(clientIndex)
+	return failsBkaPrerequisite[clientIndex]
+end
+
+function Plugin:GetPrefixes(clientIndex)
+	return prefixes[clientIndex]
+end
+
+function updateTeamNumbers(forceUpdate)
+	if forceUpdate or lastUpdatedTeamNumbers == nil or Shared.GetTime() - lastUpdatedTeamNumbers > 1 then
+		TGNS.DoFor(ScoreboardUI_GetAllScores(), function(playerRecord)
+	        local clientIndex = playerRecord.ClientIndex
+	        local teamNumber = playerRecord.EntityTeamNumber
+			if lastTeamNumber[clientIndex] == nil or lastTeamNumber[clientIndex].teamNumber ~= teamNumber then
+				lastTeamNumber[clientIndex] = {teamNumber=teamNumber,when=lastTeamNumber[clientIndex] == nil and -30 or Shared.GetTime()}
+			end
+		end)
+		lastUpdatedTeamNumbers = Shared.GetTime()
+	end
+end
+
 function Plugin:Initialise()
 	self.Enabled = true
 
@@ -182,27 +207,34 @@ function Plugin:Initialise()
 	Client.PrecacheLocalSound(startSoundEventName)
 	Client.PrecacheLocalSound(armorDecay1SoundEventName)
 
+	local scoreboardIsVisible = false
+	local mouseIsHoveringOverPlayerRow = false
+
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
 		originalGUIScoreboardUpdate(self, deltaTime)
 
-        if self.visible then
+		scoreboardIsVisible = self.visible
+		mouseIsHoveringOverPlayerRow = false
 
-        	guiItemTooltipText = nil
-        	hoverBadge = nil
+    	guiItemTooltipText = nil
+    	hoverBadge = nil
+
+        if self.visible == true then
+
+        	updateTeamNumbers(true)
 
 			for index, team in ipairs(self.teams) do
 	            self:UpdateTeam(team)
 		    end
 
-
-            if guiItemTooltipText and self.badgeNameTooltip and not self.hoverMenu.background:GetIsVisible() and not MainMenu_GetIsOpened() then
+            if guiItemTooltipText and self.badgeNameTooltip and not self.hoverMenu.background:GetIsVisible() and not MainMenu_GetIsOpened() and mouseIsHoveringOverPlayerRow then
 				self.badgeNameTooltip:SetText(guiItemTooltipText)
 				self.badgeNameTooltip.protectedText = guiItemTooltipText
                 self.badgeNameTooltip:Show(0)
             else
                 if not hoverBadge then
-	                self.badgeNameTooltip:Hide(nil, true)
+	                self.badgeNameTooltip:Hide(0, true)
                 end
             end
 
@@ -213,6 +245,17 @@ function Plugin:Initialise()
 			end
         end
 
+        if Shine.VoteMenu.Visible then
+        	self.badgeNameTooltip:Hide(0, true)
+        end
+
+     --    Shared.Message("Shared.GetTime(): " .. tostring(Shared.GetTime()))
+	    -- Shared.Message("guiItemTooltipText: " .. tostring(guiItemTooltipText))
+	    -- Shared.Message("hoverBadge: " .. tostring(hoverBadge))
+	    -- Shared.Message("self.badgeNameTooltip: " .. tostring(self.badgeNameTooltip))
+	    -- Shared.Message("self.hoverMenu.background:GetIsVisible(): " .. tostring(self.hoverMenu.background:GetIsVisible()))
+	    -- Shared.Message("MainMenu_GetIsOpened(): " .. tostring(MainMenu_GetIsOpened()))
+	    -- Shared.Message("Shine.VoteMenu.Visible: " .. tostring(Shine.VoteMenu.Visible))
 
 	end
 
@@ -230,13 +273,11 @@ function Plugin:Initialise()
 		    for teamsIndex, team in ipairs(self.teams) do
 		    	local playerList = team["PlayerList"]
 		    	local teamScores = team["GetScores"]()
-		    	//local currentPlayerIndex = 1
 				for playerListIndex, player in ipairs(playerList) do
 					local playerRecord = teamScores[playerListIndex]
 					if playerRecord and playerRecord.Ping > 0 then
 						ingamePlayersCount = ingamePlayersCount + 1
 					end
-					//currentPlayerIndex = currentPlayerIndex + 1
 				end
 		    end
 	        local numPlayersConnecting = PlayerUI_GetNumConnectingPlayers()
@@ -400,10 +441,8 @@ function Plugin:Initialise()
 
 
         	if player.SteamFriend then
-			    local steamFriendPosition = player.Ping:GetPosition()
-			    steamFriendPosition.x = steamFriendPosition.x + 26
-			    steamFriendPosition.y = steamFriendPosition.y - 10
-			    player.SteamFriend:SetPosition(steamFriendPosition)
+			    player.SteamFriend:SetAnchor(GUIItem.Right, GUIItem.Center)
+			    player.SteamFriend:SetPosition(Vector(-kPlayerBadgeIconSize/2, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
 			    player.SteamFriend:SetIsVisible(playerRecord.IsSteamFriend or Shared.GetDevMode() or Client.GetLocalClientIndex() == clientIndex)
 			    if player.IconTable then
 			    	table.removevalue(player.IconTable, player.SteamFriend)
@@ -515,25 +554,37 @@ function Plugin:Initialise()
 
 			if MouseTracker_GetIsVisible() and not guiItemTooltipText and not hoverBadge then
 				local mouseX, mouseY = Client.GetCursorPosScreen()
-				for i = 1, #guiItems do
-					local guiItem = guiItems[i]
-					if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
-						guiItemTooltipText = type(guiItem.tooltipText) == "function" and guiItem.tooltipText(clientIndex, teamNumber) or guiItem.tooltipText
-						break
+				if GUIItemContainsPoint(player["Background"], mouseX, mouseY) then
+					mouseIsHoveringOverPlayerRow = mouseIsHoveringOverPlayerRow or true
+					for i = 1, #guiItems do
+						local guiItem = guiItems[i]
+						if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
+							guiItemTooltipText = type(guiItem.tooltipText) == "function" and guiItem.tooltipText(clientIndex, teamNumber) or guiItem.tooltipText
+							break
+						end
 					end
+	                for i = 1, #player.BadgeItems do
+	                    local badgeItem = player.BadgeItems[i]
+	                    if GUIItemContainsPoint(badgeItem, mouseX, mouseY) and badgeItem:GetIsVisible() then
+	                        hoverBadge = true
+	                        break
+	                    end
+	                end
 				end
-                for i = 1, #player.BadgeItems do
-                    local badgeItem = player.BadgeItems[i]
-                    if GUIItemContainsPoint(badgeItem, mouseX, mouseY) and badgeItem:GetIsVisible() then
-                        hoverBadge = true
-                        break
-                    end
-                end
-
 			end
 
 			if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 and not player.Status:GetText():find("Spec") then
-				player["Background"]:SetColor(Color(17/255,115/255,17/255))
+				color = Color(17/255,115/255,17/255)
+				player["Background"]:SetColor(color)
+			end
+
+			if lastTeamNumber[clientIndex] ~= nil then
+				local duration = 30
+				local secondsSinceTeamNumberChange = Shared.GetTime() - lastTeamNumber[clientIndex].when
+				if secondsSinceTeamNumberChange < duration then
+					color = Color(color.r, color.g, color.b, secondsSinceTeamNumberChange / duration)
+					player["Background"]:SetColor(color)
+				end
 			end
 
 			if self.hoverMenu then
@@ -762,13 +813,26 @@ function Plugin:Initialise()
 
 	local originalGUIHoverTooltipHide = GUIHoverTooltip.Hide
 	GUIHoverTooltip.Hide = function(self, hideTime, hideProtectedText)
-		if self.protectedText and MouseTracker_GetIsVisible() then
-			if self.tooltip and self.tooltip.GetText and self.tooltip:GetText() == self.protectedText and hideProtectedText then
+		if scoreboardIsVisible then
+			-- Shared.Message(string.format("GUIHoverTooltip.Hide: hideTime=%s; hideProtectedText=%s; self.protectedText=%s; MouseTracker_GetIsVisible()=%s; scoreboardIsVisible=%s; mouseIsHoveringOverPlayerRow=%s", hideTime,hideProtectedText, self.protectedText, MouseTracker_GetIsVisible(), scoreboardIsVisible, mouseIsHoveringOverPlayerRow))
+			-- Shared.Message("GUIHoverTooltip.Hide: 10")
+			if self.protectedText and MouseTracker_GetIsVisible() then
+				-- Shared.Message("GUIHoverTooltip.Hide: 20")
+				if self.tooltip and self.tooltip.GetText and hideProtectedText and TGNS.Truncate(self.tooltip:GetText(), 50) == TGNS.Truncate(self.protectedText, 50) then
+					-- Shared.ConsoleCommand("output GUIHoverTooltip.Hide: 30")
+					-- Shared.Message("GUIHoverTooltip.Hide: 30")
+					originalGUIHoverTooltipHide(self, hideTime)
+					self.protectedText = nil
+				end
+			else
+				-- Shared.Message("GUIHoverTooltip.Hide: 40")
 				originalGUIHoverTooltipHide(self, hideTime)
-				self.protectedText = nil
+				-- self.protectedText = nil
 			end
 		else
+			-- Shared.Message("GUIHoverTooltip.Hide: 50")
 			originalGUIHoverTooltipHide(self, hideTime)
+			-- self.protectedText = nil
 		end
 	end
 
@@ -1055,7 +1119,7 @@ function Plugin:Initialise()
 	return true
 end
 
-function Plugin:Think()
+function Plugin:Think(deltaTime)
 	local isInUntrackableAfkActivity = not (Client.GetIsWindowFocused() or (Client.GetSteamOverlayActive and Client.GetSteamOverlayActive()))
 	if isInUntrackableAfkActivity then
 		if not wasInUntrackableAfkActivity then
@@ -1077,6 +1141,7 @@ function Plugin:Think()
 		end
 	end
 
+	updateTeamNumbers()
 end
 
 function Plugin:Cleanup()
