@@ -102,11 +102,11 @@ if Server or Client then
 			    teamItem:SetLayer(guiLayer)
 			    
 			    local logoItem = GUIManager:CreateGraphicItem()
-			    logoItem:SetSize(Vector(250, 45, 0) * GUIScoreboard.kScalingFactor)
+			    logoItem:SetSize(Vector(300, 50, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetAnchor(GUIItem.Right, GUIItem.Top)
 			    logoItem:SetColor(Color(1, 1, 1, 1))
-			    logoItem:SetTexture("ui/badges/marines/CaptainsBanner3.dds")
-			    logoItem:SetPosition(Vector(-250, 0, 0) * GUIScoreboard.kScalingFactor)
+			    logoItem:SetTexture("ui/badges/marines/CaptainsBanner.dds")
+			    logoItem:SetPosition(Vector(-300, 0, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetStencilFunc(GUIItem.NotEqual)
 			    logoItem:SetIsVisible(true)
 			    teamItem:AddChild(logoItem)
@@ -688,8 +688,10 @@ if Server or Client then
 			    local teamHeaderText = string.format("%s (%s%s)", teamNameText, playersOnTeamText, sortDescription)
 			    
 			    teamNameGUIItem:SetText( teamHeaderText )
-			    
-			    teamInfoGUIItem:SetText(teamNameText == "Pickable Players" and string.format("Team Choice: %s        Player Choice: %s", teamChoiceCaptainName, playerChoiceCaptainName) or "") -- "Opt-in to play! Press M > Captains > sh_iwantcaptains")
+
+				local captainsSlotsRemaining = 14 - optedInCount
+				captainsSlotsRemaining = captainsSlotsRemaining >= 0 and captainsSlotsRemaining or 0
+			    teamInfoGUIItem:SetText(teamNameText == "Pickable Players" and string.format("Team Choice: %s        Player Choice: %s", teamChoiceCaptainName, playerChoiceCaptainName) or string.format("Slots remaining: %s/14", captainsSlotsRemaining)) -- "Opt-in to play! Press M > Captains > sh_iwantcaptains")
 
 				if teamNameText == "Pickable Players" then
 					teamInfoGUIItem:SetColor(CaptainsCaptainFontColor)
@@ -1156,16 +1158,16 @@ if Server or Client then
 				    
 				        -- Don't draw if no players on team
 				        local numPlayers = table.count(team["GetScores"]())
-				        team["GUIs"]["Background"]:SetIsVisible(captainsBoardShouldBeShown() and (numPlayers > 0))
+				        team["GUIs"]["Background"]:SetIsVisible(true) -- captainsBoardShouldBeShown() and (numPlayers > 0)
 				        
 				        if captainsBoardShouldBeShown() then
 				            UpdateTeam(team)
-				            if numPlayers > 0 then
+				            -- if numPlayers > 0 then
 				                if teamGUISize[team.TeamNumber] == nil then
 				                    teamGUISize[team.TeamNumber] = {}
 				                end
 				                teamGUISize[team.TeamNumber] = teams[index].GUIs.Background:GetSize().y
-				            end
+				            -- end
 				        end
 				        
 				    end
@@ -1505,7 +1507,7 @@ if Server or Client then
 
 
 					if not TGNS.IsProduction() then
-						optedInClients = TGNS.GetClientList()
+						optedInClients = TGNS.GetHumanClientList()
 					end
 
 					-- todo mlh restore this
