@@ -13,7 +13,7 @@ local function initCurrentGameObject()
 end
 
 local function addClientClassDuration(client)
-	if client then
+	if client and Shine:IsValidClient(client) and not TGNS.GetIsClientVirtual(client) then
 		local lastGestation = lastGestationData[client]
 		if lastGestation and lastGestation.what and lastGestation.when and currentGame then
 			local classDuration = Shared.GetTime() - lastGestation.when
@@ -21,6 +21,7 @@ local function addClientClassDuration(client)
 			local currentGameClassSeconds = currentGame["ClassDurations"][client][lastGestation.what] or 0
 			currentGame["ClassDurations"][client][lastGestation.what] = currentGameClassSeconds + classDuration
 			lastGestationData[client] = nil
+			TGNS.DebugPrint(string.format("addClientClassDuration[%s]: id=%s; techid=%s; addingDuration=%s; totalDuration=%s", currentGame["startTimeSeconds"], TGNS.GetClientSteamId(client), lastGestation.what, classDuration, currentGame["ClassDurations"][client][lastGestation.what]))
 		end
 	end
 end
@@ -102,6 +103,7 @@ function Plugin:Initialise()
 		TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
 			table.insertunique(currentGame["clients"], c)
 		end)
+		lastGestationData = {}
 	end)
 	TGNS.RegisterEventHook("WinOrLoseCalled", function(teamNumber)
 		currentGame["surrenderTeamNumber"] = teamNumber
@@ -110,6 +112,8 @@ function Plugin:Initialise()
 		currentGame["winOrLoseEndGameCountdownValue"] = countdownValue
 	end)
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)
+		TGNS.DoFor(clients, addClientClassDuration)
+		TGNS.DebugPrint(string.format("FullGamePlayed[%s]", currentGame["startTimeSeconds"]))
 		local gamerules = GetGamerules()
     	local gameData = {}
     	gameData.StartTimeSeconds = currentGame["startTimeSeconds"]
@@ -173,7 +177,6 @@ function Plugin:Initialise()
 					    		playerData.WeldGave = TGNS.GetNumericValueOrZero(currentGame["WeldHealth"][c])
 					    		playerData.HealSprayGave = TGNS.GetNumericValueOrZero(currentGame["HealSpray"][c])
 
-								addClientClassDuration(c)
 					    		currentGame["ClassDurations"][c] = currentGame["ClassDurations"][c] or {}
 					    		playerData.GorgeSeconds = currentGame["ClassDurations"][c][kTechId.Gorge] or 0
 					    		playerData.LerkSeconds = currentGame["ClassDurations"][c][kTechId.Lerk] or 0
