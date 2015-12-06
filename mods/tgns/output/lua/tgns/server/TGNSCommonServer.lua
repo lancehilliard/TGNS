@@ -500,38 +500,12 @@ function TGNS.GetHumanClientList(predicate)
 	return result
 end
 
-function TGNS.IsProduction()
-	local result = TGNS.Has({"Taunt","Chuckle"}, TGNS.GetSimpleServerName())
-	return result
-end
-
 function TGNS.GetSimpleServerName()
 	return TGNS.Config.ServerSimpleName
 end
 
 function TGNS.GetNextMapName()
 	local result = Shine.Plugins.mapvote:GetNextMap()
-	return result
-end
-
-function TGNS.Substring(s, startIndex, length)
-	local endIndex = length ~= nil and startIndex + length - 1 or nil
-	local result = string.sub(s, startIndex, endIndex)
-	return result
-end
-
-function TGNS.Truncate(s, length)
-	local result = TGNS.Substring(s, 1, length)
-	return result
-end
-
-function TGNS.ToLower(s)
-	local result = string.lower(s)
-	return result
-end
-
-function TGNS.ToUpper(s)
-	local result = string.upper(s)
 	return result
 end
 
@@ -699,14 +673,6 @@ end
 function TGNS.RemoveAllMatching(elements, element)
 	TGNS.DoForReverse(elements, function(e, index)
 		if element == e then
-			table.remove(elements, index)
-		end
-	end)
-end
-
-function TGNS.RemoveAllWhere(elements, predicate)
-	TGNS.DoForReverse(elements, function(e, index)
-		if predicate == nil or predicate(e) then
 			table.remove(elements, index)
 		end
 	end)
@@ -885,14 +851,6 @@ function TGNS.GetClientCommunityDesignationCharacter(client)
 	return result
 end
 
-function TGNS.StartsWith(s,part)
-   return string.sub(s,1,string.len(part))==part
-end
-
-function TGNS.EndsWith(s, part)
-	return #s >= #part and s:find(part, #s-#part+1, true) and true or false
-end
-
 function TGNS.RespawnPlayer(player)
 	GetGamerules():RespawnPlayer(player)
 end
@@ -980,44 +938,6 @@ end
 
 function TGNS.ClientsAreTeammates(client1, client2)
 	return TGNS.PlayersAreTeammates(TGNS.GetPlayer(client1), TGNS.GetPlayer(client2))
-end
-
-function TGNS.TableValueCount(tt, item)
-	local result = 0
-	TGNS.DoForPairs(tt, function(key, value)
-		if item == value then
-			result = result + 1
-		end
-	end)
-	return result
-end
-
-function TGNS.TableKeyCount(tt)
-	local result = 0
-	TGNS.DoForPairs(tt, function(key, value)
-		result = result + 1
-	end)
-	return result
-end
-
-function TGNS.GetUniqueTableValues(tt)
-	local result = {}
-	TGNS.DoForPairs(tt, function(key, value)
-		if TGNS.TableValueCount(result, value) == 0 then
-			result[#result+1] = value
-		end
-	end)
-	return result
-end
-
-function TGNS.GetUniqueTableKeys(tt)
-	local result = {}
-	TGNS.DoForPairs(tt, function(key, value)
-		if TGNS.TableValueCount(result, key) == 0 then
-			result[#result+1] = key
-		end
-	end)
-	return result
 end
 
 function TGNS.ScheduleActionInterval(intervalInSeconds, action)
@@ -1395,31 +1315,6 @@ function TGNS.DisconnectClient(client, reason)
 	pcall(function()
 		client.DisconnectReason = reason
 		Server.DisconnectClient(client)
-	end)
-end
-
-function TGNS.RemoveAll(elements)
-	TGNS.DoForReverse(elements, function(e, index)
-		table.remove(elements, index)
-	end)
-end
-
-function TGNS.TableReverse(elements)
-	local temp = {}
-	TGNS.DoFor(elements, function(e) table.insert(temp, e) end)
-	TGNS.RemoveAll(elements)
-	TGNS.DoForReverse(temp, function(e) table.insert(elements, e) end)
-end
-
-function TGNS.SortDescending(elements, sortFunction)
-	TGNS.SortAscending(elements, sortFunction)
-	TGNS.TableReverse(elements)
-end
-
-function TGNS.SortAscending(elements, sortFunction)
-	sortFunction = sortFunction or function(x) return x end
-	table.sort(elements, function(e1, e2)
-		return sortFunction(e1) < sortFunction(e2)
 	end)
 end
 
