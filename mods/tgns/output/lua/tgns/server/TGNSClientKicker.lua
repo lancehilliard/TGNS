@@ -6,7 +6,7 @@ local md = TGNSMessageDisplayer.Create("KICK")
 local kickReasons = {}
 local REPEAT_KICK_THRESHOLD = 3
 local REPEAT_KICK_BAN_DURATION_IN_MINUTES = 120
-local namesOfPlayersKickedForOffenses = {}
+local playersKickedForOffenses = {}
 
 local function AdviseKickedClients()
 	local connectedKickedClients = TGNS.GetClientList(TGNSClientKicker.IsClientKicked)
@@ -49,7 +49,7 @@ function TGNSClientKicker.Kick(client, reason, onPreKick, onPostKick, repeatOffe
 				md:ToClientConsole(client, string.format("Kick reason: %s", reason))
 				if repeatOffensesIsCauseForBan then
 					md:ToClientConsole(client, "Note: Too many kicks may create a temporary ban.")
-					namesOfPlayersKickedForOffenses[targetSteamId] = targetName
+					playersKickedForOffenses[targetSteamId] = {name=targetName,reason=reason}
 				end
 				md:ToClientConsole(client, "Contact TGNS administration (CAA): http://rr.tacticalgamer.com/Community")
 				md:ToClientConsole(client, "----------------------------------------------------------------------------------------------------------------")
@@ -113,9 +113,9 @@ TGNS.RegisterEventHook("PlayerSay", onPlayerSay, 5)
 -- end)
 
 TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
-	local kickedName = namesOfPlayersKickedForOffenses[joiningSteamId]
-	if kickedName then
-		md:ToAdminNotifyInfo(string.format("Reconnecting: %s (%s)", kickedName, joiningSteamId))
+	local playerData = playersKickedForOffenses[joiningSteamId]
+	if playerData then
+		md:ToAdminNotifyInfo(string.format("Reconnecting: %s (kicked for: %s)", playerData.name, playerData.reason))
 	end
     return true
 end)
