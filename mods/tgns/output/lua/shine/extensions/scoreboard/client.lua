@@ -548,8 +548,10 @@ function Plugin:Initialise()
 	        if playerSquadIcon then
 	        	table.insert(guiItems, playerSquadIcon)
 	        	playerSquadIcon:SetIsVisible(playerSquadIconShouldDisplay)
-	        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or inProgressGameShouldProhibitSquadChanging(teamNumber)
-		        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
+	        	if playerSquadIconShouldDisplay then
+		        	local playerSquadIconShouldBeDisabled = isSquading or (Client.GetLocalClientTeamNumber() == kSpectatorIndex) or inProgressGameShouldProhibitSquadChanging(teamNumber)
+			        playerSquadIcon:SetTexture(getTeamSquadTexture(clientIndex, teamNumber, playerSquadIconShouldBeDisabled))
+	        	end
 	        end
 
 			if MouseTracker_GetIsVisible() and not guiItemTooltipText and not hoverBadge then
