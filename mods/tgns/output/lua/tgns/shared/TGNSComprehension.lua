@@ -71,3 +71,11 @@ function TGNS.All(elements, predicate)
 	local result = #TGNS.Where(elements, predicate) == #elements
 	return result
 end
+
+function TGNS.ToTable(elements, keyProjector, valueProjector)
+	local result = {}
+	TGNS.DoFor(elements, function(e)
+		result[keyProjector(e)] = valueProjector(e)
+	end)
+	return result
+end
