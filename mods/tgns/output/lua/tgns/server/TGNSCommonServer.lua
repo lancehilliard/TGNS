@@ -4,6 +4,11 @@ local scheduledActionsErrorCounts = {}
 local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 local AFK_IDLE_THRESHOLD_SECONDS = 15
+local shouldProcessHttpRequests = false
+
+Event.Hook("MapPostLoad", function()
+	shouldProcessHttpRequests = true
+end)
 
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
@@ -170,7 +175,8 @@ end
 
 function TGNS.DebugPrint(message)
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
-	Shine:DebugPrint(string.format("%s %s", stamp, message))
+	local messageWithStamp = string.format("%s %s", stamp, message)
+	Shine:DebugPrint(messageWithStamp)
 end
 
 function TGNS.GetPlayerDeaths(player)
@@ -982,7 +988,7 @@ local function ProcessScheduledRequests()
 
 
 	local unsentRequests = TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end)
-	if #unsentRequests > 0 then
+	if #unsentRequests > 0 and shouldProcessHttpRequests then
 		local unsentScheduledRequests = TGNS.Take(unsentRequests, TGNS.Config and TGNS.Config.HttpRequestsPerSecond or 1)
 		TGNS.DoFor(unsentScheduledRequests, function(r)
 			r.sent = true
