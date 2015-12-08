@@ -7,6 +7,7 @@ local bkas = {}
 local steamPlayerDatas = {}
 --local fetchDurations = {}
 local batchBkas = {}
+local dataFetchFailedFor = {}
 
 local pdr = TGNSPlayerDataRepository.Create("bka", function(bkaData)
 	bkaData.AKAs = bkaData.AKAs ~= nil and bkaData.AKAs or {}
@@ -84,7 +85,7 @@ function Plugin:PlayerFailsBkaPrerequisite(player)
 	local client = TGNS.GetClient(player)
 	if client then
 		local totalGamesPlayedCount = Balance.GetTotalGamesPlayed(client)
-		if totalGamesPlayedCount >= PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and not Shine.Plugins.betterknownas:IsPlayingWithBkaName(client) then
+		if totalGamesPlayedCount >= PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and not Shine.Plugins.betterknownas:IsPlayingWithBkaName(client) and not dataFetchFailedFor[client] then
 			result = true
 		end
 		-- if not TGNS.IsProduction() then
@@ -232,7 +233,9 @@ function Plugin:ClientConnect(client)
 							md:ToAdminConsole(string.format("Fetched '%s' BKA when %s connected (why wasn't it loaded at map load?).", bkas[client], TGNS.GetClientName(client)))
 						end
 					end
+					dataFetchFailedFor[client] = false
 				else
+					dataFetchFailedFor[client] = true
 					Shared.Message("betterknownas ERROR: unable to access data")
 				end
 				--local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
