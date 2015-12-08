@@ -12,16 +12,18 @@ local function initCurrentGameObject()
 	currentGame["ClassDurations"] = {}
 end
 
+local trackedClassData = { {PlayerDataPropertyName="GorgeSeconds", TechId=kTechId.Gorge}, {PlayerDataPropertyName="LerkSeconds", TechId=kTechId.Lerk}, {PlayerDataPropertyName="FadeSeconds", TechId=kTechId.Fade}, {PlayerDataPropertyName="OnosSeconds", TechId=kTechId.Onos} }
+
 local function addClientClassDuration(client)
 	if client and Shine:IsValidClient(client) and not TGNS.GetIsClientVirtual(client) then
 		local lastGestation = lastGestationData[client]
 		if lastGestation and lastGestation.what and lastGestation.when and currentGame then
 			local classDuration = Shared.GetTime() - lastGestation.when
 			currentGame["ClassDurations"][client] = currentGame["ClassDurations"][client] or {}
-			local currentGameClassSeconds = currentGame["ClassDurations"][client][lastGestation.what] or 0
-			currentGame["ClassDurations"][client][lastGestation.what] = currentGameClassSeconds + classDuration
+			local currentGameClassSeconds = currentGame["ClassDurations"][client][lastGestation.what.TechId] or 0
+			currentGame["ClassDurations"][client][lastGestation.what.TechId] = currentGameClassSeconds + classDuration
 			lastGestationData[client] = nil
-			TGNS.DebugPrint(string.format("addClientClassDuration[%s]: id=%s; techid=%s; addingDuration=%s; totalDuration=%s", currentGame["startTimeSeconds"], TGNS.GetClientSteamId(client), lastGestation.what, classDuration, currentGame["ClassDurations"][client][lastGestation.what]))
+			-- TGNS.DebugPrint(string.format("addClientClassDuration[%s]: id=%s; techid=%s (%s); addingDuration=%s; totalDuration=%s", currentGame["startTimeSeconds"], TGNS.GetClientSteamId(client), lastGestation.what.PlayerDataPropertyName, lastGestation.what.TechId, classDuration, currentGame["ClassDurations"][client][lastGestation.what.TechId]))
 		end
 	end
 end
@@ -178,6 +180,10 @@ function Plugin:Initialise()
 					    		playerData.HealSprayGave = TGNS.GetNumericValueOrZero(currentGame["HealSpray"][c])
 
 					    		currentGame["ClassDurations"][c] = currentGame["ClassDurations"][c] or {}
+					    		TGNS.DoFor(trackedClassData, function(d)
+					    			playerData[d.PlayerDataPropertyName] = currentGame["ClassDurations"][c][d.TechId] or 0
+					    		end)
+
 					    		playerData.GorgeSeconds = currentGame["ClassDurations"][c][kTechId.Gorge] or 0
 					    		playerData.LerkSeconds = currentGame["ClassDurations"][c][kTechId.Lerk] or 0
 					    		playerData.FadeSeconds = currentGame["ClassDurations"][c][kTechId.Fade] or 0
@@ -223,9 +229,11 @@ function Plugin:Initialise()
 	Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
 		originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
 		local client = TGNS.GetClient(embryoSelf)
-		TGNS.DoFor(techIds, function(t)
-			lastGestationData[client] = {when=Shared.GetTime(),what=t}
-		end)
+		addClientClassDuration(client)
+		local trackedClass = TGNS.FirstOrNil(trackedClassData, function(d) return TGNS.Has(techIds, d.TechId) end)
+		if trackedClass then
+			lastGestationData[client] = {when=Shared.GetTime(),what=trackedClass}
+		end
 	end
 
 	local originalPlayerOnKill = Player.OnKill
