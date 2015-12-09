@@ -144,7 +144,7 @@ if Server or Client then
 			    teamInfoItem:SetAnchor(GUIItem.Left, GUIItem.Top)
 			    teamInfoItem:SetTextAlignmentX(GUIItem.Align_Min)
 			    teamInfoItem:SetTextAlignmentY(GUIItem.Align_Min)
-			    teamInfoItem:SetPosition(Vector(12, GUIScoreboard.kTeamNameFontSize + 7, 0) * GUIScoreboard.kScalingFactor)
+			    teamInfoItem:SetPosition(Vector(12, GUIScoreboard.kTeamNameFontSize + 3, 0) * GUIScoreboard.kScalingFactor)
 			    teamInfoItem:SetColor(color)
 			    teamInfoItem:SetStencilFunc(GUIItem.NotEqual)
 			    teamItem:AddChild(teamInfoItem)
