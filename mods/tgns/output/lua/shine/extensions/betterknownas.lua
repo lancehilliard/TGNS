@@ -234,8 +234,10 @@ function Plugin:ClientConnect(client)
 						end
 					end
 					dataFetchFailedFor[client] = false
+					TGNS.ExecuteEventHooks("BkaChanged", client)
 				else
 					dataFetchFailedFor[client] = true
+					TGNS.ExecuteEventHooks("BkaChanged", client)
 					Shared.Message("betterknownas ERROR: unable to access data")
 				end
 				--local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
