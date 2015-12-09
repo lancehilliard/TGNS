@@ -975,7 +975,7 @@ if Server or Client then
 			function Plugin:PlayerKeyPress(key, down, amount)
 				if GetIsBinding(key, "Scoreboard") then
 					scoreboardIsBeingShown = down
-					if not down then
+					if not down and userHasToggledCaptainsBoardDisplayOn ~= nil then
 						userHasToggledCaptainsBoardDisplayOn = not userHasToggledCaptainsBoardDisplayOn
 					end
 				end
