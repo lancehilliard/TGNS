@@ -583,8 +583,9 @@ function Plugin:Initialise()
 			if lastTeamNumber[clientIndex] ~= nil then
 				local duration = 30
 				local secondsSinceTeamNumberChange = Shared.GetTime() - lastTeamNumber[clientIndex].when
-				if secondsSinceTeamNumberChange < duration then
-					color = Color(color.r, color.g, color.b, secondsSinceTeamNumberChange / duration)
+				if secondsSinceTeamNumberChange < duration and not playerRecord.IsCommander then
+					local transparencyPercentage = secondsSinceTeamNumberChange / duration
+					color = Color(color.r, color.g, color.b, transparencyPercentage)
 					player["Background"]:SetColor(color)
 				end
 			end
