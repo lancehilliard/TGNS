@@ -37,7 +37,7 @@ local function GetAttackUrgency(bot, mem)
         end    
     end
         
-    local immediateThreats = {
+    local immediateThreats = TGNS.GetCurrentMapName() == "dev_test" and {} or {
         [kMinimapBlipType.Marine] = true,
         [kMinimapBlipType.JetpackMarine] = true,
         [kMinimapBlipType.Exo] = true,    
@@ -58,7 +58,7 @@ local function GetAttackUrgency(bot, mem)
                 return false
             end)
                     
-    local urgencies = {
+    local urgencies = TGNS.GetCurrentMapName() == "dev_test" and { [kMinimapBlipType.CommandStation] = 1 } or {
         // Active threats
         [kMinimapBlipType.Marine] =             numOthers >= 3 and 0.3 or 1.4,
         [kMinimapBlipType.JetpackMarine] =      numOthers >= 3 and 0.6 or 1.1,
