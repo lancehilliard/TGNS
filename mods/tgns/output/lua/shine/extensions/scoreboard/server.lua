@@ -67,7 +67,13 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerHasPulseGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(PulseGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerTunnelDescription = tunnelDescriptions[sourcePlayer:GetClientIndex()] or ""
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades,t=sourcePlayerTunnelDescription})
+		local sourcePlayerHasCelerity = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCelerityUpgrade(sourcePlayer)
+		local sourcePlayerHasAdrenaline = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAdrenalineUpgrade(sourcePlayer)
+		local sourcePlayerHasRegeneration = TGNS.IsPlayerAlive(sourcePlayer) and GetHasRegenerationUpgrade(sourcePlayer)
+		local sourcePlayerHasCarapace = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCarapaceUpgrade(sourcePlayer)
+		local sourcePlayerHasSilence = TGNS.IsPlayerAlive(sourcePlayer) and GetHasSilenceUpgrade(sourcePlayer)
+		local sourcePlayerHasAura = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAuraUpgrade(sourcePlayer)
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasRegeneration, u4=sourcePlayerHasCarapace, u5=sourcePlayerHasSilence, u6=sourcePlayerHasAura})
 	end
 end
 
@@ -297,11 +303,11 @@ function Plugin:CreateCommands()
 	textTestCommand:AddParam{ Type = "number", Min = 0, Max = 1 }
 	textTestCommand:Help( "Show test text to yourself." )
 
-	-- local wyzCommand = self:BindCommand( "otherserverall", nil, function(client)
-	-- 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-	-- 		TGNS.SendNetworkMessageToPlayer(p, self.WYZ)
-	-- 	end)
-	-- end)
+	local wyzCommand = self:BindCommand( "otherserverall", nil, function(client)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			TGNS.SendNetworkMessageToPlayer(p, self.WYZ)
+		end)
+	end)
 
 end
 
@@ -607,6 +613,12 @@ function Plugin:Initialise()
  	Tunnel.RemoveExit = function(tunnelSelf, exit)
  		OnTunnelExitAddedOrRemoved(tunnelSelf, exit, originalTunnelRemoveExit)
  	end
+
+	local originalEmbryoSetGestationData = Embryo.SetGestationData
+	Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
+		originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
+		self:AnnouncePlayerPrefix(embryoSelf)
+	end
 
 	return true
 end

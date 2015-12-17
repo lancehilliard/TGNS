@@ -288,6 +288,12 @@
 !mods/tgns/source/ui/badges/marines/CaptainsBanner.psd
 !mods/tgns/source/ui/badges/aliens/ClosedTunnel.psd
 !mods/tgns/source/ui/badges/aliens/OpenTunnel.psd
+!mods/tgns/source/ui/badges/aliens/adren.psd
+!mods/tgns/source/ui/badges/aliens/aura.psd
+!mods/tgns/source/ui/badges/aliens/cara.psd
+!mods/tgns/source/ui/badges/aliens/celerity.psd
+!mods/tgns/source/ui/badges/aliens/phantom.psd
+!mods/tgns/source/ui/badges/aliens/regen.psd
 
 # And then whitelist spec files
 
