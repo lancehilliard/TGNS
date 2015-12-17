@@ -113,11 +113,11 @@ if Server or Client then
 			    teamItem:SetLayer(guiLayer)
 			    
 			    local logoItem = GUIManager:CreateGraphicItem()
-			    logoItem:SetSize(Vector(300, 50, 0) * GUIScoreboard.kScalingFactor)
+			    logoItem:SetSize(Vector(200, 50, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetAnchor(GUIItem.Right, GUIItem.Top)
 			    logoItem:SetColor(Color(1, 1, 1, 1))
 			    logoItem:SetTexture("ui/badges/marines/CaptainsBanner.dds")
-			    logoItem:SetPosition(Vector(-300, 0, 0) * GUIScoreboard.kScalingFactor)
+			    logoItem:SetPosition(Vector(-200, 0, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetStencilFunc(GUIItem.NotEqual)
 			    logoItem:SetIsVisible(true)
 			    teamItem:AddChild(logoItem)
@@ -1074,22 +1074,27 @@ if Server or Client then
 				                               Color = GUIScoreboard.kSpectatorColor, PlayerList = { }, HighlightColor = GUIScoreboard.kSpectatorHighlightColor,
 				                               GetScores = function()
 				                               		local scoresData = GetScoreData({ kTeamReadyRoom })
-				                               		scoresData = TGNS.Where(scoresData, function(s) return rolesClientData[s.ClientIndex] ~= nil end)
+				                               		local filteredScoresData = TGNS.Where(scoresData, function(s) return rolesClientData[s.ClientIndex] ~= nil end)
 				                               		if localClientIsCaptain then
-				                               			TGNS.SortDescending(scoresData, function(s) return s.Skill end)
+				                               			TGNS.SortDescending(filteredScoresData, function(s) return s.Skill end)
 				                               		else
-				                               			TGNS.SortAscending(scoresData, function(s) return s.Name end)
+				                               			TGNS.SortAscending(filteredScoresData, function(s) return s.Name end)
 				                               		end
-				                               		return scoresData
+
+				                               		local datas = {scoresData=scoresData, filteredScoresData=filteredScoresData, rolesClientData=rolesClientData}
+				                               		debug(string.format("s: %s; f: %s; r: %s; d: %s", #scoresData, #filteredScoresData, #rolesClientData, json.encode(datas)))
+
+
+				                               		return filteredScoresData
 				                               end, TeamNumber = kTeamReadyRoom })
 
 				    table.insert(teams, { GUIs = CreateTeamBackground(GUIScoreboard.kSpectatorColor, guiLayer), TeamTitle = "Not Opted In",
 				                               Color = GUIScoreboard.kSpectatorColor, PlayerList = { }, HighlightColor = GUIScoreboard.kSpectatorHighlightColor,
 				                               GetScores = function()
 				                               		local scoresData = GetScoreData({ kTeamReadyRoom })
-				                               		scoresData = TGNS.Where(scoresData, function(s) return rolesClientData[s.ClientIndex] == nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end)
-			                               			TGNS.SortAscending(scoresData, function(s) return s.Name end)
-				                               		return scoresData
+				                               		local filteredScoresData = TGNS.Where(scoresData, function(s) return rolesClientData[s.ClientIndex] == nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end)
+			                               			TGNS.SortAscending(filteredScoresData, function(s) return s.Name end)
+				                               		return filteredScoresData
 				                               end, TeamNumber = kMarineTeamType })
 				                               
 				    -- -- Blue team.
