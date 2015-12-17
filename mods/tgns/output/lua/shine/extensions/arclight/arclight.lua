@@ -139,7 +139,7 @@ if Server or Client then
 		local surrenderWeakerTeamIfConditionsAreRight = function()
 			local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
 			
-			if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= Shine.Plugins.communityslots.Config.PublicSlots and TGNS.IsGameInProgress() and not winOrLoseForcedRecently then
+			if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= Shine.Plugins.communityslots.Config.PublicSlots and TGNS.IsGameInProgress() and not winOrLoseForcedRecently and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
 				pointsRemaining[kMarineTeamType] = pointsRemaining[kMarineTeamType] or 0
 				pointsRemaining[kAlienTeamType] = pointsRemaining[kAlienTeamType] or 0
 				local surrenderingTeamNumber = pointsRemaining[kMarineTeamType] < pointsRemaining[kAlienTeamType] and kMarineTeamType or kAlienTeamType
@@ -749,7 +749,7 @@ if Server or Client then
 	function Plugin:Initialise()
 		self.Enabled = ArclightModsEnabled
 
-		Shine.Timer.Simple(5, function()
+		Shine.Timer.Simple(10, function()
 			if Shared.GetMapName() == ArclightMapName then
 				if Client then OnClientInitialise() end
 				if Server then OnServerInitialise() end
