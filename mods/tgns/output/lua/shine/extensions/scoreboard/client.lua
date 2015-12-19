@@ -495,7 +495,7 @@ function Plugin:Initialise()
 			local xOffset = 0
 			local addOffsetIf = function(boolean) if boolean then xOffset = xOffset + 20 end end
 			addOffsetIf(playerIconShouldDisplay.Squad)
-			addOffsetIf(playerIconShouldDisplay.ApproveIcon)
+			addOffsetIf(playerIconShouldDisplay.Approve)
 			addOffsetIf(playerIconShouldDisplay.Query)
 			addOffsetIf(playerIconShouldDisplay.Vr)
 
