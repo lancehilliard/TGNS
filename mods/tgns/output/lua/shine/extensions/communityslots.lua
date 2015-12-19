@@ -525,7 +525,7 @@ function Plugin:CreateCommands()
             end
         end)
     end, true)
-    fullSpecCommand:Help("Toggle your sh_fullspec. Help: M > Info > sh_fullspec")
+    fullSpecCommand:Help("Toggle your sh_fullspec. Help: http://rr.tacticalgamer.com/FullSpec/Manage")
 
     local fullSpecRefreshCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
         refreshFullSpecData()
