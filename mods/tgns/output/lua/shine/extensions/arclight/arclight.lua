@@ -136,6 +136,15 @@ if Server or Client then
 		local teamNumberWhichCalledWinOrLose
 		local voidTheJumpSlowdownUntil = {}
 
+		function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
+			if victimEntity then
+				local victimClient = TGNS.GetClient(victimEntity)
+				if victimClient then
+					teleportOutOfBaseAllowedAt[victimClient] = Shared.GetTime()
+				end
+			end
+		end
+
 		local surrenderWeakerTeamIfConditionsAreRight = function()
 			local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
 			
@@ -613,14 +622,16 @@ if Server or Client then
 					if TGNS.GetIsPlayerVirtual(p) then
 						bottomFloorTele:OnTriggerEntered(p, bottomFloorTele)
 					else
-						local c = TGNS.GetClient(p)
-						if not TGNS.IsClientCommander(c) then
-							teleportOutOfBaseAllowedAt[c] = teleportOutOfBaseAllowedAt[c] or 0
-							local secondsUntilTeleportOutOfBaseAllowed = math.floor(teleportOutOfBaseAllowedAt[c] - Shared.GetTime())
-							if secondsUntilTeleportOutOfBaseAllowed > -3 then
-								local message = string.format("You may return to %s %s", hillLocationName, secondsUntilTeleportOutOfBaseAllowed > 0 and string.format("in: %s", Pluralize(secondsUntilTeleportOutOfBaseAllowed, "second")) or "NOW!")
-								local rgb = TGNS.GetTeamRgb(TGNS.GetClientTeamNumber(c))
-								Shine.ScreenText.Add(68, {X = 0.5, Y = 0.25, Text = message, Duration = 1.5, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+						if TGNS.IsPlayerAlive(p) then
+							local c = TGNS.GetClient(p)
+							if not TGNS.IsClientCommander(c) then
+								teleportOutOfBaseAllowedAt[c] = teleportOutOfBaseAllowedAt[c] or 0
+								local secondsUntilTeleportOutOfBaseAllowed = math.floor(teleportOutOfBaseAllowedAt[c] - Shared.GetTime())
+								if secondsUntilTeleportOutOfBaseAllowed > -3 then
+									local message = string.format("You may return to %s %s", hillLocationName, secondsUntilTeleportOutOfBaseAllowed > 0 and string.format("in: %s", Pluralize(secondsUntilTeleportOutOfBaseAllowed, "second")) or "NOW!")
+									local rgb = TGNS.GetTeamRgb(TGNS.GetClientTeamNumber(c))
+									Shine.ScreenText.Add(68, {X = 0.5, Y = 0.25, Text = message, Duration = 1.5, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+								end
 							end
 						end
 					end
