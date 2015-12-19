@@ -37,6 +37,8 @@ if Server or Client then
 		local scoreboardIsBeingShown
 		local userHasToggledCaptainsBoardDisplayOn
 		local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
+		local optedInScores = {}
+		local notOptedInScores = {}
 
 		TGNS.HookNetworkMessage(Plugin.CAPTAINS_DATA, function(message)
 			--Shared.Message("")
@@ -51,6 +53,8 @@ if Server or Client then
 				--Shared.Message(string.format("Should show as opted in: %s", Scoreboard_GetPlayerName(clientIndex)))
 				-- Shared.Message("Captains Debug (until game start): clientIndex: " .. tostring(clientIndex) .. "; rolesData: " .. tostring(rolesData))
 			--end)
+
+
 			optedInCount = TGNS.TableKeyCount(rolesClientData)
 			captainsClientIndexes = data.c or {}
 			localClientIsCaptain = TGNS.Any(captainsClientIndexes, function(i) return i == Client.GetLocalClientIndex() end)
@@ -61,7 +65,27 @@ if Server or Client then
 			--Shared.Message("------------------------")
 			--Shared.Message("------------------------")
 			--Shared.Message("")
-			debug(string.format("optedInCount: %s", optedInCount))
+
+			local scoresData = GetScoreData({ kTeamReadyRoom })
+
+
+			local buildScoresData = function(isForOptedInBoard)
+				local dataName = isForOptedInBoard and "optedInScores" or "notOptedInScores"
+				local getKey = function(s) return string.format("client%s", s.ClientIndex) end
+				local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil end
+		   		local result = TGNS.Where(scoresData, scoresDataPredicate)
+		   		if localClientIsCaptain and isForOptedInBoard then
+		   			TGNS.SortDescending(result, function(s) return s.Skill end)
+		   		else
+		   			TGNS.SortAscending(result, function(s) return s.Name end)
+		   		end
+		   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
+		   		datas[dataName] = result
+		   		debug(string.format("total: %s; optedIn: %s; %s: %s; datas: %s", #scoresData, optedInCount, dataName, #result, json.encode(datas)))
+		   		return result
+			end
+	   		optedInScores = buildScoresData(true)
+	   		notOptedInScores = buildScoresData(false)
 		end)
 
 		OnClientInitialise = function(self)
@@ -934,7 +958,7 @@ if Server or Client then
 				        local onosPercentIconTransparency = 0
 				        local marineCommPercentIconTransparency = 0
 				        local alienCommPercentIconTransparency = 0
-				        local rolesData = rolesClientData[clientIndex]
+				        local rolesData = rolesClientData[string.format("client%s", clientIndex)]
 				        if rolesData then
 				        	gorgePercentIconTransparency = rolesData.g
 				        	lerkPercentIconTransparency = rolesData.l
@@ -1073,28 +1097,13 @@ if Server or Client then
 				    table.insert(teams, { GUIs = CreateTeamBackground(GUIScoreboard.kSpectatorColor, guiLayer), TeamTitle = "Pickable Players",
 				                               Color = GUIScoreboard.kSpectatorColor, PlayerList = { }, HighlightColor = GUIScoreboard.kSpectatorHighlightColor,
 				                               GetScores = function()
-				                               		local scoresData = GetScoreData({ kTeamReadyRoom })
-				                               		local filteredScoresData = TGNS.Where(scoresData, function(s) return rolesClientData[s.ClientIndex] ~= nil end)
-				                               		if localClientIsCaptain then
-				                               			TGNS.SortDescending(filteredScoresData, function(s) return s.Skill end)
-				                               		else
-				                               			TGNS.SortAscending(filteredScoresData, function(s) return s.Name end)
-				                               		end
-
-				                               		local datas = {scoresData=scoresData, filteredScoresData=filteredScoresData, rolesClientData=rolesClientData}
-				                               		debug(string.format("s: %s; f: %s; r: %s; d: %s", #scoresData, #filteredScoresData, #rolesClientData, json.encode(datas)))
-
-
-				                               		return filteredScoresData
+				                               		return optedInScores
 				                               end, TeamNumber = kTeamReadyRoom })
 
 				    table.insert(teams, { GUIs = CreateTeamBackground(GUIScoreboard.kSpectatorColor, guiLayer), TeamTitle = "Not Opted In",
 				                               Color = GUIScoreboard.kSpectatorColor, PlayerList = { }, HighlightColor = GUIScoreboard.kSpectatorHighlightColor,
 				                               GetScores = function()
-				                               		local scoresData = GetScoreData({ kTeamReadyRoom })
-				                               		local filteredScoresData = TGNS.Where(scoresData, function(s) return rolesClientData[s.ClientIndex] == nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end)
-			                               			TGNS.SortAscending(filteredScoresData, function(s) return s.Name end)
-				                               		return filteredScoresData
+				                               		return notOptedInScores
 				                               end, TeamNumber = kMarineTeamType })
 				                               
 				    -- -- Blue team.
@@ -1445,7 +1454,7 @@ if Server or Client then
 					Shine.ScreenText.Add(50, {X = 0.05, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, clients[1])
 				end
 			end
-			local data = {c = TGNS.Select(captainClients, TGNS.GetClientIndex), p=TGNS.ToTable(optedInClients, TGNS.GetClientIndex, function(c)
+			local data = {c = TGNS.Select(captainClients, TGNS.GetClientIndex), p=TGNS.ToTable(optedInClients, function(c) return string.format("client%s", TGNS.GetClientIndex(c)) end, function(c)
 				local gorgePercent = 0
 				local lerkPercent = 0
 				local fadePercent = 0
@@ -1455,25 +1464,32 @@ if Server or Client then
 				local steamId = TGNS.GetClientSteamId(c)
 				local d = TGNS.FirstOrNil(rolesServerData, function(d) return d.PlayerId == steamId end)
 				if d then
-					local secondsSum = d.GorgeSeconds + d.LerkSeconds + d.FadeSeconds + d.OnosSeconds + d.MarineCommSeconds + d.AlienCommSeconds
-					if secondsSum > 0 then
-						gorgePercent = math.floor((d.GorgeSeconds / secondsSum) * 100) / 100
-						lerkPercent = math.floor((d.LerkSeconds / secondsSum) * 100) / 100
-						fadePercent = math.floor((d.FadeSeconds / secondsSum) * 100) / 100
-						onosPercent = math.floor((d.OnosSeconds / secondsSum) * 100) / 100
-						marineCommPercent = math.floor((d.MarineCommSeconds / secondsSum) * 100) / 100
-						alienCommPercent = math.floor((d.AlienCommSeconds / secondsSum) * 100) / 100
-
+					local lifeformSecondsSum = d.GorgeSeconds + d.LerkSeconds + d.FadeSeconds + d.OnosSeconds
+					local commSecondsSum = d.MarineCommSeconds + d.AlienCommSeconds
+					if lifeformSecondsSum > 0 or commSecondsSum > 0 then
+						if lifeformSecondsSum > 0 then
+							gorgePercent = math.floor((d.GorgeSeconds / lifeformSecondsSum) * 100) / 100
+							lerkPercent = math.floor((d.LerkSeconds / lifeformSecondsSum) * 100) / 100
+							fadePercent = math.floor((d.FadeSeconds / lifeformSecondsSum) * 100) / 100
+							onosPercent = math.floor((d.OnosSeconds / lifeformSecondsSum) * 100) / 100
+						end
+						if commSecondsSum > 0 then
+							marineCommPercent = math.floor((d.MarineCommSeconds / commSecondsSum) * 100) / 100
+							alienCommPercent = math.floor((d.AlienCommSeconds / commSecondsSum) * 100) / 100
+						end
 						local minimumTransparency = 0.1
-						gorgePercent = gorgePercent >= minimumTransparency and gorgePercent or minimumTransparency
-						lerkPercent = lerkPercent >= minimumTransparency and lerkPercent or minimumTransparency
-						fadePercent = fadePercent >= minimumTransparency and fadePercent or minimumTransparency
-						onosPercent = onosPercent >= minimumTransparency and onosPercent or minimumTransparency
-						marineCommPercent = marineCommPercent >= minimumTransparency and marineCommPercent or minimumTransparency
-						alienCommPercent = alienCommPercent >= minimumTransparency and alienCommPercent or minimumTransparency
+						local transparencyBoost = 0.3
+						gorgePercent = gorgePercent >= minimumTransparency and gorgePercent + transparencyBoost or minimumTransparency
+						lerkPercent = lerkPercent >= minimumTransparency and lerkPercent + transparencyBoost or minimumTransparency
+						fadePercent = fadePercent >= minimumTransparency and fadePercent + transparencyBoost or minimumTransparency
+						onosPercent = onosPercent >= minimumTransparency and onosPercent + transparencyBoost or minimumTransparency
+						marineCommPercent = marineCommPercent >= minimumTransparency and marineCommPercent + transparencyBoost or minimumTransparency
+						alienCommPercent = alienCommPercent >= minimumTransparency and alienCommPercent + transparencyBoost or minimumTransparency
 					end
 				end
-				return {g=gorgePercent,l=lerkPercent,f=fadePercent,o=onosPercent,m=marineCommPercent,a=alienCommPercent}
+				local result = {g=gorgePercent,l=lerkPercent,f=fadePercent,o=onosPercent,m=marineCommPercent,a=alienCommPercent}
+				-- Shared.Message(string.format("ToTable result: %s", json.encode(result)))
+				return result
 			end)}
 			local dataJson = json.encode(data)
 			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
