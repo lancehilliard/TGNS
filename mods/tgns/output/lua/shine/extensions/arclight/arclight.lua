@@ -551,7 +551,9 @@ if Server or Client then
 
 		TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
 			local client = TGNS.GetClient(player)
-			showHelpText(client)
+			if client then
+				showHelpText(client)
+			end
 			--debug(string.format("Location: %s - %s", TGNS.GetPlayerName(player), locationName))
 		end)
 
