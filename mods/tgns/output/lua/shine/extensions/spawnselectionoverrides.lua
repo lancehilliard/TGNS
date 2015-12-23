@@ -1,5 +1,4 @@
 local md
-local originalResetGame
 local forcedSpawnSelectionOverrides
 local currentMapSpawnSelectionOverridesData
 local BRIEF_SUMMARY_TRUNCATE_LENGTH = 5
@@ -46,6 +45,7 @@ function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create("CUSTOMSPAWNS")
 
+	local originalResetGame
 	originalResetGame = TGNS.ReplaceClassMethod("NS2Gamerules", "ResetGame", function(gamerules)
 		local success, result = xpcall(function()
 			if self.Config.enableForBuildNumber == Shared.GetBuildNumber() then
