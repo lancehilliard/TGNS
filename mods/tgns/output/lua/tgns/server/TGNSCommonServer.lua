@@ -418,7 +418,7 @@ function TGNS.Ban(client, targetClient, durationInMinutes, reason)
 end
 
 function TGNS.IsPlayerAlive(player)
-	local result = player:GetIsAlive()
+	local result = player.GetIsAlive and player:GetIsAlive()
 	return result
 end
 
