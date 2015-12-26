@@ -945,7 +945,7 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.HookNetworkMessage(Plugin.WYZ, function(message)
-		Shared.ConsoleCommand("connect 66.85.77.75")
+		Shared.ConsoleCommand("connect 23.105.33.54")
 	end)
 
 	local originalGUIInsight_PlayerHealthbarsUpdatePlayers
