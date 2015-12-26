@@ -13,7 +13,7 @@ if Server or Client then
 
 	Plugin.CAPTAINS_DATA = "captains_CAPTAINS_DATA"
 
-	TGNS.RegisterNetworkMessage(Plugin.CAPTAINS_DATA, {d="string(800)"})
+	TGNS.RegisterNetworkMessage(Plugin.CAPTAINS_DATA, {d="string(900)"})
 
 	if Client then
 		local showClientDebug = false
@@ -48,44 +48,48 @@ if Server or Client then
 			--Shared.Message("------------------------ " .. Shared.GetTime())
 			--Shared.Message("------------------------")
 			local data = json.decode(message.d)
-			rolesClientData = data.p
-			--TGNS.DoForPairs(rolesClientData, function(clientIndex, rolesData)
-				--Shared.Message(string.format("Should show as opted in: %s", Scoreboard_GetPlayerName(clientIndex)))
-				-- Shared.Message("Captains Debug (until game start): clientIndex: " .. tostring(clientIndex) .. "; rolesData: " .. tostring(rolesData))
-			--end)
+			debug("message.d: " .. tostring(message.d))
+			if data then
+				rolesClientData = data.p
+				--TGNS.DoForPairs(rolesClientData, function(clientIndex, rolesData)
+					--Shared.Message(string.format("Should show as opted in: %s", Scoreboard_GetPlayerName(clientIndex)))
+					-- Shared.Message("Captains Debug (until game start): clientIndex: " .. tostring(clientIndex) .. "; rolesData: " .. tostring(rolesData))
+				--end)
 
 
-			optedInCount = TGNS.TableKeyCount(rolesClientData)
-			captainsClientIndexes = data.c or {}
-			localClientIsCaptain = TGNS.Any(captainsClientIndexes, function(i) return i == Client.GetLocalClientIndex() end)
-			rolesClientDataLastUpdated = Shared.GetTime()
-			if userHasToggledCaptainsBoardDisplayOn == nil then
-				userHasToggledCaptainsBoardDisplayOn = true
+				optedInCount = TGNS.TableKeyCount(rolesClientData)
+				captainsClientIndexes = data.c or {}
+				localClientIsCaptain = TGNS.Any(captainsClientIndexes, function(i) return i == Client.GetLocalClientIndex() end)
+				rolesClientDataLastUpdated = Shared.GetTime()
+				if userHasToggledCaptainsBoardDisplayOn == nil then
+					userHasToggledCaptainsBoardDisplayOn = true
+				end
+				--Shared.Message("------------------------")
+				--Shared.Message("------------------------")
+				--Shared.Message("")
+
+				local scoresData = GetScoreData({ kTeamReadyRoom })
+
+
+				local buildScoresData = function(isForOptedInBoard)
+					local dataName = isForOptedInBoard and "optedInScores" or "notOptedInScores"
+					local getKey = function(s) return string.format("c%s", s.ClientIndex) end
+					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil end
+			   		local result = TGNS.Where(scoresData, scoresDataPredicate)
+			   		if localClientIsCaptain and isForOptedInBoard then
+			   			TGNS.SortDescending(result, function(s) return s.Skill end)
+			   		else
+			   			TGNS.SortAscending(result, function(s) return s.Name end)
+			   		end
+			   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
+			   		datas[dataName] = result
+			   		debug(string.format("total: %s; optedIn: %s; %s: %s; datas: %s", #scoresData, optedInCount, dataName, #result, json.encode(datas)))
+			   		return result
+				end
+		   		optedInScores = buildScoresData(true)
+		   		notOptedInScores = buildScoresData(false)
 			end
-			--Shared.Message("------------------------")
-			--Shared.Message("------------------------")
-			--Shared.Message("")
 
-			local scoresData = GetScoreData({ kTeamReadyRoom })
-
-
-			local buildScoresData = function(isForOptedInBoard)
-				local dataName = isForOptedInBoard and "optedInScores" or "notOptedInScores"
-				local getKey = function(s) return string.format("client%s", s.ClientIndex) end
-				local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil end
-		   		local result = TGNS.Where(scoresData, scoresDataPredicate)
-		   		if localClientIsCaptain and isForOptedInBoard then
-		   			TGNS.SortDescending(result, function(s) return s.Skill end)
-		   		else
-		   			TGNS.SortAscending(result, function(s) return s.Name end)
-		   		end
-		   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
-		   		datas[dataName] = result
-		   		debug(string.format("total: %s; optedIn: %s; %s: %s; datas: %s", #scoresData, optedInCount, dataName, #result, json.encode(datas)))
-		   		return result
-			end
-	   		optedInScores = buildScoresData(true)
-	   		notOptedInScores = buildScoresData(false)
 		end)
 
 		OnClientInitialise = function(self)
@@ -958,7 +962,7 @@ if Server or Client then
 				        local onosPercentIconTransparency = 0
 				        local marineCommPercentIconTransparency = 0
 				        local alienCommPercentIconTransparency = 0
-				        local rolesData = rolesClientData[string.format("client%s", clientIndex)]
+				        local rolesData = rolesClientData[string.format("c%s", clientIndex)]
 				        if rolesData then
 				        	gorgePercentIconTransparency = rolesData.g
 				        	lerkPercentIconTransparency = rolesData.l
@@ -1454,7 +1458,7 @@ if Server or Client then
 					Shine.ScreenText.Add(50, {X = 0.05, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, clients[1])
 				end
 			end
-			local data = {c = TGNS.Select(captainClients, TGNS.GetClientIndex), p=TGNS.ToTable(optedInClients, function(c) return string.format("client%s", TGNS.GetClientIndex(c)) end, function(c)
+			local data = {c = TGNS.Select(captainClients, TGNS.GetClientIndex), p=TGNS.ToTable(optedInClients, function(c) return string.format("c%s", TGNS.GetClientIndex(c)) end, function(c)
 				local gorgePercent = 0
 				local lerkPercent = 0
 				local fadePercent = 0
@@ -1492,9 +1496,30 @@ if Server or Client then
 				return result
 			end)}
 			local dataJson = json.encode(data)
+			Shared.Message("captains debug: " .. tostring(dataJson))
 			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.captains.CAPTAINS_DATA, {d=dataJson})
 			end)
+		end
+
+		local function getRolesData(steamIds)
+			if #steamIds > 0 then
+				local playerIdsInput = TGNS.Join(steamIds, ",")
+				local url = string.format("%s&d=%s&i=%s", TGNS.Config.RolesEndpointBaseUrl, 30, playerIdsInput)
+				TGNS.GetHttpAsync(url, function(rolesResponseJson)
+					-- Shared.Message("rolesResponseJson: " .. rolesResponseJson)
+					local rolesResponse = json.decode(rolesResponseJson) or {}
+					if rolesResponse.success then
+						TGNS.DoFor(rolesResponse.result, function(r)
+							if not TGNS.Any(rolesServerData, function(d) return d.PlayerId == r.PlayerId end) then
+								table.insert(rolesServerData, r)
+							end
+						end)
+					else
+						TGNS.DebugPrint(string.format("captains ERROR: Unable to access roles data for playerIds %s. url: %s | msg: %s | response: %s | stacktrace: %s", playerIdsInput, url, rolesResponse.msg, rolesResponseJson, rolesResponse.stacktrace))
+					end
+				end)
+			end
 		end
 
 		local function showPickables()
@@ -1544,24 +1569,8 @@ if Server or Client then
 
 					-- todo mlh restore this
 					local steamIdsOfOptedInClientsNeedingRoleData = TGNS.Select(TGNS.Where(optedInClients, function(c) return not TGNS.Any(rolesServerData, function(d) return d.PlayerId == TGNS.GetClientSteamId(c) end) end), TGNS.GetClientSteamId)
+					getRolesData(steamIdsOfOptedInClientsNeedingRoleData)
 					--md:ToAdminNotifyInfo(string.format("showPickables: steamIdsOfOptedInClientsNeedingRoleData count: %s", #steamIdsOfOptedInClientsNeedingRoleData))
-					if #steamIdsOfOptedInClientsNeedingRoleData > 0 then
-						local playerIdsInput = TGNS.Join(steamIdsOfOptedInClientsNeedingRoleData, ",")
-						local url = string.format("%s&d=%s&i=%s", TGNS.Config.RolesEndpointBaseUrl, 30, playerIdsInput)
-						TGNS.GetHttpAsync(url, function(rolesResponseJson)
-							-- Shared.Message("rolesResponseJson: " .. rolesResponseJson)
-							local rolesResponse = json.decode(rolesResponseJson) or {}
-							if rolesResponse.success then
-								TGNS.DoFor(rolesResponse.result, function(r)
-									if not TGNS.Any(rolesServerData, function(d) return d.PlayerId == r.PlayerId end) then
-										table.insert(rolesServerData, r)
-									end
-								end)
-							else
-								TGNS.DebugPrint(string.format("captains ERROR: Unable to access roles data for playerIds %s. url: %s | msg: %s | response: %s | stacktrace: %s", playerIdsInput, url, rolesResponse.msg, rolesResponseJson, rolesResponse.stacktrace))
-							end
-						end)
-					end
 
 					-- todo mlh restore this
 					sendRolesDataToAllPlayers(optedInClients)
@@ -1811,6 +1820,7 @@ if Server or Client then
 				if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
 					table.insertunique(readyPlayerClients, client)
 					TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+					getRolesData({TGNS.GetClientSteamId(client)})
 					TGNS.RemoveAllMatching(readyCaptainClients, client)
 					updateCaptainsReadyProgress(client)
 				else
@@ -1861,7 +1871,8 @@ if Server or Client then
 					momentWhenSecondCaptainOptedIn = momentWhenSecondCaptainOptedIn or TGNS.GetSecondsSinceMapLoaded()
 				end
 			end
-				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+			getRolesData({TGNS.GetClientSteamId(client)})
 			updateCaptainsReadyProgress(client)
 		end
 
@@ -2219,6 +2230,7 @@ if Server or Client then
 								readyPlayerClients = readyPlayerClients or {}
 								table.insertunique(readyPlayerClients, optingInClient)
 								TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(optingInClient), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+								getRolesData({TGNS.GetClientSteamId(optingInClient)})
 							-- end
 						end
 						md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), string.format("You will be automatically opted-in when votes are allowed. Thank you for being a %s!", isSm and "Supporting Member" or "recent Captain"))
