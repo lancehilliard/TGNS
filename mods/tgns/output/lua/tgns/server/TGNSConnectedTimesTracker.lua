@@ -1,7 +1,7 @@
 TGNSConnectedTimesTracker = {}
 
 local DISCONNECTED_TIME_ALLOWED_IN_SECONDS = 300
-local TRACKING_INTERVAL_IN_SECONDS = 15
+local TRACKING_INTERVAL_IN_SECONDS = 30
 local DATA_BACKEND_UPDATE_INTERVAL_IN_SECONDS = 60
 local connectedTimes = {}
 local played = {}
