@@ -165,18 +165,18 @@ function Plugin:Initialise()
 
 	TGNS.ScheduleActionInterval(30, function()
 		local playerList = TGNS.GetPlayerList()
-		TGNS.DoFor(TGNS.GetSpectatorClients(playerList), function(c)
-			local numberOfPlayingClients = #TGNS.GetPlayingClients(playerList)
-			if numberOfPlayingClients >= Shine.Plugins.communityslots.Config.PublicSlots then
-				local steamId = TGNS.GetClientSteamId(c)
-				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] or 0
-				spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] + 1
-				if spectateKarmaProgress[steamId] >= 10 then
-					TGNS.Karma(steamId, "SpectatingWhenFull")
-					spectateKarmaProgress[steamId] = 0
-				end
-			end
-		end)
+		local numberOfPlayingClients = #TGNS.GetPlayingClients(playerList)
+		if numberOfPlayingClients >= Shine.Plugins.communityslots.Config.PublicSlots then
+			TGNS.DoFor(TGNS.GetSpectatorClients(playerList), function(c)
+					local steamId = TGNS.GetClientSteamId(c)
+					spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] or 0
+					spectateKarmaProgress[steamId] = spectateKarmaProgress[steamId] + 1
+					if spectateKarmaProgress[steamId] >= 10 then
+						TGNS.Karma(steamId, "SpectatingWhenFull")
+						spectateKarmaProgress[steamId] = 0
+					end
+			end)
+		end
 	end)
 
 	karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
