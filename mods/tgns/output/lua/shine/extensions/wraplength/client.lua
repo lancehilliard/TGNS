@@ -18,9 +18,9 @@ function Plugin:Initialise()
     end
 
     local originalWordWrapFunction = WordWrap
-    WordWrap = function( Label, Text, XPos, MaxWidth )
+    WordWrap = function( Label, Text, XPos, MaxWidth, MaxLines )
         MaxWidth = getMaxWidth(MaxWidth)
-        return originalWordWrapFunction( Label, Text, XPos, MaxWidth )
+        return originalWordWrapFunction( Label, Text, XPos, MaxWidth, MaxLines )
     end
 
     local originalTextWrapFunction = TextWrap
