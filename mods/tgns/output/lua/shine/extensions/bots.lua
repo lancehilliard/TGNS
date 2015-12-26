@@ -28,6 +28,7 @@ local onosSpeedMultiplier = 1
 local onosSpeedMultiplierCalculator = function() end
 local startingBotsKarmaThrottleInMinutes = 10
 local startingBotsKarmaLastGiven = {}
+local botsEnabled = false
 
 local Plugin = {}
 
@@ -45,6 +46,7 @@ function Plugin:GetTotalNumberOfBots()
 end
 
 local function setBotConfig()
+	botsEnabled = true
 	if not originalEndRoundOnTeamUnbalanceSetting then
 		originalEndRoundOnTeamUnbalanceSetting = Server.GetConfigSetting("end_round_on_team_unbalance")
 	end
@@ -139,6 +141,7 @@ local function setBotConfig()
 end
 
 local function setOriginalConfig()
+	botsEnabled = false
 	spawnReprieveAction = function() end
 	surrenderBotsIfConditionsAreRight = function() end
 	if originalEndRoundOnTeamUnbalanceSetting then
@@ -379,17 +382,27 @@ function Plugin:Initialise()
 		return result
 	end)
 
-	TGNS.ScheduleActionInterval(120, spawnReprieveAction)
-	TGNS.ScheduleActionInterval(10, function() surrenderBotsIfConditionsAreRight() end)
+	TGNS.ScheduleActionInterval(120, function() 
+		if botsEnabled then
+			spawnReprieveAction()
+		end
+	end)
+	TGNS.ScheduleActionInterval(10, function() 
+		if botsEnabled then
+			surrenderBotsIfConditionsAreRight()
+		end
+	end)
 	TGNS.ScheduleActionInterval(3, function()
-		onosSpeedMultiplierCalculator()
-		if onosSpeedMultiplier < 1 and (whenLastOnosSpeedAdvisory == nil or (Shared.GetTime() - whenLastOnosSpeedAdvisory) > 2) then
-			local message = string.format("Onos movement speed is\nreduced in bot games having\nfewer than %s Marines.\n\nModifier: %s", MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS, TGNS.RoundPositiveNumberDown(onosSpeedMultiplier, 2))
-			local onosPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return p:isa("Onos") end)
-			TGNS.DoFor(onosPlayers, function(p)
-				Shine.ScreenText.Add(36, {X = 0.75, Y = 0.65, Text = message, Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, TGNS.GetClient(p))
-			end)				
-			whenLastOnosSpeedAdvisory = Shared.GetTime()
+		if botsEnabled then
+			onosSpeedMultiplierCalculator()
+			if onosSpeedMultiplier < 1 and (whenLastOnosSpeedAdvisory == nil or (Shared.GetTime() - whenLastOnosSpeedAdvisory) > 2) then
+				local message = string.format("Onos movement speed is\nreduced in bot games having\nfewer than %s Marines.\n\nModifier: %s", MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS, TGNS.RoundPositiveNumberDown(onosSpeedMultiplier, 2))
+				local onosPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return p:isa("Onos") end)
+				TGNS.DoFor(onosPlayers, function(p)
+					Shine.ScreenText.Add(36, {X = 0.75, Y = 0.65, Text = message, Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, TGNS.GetClient(p))
+				end)				
+				whenLastOnosSpeedAdvisory = Shared.GetTime()
+			end
 		end
 	end)
 
