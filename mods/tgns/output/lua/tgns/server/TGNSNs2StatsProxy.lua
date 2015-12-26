@@ -29,7 +29,7 @@ local function getRequestedRecords()
 		end
 	end)
 end
-TGNS.ScheduleActionInterval(120, getRequestedRecords)
+-- TGNS.ScheduleActionInterval(120, getRequestedRecords)
 
 TGNSNs2StatsProxy = {}
 TGNSNs2StatsProxy.AddSteamId = function(steamId)
