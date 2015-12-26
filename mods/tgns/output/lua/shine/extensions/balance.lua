@@ -493,11 +493,11 @@ function Plugin:CreateCommands()
 	goodPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 	goodPlayersCommand:Help("<player> Toggle player in Good bucket")
 
-	local decayedHarvestersCommand = self:BindCommand("sh_decayharvesters", nil, function(client)
-		md:ToClientConsole(client, "Harvesters will decay until map end.")
-		harvesterDecayEnabled = true
-	end)
-	decayedHarvestersCommand:Help("Enable experimental harvester decay (Wyz/IronHorse)")
+	-- local decayedHarvestersCommand = self:BindCommand("sh_decayharvesters", nil, function(client)
+	-- 	md:ToClientConsole(client, "Harvesters will decay until map end.")
+	-- 	harvesterDecayEnabled = true
+	-- end)
+	-- decayedHarvestersCommand:Help("Enable experimental harvester decay (Wyz/IronHorse)")
 
 end
 
@@ -565,70 +565,41 @@ function Plugin:Initialise()
         Server.ClientCommand(player, team2Players < team1Players and "jointeamtwo" or "jointeamone")
     end
 
-    TGNS.ScheduleAction(10, function()
-    	-- if not TGNS.IsProduction() then
-		    -- todo mlh 1) notify khamm only on last damage 2) 
-
-    		local minutesToDecayFullArmorToNoArmor = 4.5
-		    TGNS.ScheduleActionInterval(1, function()
-		    	if TGNS.IsGameInProgress() and harvesterDecayEnabled then
-		    		local matureArmorlessHarvesterEntityIds = {}
-		    		TGNS.DoFor(TGNS.GetEntitiesWithClassName("Harvester"), function(h)
-		    			if (h:GetIsBuilt()) then
-		    				if h:GetArmor() > 0 then
-				    			local decayAmountPerSecond = h:GetMatureMaxArmor() / minutesToDecayFullArmorToNoArmor / TGNS.ConvertMinutesToSeconds(1);
-				    			local currentArmor = h:GetArmor()
-				    			local newArmor = currentArmor - decayAmountPerSecond
-				    			newArmor = newArmor > 0 and newArmor or 0
-				    			h:SetArmor(newArmor, true)
-				    			if newArmor == 0 then
-				    				-- CreatePheromone(kTechId.NeedHealingMarker, h:GetOrigin(), kAlienTeamType)
-					                -- -- flash structure on map
-					                -- h:GetTeam():TriggerAlert(kTechId.AlienAlertNeedHealing, h)
-					                -- -- play sound
-					                -- TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-					                -- 	TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.ARMORDECAY1)
-					                -- end)
-						    		-- !!! Player:TriggerAlert(techId, entity)
-				    			end
-				    			--Shared.Message(string.format("balance harvester [%s]: currentArmor: %s; decayAmountPerSecond: %s; newArmor: %s", Shared.GetTime(), currentArmor, decayAmountPerSecond, newArmor))
-		    				else
-		    					table.insert(matureArmorlessHarvesterEntityIds, h:GetId())
-		    				end
-		    			end
-		    		end)
-		            TGNS.DoFor(TGNS.GetAlienPlayers(TGNS.GetPlayerList()), function(p)
-		            	TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.ARMORLESS_HARVESTERS, {l=TGNS.Join(matureArmorlessHarvesterEntityIds, ",")})
-		            end)
-		    	end
-		    end)
-    	-- end
-    end)
-
- --    local originalMarineTeamSpawnInitialStructures = MarineTeam.SpawnInitialStructures
- --    MarineTeam.SpawnInitialStructures = function(selfx, techPoint)
- --    	local extraIpCost = kInfantryPortalCost/2
- --    	local originalGetNumPlayers = selfx.GetNumPlayers
- --    	-- if selfx:GetNumPlayers() == 8 then
-	--     	selfx.GetNumPlayers = function(selfy)
-	--     		return originalGetNumPlayers(selfy) + 9
-	--     	end
-	--     	selfx:AddTeamResources(-extraIpCost)
- --    	-- end
- --    	local tower, commandStation = originalMarineTeamSpawnInitialStructures(selfx, techPoint)
- --    	md:ToTeamNotifyInfo(selfx:GetTeamNumber(), string.format("Marines get extra IP and lose %s resources.", extraIpCost))
-
- --    	selfx.GetNumPlayers = originalGetNumPlayers
- --    	return tower, commandStation
-	-- end
-
-	-- TGNS.ScheduleAction(5, function()
-	-- 	local showBalanceCommandAdvisory = function(client)
-	-- 		md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Primer signers may use sh_balance to send players to teams.")
-	-- 	end
-	-- 	Shine.Commands.sh_voterandom.Func = showBalanceCommandAdvisory
-	-- 	Shine.Commands.sh_enablerandom.Func = showBalanceCommandAdvisory
-	-- end)
+    -- TGNS.ScheduleAction(10, function()
+    -- 		local minutesToDecayFullArmorToNoArmor = 4.5
+		  --   TGNS.ScheduleActionInterval(1, function()
+		  --   	if TGNS.IsGameInProgress() and harvesterDecayEnabled then
+		  --   		local matureArmorlessHarvesterEntityIds = {}
+		  --   		TGNS.DoFor(TGNS.GetEntitiesWithClassName("Harvester"), function(h)
+		  --   			if (h:GetIsBuilt()) then
+		  --   				if h:GetArmor() > 0 then
+				--     			local decayAmountPerSecond = h:GetMatureMaxArmor() / minutesToDecayFullArmorToNoArmor / TGNS.ConvertMinutesToSeconds(1);
+				--     			local currentArmor = h:GetArmor()
+				--     			local newArmor = currentArmor - decayAmountPerSecond
+				--     			newArmor = newArmor > 0 and newArmor or 0
+				--     			h:SetArmor(newArmor, true)
+				--     			if newArmor == 0 then
+				--     				-- CreatePheromone(kTechId.NeedHealingMarker, h:GetOrigin(), kAlienTeamType)
+				-- 	                -- -- flash structure on map
+				-- 	                -- h:GetTeam():TriggerAlert(kTechId.AlienAlertNeedHealing, h)
+				-- 	                -- -- play sound
+				-- 	                -- TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+				-- 	                -- 	TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.ARMORDECAY1)
+				-- 	                -- end)
+				-- 		    		-- !!! Player:TriggerAlert(techId, entity)
+				--     			end
+				--     			--Shared.Message(string.format("balance harvester [%s]: currentArmor: %s; decayAmountPerSecond: %s; newArmor: %s", Shared.GetTime(), currentArmor, decayAmountPerSecond, newArmor))
+		  --   				else
+		  --   					table.insert(matureArmorlessHarvesterEntityIds, h:GetId())
+		  --   				end
+		  --   			end
+		  --   		end)
+		  --           TGNS.DoFor(TGNS.GetAlienPlayers(TGNS.GetPlayerList()), function(p)
+		  --           	TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.ARMORLESS_HARVESTERS, {l=TGNS.Join(matureArmorlessHarvesterEntityIds, ",")})
+		  --           end)
+		  --   	end
+		  --   end)
+    -- end)
 
 	balanceCacheData = Shine.LoadJSONFile(balanceTempfilePath) or {}
 	TGNS.RemoveAllWhere(balanceCacheData, function(d) return TGNS.GetSecondsSinceEpoch() - d.lastCachedWhen > TGNS.ConvertDaysToSeconds(14) end)
