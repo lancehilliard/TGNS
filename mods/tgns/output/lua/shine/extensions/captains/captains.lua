@@ -1334,7 +1334,7 @@ if Server or Client then
 		local infiniteTimeRemainingDisplayStarted
 		local hasEarnedSetSpawnsKarma = {}
 		local hasEarnedCaptainsNightPunctualityKarma = {}
-		local CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME = 18
+		local CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME = 20
 		local recentCaptainsData = {}
 		local recentCaptainsTempfilePath = "config://tgns/temp/recentcaptains.json"
 		local rolesServerData = {}
