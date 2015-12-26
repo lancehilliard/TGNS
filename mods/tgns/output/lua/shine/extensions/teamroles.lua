@@ -4,6 +4,7 @@ local pbrCache = {}
 local pprCache = {}
 local knownRoleDataNames = {}
 
+
 local function getPdr(persistedDataName)
 	local result = TGNSPlayerDataRepository.Create(persistedDataName, function(data)
 		data.optin = data.optin ~= nil and data.optin or false
@@ -136,20 +137,20 @@ local function ToggleOptIn(client, role)
 	end
 end
 
-local function CheckRoster()
-	local playerList = TGNS.GetPlayerList()
-	local marinePlayers = TGNS.GetMarinePlayers(playerList)
-	local alienPlayers = TGNS.GetAlienPlayers(playerList)
-	local readyRoomPlayers = TGNS.GetReadyRoomPlayers(playerList)
-	local spectatorPlayers = TGNS.GetSpectatorPlayers(playerList)
+-- local function CheckRoster()
+-- 	local playerList = TGNS.GetPlayerList()
+-- 	local marinePlayers = TGNS.GetMarinePlayers(playerList)
+-- 	local alienPlayers = TGNS.GetAlienPlayers(playerList)
+-- 	local readyRoomPlayers = TGNS.GetReadyRoomPlayers(playerList)
+-- 	local spectatorPlayers = TGNS.GetSpectatorPlayers(playerList)
 
-	TGNS.DoFor(roles, function(role)
-		EnsureAmongPlayers(readyRoomPlayers, role)
-		EnsureAmongPlayers(marinePlayers, role)
-		EnsureAmongPlayers(alienPlayers, role)
-		EnsureAmongPlayers(spectatorPlayers, role)
-	end)
-end
+-- 	TGNS.DoFor(roles, function(role)
+-- 		EnsureAmongPlayers(readyRoomPlayers, role)
+-- 		EnsureAmongPlayers(marinePlayers, role)
+-- 		EnsureAmongPlayers(alienPlayers, role)
+-- 		EnsureAmongPlayers(spectatorPlayers, role)
+-- 	end)
+-- end
 
 local function RegisterCommandHook(plugin, role)
 	local command = plugin:BindCommand(role.optInConsoleCommandName, nil, function(client)
@@ -176,6 +177,8 @@ function reviewPlayerForRolesChange(player)
 			if numberOnNewTeam >= 2 or numberOfBlockersOnNewTeam > 0 or not role:IsClientEligible(client) then
 				RemoveFromClient(client, role)
 			end
+		else
+			EnsureAmongPlayers(teamPlayers, role)
 		end
 	end)
 end
@@ -222,13 +225,14 @@ end
 
 function Plugin:ClientConfirmConnect(client)
 	if not TGNS.GetIsClientVirtual(client) then
-		CheckRoster()
+		-- CheckRoster()
+		reviewPlayerForRolesChange(TGNS.GetPlayer(client))
 	end
 end
 
 function Plugin:Initialise()
 	self.Enabled = true
-	TGNS.ScheduleActionInterval(10, CheckRoster)
+	-- TGNS.ScheduleActionInterval(10, CheckRoster)
 	TGNS.DoFor(roles, function(r) RegisterCommandHook(self, r) end)
 	TGNS.RegisterEventHook("BkaChanged", function(client)
 		reviewPlayerForRolesChange(TGNS.GetPlayer(client))
