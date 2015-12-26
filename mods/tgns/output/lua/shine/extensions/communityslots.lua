@@ -613,30 +613,32 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 local function sweep()
-    TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c)
-        if (Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-2) and TGNS.IsGameInProgress() then
-            local lastTeamChangeTime = inReadyRoomSinceTimes[c]
-            if lastTeamChangeTime then
-                local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
-                if secondsRemaining > 0 then
-                    // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
-                    if secondsRemaining < 40 then
-                        local p = TGNS.GetPlayer(c)
-                        tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
-                        // AnnounceOtherServerOptionsToBumpedClient(c)
-                        Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
+    if Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-2 then
+        TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c)
+            if TGNS.IsGameInProgress() then
+                local lastTeamChangeTime = inReadyRoomSinceTimes[c]
+                if lastTeamChangeTime then
+                    local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
+                    if secondsRemaining > 0 then
+                        // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
+                        if secondsRemaining < 40 then
+                            local p = TGNS.GetPlayer(c)
+                            tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
+                            // AnnounceOtherServerOptionsToBumpedClient(c)
+                            Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
+                        end
+                    else
+                        TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
+                        tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
                     end
                 else
-                    TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
-                    tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
+                    inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
                 end
             else
                 inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
             end
-        else
-            inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
-        end
-    end)
+        end)
+    end
 end
 
 function Plugin:ClientDisconnect(client)
