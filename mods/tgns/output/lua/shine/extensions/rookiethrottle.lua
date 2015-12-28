@@ -1,8 +1,7 @@
-local function GetRookieCount()
-	local rookieClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p)
+local function GetPlayingRookieCount()
+	local rookieClients = TGNS.GetMatchingClients(TGNS.GetPlayers(TGNS.GetPlayingClients(TGNS.GetPlayerList())), function(c,p)
 			return p:GetIsRookie()
-		end
-	)
+	end)
 	local result = #rookieClients
 	return result
 end
@@ -11,18 +10,21 @@ local md = TGNSMessageDisplayer.Create()
 
 local Plugin = {}
 
+function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
+	if TGNS.IsGameplayTeamNumber(newTeamNumber) then
+		local playerIsRookie = player:GetIsRookie()
+		if playerIsRookie then
+			local tooManyRookies = TGNS.GetPlayerCount() > 10 and GetPlayingRookieCount() > 4
+			if tooManyRookies then
+				md:ToPlayerNotifyError(player, "To teach, we limit concurrent rookies. Please spectate for now!")
+				return false
+			end
+		end
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
-	TGNS.RegisterEventHook("ClientConfirmConnect", function(client)
-		local player = TGNS.GetPlayer(client)
-		local playerIsRookie = player:GetIsRookie()
-		local rookieShouldBeKicked = TGNS.GetPlayerCount() > 10 and GetRookieCount() > 4 and playerIsRookie
-		if rookieShouldBeKicked then
-			md:ToPlayerNotifyInfo(player, "To teach, we limit concurrent rookies. Please return later!")
-			TGNSClientKicker.Kick(client, "To teach, we limit concurrent rookies. Please return later!", nil, nil, false)
-			return false
-		end
-	end, TGNS.HIGHEST_EVENT_HANDLER_PRIORITY)
     return true
 end
 
