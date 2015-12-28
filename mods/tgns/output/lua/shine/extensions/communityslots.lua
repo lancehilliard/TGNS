@@ -581,7 +581,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
         if not (force or shineForce) then
             local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumEffectiveSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
-            if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
+            if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and not TGNS.PlayerIsRookie(player) then
                 tgnsMd:ToPlayerNotifyError(player, string.format("Mid-game spectate is available only when teams are %s.", fullGameDescriptor))
                 cancel = true
             end
