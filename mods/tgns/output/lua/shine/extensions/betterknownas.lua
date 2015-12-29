@@ -376,7 +376,9 @@ function Plugin:CreateCommands()
 					md:ToClientConsole(client, "Also, any full admin can fix any BKA you've set for yourself in error. Just ask!")
 				else
 					if warned[client] == newBkaName then
-						TGNS.SendClientCommand(client, string.format("name %s", newBkaName))
+						if TGNS.GetClientName(client) ~= newBkaName then
+							TGNS.SendClientCommand(client, string.format("name %s", newBkaName))
+						end
 						bkaData.BKAPlayerModifiedAtInSeconds = TGNS.GetSecondsSinceEpoch()
 						bkaData.BKAPlayerModifiedAtGmtString = TGNS.GetCurrentDateTimeAsGmtString()
 						TGNS.ScheduleAction(1, function()
