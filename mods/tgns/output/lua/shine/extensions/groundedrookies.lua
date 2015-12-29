@@ -13,7 +13,7 @@ function Plugin:Initialise()
 			local rookieShouldBePreventedFromCommanding = TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20 and numberOfAliveTeammates > 2
 			if rookieShouldBePreventedFromCommanding then
 				--if not TGNS.Has(notifiedPlayerIds, playerId) then
-					md:ToTeamNotifyError(TGNS.GetPlayerTeamNumber(player), string.format("%s! Rookies will fight from the ground this game. Help them!", TGNS.GetPlayerTeamName(player)))
+					md:ToTeamNotifyError(TGNS.GetPlayerTeamNumber(player), string.format("%s: Rookies fight from the ground. Marines: help %s!", TGNS.GetPlayerName(player), TGNS.GetPlayerTeamName(player)))
 					--table.insert(notifiedPlayerIds, playerId)
 					--TGNS.ScheduleAction(3, function() TGNS.RemoveAllMatching(notifiedPlayerIds, playerId) end)
 				--end
