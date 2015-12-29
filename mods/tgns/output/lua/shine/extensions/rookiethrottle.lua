@@ -1,6 +1,6 @@
 local function GetPlayingRookieCount()
 	local rookieClients = TGNS.GetMatchingClients(TGNS.GetPlayers(TGNS.GetPlayingClients(TGNS.GetPlayerList())), function(c,p)
-			return p:GetIsRookie()
+			return p:GetIsRookie() and not TGNS.IsPlayerSM(p)
 	end)
 	local result = #rookieClients
 	return result
@@ -11,13 +11,15 @@ local md = TGNSMessageDisplayer.Create()
 local Plugin = {}
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-	if TGNS.IsGameplayTeamNumber(newTeamNumber) then
-		local playerIsRookie = player:GetIsRookie()
-		if playerIsRookie then
-			local tooManyRookies = TGNS.GetPlayerCount() > 10 and GetPlayingRookieCount() > 4
-			if tooManyRookies then
-				md:ToPlayerNotifyError(player, "To teach, we limit concurrent rookies. Please spectate for now!")
-				return false
+	if not (force or shineForce) then
+		if TGNS.IsGameplayTeamNumber(newTeamNumber) then
+			local playerIsRookie = player:GetIsRookie()
+			if playerIsRookie then
+				local tooManyRookies = TGNS.GetPlayerCount() > 10 and GetPlayingRookieCount() > 4
+				if tooManyRookies then
+					md:ToPlayerNotifyError(player, "To teach, we limit concurrent rookies. Please spectate for now!")
+					return false
+				end
 			end
 		end
 	end
