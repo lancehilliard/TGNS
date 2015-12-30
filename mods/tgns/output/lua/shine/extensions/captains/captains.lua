@@ -1496,7 +1496,7 @@ if Server or Client then
 				return result
 			end)}
 			local dataJson = json.encode(data)
-			Shared.Message("captains debug: " .. tostring(dataJson))
+			-- Shared.Message("captains debug: " .. tostring(dataJson))
 			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.captains.CAPTAINS_DATA, {d=dataJson})
 			end)
