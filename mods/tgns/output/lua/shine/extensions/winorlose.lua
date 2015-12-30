@@ -376,7 +376,7 @@ function Plugin:Initialise()
 	local originalObservatoryTriggerDistressBeacon = Observatory.TriggerDistressBeacon
 	Observatory.TriggerDistressBeacon = function(observatorySelf)
 		local timeRemainingThreshold = math.floor(Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds * .9)
-		if kCountdownTimeRemaining > 0 and kCountdownTimeRemaining < timeRemainingThreshold then
+		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 and kCountdownTimeRemaining < timeRemainingThreshold then
 			local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 			local commanderClient = TGNS.GetFirst(TGNS.Where(TGNS.GetTeamClients(TGNS.GetOtherPlayingTeamNumber(teamNumberWhichWillWinIfWinLoseCountdownExpires)), TGNS.IsClientCommander))
 			local commanderPlayer = TGNS.GetPlayer(commanderClient)
