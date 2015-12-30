@@ -1,5 +1,7 @@
 TGNSPlayerBlacklistRepository = {}
 
+local pbrCache = {}
+
 function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 	assert(blacklistTypeName ~= nil and blacklistTypeName ~= "")
 
@@ -14,18 +16,48 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 	function result:IsClientBlacklisted(client, callback)
 		callback = callback or function() end
 		local steamId = TGNS.GetClientSteamId(client)
-		dr.Load(nil, function(loadResponse)
-			if loadResponse.success then
-				local blacklistData = loadResponse.value
-				local blacklists = blacklistData.blacklists
-				local isBlacklisted = TGNS.Any(blacklists, function(b) return b.from == self.blacklistTypeName and b.id == steamId end)
-				callback(isBlacklisted)
-			else
-				Shared.Message("PlayerBlacklistRepository ERROR: Unable to access data.")
-				callback(false)
-			end
-		end)
+		pbrCache[blacklistTypeName] = pbrCache[blacklistTypeName] or {}
+		if pbrCache[blacklistTypeName][steamId] == nil then
+			dr.Load(nil, function(loadResponse)
+				if loadResponse.success then
+					local blacklistData = loadResponse.value
+					local blacklists = blacklistData.blacklists
+					local isBlacklisted = TGNS.Any(blacklists, function(b) return b.from == self.blacklistTypeName and b.id == steamId end)
+					pbrCache[blacklistTypeName][steamId] = isBlacklisted
+					callback(isBlacklisted)
+				else
+					Shared.Message("PlayerBlacklistRepository ERROR: Unable to access data.")
+					callback(false)
+				end
+			end)
+		else
+			callback(pbrCache[blacklistTypeName][steamId])
+		end
 	end
 
 	return result
 end
+
+local function getBlacklists()
+	if TGNS.Config and TGNS.Config.BlacklistEndpointBaseUrl then
+		local url = TGNS.Config.BlacklistEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(blacklistResponseJson)
+			-- Shared.Message("blacklistResponseJson: " .. blacklistResponseJson)
+			local blacklistResponse = json.decode(blacklistResponseJson) or {}
+			if blacklistResponse.success then
+				TGNS.DoFor(blacklistResponse.result, function(r)
+					if r.From ~= nil and r.PlayerId ~= nil then
+						pbrCache[r.From] = pbrCache[r.From] or {}
+						pbrCache[r.From][r.PlayerId] = true
+					end
+				end)
+			else
+				TGNS.DebugPrint(string.format("captains ERROR: Unable to access blacklist data. url: %s | msg: %s | response: %s | stacktrace: %s", url, blacklistResponse.msg, blacklistResponseJson, blacklistResponse.stacktrace))
+			end
+		end)
+	else
+		TGNS.ScheduleAction(0, getBlacklists)
+	end
+end
+
+Event.Hook("MapPostLoad", getBlacklists)
