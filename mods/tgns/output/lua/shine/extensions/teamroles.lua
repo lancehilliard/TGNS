@@ -28,7 +28,10 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 	result.IsClientOneOf = isClientOneOfQuery
 	result.IsClientBlockerOf = isClientBlockerQuery
 	function result:IsTeamEligible(teamPlayers) return TGNS.GetLastMatchingClient(teamPlayers, self.IsClientBlockerOf) == nil end
-	function result:IsClientBlacklisted(client) return pbrCache[persistedDataName][client] == true end
+	function result:IsClientBlacklisted(client) 
+		local steamId = TGNS.GetClientSteamId(client)
+		return pbrCache[persistedDataName][steamId] == true
+	end
 	function result:IsClientPreferred(client) return pprCache[persistedDataName][client] == true end
 	function result:LoadOptInData(client)
 		local steamId = TGNS.GetClientSteamId(client)
@@ -211,7 +214,7 @@ function Plugin:ClientConnect(client)
 
 			local pbr = TGNSPlayerBlacklistRepository.Create(roleName)
 			pbr:IsClientBlacklisted(client, function(isBlacklisted)
-				pbrCache[roleName][client] = isBlacklisted
+				pbrCache[roleName][steamId] = isBlacklisted
 			end)
 
 			local ppr = TGNSPlayerPreferredRepository.Create(roleName)
@@ -237,6 +240,7 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("BkaChanged", function(client)
 		reviewPlayerForRolesChange(TGNS.GetPlayer(client))
 	end)
+
 	return true
 end
 
