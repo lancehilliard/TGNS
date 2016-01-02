@@ -15,7 +15,7 @@ local function showTimeRemaining()
 	if teamsAreTooImbalanced or not timerInProgress then
 		timerInProgress = false
 		secondsRemaining = secondsRemaining + math.ceil((countdownSeconds - secondsRemaining) / 2)
-		if teamsAreTooImbalanced then
+		if teamsAreTooImbalanced and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
 			Shine.ScreenText.Add(51, {X = 0.5, Y = 0.45, Text = "Countdown will resume when teams fill.", Duration = 10, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
 		end
 	else
@@ -94,7 +94,9 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			if numberOfPlayingClients == 0 then
 				timerInProgress = false
 				secondsRemaining = countdownSeconds
-				Shine.ScreenText.Add(51, {X = 0.5, Y = 0.45, Text = "Countdown halted.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
+				if not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+					Shine.ScreenText.Add(51, {X = 0.5, Y = 0.45, Text = "Countdown halted.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
+				end
 			end
 		else
 			local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
