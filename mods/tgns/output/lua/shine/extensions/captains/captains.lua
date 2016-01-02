@@ -59,7 +59,7 @@ if Server or Client then
 
 				optedInCount = TGNS.TableKeyCount(rolesClientData)
 				captainsClientIndexes = data.c or {}
-				localClientIsCaptain = TGNS.Any(captainsClientIndexes, function(i) return i == Client.GetLocalClientIndex() end)
+				localClientIsCaptain = TGNS.Has(captainsClientIndexes, Client.GetLocalClientIndex())
 				rolesClientDataLastUpdated = Shared.GetTime()
 				if userHasToggledCaptainsBoardDisplayOn == nil then
 					userHasToggledCaptainsBoardDisplayOn = true
@@ -74,7 +74,7 @@ if Server or Client then
 				local buildScoresData = function(isForOptedInBoard)
 					local dataName = isForOptedInBoard and "optedInScores" or "notOptedInScores"
 					local getKey = function(s) return string.format("c%s", s.ClientIndex) end
-					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil end
+					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
 			   		local result = TGNS.Where(scoresData, scoresDataPredicate)
 			   		if localClientIsCaptain and isForOptedInBoard then
 			   			TGNS.SortDescending(result, function(s) return s.Skill end)
