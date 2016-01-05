@@ -365,6 +365,11 @@ function Plugin:EndGame(gamerules, winningTeam)
 	end)
 	TGNS.DoFor(TGNS.GetClientList(), refundBets)
 	playerGameBets = {}
+	TGNS.DoForPairs(playerGameTransactions, function(steamId, transactions)
+		TGNS.DoFor(TGNS.Take(transactions, 10), function(t)
+			TGNS.Karma(steamId, "SpecBet")
+		end)
+	end)
 	playerGameTransactions = {}
 end
 
