@@ -14,6 +14,7 @@ local lastBannerDisplayCountdownRemaining
 local TEXT_LOCATION_HEIGHT_ADDITIVE = 0.15
 local textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
 local VOTE_START_COOLDOWN = 180
+local attackOrderLastGivenWhen = {}
 
 local originalGetCanAttack
 
@@ -106,13 +107,14 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
 		local teamNumberWhichWillWinIfWinLoseCountdownExpires = kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 		if kCountdownTimeRemaining > 0 then
-			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 10) then
+			if ((lastBannerDisplayCountdownRemaining == nil or lastBannerDisplayCountdownRemaining >= kCountdownTimeRemaining + Shine.Plugins.winorlose.Config.WarningIntervalInSeconds) or kCountdownTimeRemaining <= 10 or kCountdownTimeRemaining > Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds - 3) then
 				local teamName = TGNS.GetTeamName(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				local threateningActionName = (Shine.Plugins.arclight and Shine.Plugins.arclight:IsArclight()) and "control the platform" or "attack"
 				local chatMessage = string.format("%s can't %s. Game ends in %s seconds.", teamName, threateningActionName, kCountdownTimeRemaining)
 				local bannerLocationName = ""
 
-				local teamNameWhichMustWinOrLose = TGNS.GetTeamName(TGNS.GetOtherPlayingTeamNumber(teamNumberWhichWillWinIfWinLoseCountdownExpires))
+				local teamNumberWhichWillLoseIfWinLoseCountdownExpires = TGNS.GetOtherPlayingTeamNumber(teamNumberWhichWillWinIfWinLoseCountdownExpires)
+				local teamNameWhichMustWinOrLose = TGNS.GetTeamName(teamNumberWhichWillLoseIfWinLoseCountdownExpires)
 				local howToWinDescription = string.format("Kill the %s", TGNS.GetTeamCommandStructureCommonName(teamNumberWhichWillWinIfWinLoseCountdownExpires))
 				if Shine.Plugins.arclight and Shine.Plugins.arclight:IsArclight() then
 					howToWinDescription = "Control the platform"
@@ -136,6 +138,24 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						local locationNameOfCommandStructureToKeep = commandStructureToKeep:GetLocationName()
 						TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
 						bannerLocationName = string.format(" in %s", locationNameOfCommandStructureToKeep)
+
+						local waypointAction = teamNumberWhichWillLoseIfWinLoseCountdownExpires == kMarineTeamType and function(p)
+							if p.GiveOrder then
+								p:GiveOrder(kTechId.Attack, commandStructureToKeep:GetId(), commandStructureToKeep:GetOrigin())
+							end
+						end or function(p)
+							CreatePheromone(kTechId.LargeThreatMarker, commandStructureToKeep:GetOrigin(), kAlienTeamType)
+						end
+
+						TGNS.DoFor(TGNS.GetTeamClients(teamNumberWhichWillLoseIfWinLoseCountdownExpires, TGNS.GetPlayerList()), function(c)
+							if attackOrderLastGivenWhen[c] == nil or Shared.GetTime() - attackOrderLastGivenWhen[c] >= 6 then
+								local p = TGNS.GetPlayer(c)
+								if not GetCanSeeEntity(p, commandStructureToKeep, true) then
+									waypointAction(p)
+									attackOrderLastGivenWhen[c] = Shared.GetTime()
+								end
+							end
+						end)
 					end
 				end
 				TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
@@ -389,6 +409,9 @@ function Plugin:Initialise()
 
 	TGNS.RegisterEventHook("GameStarted", function()
 		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + 5
+		if not TGNS.IsProduction() then
+			self:CallWinOrLose(TGNS.GetOtherPlayingTeamNumber(TGNS.GetClientTeamNumber(TGNS.GetFirst(TGNS.GetHumanClientList()))))
+		end
 	end)
 	SetupWinOrLoseVars()
 	TGNS.RegisterEventHook("OnEverySecond", function()
@@ -398,6 +421,7 @@ function Plugin:Initialise()
 	end)
 	self:CreateCommands()
 	InitializeVariables()
+
     return true
 end
 
