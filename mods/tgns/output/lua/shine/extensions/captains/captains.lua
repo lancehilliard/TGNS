@@ -141,11 +141,11 @@ if Server or Client then
 			    teamItem:SetLayer(guiLayer)
 			    
 			    local logoItem = GUIManager:CreateGraphicItem()
-			    logoItem:SetSize(Vector(200, 50, 0) * GUIScoreboard.kScalingFactor)
+			    logoItem:SetSize(Vector(300, 50, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetAnchor(GUIItem.Right, GUIItem.Top)
 			    logoItem:SetColor(Color(1, 1, 1, 1))
 			    logoItem:SetTexture("ui/badges/marines/CaptainsBanner.dds")
-			    logoItem:SetPosition(Vector(-200, 0, 0) * GUIScoreboard.kScalingFactor)
+			    logoItem:SetPosition(Vector(-300, 0, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetStencilFunc(GUIItem.NotEqual)
 			    logoItem:SetIsVisible(true)
 			    teamItem:AddChild(logoItem)
@@ -1291,6 +1291,15 @@ if Server or Client then
 
 			end
 		end
+
+		-- local originalGUIGameEndSetGameEnded = GUIGameEnd.SetGameEnded
+		-- GUIGameEnd.SetGameEnded = function(guiGameEndSelf, playerWon, playerDraw, playerTeamType)
+		-- 	if playerDraw then
+		-- 		originalGUIGameEndSetGameEnded(guiGameEndSelf, playerWon, playerDraw, playerTeamType)
+		-- 	else
+		-- 		originalGUIGameEndSetGameEnded(guiGameEndSelf, true, playerDraw, playerWon and playerTeamType or )
+		-- 	end
+		-- end
 	end
 
 	if Server then
