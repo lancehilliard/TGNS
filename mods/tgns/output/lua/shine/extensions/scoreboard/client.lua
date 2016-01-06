@@ -57,6 +57,7 @@ local tunnelDescriptions = {}
 
 local lastTeamNumber = {}
 local lastUpdatedTeamNumbers = 0
+local lastWinOrLoseWarningWhen = 0
 
 local has = {}
 has.Celerity = {}
@@ -911,6 +912,7 @@ function Plugin:Initialise()
 
 	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
 		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
+		lastWinOrLoseWarningWhen = Shared.GetTime()
 	end)
 
 	TGNS.HookNetworkMessage(Plugin.TOOLTIP_SOUND, function(message)
@@ -1184,6 +1186,29 @@ function Plugin:Initialise()
 		hasAfkRelevantActivity = true
 		return result
 	end
+
+	local function ReplacementGetMostRelevantPheromone(toOrigin)
+	    local pheromones = GetEntitiesWithinRange("Pheromone", toOrigin, (Shared.GetTime() - lastWinOrLoseWarningWhen) < 10 and 300 or 100)
+	    local bestPheromone
+	    local bestDistSq = math.huge
+	    for p = 1, #pheromones do
+	    
+	        local currentPheromone = pheromones[p]
+	        local currentDistSq = currentPheromone:GetDistanceSquared(toOrigin)
+
+	        if currentDistSq < bestDistSq then
+	        
+	            bestDistSq = currentDistSq
+	            bestPheromone = currentPheromone
+	            
+	        end
+	        
+	    end
+	    
+	    return bestPheromone
+	end
+
+	ReplaceLocals( PlayerUI_GetOrderPath, { GetMostRelevantPheromone = ReplacementGetMostRelevantPheromone } )
 
 	return true
 end
