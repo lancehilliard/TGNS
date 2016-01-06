@@ -11,6 +11,7 @@ local vouches = {}
 local squadNumbers = {}
 local NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS = 180
 local tunnelDescriptions = {}
+local streamingWebAddresses = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -73,7 +74,7 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourcePlayerHasCarapace = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCarapaceUpgrade(sourcePlayer)
 		local sourcePlayerHasSilence = TGNS.IsPlayerAlive(sourcePlayer) and GetHasSilenceUpgrade(sourcePlayer)
 		local sourcePlayerHasAura = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAuraUpgrade(sourcePlayer)
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasRegeneration, u4=sourcePlayerHasCarapace, u5=sourcePlayerHasSilence, u6=sourcePlayerHasAura})
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasRegeneration, u4=sourcePlayerHasCarapace, u5=sourcePlayerHasSilence, u6=sourcePlayerHasAura, streaming=streamingWebAddresses[sourceClient] or ""})
 	end
 end
 
@@ -308,6 +309,25 @@ function Plugin:CreateCommands()
 			TGNS.SendNetworkMessageToPlayer(p, self.WYZ)
 		end)
 	end)
+
+	local streamingCommand = self:BindCommand( "sh_streaming", "streaming", function(client, webAddress)
+		local player = TGNS.GetPlayer(client)
+		local steamId = TGNS.GetClientSteamId(client)
+		local md = TGNSMessageDisplayer.Create("STREAMING")
+		if TGNS.HasNonEmptyValue(webAddress) then
+			md:ToPlayerNotifyInfo(player, string.format("Streaming icon created for web address '%s'.", webAddress))
+			md:ToPlayerNotifyInfo(player, "To remove the icon, execute this command again with no web address.")
+		else
+			if TGNS.HasNonEmptyValue(streamingWebAddresses[client]) then
+				md:ToPlayerNotifyInfo(player, "Streaming icon removed.")
+			end
+			md:ToPlayerNotifyInfo(player, "To show a streaming icon, execute this command again with a web address parameter.")
+		end
+		streamingWebAddresses[client] = webAddress
+		self:AnnouncePlayerPrefix(player)
+	end, true)
+	streamingCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	streamingCommand:Help( "<webaddress> Show your 'I'm Streaming' icon on the scoreboard" )
 
 end
 

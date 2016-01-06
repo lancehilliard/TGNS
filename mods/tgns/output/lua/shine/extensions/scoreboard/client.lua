@@ -71,7 +71,7 @@ has.ClusterGrenade = {}
 has.GasGrenade = {}
 has.PulseGrenade = {}
 
-
+local streamingWebAddresses = {}
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
@@ -90,6 +90,7 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	has.Carapace[message.i] = message.u4
 	has.Silence[message.i] = message.u5
 	has.Aura[message.i] = message.u6
+	streamingWebAddresses[message.i] = message.streaming
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -350,7 +351,7 @@ function Plugin:Initialise()
 			playerIconShouldDisplay.Carapace = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Carapace[clientIndex] == true)
 			playerIconShouldDisplay.Silence = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Silence[clientIndex] == true)
 			playerIconShouldDisplay.Aura = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Aura[clientIndex] == true)
-
+	        playerIconShouldDisplay.Streaming = TGNS.HasNonEmptyValue(streamingWebAddresses[clientIndex])
 
         	local playerNote = notes[clientIndex]
 
@@ -388,6 +389,7 @@ function Plugin:Initialise()
 		        end
 	        	-- playerIconShouldDisplay.ApproveNote = true
 	        	playerNote = playerNote or "test"
+	        	playerIconShouldDisplay.Streaming = true
         	end
 
    	        local icons = {
@@ -421,6 +423,7 @@ function Plugin:Initialise()
 	        	,{n="PlayerAdrenalineIcon",t="ui/badges/aliens/adren.dds",x=-180,l="Adrenaline\n\nThis player has the Adrenaline upgrade."}
 	        	,{n="PlayerSilenceIcon",t="ui/badges/aliens/phantom.dds",x=-200,l="Phantom\n\nThis player has the Phantom upgrade."}
 	        	,{n="PlayerAuraIcon",t="ui/badges/aliens/aura.dds",x=-200,l="Aura\n\nThis player has the Aura upgrade."}
+	        	,{n="PlayerStreamingIcon",t="ui/badges/streaming/camera.dds",x=-220,l=function(clientIndex, teamNumber) return string.format("Streaming\n\n%s is streaming!\n\n%s\n\nAre you streaming? Chat '!streaming' to share.", Scoreboard_GetPlayerData(clientIndex, "Name"), streamingWebAddresses[clientIndex]) end}
 	    	}
 
 			TGNS.DoFor(icons, function(i)
@@ -575,6 +578,10 @@ function Plugin:Initialise()
 	        if player["PlayerAuraIcon"] then
 	        	table.insert(guiItems, player["PlayerAuraIcon"])
 	        	player["PlayerAuraIcon"]:SetIsVisible(playerIconShouldDisplay.Aura)
+	        end
+	        if player["PlayerStreamingIcon"] then
+	        	table.insert(guiItems, player["PlayerStreamingIcon"])
+	        	player["PlayerStreamingIcon"]:SetIsVisible(playerIconShouldDisplay.Streaming)
 	        end
 
 
