@@ -377,7 +377,9 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 	if attackerEntity and victimEntity and attackerEntity:isa("Player") and victimEntity:isa("Player") then
 		local attackerClient = TGNS.GetClient(attackerEntity)
 		local victimClient = TGNS.GetClient(victimEntity)
-		onKill(attackerClient, victimClient)
+		if attackerClient and victimClient then
+			onKill(attackerClient, victimClient)
+		end
 	end
 end
 
