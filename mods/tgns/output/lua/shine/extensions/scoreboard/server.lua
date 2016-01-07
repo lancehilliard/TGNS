@@ -96,7 +96,7 @@ function Plugin:SendTeamScoresDatas()
 			end
 		end
 	end)
-	TGNS.DoFor(TGNS.GetSpectatorPlayers(TGNS.GetPlayerList()), function(p)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.TEAM_SCORES_DATA, {mn=marineTeamName,an=alienTeamName,ms=marineTeamScore,as=alienTeamScore})
 	end)
 end
