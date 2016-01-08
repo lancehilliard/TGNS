@@ -162,7 +162,7 @@ if Server or Client then
 			    logoItem:SetSize(Vector(300, 50, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetAnchor(GUIItem.Right, GUIItem.Top)
 			    logoItem:SetColor(Color(1, 1, 1, 1))
-			    logoItem:SetTexture("ui/badges/marines/CaptainsBanner.dds")
+			    logoItem:SetTexture("ui/captains/CaptainsBanner.dds")
 			    logoItem:SetPosition(Vector(-300, 0, 0) * GUIScoreboard.kScalingFactor)
 			    logoItem:SetStencilFunc(GUIItem.NotEqual)
 			    logoItem:SetIsVisible(true)
@@ -457,11 +457,24 @@ if Server or Client then
 			    -- scoreItem:SetColor(Color(1, 1, 1, 1))
 			    -- scoreItem:SetStencilFunc(GUIItem.NotEqual)
 			    -- playerItem:AddChild(scoreItem)
+			        local kdPercentIcon = GUIManager:CreateGraphicItem()
+			        kdPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+			        kdPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+			        kdPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+				    kdPercentIcon:SetTexture("ui/captains/KillRatioSkill.dds")
+			        kdPercentIcon:SetIsVisible(true)
+			        kdPercentIcon:SetStencilFunc(GUIItem.NotEqual)
+			        kdPercentIcon.tooltipText = "Kill/Death Ratio"
+			        kdPercentIcon.allowHighlight = true
+			        playerItem:AddChild(kdPercentIcon)
+			    
+			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (20 * GUIScoreboard.kScalingFactor)
+
 			        local gorgePercentIcon = GUIManager:CreateGraphicItem()
 			        gorgePercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
 			        gorgePercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 			        gorgePercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    gorgePercentIcon:SetTexture("ui/squads/squad-team2-squad2.dds")
+				    gorgePercentIcon:SetTexture("ui/captains/GorgeSkill.dds")
 			        gorgePercentIcon:SetIsVisible(true)
 			        gorgePercentIcon:SetStencilFunc(GUIItem.NotEqual)
 			        gorgePercentIcon.tooltipText = "Gorge"
@@ -488,7 +501,7 @@ if Server or Client then
 			        lerkPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
 			        lerkPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 			        lerkPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    lerkPercentIcon:SetTexture("ui/squads/squad-team2-squad3.dds")
+				    lerkPercentIcon:SetTexture("ui/captains/LerkSkill.dds")
 			        lerkPercentIcon:SetIsVisible(true)
 			        lerkPercentIcon:SetStencilFunc(GUIItem.NotEqual)
 			        lerkPercentIcon.tooltipText = "Lerk"
@@ -518,7 +531,7 @@ if Server or Client then
 			        fadePercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
 			        fadePercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 			        fadePercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    fadePercentIcon:SetTexture("ui/squads/squad-team2-squad4.dds")
+				    fadePercentIcon:SetTexture("ui/captains/FadeSkill.dds")
 			        fadePercentIcon:SetIsVisible(true)
 			        fadePercentIcon:SetStencilFunc(GUIItem.NotEqual)
 			        fadePercentIcon.tooltipText = "Fade"
@@ -547,7 +560,7 @@ if Server or Client then
 			        onosPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
 			        onosPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 			        onosPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    onosPercentIcon:SetTexture("ui/squads/squad-team2-squad5.dds")
+				    onosPercentIcon:SetTexture("ui/captains/OnosSkill.dds")
 			        onosPercentIcon:SetIsVisible(true)
 			        onosPercentIcon:SetStencilFunc(GUIItem.NotEqual)
 			        onosPercentIcon.tooltipText = "Onos"
@@ -577,7 +590,7 @@ if Server or Client then
 			        marineCommPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
 			        marineCommPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 			        marineCommPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    marineCommPercentIcon:SetTexture("ui/badges/marines/RecentComm1.dds")
+				    marineCommPercentIcon:SetTexture("ui/captains/CommSkill.dds")
 			        marineCommPercentIcon:SetIsVisible(true)
 			        marineCommPercentIcon:SetStencilFunc(GUIItem.NotEqual)
 			        marineCommPercentIcon.tooltipText = "Marine Commander"
@@ -592,7 +605,7 @@ if Server or Client then
 			        alienCommPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
 			        alienCommPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
 			        alienCommPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    alienCommPercentIcon:SetTexture("ui/squads/squad-team2-squad6.dds")
+				    alienCommPercentIcon:SetTexture("ui/captains/KhammSkill.dds")
 			        alienCommPercentIcon:SetIsVisible(true)
 			        alienCommPercentIcon:SetStencilFunc(GUIItem.NotEqual)
 			        alienCommPercentIcon.tooltipText = "Alien Khammander"
@@ -655,7 +668,7 @@ if Server or Client then
 			        SteamFriend = steamFriendIcon, IconTable = iconTable,
 			        GorgePercentIcon = gorgePercentIcon, LerkPercentIcon = lerkPercentIcon,
 			        FadePercentIcon = fadePercentIcon, OnosPercentIcon = onosPercentIcon,
-			        MarineCommPercentIcon = marineCommPercentIcon, AlienCommPercentIcon = alienCommPercentIcon
+			        MarineCommPercentIcon = marineCommPercentIcon, AlienCommPercentIcon = alienCommPercentIcon, KdPercentIcon = kdPercentIcon
 			    }
 			end
 
@@ -945,9 +958,17 @@ if Server or Client then
 
 
 				               	TGNS.DoForPairs(player, function(key, i)
+				               		local tooltipText
 				               		if TGNS.EndsWith(key, "PercentIcon") and i.tooltipText then
+				               			if i.tooltipText == "Kill/Death Ratio" then
+				               				tooltipText = "Kill/Death Ratio (Recent)\n\nThis icon displays only for remarkably high KD.\n\nOpaqueness shows higher KD."
+				               			else
+				               				tooltipText = string.format("%s Playtime (Recent)\n\nThis icon's transparency shows roughly\nhow much game time this player has spent\nplaying in this role rather than other roles.\n\nOpaqueness shows more relative playtime.", i.tooltipText)
+				               			end
+				               		end
+				               		if tooltipText then
 					                    if GUIItemContainsPoint(i, mouseX, mouseY) and i:GetIsVisible() then
-					                        badgeNameTooltip:SetText(string.format("%s Playtime (Recent)\n\nThis icon's transparency shows roughly\nhow much game time this player has spent\nplaying in this role rather than other roles.\n\nOpaqueness shows more relative playtime.", i.tooltipText))
+					                        badgeNameTooltip:SetText(string.format("%s\n_____________________________________\nOnly TGNS gameplay contributes to this data.", tooltipText))
 					                        hoverBadge = true
 					                        -- Shared.Message("hoverBadge = true " .. teamNameText)
 					                        return true
@@ -974,12 +995,14 @@ if Server or Client then
 					    player["OnosPercentIcon"]:SetIsVisible(true)
 					    player["MarineCommPercentIcon"]:SetIsVisible(true)
 					    player["AlienCommPercentIcon"]:SetIsVisible(true)
+					    player["KdPercentIcon"]:SetIsVisible(true)
 				        local gorgePercentIconTransparency = 0
 				        local lerkPercentIconTransparency = 0
 				        local fadePercentIconTransparency = 0
 				        local onosPercentIconTransparency = 0
 				        local marineCommPercentIconTransparency = 0
 				        local alienCommPercentIconTransparency = 0
+				        local kdPercentIconTransparency = 0
 				        local rolesData = rolesClientData[string.format("c%s", clientIndex)]
 				        if rolesData then
 				        	gorgePercentIconTransparency = rolesData.g
@@ -988,6 +1011,7 @@ if Server or Client then
 				        	onosPercentIconTransparency = rolesData.o
 				        	marineCommPercentIconTransparency = rolesData.m
 				        	alienCommPercentIconTransparency = rolesData.a
+				        	kdPercentIconTransparency = rolesData.k
 				        end
 			        	player["GorgePercentIcon"]:SetColor(Color(1,1,1,gorgePercentIconTransparency))
 			        	player["LerkPercentIcon"]:SetColor(Color(1,1,1,lerkPercentIconTransparency))
@@ -995,6 +1019,7 @@ if Server or Client then
 			        	player["OnosPercentIcon"]:SetColor(Color(1,1,1,onosPercentIconTransparency))
 			        	player["MarineCommPercentIcon"]:SetColor(Color(1,1,1,marineCommPercentIconTransparency))
 			        	player["AlienCommPercentIcon"]:SetColor(Color(1,1,1,alienCommPercentIconTransparency))
+			        	player["KdPercentIcon"]:SetColor(Color(1,1,1,kdPercentIconTransparency))
 
 			        	player["GorgePercentIcon"]:SetIsVisible(gorgePercentIconTransparency > 0)
 			        	player["LerkPercentIcon"]:SetIsVisible(lerkPercentIconTransparency > 0)
@@ -1002,6 +1027,7 @@ if Server or Client then
 			        	player["OnosPercentIcon"]:SetIsVisible(onosPercentIconTransparency > 0)
 			        	player["MarineCommPercentIcon"]:SetIsVisible(marineCommPercentIconTransparency > 0)
 			        	player["AlienCommPercentIcon"]:SetIsVisible(alienCommPercentIconTransparency > 0)
+			        	player["KdPercentIcon"]:SetIsVisible(kdPercentIconTransparency > 0)
 
 			        	-- Shared.Message("gorgePercentIconTransparency: " .. tostring(gorgePercentIconTransparency))
 			        else
@@ -1011,6 +1037,7 @@ if Server or Client then
 					    player["OnosPercentIcon"]:SetIsVisible(false)
 					    player["MarineCommPercentIcon"]:SetIsVisible(false)
 					    player["AlienCommPercentIcon"]:SetIsVisible(false)
+					    player["KdPercentIcon"]:SetIsVisible(false)
 			        end
 			    end
 
@@ -1492,11 +1519,16 @@ if Server or Client then
 				local onosPercent = 0
 				local marineCommPercent = 0
 				local alienCommPercent = 0
+				local kdPercent = 0
 				local steamId = TGNS.GetClientSteamId(c)
 				local d = TGNS.FirstOrNil(rolesServerData, function(d) return d.PlayerId == steamId end)
 				if d then
 					local lifeformSecondsSum = d.GorgeSeconds + d.LerkSeconds + d.FadeSeconds + d.OnosSeconds
 					local commSecondsSum = d.MarineCommSeconds + d.AlienCommSeconds
+					local highestRelevantKd = 2.3
+					local lowestRelevantKd = 1.84
+					d.KD = 1.9
+					kdPercent = d.KD >= highestRelevantKd and 1 or (d.KD >= lowestRelevantKd and (d.KD-lowestRelevantKd)/(highestRelevantKd-lowestRelevantKd) or 0)
 					if lifeformSecondsSum > 0 or commSecondsSum > 0 then
 						if lifeformSecondsSum > 0 then
 							gorgePercent = math.floor((d.GorgeSeconds / lifeformSecondsSum) * 100) / 100
@@ -1518,7 +1550,7 @@ if Server or Client then
 						alienCommPercent = alienCommPercent >= minimumTransparency and alienCommPercent + transparencyBoost or minimumTransparency
 					end
 				end
-				local result = {g=gorgePercent,l=lerkPercent,f=fadePercent,o=onosPercent,m=marineCommPercent,a=alienCommPercent}
+				local result = {g=gorgePercent,l=lerkPercent,f=fadePercent,o=onosPercent,m=marineCommPercent,a=alienCommPercent,k=kdPercent}
 				-- Shared.Message(string.format("ToTable result: %s", json.encode(result)))
 				return result
 			end)}
