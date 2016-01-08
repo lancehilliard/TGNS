@@ -15,6 +15,7 @@ local TEXT_LOCATION_HEIGHT_ADDITIVE = 0.15
 local textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
 local VOTE_START_COOLDOWN = 180
 local attackOrderLastGivenWhen = {}
+local attackEnhancementLastGivenWhen = {}
 
 local originalGetCanAttack
 
@@ -90,7 +91,7 @@ local function onVoteSuccessful(teamNumber)
 
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
-	numberOfSecondsToDeductFromCountdownTimeRemaining = 4
+	numberOfSecondsToDeductFromCountdownTimeRemaining = 7
 	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
 
 	kWinOrLoseVoteArray[teamNumber].WinOrLoseVotesAlertTime = 0
@@ -139,20 +140,43 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						TGNS.DestroyEntitiesExcept(commandStructures, commandStructureToKeep)
 						bannerLocationName = string.format(" in %s", locationNameOfCommandStructureToKeep)
 
-						local waypointAction = teamNumberWhichWillLoseIfWinLoseCountdownExpires == kMarineTeamType and function(p)
-							if p.GiveOrder then
+						local waypointAction = teamNumberWhichWillLoseIfWinLoseCountdownExpires == kMarineTeamType and function(p, c)
+							if p.GiveOrder and not TGNS.IsClientCommander(c) then
 								p:GiveOrder(kTechId.Attack, commandStructureToKeep:GetId(), commandStructureToKeep:GetOrigin())
+								return true
 							end
-						end or function(p)
+						end or function(p, c)
 							CreatePheromone(kTechId.LargeThreatMarker, commandStructureToKeep:GetOrigin(), kAlienTeamType)
+							return true
+						end
+
+						local enhancementAction = teamNumberWhichWillLoseIfWinLoseCountdownExpires == kMarineTeamType and function(p, c)
+							if p.ApplyCatPack and not TGNS.IsClientCommander(c) then
+								StartSoundEffectAtOrigin(CatPack.kPickupSound, p:GetOrigin())
+					    		p:ApplyCatPack()
+					    		return true
+							end
+						end or function(p, c)
+							if p.TriggerEnzyme and p.SetSpeedBoostDuration and not TGNS.IsClientCommander(c) then
+								p:TriggerEnzyme(8)
+	            				p:SetSpeedBoostDuration(8)
+	            				return true
+							end
 						end
 
 						TGNS.DoFor(TGNS.GetTeamClients(teamNumberWhichWillLoseIfWinLoseCountdownExpires, TGNS.GetPlayerList()), function(c)
 							if attackOrderLastGivenWhen[c] == nil or Shared.GetTime() - attackOrderLastGivenWhen[c] >= 6 then
 								local p = TGNS.GetPlayer(c)
 								if not GetCanSeeEntity(p, commandStructureToKeep, true) then
-									waypointAction(p)
-									attackOrderLastGivenWhen[c] = Shared.GetTime()
+									if waypointAction(p, c) then
+										attackOrderLastGivenWhen[c] = Shared.GetTime()
+									end
+								end
+							end
+							if attackEnhancementLastGivenWhen[c] == nil or Shared.GetTime() - attackEnhancementLastGivenWhen[c] >= 15 then
+								local p = TGNS.GetPlayer(c)
+								if enhancementAction(p, c) then
+									attackEnhancementLastGivenWhen[c] = Shared.GetTime()
 								end
 							end
 						end)
@@ -410,9 +434,9 @@ function Plugin:Initialise()
 	TGNS.RegisterEventHook("GameStarted", function()
 		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + 5
 		
-		-- if not TGNS.IsProduction() then
-		-- 	self:CallWinOrLose(TGNS.GetOtherPlayingTeamNumber(TGNS.GetClientTeamNumber(TGNS.GetFirst(TGNS.GetHumanClientList()))))
-		-- end
+		if not TGNS.IsProduction() then
+			self:CallWinOrLose(TGNS.GetOtherPlayingTeamNumber(TGNS.GetClientTeamNumber(TGNS.GetFirst(TGNS.GetHumanClientList()))))
+		end
 	end)
 	SetupWinOrLoseVars()
 	TGNS.RegisterEventHook("OnEverySecond", function()
@@ -470,10 +494,10 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 					local victimRed = victimIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
 					local victimGreen = victimIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
 					local victimBlue = victimIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
-					if kCountdownTimeRemaining > 16 then
+					if kCountdownTimeRemaining > 18 then
 						if attackerTeamNumber ~= teamNumberWhichWillWinIfWinLoseCountdownExpires and victimTeamNumber == teamNumberWhichWillWinIfWinLoseCountdownExpires then
 							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining + 1
-							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 8 and 8 or numberOfSecondsToDeductFromCountdownTimeRemaining
+							numberOfSecondsToDeductFromCountdownTimeRemaining = numberOfSecondsToDeductFromCountdownTimeRemaining > 10 and 10 or numberOfSecondsToDeductFromCountdownTimeRemaining
 							local deductionAmountMultiplier = TGNS.IsClientStranger(TGNS.GetClient(attackerEntity)) and 0.5 or 1
 							kCountdownTimeRemaining = kCountdownTimeRemaining - math.floor(numberOfSecondsToDeductFromCountdownTimeRemaining * deductionAmountMultiplier)
 							local attackerTeamNumber = TGNS.GetPlayerTeamNumber(attackerEntity)
