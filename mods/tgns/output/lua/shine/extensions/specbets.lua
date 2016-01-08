@@ -4,6 +4,8 @@ local md = TGNSMessageDisplayer.Create("SPECBETS-BETA")
 local playerGameBets = {}
 local playerBanks = {}
 local playerGameTransactions = {}
+local karmaTransactions = {}
+local MAXIMUM_KARMA_TRANSACTIONS = 10
 
 local Plugin = {}
 
@@ -366,8 +368,11 @@ function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.DoFor(TGNS.GetClientList(), refundBets)
 	playerGameBets = {}
 	TGNS.DoForPairs(playerGameTransactions, function(steamId, transactions)
-		TGNS.DoFor(TGNS.Take(transactions, 10), function(t)
+		karmaTransactions[steamId] = karmaTransactions[steamId] or 0
+		local numberOfTransactionsToGiveKarmaFor = karmaTransactions[steamId] < MAXIMUM_KARMA_TRANSACTIONS and (MAXIMUM_KARMA_TRANSACTIONS - karmaTransactions[steamId]) or 0
+		TGNS.DoFor(TGNS.Take(transactions, numberOfTransactionsToGiveKarmaFor), function(t)
 			TGNS.Karma(steamId, "SpecBet")
+			karmaTransactions[steamId] = karmaTransactions[steamId] + 1
 		end)
 	end)
 	playerGameTransactions = {}
