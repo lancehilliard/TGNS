@@ -1235,6 +1235,10 @@ function Plugin:Think(deltaTime)
 		end
 	end
 
+	-- if (Shared.GetTime() - lastWinOrLoseWarningWhen) < 10 then
+	-- 	-- show center winorlose attack image
+	-- end
+
 	updateTeamNumbers()
 end
 
