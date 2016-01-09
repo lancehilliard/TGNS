@@ -326,6 +326,7 @@ function Plugin:Initialise()
 		local originalChangelevelFunc = Shine.Commands.sh_changelevel and Shine.Commands.sh_changelevel.Func or nil
 		if originalChangelevelFunc then
 			Shine.Commands.sh_changelevel.Func = function(client, mapName)
+				TGNS.ShouldProcessHttpRequests = false
 				TGNS.ScheduleAction(1, function()
 					originalChangelevelFunc(client, mapName)
 				end)
