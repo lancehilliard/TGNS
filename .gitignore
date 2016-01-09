@@ -84,6 +84,8 @@
 !mods/tgns/output/lua/shine/extensions/autoexec/shared.lua
 !mods/tgns/output/lua/shine/extensions/captains/captains.lua
 !mods/tgns/output/lua/shine/extensions/captains/shared.lua
+!mods/tgns/output/lua/shine/extensions/movement/movement.lua
+!mods/tgns/output/lua/shine/extensions/movement/shared.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/shared.lua
