@@ -414,65 +414,65 @@ function Plugin:Initialise()
 			GetGamerules():GetTeam(kAlienTeamType):AddTeamResources(100)
 			alienTeamResBonus = 0
 		end
-		if TGNS.GetCurrentMapName() == "dev_test" then
-			TGNS.ScheduleAction(60, function()
-				local hives = GetEntitiesForTeam( "Hive", kAlienTeamType )
-				local hive = hives[ math.random(#hives) ]
-				local chairs = GetEntitiesForTeam( "CommandStation", kMarineTeamType )
-				local chair = chairs[ math.random(#chairs) ]
-				local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
+		-- if TGNS.GetCurrentMapName() == "dev_test" then
+		-- 	TGNS.ScheduleAction(60, function()
+		-- 		local hives = GetEntitiesForTeam( "Hive", kAlienTeamType )
+		-- 		local hive = hives[ math.random(#hives) ]
+		-- 		local chairs = GetEntitiesForTeam( "CommandStation", kMarineTeamType )
+		-- 		local chair = chairs[ math.random(#chairs) ]
+		-- 		local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
 
-				local numberOfStructures = 25
-				TGNS.DoTimes(numberOfStructures, function(i)
-					local structureNames = { Crag.kMapName, Shift.kMapName, Drifter.kMapName, Whip.kMapName, Shade.kMapName }
-					local structureName = TGNS.GetFirst(TGNS.GetRandomizedElements(structureNames))
-					local testEntity = CreateEntity(structureName, pos, kAlienTeamType)
+		-- 		local numberOfStructures = 25
+		-- 		TGNS.DoTimes(numberOfStructures, function(i)
+		-- 			local structureNames = { Crag.kMapName, Shift.kMapName, Drifter.kMapName, Whip.kMapName, Shade.kMapName }
+		-- 			local structureName = TGNS.GetFirst(TGNS.GetRandomizedElements(structureNames))
+		-- 			local testEntity = CreateEntity(structureName, pos, kAlienTeamType)
 
-					if testEntity.SetConstructionComplete then
-						testEntity:SetConstructionComplete()
-					end
+		-- 			if testEntity.SetConstructionComplete then
+		-- 				testEntity:SetConstructionComplete()
+		-- 			end
 
-					local modifier = 3 * (i/numberOfStructures)
+		-- 			local modifier = 3 * (i/numberOfStructures)
 
-					local originalGetMaxSpeed = testEntity.GetMaxSpeed
-					testEntity.GetMaxSpeed = function(testEntitySelf)
-						local result = originalGetMaxSpeed(testEntitySelf)
-						return result * modifier
-					end
+		-- 			local originalGetMaxSpeed = testEntity.GetMaxSpeed
+		-- 			testEntity.GetMaxSpeed = function(testEntitySelf)
+		-- 				local result = originalGetMaxSpeed(testEntitySelf)
+		-- 				return result * modifier
+		-- 			end
 
-					local originalDrifterkMoveSpeed = Drifter.kMoveSpeed
-					local originalDrifterOnUpdate = Drifter.OnUpdate
-					testEntity.kDrifterMoveSpeed = originalDrifterkMoveSpeed * modifier
-					Drifter.OnUpdate = function(drifterSelf, deltaTime)
-						Drifter.kMoveSpeed = drifterSelf.kDrifterMoveSpeed
-						originalDrifterOnUpdate(drifterSelf, deltaTime)
-						Drifter.kMoveSpeed = originalDrifterkMoveSpeed
-					end
+		-- 			local originalDrifterkMoveSpeed = Drifter.kMoveSpeed
+		-- 			local originalDrifterOnUpdate = Drifter.OnUpdate
+		-- 			testEntity.kDrifterMoveSpeed = originalDrifterkMoveSpeed * modifier
+		-- 			Drifter.OnUpdate = function(drifterSelf, deltaTime)
+		-- 				Drifter.kMoveSpeed = drifterSelf.kDrifterMoveSpeed
+		-- 				originalDrifterOnUpdate(drifterSelf, deltaTime)
+		-- 				Drifter.kMoveSpeed = originalDrifterkMoveSpeed
+		-- 			end
 
-					if testEntity.matureMaxHealth then
-						testEntity:SetMaxHealth(testEntity:GetMaxHealth() * modifier)
-						testEntity.matureMaxHealth = testEntity.matureMaxHealth * modifier
-						testEntity:SetHealth(testEntity:GetMatureMaxHealth())
-						testEntity:SetMaxArmor(testEntity:GetMaxArmor() * modifier)
-						testEntity.matureMaxArmor = testEntity.matureMaxArmor * modifier
-						testEntity:SetMature()
-						testEntity:SetArmor(testEntity:GetMatureMaxArmor())
-					end
+		-- 			if testEntity.matureMaxHealth then
+		-- 				testEntity:SetMaxHealth(testEntity:GetMaxHealth() * modifier)
+		-- 				testEntity.matureMaxHealth = testEntity.matureMaxHealth * modifier
+		-- 				testEntity:SetHealth(testEntity:GetMatureMaxHealth())
+		-- 				testEntity:SetMaxArmor(testEntity:GetMaxArmor() * modifier)
+		-- 				testEntity.matureMaxArmor = testEntity.matureMaxArmor * modifier
+		-- 				testEntity:SetMature()
+		-- 				testEntity:SetArmor(testEntity:GetMatureMaxArmor())
+		-- 			end
 
-					if testEntity.SetOnFire and math.random() < .5 then
-						testEntity:SetOnFire(nil, nil)
-					end
+		-- 			if testEntity.SetOnFire and math.random() < .5 then
+		-- 				testEntity:SetOnFire(nil, nil)
+		-- 			end
 
-					testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
-					TGNS.ScheduleAction(45, function()
-						testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
-					end)
-					TGNS.ScheduleAction(90, function()
-						testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
-					end)
-				end)
-			end)
-		end
+		-- 			testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
+		-- 			TGNS.ScheduleAction(45, function()
+		-- 				testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
+		-- 			end)
+		-- 			TGNS.ScheduleAction(90, function()
+		-- 				testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
+		-- 			end)
+		-- 		end)
+		-- 	end)
+		-- end
 	end)
 
     return true
