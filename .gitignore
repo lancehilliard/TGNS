@@ -295,6 +295,8 @@
 !mods/tgns/source/ui/badges/aliens/phantom.psd
 !mods/tgns/source/ui/badges/aliens/regen.psd
 
+!mods/tgns/source/ui/badges/streaming/camera.psd
+
 # And then whitelist spec files
 
 !specs/lib/lemock.lua
