@@ -4,11 +4,11 @@ local scheduledActionsErrorCounts = {}
 local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 local AFK_IDLE_THRESHOLD_SECONDS = 15
-local shouldProcessHttpRequests = false
+TGNS.ShouldProcessHttpRequests = false
 local numberOfHttpRequestsMade = 0
 
 Event.Hook("MapPostLoad", function()
-	shouldProcessHttpRequests = true
+	TGNS.ShouldProcessHttpRequests = true
 end)
 
 TGNS.Config = {}
@@ -989,7 +989,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 
 
 	local unsentRequests = TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end)
-	if #unsentRequests > 0 and shouldProcessHttpRequests then
+	if #unsentRequests > 0 and TGNS.ShouldProcessHttpRequests then
 		local unsentScheduledRequests = TGNS.Take(unsentRequests, TGNS.Config and TGNS.Config.HttpRequestsPerSecond or 1)
 		TGNS.DoFor(unsentScheduledRequests, function(r)
 			r.sent = true
