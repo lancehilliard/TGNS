@@ -195,16 +195,16 @@ function Plugin:Initialise()
 		end
 
 		local originalApplyRTVWinner = Shine.Plugins.mapvote.ApplyRTVWinner
-		Shine.Plugins.mapvote.ApplyRTVWinner( mapVoteSelf, Time, Choice )
+		Shine.Plugins.mapvote.ApplyRTVWinner = function( mapVoteSelf, Time, Choice )
 			TGNS.ShouldProcessHttpRequests = false
 			originalApplyRTVWinner( mapVoteSelf, Time, Choice )
 		end
 
 		local originalApplyNextMapWinner = Shine.Plugins.mapvote.ApplyNextMapWinner
-		Shine.Plugins.mapvote.ApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
+		Shine.Plugins.mapvote.ApplyNextMapWinner = function( mapVoteSelf, Time, Choice, MentionMap )
 			TGNS.ShouldProcessHttpRequests = false
 			originalApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
-		ehd
+		end
 	end)
 
     return true
