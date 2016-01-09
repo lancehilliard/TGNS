@@ -193,6 +193,18 @@ function Plugin:Initialise()
 			Shine:RemoveText(nil, { ID = 67 } )
 			Shine:RemoveText(nil, { ID = 68 } )
 		end
+
+		local originalApplyRTVWinner = Shine.Plugins.mapvote.ApplyRTVWinner
+		Shine.Plugins.mapvote.ApplyRTVWinner( mapVoteSelf, Time, Choice )
+			TGNS.ShouldProcessHttpRequests = false
+			originalApplyRTVWinner( mapVoteSelf, Time, Choice )
+		end
+
+		local originalApplyNextMapWinner = Shine.Plugins.mapvote.ApplyNextMapWinner
+		Shine.Plugins.mapvote.ApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
+			TGNS.ShouldProcessHttpRequests = false
+			originalApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
+		ehd
 	end)
 
     return true
