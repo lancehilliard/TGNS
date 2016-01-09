@@ -1527,7 +1527,6 @@ if Server or Client then
 					local commSecondsSum = d.MarineCommSeconds + d.AlienCommSeconds
 					local highestRelevantKd = 2.3
 					local lowestRelevantKd = 1.84
-					d.KD = 1.9
 					kdPercent = d.KD >= highestRelevantKd and 1 or (d.KD >= lowestRelevantKd and (d.KD-lowestRelevantKd)/(highestRelevantKd-lowestRelevantKd) or 0)
 					if lifeformSecondsSum > 0 or commSecondsSum > 0 then
 						if lifeformSecondsSum > 0 then
@@ -2457,6 +2456,9 @@ if Server or Client then
 					md:ToPlayerNotifyInfo(p, message)
 				end)
 				automaticVoteAllowAction = function() end
+				TGNS.ScheduleAction(20, function()
+					getRolesData(TGNS.Select(TGNS.GetHumanClientList(), TGNS.GetClientSteamId))
+				end)
 			end)
 			voteRestrictCommand:Help("Disallow Captains votes.")
 
