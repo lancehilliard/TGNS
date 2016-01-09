@@ -5,6 +5,7 @@ local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 local AFK_IDLE_THRESHOLD_SECONDS = 15
 local shouldProcessHttpRequests = false
+local numberOfHttpRequestsMade = 0
 
 Event.Hook("MapPostLoad", function()
 	shouldProcessHttpRequests = true
@@ -993,6 +994,10 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 		TGNS.DoFor(unsentScheduledRequests, function(r)
 			r.sent = true
 			-- local requestStartTime = Shared.GetTime()
+			if TGNS.LogHttp then
+				Shared.Message(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url))
+			end
+			numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
 			Shared.SendHTTPRequest(r.url, "GET", function(response)
 				-- local requestDuration = Shared.GetTime() - requestStartTime
 				TGNS.RemoveAllMatching(scheduledRequests, r)
