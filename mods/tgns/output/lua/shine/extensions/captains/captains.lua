@@ -2760,7 +2760,7 @@ if Server or Client then
 
 			local originalServerSetPassword = Server.SetPassword
 			local function disallowPasswordAfterMidnightOnSaturdays()
-				if (TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6) or (TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= 22) then
+				if TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6 then
 						Server.SetPassword("")
 						Server.SetPassword = function()
 							TGNS.ScheduleAction(0, function()
