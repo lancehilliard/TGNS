@@ -1513,6 +1513,8 @@ if Server or Client then
 				end
 			end
 			local data = {c = TGNS.Select(captainClients, TGNS.GetClientIndex), p=TGNS.ToTable(optedInClients, function(c) return string.format("c%s", TGNS.GetClientIndex(c)) end, function(c)
+				local minimumTransparency = 0.1
+				local transparencyBoost = 0.3
 				local gorgePercent = 0
 				local lerkPercent = 0
 				local fadePercent = 0
@@ -1527,7 +1529,8 @@ if Server or Client then
 					local commSecondsSum = d.MarineCommSeconds + d.AlienCommSeconds
 					local highestRelevantKd = 2.3
 					local lowestRelevantKd = 1.84
-					kdPercent = d.KD >= highestRelevantKd and 1 or (d.KD >= lowestRelevantKd and (d.KD-lowestRelevantKd)/(highestRelevantKd-lowestRelevantKd) or 0)
+					kdPercent = d.KD >= highestRelevantKd and 1 or (d.KD >= lowestRelevantKd and ((d.KD-lowestRelevantKd)/(highestRelevantKd-lowestRelevantKd))+transparencyBoost or 0)
+					
 					if lifeformSecondsSum > 0 or commSecondsSum > 0 then
 						if lifeformSecondsSum > 0 then
 							gorgePercent = math.floor((d.GorgeSeconds / lifeformSecondsSum) * 100) / 100
@@ -1539,8 +1542,6 @@ if Server or Client then
 							marineCommPercent = math.floor((d.MarineCommSeconds / commSecondsSum) * 100) / 100
 							alienCommPercent = math.floor((d.AlienCommSeconds / commSecondsSum) * 100) / 100
 						end
-						local minimumTransparency = 0.1
-						local transparencyBoost = 0.3
 						gorgePercent = gorgePercent >= minimumTransparency and gorgePercent + transparencyBoost or minimumTransparency
 						lerkPercent = lerkPercent >= minimumTransparency and lerkPercent + transparencyBoost or minimumTransparency
 						fadePercent = fadePercent >= minimumTransparency and fadePercent + transparencyBoost or minimumTransparency
