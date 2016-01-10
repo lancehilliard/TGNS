@@ -211,6 +211,12 @@ function Plugin:ClientConfirmConnect(client)
 	end
 end
 
+function Plugin:ClientConnect(client)
+	if botsEnabled and TGNS.GetIsClientVirtual(client) then
+		TGNS.SendToTeam(TGNS.GetPlayer(client), kAlienTeamType, true)
+	end
+end
+
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if not (force or shineForce) then
@@ -291,9 +297,10 @@ function Plugin:CreateCommands()
 						end
 					end
 				end
-				local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
+				--local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
 				TGNS.ScheduleAction(TGNS.IsGameInProgress() and 0 or 2, function()
-					TGNS.ExecuteServerCommand(command)
+					--TGNS.ExecuteServerCommand(command)
+					OnConsoleAddBots(nil, countModifier, kAlienTeamType)
 				end)
 			else
 				local numberOfBotsToRemove = math.abs(countModifier)
