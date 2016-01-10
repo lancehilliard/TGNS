@@ -14,6 +14,12 @@ local Plugin = {}
 Plugin.HasConfig = true
 Plugin.ConfigName = "lapstracker.json"
 
+local function giveWaypoint(player, locationName)
+	-- disabled for now, as: 1) you're arguably moving too fast to use waypoints 2) they often show the slowest path (if ever another attempt: use origin that's above ground, not beneath it)
+	-- local locationEntity = TGNS.GetFirst(GetLocationEntitiesNamed(locationName))
+	-- player:GiveOrder(kTechId.Move, locationEntity:GetId(), locationEntity:GetOrigin())
+end
+
 local function debug(message)
 	if not TGNS.IsProduction() then
 		md:ToAdminNotifyInfo(message)
@@ -152,6 +158,9 @@ local function OnLocationChanged(player, locationName)
 						local trackDescriptor = string.format("(%sTime: %s) %s", completedTrack and "Final " or "", getTrackDurationDisplay(trackDuration), trackName)
 						local routeDescriptor = string.format("Go to %s", string.format("%s%s", nextLocationNames[client][trackId].first, nextLocationNames[client][trackId].second and string.format(", then %s", nextLocationNames[client][trackId].second) or "!"))
 						table.insert(advisories, {i=trackId,n=trackName,l=trackDescriptor,r=routeDescriptor})
+						if trackStartTimes[client][trackId] then
+							giveWaypoint(player, nextLocationNames[client][trackId].first)
+						end
 					end
 					if completedTrack then
 						local showCompletedMessageToAll = math.random() < 0.05
