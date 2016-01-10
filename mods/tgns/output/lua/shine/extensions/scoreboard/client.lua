@@ -58,6 +58,7 @@ local tunnelDescriptions = {}
 local lastTeamNumber = {}
 local lastUpdatedTeamNumbers = 0
 local lastWinOrLoseWarningWhen = 0
+local CHUDOptionsToDisableDuringWinOrLose = {"wps", "minwps"}
 
 local has = {}
 has.Celerity = {}
@@ -943,6 +944,8 @@ function Plugin:Initialise()
 		gameIsInProgress = message.b
 		if gameIsInProgress then
 			gameIsInProgressLastChanged = Shared.GetTime()
+		else
+			TGNS.DoFor(CHUDOptionsToDisableDuringWinOrLose, function(key) CHUDOptions[key].disabled = false end)
 		end
 	end)
 
@@ -1235,9 +1238,10 @@ function Plugin:Think(deltaTime)
 		end
 	end
 
-	-- if (Shared.GetTime() - lastWinOrLoseWarningWhen) < 10 then
-	-- 	-- show center winorlose attack image
-	-- end
+	if (Shared.GetTime() - lastWinOrLoseWarningWhen) < 10 then
+		TGNS.DoFor(CHUDOptionsToDisableDuringWinOrLose, function(key) CHUDOptions[key].disabled = true end)
+		-- show center winorlose attack image
+	end
 
 	updateTeamNumbers()
 end
