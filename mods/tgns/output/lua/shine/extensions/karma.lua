@@ -133,7 +133,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 local function getTargetSteamId(target)
-	local result = IsNumber(target) and target or TGNS.GetClientSteamId(target:isa("Player") and TGNS.GetClient(target) or target)
+	local result = IsNumber(target) and target or TGNS.GetClientSteamId((target.isa and target:isa("Player")) and TGNS.GetClient(target) or target)
 	return result
 end
 
