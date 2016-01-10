@@ -102,7 +102,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
 			local percentPrimerSignersAmongPlayingClients = numberOfPrimerSignersAmongPlayingClients / numberOfPlayingClients
 			local serverIsHighPopulationAndMostlyPrimerSigners = numberOfPlayingClients >= Shine.Plugins.communityslots.Config.PublicSlots - 2 and percentPrimerSignersAmongPlayingClients >= 0.82
-			if serverIsHighPopulationAndMostlyPrimerSigners or not TGNS.IsProduction() then
+			if serverIsHighPopulationAndMostlyPrimerSigners then
 				timerInProgress = true
 				secondsRemaining = secondsRemaining or countdownSeconds
 				secondsRemaining = (secondsRemaining >= 20 and secondsRemaining < countdownSeconds) and secondsRemaining or countdownSeconds
