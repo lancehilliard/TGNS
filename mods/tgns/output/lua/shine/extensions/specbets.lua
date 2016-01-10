@@ -370,7 +370,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 	TGNS.DoForPairs(playerGameTransactions, function(steamId, transactions)
 		karmaTransactions[steamId] = karmaTransactions[steamId] or 0
 		local numberOfTransactionsToGiveKarmaFor = karmaTransactions[steamId] < MAXIMUM_KARMA_TRANSACTIONS and (MAXIMUM_KARMA_TRANSACTIONS - karmaTransactions[steamId]) or 0
-		TGNS.DoFor(TGNS.Take(transactions, numberOfTransactionsToGiveKarmaFor), function(t)
+		TGNS.DoFor(TGNS.Take(TGNS.Where(transactions, function(t) return TGNS.Has({'bet','payout'}, t.type) end), numberOfTransactionsToGiveKarmaFor), function(t)
 			TGNS.Karma(steamId, "SpecBet")
 			karmaTransactions[steamId] = karmaTransactions[steamId] + 1
 		end)
