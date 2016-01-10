@@ -297,6 +297,16 @@
 !mods/tgns/source/ui/badges/aliens/phantom.psd
 !mods/tgns/source/ui/badges/aliens/regen.psd
 
+!mods/tgns/source/ui/captains/CaptainsBanner.psd
+!mods/tgns/source/ui/captains/CommSkill.psd
+!mods/tgns/source/ui/captains/FadeSkill.psd
+!mods/tgns/source/ui/captains/GorgeSkill.psd
+!mods/tgns/source/ui/captains/KhammSkill.psd
+!mods/tgns/source/ui/captains/KillRatioSkill.psd
+!mods/tgns/source/ui/captains/LerkSkill.psd
+!mods/tgns/source/ui/captains/OnosSkill.psd
+
+
 !mods/tgns/source/ui/badges/streaming/camera.psd
 
 # And then whitelist spec files
