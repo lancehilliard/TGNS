@@ -238,7 +238,9 @@ function Plugin:Initialise()
 	-- TGNS.ScheduleActionInterval(10, CheckRoster)
 	TGNS.DoFor(roles, function(r) RegisterCommandHook(self, r) end)
 	TGNS.RegisterEventHook("BkaChanged", function(client)
-		reviewPlayerForRolesChange(TGNS.GetPlayer(client))
+		if Shine:IsValidClient(client) then
+			reviewPlayerForRolesChange(TGNS.GetPlayer(client))
+		end
 	end)
 
 	return true
