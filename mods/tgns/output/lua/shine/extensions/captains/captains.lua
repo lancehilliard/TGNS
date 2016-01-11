@@ -1512,7 +1512,7 @@ if Server or Client then
 					Shine.ScreenText.Add(50, {X = 0.05, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, clients[1])
 				end
 			end
-			local data = {c = TGNS.Select(captainClients, TGNS.GetClientIndex), p=TGNS.ToTable(optedInClients, function(c) return string.format("c%s", TGNS.GetClientIndex(c)) end, function(c)
+			local data = {c = TGNS.Select(TGNS.Where(captainClients, function(c) return Shine:IsValidClient(c) end), TGNS.GetClientIndex), p=TGNS.ToTable(TGNS.Where(optedInClients, function(c) return Shine:IsValidClient(c) end), function(c) return string.format("c%s", TGNS.GetClientIndex(c)) end, function(c)
 				local minimumTransparency = 0.1
 				local transparencyBoost = 0.3
 				local gorgePercent = 0
