@@ -349,7 +349,9 @@ function Plugin:Initialise()
 		end
 	end)
 	TGNS.RegisterEventHook("BkaChanged", function(client)
-		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+		if Shine:IsValidClient(client) then
+			self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+		end
 	end)
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
