@@ -352,6 +352,8 @@ function Plugin:CreateCommands()
 						bkaChangeError = "You did not specify a new Better Known As name."
 					elseif newBkaName == "clear" then
 						bkaChangeError = "You specified a Better Known As name that is not allowed."
+					elseif newBkaName:len() > kMaxNameLength then
+						bkaChangeError = string.format("Your Better Known As name must be %s characters or less.", kMaxNameLength)
 					end
 				end
 				local showSummary = function(client)
