@@ -946,6 +946,7 @@ function Plugin:Initialise()
 			gameIsInProgressLastChanged = Shared.GetTime()
 		else
 			TGNS.DoFor(CHUDOptionsToDisableDuringWinOrLose, function(key) CHUDOptions[key].disabled = false end)
+			tunnelDescriptions = {}
 		end
 	end)
 
