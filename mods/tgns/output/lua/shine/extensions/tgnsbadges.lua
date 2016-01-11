@@ -12,7 +12,7 @@ local function tellTargetAboutSource(targetClient, sourceClient)
 	local sourceBadge = badges[sourceClientSteamId]
 	if badgeName and sourceBadge and kBadges[badgeName] then
 		SetFormalBadgeName(badgeName, string.format('%s (TGNS)\n%s\n\nWhich TGNS badges do you have?\nFind out: M > TGNS Portal > Badges\nOr: http://rr.tacticalgamer.com', sourceBadge.DisplayName, sourceBadge.Description))
-		Server.SendNetworkMessage(targetClient, "Badge", { clientIndex = TGNS.GetClientId(sourceClient), badge = kBadges[badgeName] }, true)
+		Server.SendNetworkMessage(targetClient, "Badge", { clientIndex = TGNS.GetClientId(sourceClient), badge = kBadges[badgeName], badgerow = 1 }, true)
 		-- if targetClientBadgeLabels[targetClient] ~= nil and not TGNS.Has(targetClientBadgeLabels[targetClient], badgeName) then
 		-- 	Server.SendNetworkMessage(targetClient, Shine.Plugins.scoreboard.BADGE_DISPLAY_LABEL, { n = badgeName, l = string.format('%s (TGNS)\n%s', sourceBadge.DisplayName, sourceBadge.Description) }, true)
 		-- 	table.insert(targetClientBadgeLabels[targetClient], badgeName)
