@@ -134,7 +134,7 @@ function Plugin:Initialise()
 			TGNS.DoFor(getSidebarParticipantClients(), function(c)
 				if lastVoiceWarningTimes[c] == nil or lastVoiceWarningTimes[c] < Shared.GetTime() - 1 then
 					-- Shine:SendText(c, Shine.BuildScreenMessage(70, 0.2, 0.25, , 5, isAllTalkEnabled() and 255 or 0, isAllTalkEnabled() and 0 or 255, 0, 0, 4, 0 ) )
-					Shine.ScreenText.Add(70, {X = 0.2, Y = 0.25, Text = string.format("%s%s%s", message, TGNS.IsClientAdmin(c) and "\n\nLook down to hear beyond Sidebar." or "", isAllTalkEnabled() and "\nAlltalk enabled!!" or ""), Duration = 5, R = isAllTalkEnabled() and 255 or 0, G = isAllTalkEnabled() and 0 or 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 4, FadeIn = 0, IgnoreFormat = true}, c)
+					Shine.ScreenText.Add(70, {X = 0.2, Y = 0.25, Text = string.format("%s%s%s", message, TGNS.IsClientAdmin(c) and "\n\nLook down to hear beyond Sidebar." or "", isAllTalkEnabled() and "\nAlltalk enabled!!" or ""), Duration = 5, R = isAllTalkEnabled() and 255 or 0, G = isAllTalkEnabled() and 0 or 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 					lastVoiceWarningTimes[c] = Shared.GetTime()
 				end
 			end)
