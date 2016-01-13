@@ -1,6 +1,7 @@
 TGNSPlayerBlacklistRepository = {}
 
 local pbrCache = {}
+local pbrCacheWasPreloaded = false
 
 function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 	assert(blacklistTypeName ~= nil and blacklistTypeName ~= "")
@@ -17,7 +18,7 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 		callback = callback or function() end
 		local steamId = TGNS.GetClientSteamId(client)
 		pbrCache[blacklistTypeName] = pbrCache[blacklistTypeName] or {}
-		if pbrCache[blacklistTypeName][steamId] == nil then
+		if pbrCache[blacklistTypeName][steamId] == nil and not pbrCacheWasPreloaded then
 			dr.Load(nil, function(loadResponse)
 				if loadResponse.success then
 					local blacklistData = loadResponse.value
@@ -51,8 +52,9 @@ local function getBlacklists()
 						pbrCache[r.From][r.PlayerId] = true
 					end
 				end)
+				pbrCacheWasPreloaded = true
 			else
-				TGNS.DebugPrint(string.format("captains ERROR: Unable to access blacklist data. url: %s | msg: %s | response: %s | stacktrace: %s", url, blacklistResponse.msg, blacklistResponseJson, blacklistResponse.stacktrace))
+				TGNS.DebugPrint(string.format("blacklist ERROR: Unable to access blacklist data. url: %s | msg: %s | response: %s | stacktrace: %s", url, blacklistResponse.msg, blacklistResponseJson, blacklistResponse.stacktrace))
 			end
 		end)
 	else
