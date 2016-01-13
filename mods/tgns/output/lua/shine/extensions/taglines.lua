@@ -1,4 +1,6 @@
 local unescapedTaglineMessages = {}
+local taglinesCache = {}
+local taglinesCacheWasPreloaded = false;
 
 local Plugin = {}
 
@@ -97,16 +99,20 @@ end
 function Plugin:ClientConnect(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
-		pdr:Load(steamId, function(loadResponse)
-			if loadResponse.success then
-				local tagline = loadResponse.value
-				if TGNS.HasNonEmptyValue(tagline.message) then
-					unescapedTaglineMessages[client] = getUnescapedTaglineMessage(tagline.message)
+		if taglinesCache[steamId] ~= nil then
+			unescapedTaglineMessages[client] = getUnescapedTaglineMessage(taglinesCache[steamId])
+		elseif not taglinesCacheWasPreloaded then
+			pdr:Load(steamId, function(loadResponse)
+				if loadResponse.success then
+					local tagline = loadResponse.value
+					if TGNS.HasNonEmptyValue(tagline.message) then
+						unescapedTaglineMessages[client] = getUnescapedTaglineMessage(tagline.message)
+					end
+				else
+					Shared.Message("taglines ERROR: Unable to access data.")
 				end
-			else
-				Shared.Message("taglines ERROR: Unable to access data.")
-			end
-		end)
+			end)
+		end
 	end
 end
 
@@ -127,6 +133,27 @@ function Plugin:Initialise()
 		end
 	end)
 	self:CreateCommands()
+
+	local function getTaglines()
+		if TGNS.Config and TGNS.Config.TaglinesEndpointBaseUrl then
+			local url = TGNS.Config.TaglinesEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(taglinesResponseJson)
+				local taglinesResponse = json.decode(taglinesResponseJson) or {}
+				if taglinesResponse.success then
+					TGNS.DoForPairs(taglinesResponse.result, function(steamId, steamIdData)
+						taglinesCache[tonumber(steamId)] = steamIdData
+					end)
+					taglinesCacheWasPreloaded = true
+				else
+					TGNS.DebugPrint(string.format("taglines ERROR: Unable to access taglines data. url: %s | msg: %s | response: %s | stacktrace: %s", url, taglinesResponse.msg, taglinesResponseJson, taglinesResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getTaglines)
+		end
+	end
+	getTaglines()
+
     return true
 end
 
