@@ -155,20 +155,29 @@ local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllA
 	pdr:Load(targetSteamId, function(loadResponse)
 		if loadResponse.success then
 			local bkaData = loadResponse.value
+			local akaWasChanged = false
 			if newBkaName ~= "clear" or not allowClearParameterToRemoveAllAkaValues then
-				table.insert(bkaData.AKAs, newBkaName)
+				if not TGNS.Any(bkaData.AKAs, function(a) return a == newBkaName end) then
+					table.insert(bkaData.AKAs, newBkaName)
+					akaWasChanged = true
+				end
 			else
 				bkaData.AKAs = {}
+				akaWasChanged = true
 			end
 			bkaData.AKAs = TGNS.GetUniqueTableValues(bkaData.AKAs)
-			pdr:Save(bkaData, function(saveResponse)
-				if saveResponse.success then
-					callback(true)
-				else
-					Shared.Message("betterknownas ERROR: Unable to save data")
-					callback(false)
-				end
-			end)
+			if akaWasChanged then
+				pdr:Save(bkaData, function(saveResponse)
+					if saveResponse.success then
+						callback(true)
+					else
+						Shared.Message("betterknownas ERROR: Unable to save data")
+						callback(false)
+					end
+				end)
+			else
+				callback(true)
+			end
 		else
 			Shared.Message("betterknownas ERROR: Unable to access data")
 			callback(false)
