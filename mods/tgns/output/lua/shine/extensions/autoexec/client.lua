@@ -1,10 +1,11 @@
 local Plugin = Plugin
 
+TGNS.HookNetworkMessage(Shine.Plugins.autoexec.COMMAND, function(message)
+    Shared.ConsoleCommand(message.c)
+end)
+
 function Plugin:Initialise()
 	self.Enabled = true
-    TGNS.HookNetworkMessage(self.COMMAND, function(message)
-        Shared.ConsoleCommand(message.c)
-    end)
 	return true
 end
 
