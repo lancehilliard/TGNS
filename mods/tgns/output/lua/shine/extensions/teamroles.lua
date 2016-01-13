@@ -3,7 +3,7 @@ local pdrCache = {}
 local pbrCache = {}
 local pprCache = {}
 local knownRoleDataNames = {}
-
+local rolePdrCacheWasPreloaded = {}
 
 local function getPdr(persistedDataName)
 	local result = TGNSPlayerDataRepository.Create(persistedDataName, function(data)
@@ -43,6 +43,8 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 		callback = callback or function() end
 		pdr:Save(pdrData, function(saveResponse)
 			if saveResponse.success then
+				Shared.Message("persistedDataName: " .. tostring(persistedDataName))
+				Shared.Message("pdrData.steamId: " .. tostring(pdrData.steamId))
 				pdrCache[persistedDataName][pdrData.steamId] = pdrData
 				callback(true)
 			else
@@ -204,13 +206,19 @@ function Plugin:ClientConnect(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
 		TGNS.DoFor(knownRoleDataNames, function(roleName)
-			local pdr = getPdr(roleName)
-			pdr:Load(steamId, function(loadResponse)
-				pdrCache[roleName][steamId] = loadResponse.value
-				if not loadResponse.success then
-					Shared.Message("teamroles ERROR: Unable to access PDR data.")
+			if pdrCache[roleName][steamId] == nil then
+				if rolePdrCacheWasPreloaded[roleName] then
+					pdrCache[roleName][steamId] = {steamId=steamId, optin=false}
+				else
+					local pdr = getPdr(roleName)
+					pdr:Load(steamId, function(loadResponse)
+						pdrCache[roleName][steamId] = loadResponse.value
+						if not loadResponse.success then
+							Shared.Message("teamroles ERROR: Unable to access PDR data.")
+						end
+					end)
 				end
-			end)
+			end
 
 			local pbr = TGNSPlayerBlacklistRepository.Create(roleName)
 			pbr:IsClientBlacklisted(client, function(isBlacklisted)
@@ -221,7 +229,6 @@ function Plugin:ClientConnect(client)
 			ppr:IsClientPreferred(client, function(isPreferred)
 				pprCache[roleName][client] = isPreferred
 			end)
-
 		end)
 	end
 end
@@ -242,6 +249,26 @@ function Plugin:Initialise()
 			reviewPlayerForRolesChange(TGNS.GetPlayer(client))
 		end
 	end)
+
+	local function getGuardians()
+		if TGNS.Config and TGNS.Config.GuardiansEndpointBaseUrl then
+			local url = TGNS.Config.GuardiansEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(guardiansResponseJson)
+				local guardiansResponse = json.decode(guardiansResponseJson) or {}
+				if guardiansResponse.success then
+					TGNS.DoFor(guardiansResponse.result, function(steamId)
+						pdrCache["guardian"][steamId] = {steamId=steamId, optin=true}
+					end)
+					rolePdrCacheWasPreloaded["guardian"] = true
+				else
+					TGNS.DebugPrint(string.format("teamroles ERROR: Unable to access guardians data. url: %s | msg: %s | response: %s | stacktrace: %s", url, guardiansResponse.msg, guardiansResponseJson, guardiansResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getGuardians)
+		end
+	end
+	getGuardians()
 
 	return true
 end
