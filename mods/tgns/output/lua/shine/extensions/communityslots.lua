@@ -671,16 +671,18 @@ function Plugin:PlayerSay(client, networkMessage)
     local message = StringTrim(networkMessage.message)
     if not teamOnly then
         TGNS.PlayerAction(client, function(p)
-            if TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.chatchannels and Shine.Plugins.chatchannels.DoesChatStartWithChatChannelTriggerCharacter and Shine.Plugins.chatchannels:DoesChatStartWithChatChannelTriggerCharacter(message)) then
-                tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator chat.")
-                cancel = true
-            else
-                if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() and not TGNS.HasClientSignedPrimerWithGames(client) then
-                    if ServerIsFull(GetPlayingPlayers()) and not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
-                        tgnsMd:ToPlayerNotifyError(p, "You must read and agree to our rules")
-                        tgnsMd:ToPlayerNotifyError(p, "to chat to a full game from the Ready Room.")
-                        tgnsMd:ToPlayerNotifyError(p, "Team chat starting with '@' goes to all admins.")
-                        cancel = true
+            if p then
+                if TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.chatchannels and Shine.Plugins.chatchannels.DoesChatStartWithChatChannelTriggerCharacter and Shine.Plugins.chatchannels:DoesChatStartWithChatChannelTriggerCharacter(message)) then
+                    tgnsMd:ToPlayerNotifyError(p, "Press 'y' for Spectator chat.")
+                    cancel = true
+                else
+                    if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() and not TGNS.HasClientSignedPrimerWithGames(client) then
+                        if ServerIsFull(GetPlayingPlayers()) and not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
+                            tgnsMd:ToPlayerNotifyError(p, "You must read and agree to our rules")
+                            tgnsMd:ToPlayerNotifyError(p, "to chat to a full game from the Ready Room.")
+                            tgnsMd:ToPlayerNotifyError(p, "Team chat starting with '@' goes to all admins.")
+                            cancel = true
+                        end
                     end
                 end
             end
