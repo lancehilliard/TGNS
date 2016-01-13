@@ -13,6 +13,7 @@ end)
 
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
+TGNS.LogHttp = true
 
 -- beginnings of function GetLocationIdByName...
 	-- 	TGNS.DoForPairs(GetLocations(), function(index, location)
@@ -994,7 +995,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 		TGNS.DoFor(unsentScheduledRequests, function(r)
 			r.sent = true
 			-- local requestStartTime = Shared.GetTime()
-			if TGNS.LogHttp then
+			if TGNS.LogHttp or not TGNS.IsProduction() then
 				Shared.Message(string.format("TGNSCommonServer debug> http request #%s: %s (%s unsent)", numberOfHttpRequestsMade, r.url, #unsentRequests))
 			end
 			numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
