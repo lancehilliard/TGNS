@@ -12,6 +12,8 @@ local squadNumbers = {}
 local NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS = 180
 local tunnelDescriptions = {}
 local streamingWebAddresses = {}
+local approveCache = {}
+local approveCacheWasPreloaded = false
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -183,17 +185,21 @@ end
 function Plugin:ClientConnect(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
-		local approvalsUrl = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
-		TGNS.GetHttpAsync(approvalsUrl, function(approvalsResponseJson)
-			if Shine:IsValidClient(client) then
-				local approvalsResponse = json.decode(approvalsResponseJson) or {}
-				if approvalsResponse.success then
-					table.insert(approvalCounts, {client, approvalsResponse.result})
-				else
-					TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approvals count data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, approvalsResponse.msg, approvalsResponseJson, approvalsResponse.stacktrace))
+		if approveCache[steamId] ~= nil and not TGNS.Any(approvalCounts, function(c) return c[1] == client end) then
+			table.insert(approvalCounts, {client, approveCache[steamId]})
+		elseif not approveCacheWasPreloaded then
+			local approvalsUrl = string.format("%s&i=%s&t=14", TGNS.Config.ApproveEndpointBaseUrl, steamId)
+			TGNS.GetHttpAsync(approvalsUrl, function(approvalsResponseJson)
+				if Shine:IsValidClient(client) then
+					local approvalsResponse = json.decode(approvalsResponseJson) or {}
+					if approvalsResponse.success then
+						table.insert(approvalCounts, {client, approvalsResponse.result})
+					else
+						TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approvals count data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, approvalsResponse.msg, approvalsResponseJson, approvalsResponse.stacktrace))
+					end
 				end
-			end
-		end)
+			end)
+		end
 	end
 end
 
@@ -641,6 +647,31 @@ function Plugin:Initialise()
 		originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
 		self:AnnouncePlayerPrefix(embryoSelf)
 	end
+
+	local function getApprovals()
+		if TGNS.Config and TGNS.Config.ApproveEndpointBaseUrl then
+			local url = TGNS.Config.ApproveEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(approveResponseJson)
+				-- Shared.Message("approveResponseJson: " .. approveResponseJson)
+				local approveResponse = json.decode(approveResponseJson) or {}
+				if approveResponse.success then
+					TGNS.DoForPairs(approveResponse.result, function(steamId, count)
+						approveCache[tonumber(steamId)] = count
+					end)
+					approveCacheWasPreloaded = true
+				else
+					TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approve data. url: %s | msg: %s | response: %s | stacktrace: %s", url, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getApprovals)
+		end
+	end
+	getApprovals()
+
+
+
+
 
 	return true
 end
