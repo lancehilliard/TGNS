@@ -1,6 +1,8 @@
 local md
 local pdr
 local lastSentLength = {}
+local wraplengthsCache = {}
+local wraplengthsCacheWasPreloaded = false
 
 local function updateClientWraplength(client, wraplength)
 	TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), Shine.Plugins.wraplength.WRAPLENGTH_DATA, {l=wraplength})
@@ -32,17 +34,25 @@ end
 -- end
 
 function Plugin:ClientConnect(client)
-	pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
-		if loadResponse.success then
-			local length = loadResponse.value.wraplength
-			if length ~= nil then
-				updateClientWraplength(client, length)
-				md:ToClientConsole(client, getWraplengthDescription(client, loadResponse.value))
+	local steamId = TGNS.GetClientSteamId(client)
+	local updateLength = function(client, length)
+		updateClientWraplength(client, length)
+		md:ToClientConsole(client, getWraplengthDescription(client, {wraplength=length}))
+	end
+	if wraplengthsCache[steamId] ~= nil then
+		updateLength(client, wraplengthsCache[steamId])
+	elseif not wraplengthsCacheWasPreloaded then
+		pdr:Load(steamId, function(loadResponse)
+			if loadResponse.success then
+				local length = loadResponse.value.wraplength
+				if length ~= nil then
+					updateLength(client, length)
+				end
+			else
+				Shared.Message(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)))
 			end
-		else
-			Shared.Message(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)))
-		end
-	end)
+		end)
+	end
 end
 
 local function showHelp(client)
@@ -51,7 +61,8 @@ end
 
 function Plugin:CreateCommands()
 	local wraplengthCommand = self:BindCommand( "sh_wraplength", nil, function(client, lengthCandidate)
-		pdr:Load(TGNS.GetClientSteamId(client), function(loadResponse)
+		local steamId = TGNS.GetClientSteamId(client)
+		pdr:Load(steamId, function(loadResponse)
 			local wraplengthData = loadResponse.value
 			if loadResponse.success then
 				local length = tonumber(lengthCandidate)
@@ -71,6 +82,7 @@ function Plugin:CreateCommands()
 							updateClientWraplength(client, length)
 							md:ToClientConsole(client, getWraplengthDescription(client, wraplengthData))
 							showHelp(client)
+							wraplengthsCache[steamId] = wraplengthData.wraplength
 						else
 							md:ToClientConsole(client, string.format("Unable to save wrap length percentage (you did everything right). %s", getWraplengthDescription(client, wraplengthData)))
 							showHelp(client)
@@ -97,6 +109,27 @@ function Plugin:Initialise()
 		data.wraplength = data.wraplength ~= nil and data.wraplength or nil
 		return data
 	end)
+
+	local function getWraplengths()
+		if TGNS.Config and TGNS.Config.WraplengthEndpointBaseUrl then
+			local url = TGNS.Config.WraplengthEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(wraplengthResponseJson)
+				local wraplengthResponse = json.decode(wraplengthResponseJson) or {}
+				if wraplengthResponse.success then
+					TGNS.DoForPairs(wraplengthResponse.result, function(steamId, steamIdData)
+						wraplengthsCache[tonumber(steamId)] = steamIdData
+					end)
+					wraplengthsCacheWasPreloaded = true
+				else
+					TGNS.DebugPrint(string.format("wraplength ERROR: Unable to access wraplengths data. url: %s | msg: %s | response: %s | stacktrace: %s", url, wraplengthResponse.msg, wraplengthResponseJson, wraplengthResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getWraplengths)
+		end
+	end
+	getWraplengths()
+
 	return true
 end
 
