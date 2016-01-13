@@ -3,6 +3,8 @@ local badges = {}
 local md = TGNSMessageDisplayer.Create("BADGES")
 local badgesModIsLoaded = false
 -- local targetClientBadgeLabels = {}
+local badgeNamesCache = {}
+local badgesCache = {}
 
 local Plugin = {}
 
@@ -18,30 +20,6 @@ local function tellTargetAboutSource(targetClient, sourceClient)
 		-- 	table.insert(targetClientBadgeLabels[targetClient], badgeName)
 		-- end
 	end
-end
-
-local function assignBadge(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	local url = string.format("%s&i=%s", TGNS.Config.ScoreboardBadgesEndpointBaseUrl, steamId)
-	TGNS.GetHttpAsync(url, function(scoreboardBadgesResponseJson)
-		if Shine:IsValidClient(client) then
-			local scoreboardBadgesResponse = json.decode(scoreboardBadgesResponseJson) or {}
-			if scoreboardBadgesResponse.success then
-				if #scoreboardBadgesResponse.result > 0 then
-					local badge = TGNS.GetFirst(scoreboardBadgesResponse.result)
-					local badgeName = string.format("tgns%s", badge.ID)
-					if kBadges[badgeName] then
-						badgeNames[client] = badgeName
-						badges[steamId] = badge
-						--TGNS.DebugPrint(string.format("Assigned %s badge to %s...", badgeName, TGNS.GetClientNameSteamIdCombo(client)))
-						TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
-					end
-				end
-			else
-				TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
-			end
-		end
-	end)
 end
 
 local function tellMostRecentBadge(client)
@@ -68,13 +46,17 @@ end
 
 function Plugin:ClientConnect(client)
 	if badgesModIsLoaded then
-		assignBadge(client)
+		local steamId = TGNS.GetClientSteamId(client)
+		if badgeNamesCache[steamId] and badgesCache[steamId] then
+			badgeNames[client] = badgeNamesCache[steamId]
+			badges[steamId] = badgesCache[steamId]
+			TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
+		end
 	end
 end
 
 function Plugin:ClientConfirmConnect(client)
 	if badgesModIsLoaded then
-		-- targetClientBadgeLabels[client] = {}
 		TGNS.ScheduleAction(1, function()
 			TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
 		end)
@@ -96,6 +78,31 @@ function Plugin:Initialise()
     TGNS.ScheduleAction(2, function()
 	    badgesModIsLoaded = GiveBadge and Shine.GetUpValue(GiveBadge, "sServerBadges") ~= nil
     end)
+
+    local function getBadges()
+    	if TGNS.Config and TGNS.Config.ScoreboardBadgesEndpointBaseUrl then
+			local url = TGNS.Config.ScoreboardBadgesEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(scoreboardBadgesResponseJson)
+				local scoreboardBadgesResponse = json.decode(scoreboardBadgesResponseJson) or {}
+				if scoreboardBadgesResponse.success then
+					TGNS.DoForPairs(scoreboardBadgesResponse.result, function(steamId, badges)
+						local badge = TGNS.GetFirst(badges)
+						local badgeName = string.format("tgns%s", badge.ID)
+						if kBadges[badgeName] then
+							badgeNamesCache[tonumber(steamId)] = badgeName
+							badgesCache[tonumber(steamId)] = badge
+						end
+					end)
+				else
+					TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data. url: %s | msg: %s | response: %s | stacktrace: %s", url, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getBadges)
+    	end
+    end
+    getBadges()
+
     return true
 end
 
