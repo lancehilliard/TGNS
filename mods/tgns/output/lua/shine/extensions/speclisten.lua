@@ -3,6 +3,8 @@ local md
 local specmodes = {}
 local specpriority = {}
 local whenSpecWasLastHeard = {}
+local specmodesCache = {}
+local specmodesCacheWasPreloaded = false
 
 local modeDescriptions = {["0"] = "Chat Advisory OFF; Voicecomm: All"
 	, ["1"] = "Chat Advisory OFF; Voicecomm: Marines only"
@@ -61,19 +63,27 @@ local function announceSvi(client)
 	TGNS.ExecuteEventHooks("SviChanged", client, isUsingSvi)
 end
 
+function initClient(client, specMode, specPriority)
+	specmodes[client] = specMode
+	specpriority[client] = specPriority
+	announceSvi(client)
+end
+
 function Plugin:ClientConfirmConnect(client)
 	local steamId = TGNS.GetClientSteamId(client)
-	pdr:Load(steamId, function(loadResponse)
-		if Shine:IsValidClient(client) then
-			if loadResponse.success then
-				specmodes[client] = loadResponse.value.specmode
-				specpriority[client] = loadResponse.value.specpriority
-				announceSvi(client)
-			else
-				Shared.Message("specmode ERROR: Unable to access data.")
+	if specmodesCache[steamId] ~= nil then
+		initClient(client, specmodesCache[steamId].specMode, specmodesCache[steamId].specPriority)
+	elseif not specmodesCacheWasPreloaded then
+		pdr:Load(steamId, function(loadResponse)
+			if Shine:IsValidClient(client) then
+				if loadResponse.success then
+					initClient(client, loadResponse.value.specmode, loadResponse.value.specpriority)
+				else
+					Shared.Message("specmode ERROR: Unable to access data.")
+				end
 			end
-		end
-	end)
+		end)
+	end
 end
 
 local function showCurrentSpecMode(player, showIfNil)
@@ -121,7 +131,9 @@ function Plugin:CreateCommands()
 					data.specmode = specmodes[client]
 					data.specpriority = specpriority[client]
 					pdr:Save(data, function(saveResponse)
-						if not saveResponse.success then
+						if saveResponse.success then
+							specmodesCache[steamId] = nil
+						else
 							Shared.Message("specmode ERROR: Unable to save data.")
 						end
 					end)
@@ -174,6 +186,27 @@ function Plugin:Initialise()
 			end)
 		end
 	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
+
+	local function getSpecModes()
+		if TGNS.Config and TGNS.Config.SpecModeEndpointBaseUrl then
+			local url = TGNS.Config.SpecModeEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(specModeResponseJson)
+				local specModeResponse = json.decode(specModeResponseJson) or {}
+				if specModeResponse.success then
+					TGNS.DoForPairs(specModeResponse.result, function(steamId, steamIdData)
+						specmodesCache[tonumber(steamId)] = steamIdData
+					end)
+					specmodesCacheWasPreloaded = true
+				else
+					TGNS.DebugPrint(string.format("speclisten ERROR: Unable to access specMode data. url: %s | msg: %s | response: %s | stacktrace: %s", url, specModeResponse.msg, specModeResponseJson, specModeResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getSpecModes)
+		end
+	end
+	getSpecModes()
+
 
     return true
 end
