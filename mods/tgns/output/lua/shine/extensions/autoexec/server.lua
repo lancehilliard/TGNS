@@ -2,6 +2,8 @@ local pdr = TGNSPlayerDataRepository.Create("autoexec", function(data)
 	data.commands = data.commands ~= nil and data.commands or {}
 	return data
 end)
+local autoExecsCache = {}
+local autoExecsCacheWasPreloaded = false
 
 local md = TGNSMessageDisplayer.Create("AUTOFPS")
 
@@ -29,18 +31,27 @@ local md = TGNSMessageDisplayer.Create("AUTOFPS")
 //	md:ToClientConsole(client, "")
 //end
 
-function Plugin:ClientConfirmConnect(client)
+function Plugin:ClientConnect(client)
 	local steamId = TGNS.GetClientSteamId(client)
-	pdr:Load(steamId, function(loadResponse)
-		if loadResponse.success then
-			local data = loadResponse.value
-			TGNS.DoFor(data.commands, function(command)
+	local sendCommands = function(commands)
+		if Shine:IsValidClient(client) then
+			TGNS.DoFor(commands, function(command)
 				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.COMMAND, {c=command})
 			end)
-		else
-			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
 		end
-	end)
+	end
+	if autoExecsCache[steamId] then
+		sendCommands(autoExecsCache[steamId])
+	elseif not autoExecsCacheWasPreloaded then
+		pdr:Load(steamId, function(loadResponse)
+			if loadResponse.success then
+				local data = loadResponse.value
+				sendCommands(data.commands)
+			else
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Unable to access player data.")
+			end
+		end)
+	end
 end
 
 local function createCommand(commandName, commandValue, commandDescription)
@@ -78,6 +89,28 @@ end
 function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
+
+	local function getAutoExecs()
+		if TGNS.Config and TGNS.Config.AutoExecEndpointBaseUrl then
+			local url = TGNS.Config.AutoExecEndpointBaseUrl
+			TGNS.GetHttpAsync(url, function(autoExecsResponseJson)
+				local autoExecsResponse = json.decode(autoExecsResponseJson) or {}
+				if autoExecsResponse.success then
+					TGNS.DoForPairs(autoExecsResponse.result, function(steamId, steamIdData)
+						autoExecsCache[tonumber(steamId)] = steamIdData
+					end)
+					autoExecsCacheWasPreloaded = true
+				else
+					TGNS.DebugPrint(string.format("autoExecs ERROR: Unable to access autoExecs data. url: %s | msg: %s | response: %s | stacktrace: %s", url, autoExecsResponse.msg, autoExecsResponseJson, autoExecsResponse.stacktrace))
+				end
+			end)
+		else
+			TGNS.ScheduleAction(0, getAutoExecs)
+		end
+	end
+	getAutoExecs()
+
+
     return true
 end
 
