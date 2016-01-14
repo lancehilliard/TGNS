@@ -75,18 +75,15 @@ local function showReport(transactions)
 end
 
 local function refreshPlayerBank(steamId)
-	if playerBanks[steamId] == nil then
-		playerBanks[steamId] = 0
-		local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
-		TGNS.GetHttpAsync(url, function(betResponseJson)
-			local betResponse = json.decode(betResponseJson) or {}
-			if betResponse.success then
-				playerBanks[steamId] = betResponse.result
-			else
-				TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace))
-			end
-		end)
-	end
+	local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
+	TGNS.GetHttpAsync(url, function(betResponseJson)
+		local betResponse = json.decode(betResponseJson) or {}
+		if betResponse.success then
+			playerBanks[steamId] = betResponse.result
+		else
+			TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace))
+		end
+	end)
 end
 
 local function persistTransaction(steamId, amount, killerId, victimId, type)
@@ -438,10 +435,8 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:ClientConnect(client)
-end
-
-function Plugin:ClientConfirmConnect(client)
-	local player = TGNS.GetPlayer(client)
+	local steamId = TGNS.GetClientSteamId(client)
+	playerBanks[steamId] = playerBanks[steamId] or 0
 end
 
 function Plugin:Initialise()
@@ -458,7 +453,6 @@ function Plugin:Initialise()
 					amount = amount * 1.2
 				end
 				persistTransaction(steamId, amount, nil, nil, 'playcredit')
-				playerBanks[steamId] = playerBanks[steamId] or 0
 				playerBanks[steamId] = playerBanks[steamId] + amount
 			end)
 		end
