@@ -1238,6 +1238,7 @@ function Plugin:Initialise()
 	badgeDescriptions["wc2013_silver"] = string.format("World Championship - Silver\n\nDonated to the 2013 World Championship.")
 	badgeDescriptions["wc2013_gold"] = string.format("World Championship - Gold\n\nDonated to the 2013 World Championship.")
 	badgeDescriptions["wc2013_shadow"] = string.format("World Championship - Shadow\n\nDonated to the 2013 World Championship.")
+	badgeDescriptions["pax2012"] = string.format("PAX East 2012\n\nMet the UWE team at PAX.")
 
 	local originalGetBadgeFormalName = GetBadgeFormalName
 	GetBadgeFormalName = function(name)
