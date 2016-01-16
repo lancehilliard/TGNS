@@ -94,22 +94,22 @@ if Server or Client then
 
 		OnClientInitialise = function(self)
 
-			local originalGUIGameEndSetGameEnded
-			originalGUIGameEndSetGameEnded = TGNS.ReplaceClassMethod("GUIGameEnd", "SetGameEnded", function(guiGameEndSelf, playerWon, playerDraw, playerTeamType)
-				originalGUIGameEndSetGameEnded(guiGameEndSelf, playerWon, playerDraw, playerTeamType)
-				if #captainsClientIndexes > 0 and not (PlayerUI_IsASpectator() or playerDraw) then
-					local messageText = guiGameEndSelf.messageText:GetText()
-					local marinesWon = TGNS.Has({"Marines Win!", "Aliens lose"}, messageText)
-					local winningTeamName = marinesWon and InsightUI_GetTeam1Name() or InsightUI_GetTeam2Name()
-					if winningTeamName then
-						guiGameEndSelf.messageText:SetColor(marinesWon and kMarineFontColor or kAlienFontColor)
-						guiGameEndSelf.messageText:SetFontName(marinesWon and Fonts.kAgencyFB_Huge or Fonts.kStamp_Huge)
-						guiGameEndSelf.endIcon:SetTexture(marinesWon and "ui/marine_victory.dds" or "ui/alien_victory.dds")
-						guiGameEndSelf.messageText:SetText(string.format("%s Wins!", winningTeamName))
-						GUIMakeFontScale(guiGameEndSelf.messageText)
-					end
-				end
-			end)
+			-- local originalGUIGameEndSetGameEnded
+			-- originalGUIGameEndSetGameEnded = TGNS.ReplaceClassMethod("GUIGameEnd", "SetGameEnded", function(guiGameEndSelf, playerWon, playerDraw, playerTeamType)
+			-- 	originalGUIGameEndSetGameEnded(guiGameEndSelf, playerWon, playerDraw, playerTeamType)
+			-- 	if #captainsClientIndexes > 0 and not (PlayerUI_IsASpectator() or playerDraw) then
+			-- 		local messageText = guiGameEndSelf.messageText:GetText()
+			-- 		local marinesWon = TGNS.Has({"Marines Win!", "Aliens lose"}, messageText)
+			-- 		local winningTeamName = marinesWon and InsightUI_GetTeam1Name() or InsightUI_GetTeam2Name()
+			-- 		if winningTeamName then
+			-- 			guiGameEndSelf.messageText:SetColor(marinesWon and kMarineFontColor or kAlienFontColor)
+			-- 			guiGameEndSelf.messageText:SetFontName(marinesWon and Fonts.kAgencyFB_Huge or Fonts.kStamp_Huge)
+			-- 			guiGameEndSelf.endIcon:SetTexture(marinesWon and "ui/marine_victory.dds" or "ui/alien_victory.dds")
+			-- 			guiGameEndSelf.messageText:SetText(string.format("%s Wins!", winningTeamName))
+			-- 			GUIMakeFontScale(guiGameEndSelf.messageText)
+			-- 		end
+			-- 	end
+			-- end)
 
 			local background
 			local backgroundStencil
@@ -2457,9 +2457,10 @@ if Server or Client then
 					md:ToPlayerNotifyInfo(p, message)
 				end)
 				automaticVoteAllowAction = function() end
-				TGNS.ScheduleAction(20, function()
-					getRolesData(TGNS.Select(TGNS.GetHumanClientList(), TGNS.GetClientSteamId))
-				end)
+				local getRolesDataForAllHumanClients = function() getRolesData(TGNS.Select(TGNS.GetHumanClientList(), TGNS.GetClientSteamId)) end
+				TGNS.ScheduleAction(5, getRolesDataForAllHumanClients)
+				TGNS.ScheduleAction(15, getRolesDataForAllHumanClients)
+				TGNS.ScheduleAction(25, getRolesDataForAllHumanClients)
 			end)
 			voteRestrictCommand:Help("Disallow Captains votes.")
 
