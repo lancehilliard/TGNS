@@ -5,15 +5,25 @@ local gamesPlayedOnCurrentMap = 0
 local earnedVoteKarma = {}
 
 local function show(mapVoteSummaries, totalVotes)
-	local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
-	TGNS.ShowPanel(mapVoteSummaries, TGNS.GetClientList(), 66, 67, 68, 0.30, "Votes", titleSumText, 30, "(None)")
+	-- local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
+	-- TGNS.ShowPanel(mapVoteSummaries, TGNS.GetClientList(), 66, 67, 68, 0.30, "Votes", titleSumText, 30, "(None)")
+
+	local channelId = 67
+	local y = 0.30
+	TGNS.DoFor(mapVoteSummaries, function(s)
+		local spaces = string.rep("   ", 16 - s.c)
+		Shine.ScreenText.Add(channelId, {X = 1.0, Y = y, Text = string.format("%s%s", string.format("%s (%s/%s)", s.d, s.c, totalVotes), spaces), Duration = 60, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMax, Size = 3, FadeIn = 0, IgnoreFormat = true})
+		channelId = channelId + 1
+		y = y + 0.05
+	end)
+	
 end
 
 local function showAll()
 	local mapVoteSummaries = {}
 	local totalVotes = 0
 	TGNS.DoForPairs(Shine.Plugins.mapvote.Vote.VoteList, function(mapName, voteCount)
-		table.insert(mapVoteSummaries, string.format("%s: %s", mapName, voteCount))
+		table.insert(mapVoteSummaries, {d=string.format("%s", mapName, voteCount),c=voteCount})
 		totalVotes = totalVotes + voteCount
 	end)
 	show(mapVoteSummaries, totalVotes)
@@ -31,7 +41,7 @@ local function showVoteReminders()
 	if measurableVoteIsInProgress() then
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
 			if not clientHasVoted(c) then
-				Shine.ScreenText.Add(41, {X = 0.5, Y = 0.65, Text = " Please take a moment to vote for the next map.\n( instructions are at the top right of your screen )", Duration = 8, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+				Shine.ScreenText.Add(41, {X = 0.5, Y = 0.35, Text = " Please take a moment to vote for the next map.\n( instructions are at the top right of your screen )", Duration = 8, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 			end
 		end)
 	end
