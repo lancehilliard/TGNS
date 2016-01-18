@@ -585,6 +585,10 @@ function Plugin:Initialise()
 	        	table.insert(guiItems, player["PlayerStreamingIcon"])
 	        	player["PlayerStreamingIcon"]:SetIsVisible(playerIconShouldDisplay.Streaming)
 	        end
+	        if player["SteamFriend"] and player["SteamFriend"]:GetIsVisible() then
+	        	player["SteamFriend"].tooltipText = function(clientIndex, teamNumber) return string.format("Steam Friend\n\n%s", clientIndex == Client.GetLocalClientIndex() and "You're your own best friend!\n\n(Rows without this icon represent\nopportunities to add more players\nto your Steam Friends roster.)" or string.format("%s is in your Steam Friends list.", Scoreboard_GetPlayerData(clientIndex, "Name"))) end
+	        	table.insert(guiItems, player["SteamFriend"])
+	        end
 
 
 
