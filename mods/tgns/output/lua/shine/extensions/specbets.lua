@@ -246,49 +246,51 @@ end
 local function onKill(killerClient, victimClient)
 	TGNS.DoForPairs(playerGameBets, function(steamId, bets)
 		local client = TGNS.GetClientByNs2Id(steamId)
-		if client and TGNS.IsClientSpectator(client) then
+		if client then
 			local player = TGNS.GetPlayer(client)
-			TGNS.DoForReverse(bets, function(b, index)
-				local betAppliesToThisKill
-				local betShouldPayout
-				local attackerBet = getBet(killerClient, victimClient)
-				local victimBet = getBet(victimClient, killerClient)
+			if player and TGNS.IsPlayerSpectator(player) then
+				TGNS.DoForReverse(bets, function(b, index)
+					local betAppliesToThisKill
+					local betShouldPayout
+					local attackerBet = getBet(killerClient, victimClient)
+					local victimBet = getBet(victimClient, killerClient)
 
--- Shared.Message(string.format("onKill> attackerBet.killer.playerId: %s", attackerBet.killer.playerId))
--- Shared.Message(string.format("onKill> attackerBet.killer.teamNumber: %s", attackerBet.killer.teamNumber))
--- Shared.Message(string.format("onKill> attackerBet.victim.playerId: %s", attackerBet.victim.playerId))
--- Shared.Message(string.format("onKill> attackerBet.victim.teamNumber: %s", attackerBet.victim.teamNumber))
+	-- Shared.Message(string.format("onKill> attackerBet.killer.playerId: %s", attackerBet.killer.playerId))
+	-- Shared.Message(string.format("onKill> attackerBet.killer.teamNumber: %s", attackerBet.killer.teamNumber))
+	-- Shared.Message(string.format("onKill> attackerBet.victim.playerId: %s", attackerBet.victim.playerId))
+	-- Shared.Message(string.format("onKill> attackerBet.victim.teamNumber: %s", attackerBet.victim.teamNumber))
 
--- Shared.Message(string.format("onKill> getInversePlayersBet(b).killer.playerId: %s", getInversePlayersBet(b).killer.playerId))
--- Shared.Message(string.format("onKill> getInversePlayersBet(b).killer.teamNumber: %s", getInversePlayersBet(b).killer.teamNumber))
--- Shared.Message(string.format("onKill> getInversePlayersBet(b).victim.playerId: %s", getInversePlayersBet(b).victim.playerId))
--- Shared.Message(string.format("onKill> getInversePlayersBet(b).victim.teamNumber: %s", getInversePlayersBet(b).victim.teamNumber))
+	-- Shared.Message(string.format("onKill> getInversePlayersBet(b).killer.playerId: %s", getInversePlayersBet(b).killer.playerId))
+	-- Shared.Message(string.format("onKill> getInversePlayersBet(b).killer.teamNumber: %s", getInversePlayersBet(b).killer.teamNumber))
+	-- Shared.Message(string.format("onKill> getInversePlayersBet(b).victim.playerId: %s", getInversePlayersBet(b).victim.playerId))
+	-- Shared.Message(string.format("onKill> getInversePlayersBet(b).victim.teamNumber: %s", getInversePlayersBet(b).victim.teamNumber))
 
--- Shared.Message(string.format("onKill> victimBet.killer.playerId: %s", victimBet.killer.playerId))
--- Shared.Message(string.format("onKill> victimBet.killer.teamNumber: %s", victimBet.killer.teamNumber))
--- Shared.Message(string.format("onKill> victimBet.victim.playerId: %s", victimBet.victim.playerId))
--- Shared.Message(string.format("onKill> victimBet.victim.teamNumber: %s", victimBet.victim.teamNumber))
+	-- Shared.Message(string.format("onKill> victimBet.killer.playerId: %s", victimBet.killer.playerId))
+	-- Shared.Message(string.format("onKill> victimBet.killer.teamNumber: %s", victimBet.killer.teamNumber))
+	-- Shared.Message(string.format("onKill> victimBet.victim.playerId: %s", victimBet.victim.playerId))
+	-- Shared.Message(string.format("onKill> victimBet.victim.teamNumber: %s", victimBet.victim.teamNumber))
 
 
--- Shared.Message("onKill> betPlayersAndTeamsMatch(b, attackerBet)...")
-				local betMatchesAttackerBet = betPlayersAndTeamsMatch(b, attackerBet)
--- Shared.Message("onKill> betPlayersAndTeamsMatch(b, victimBet)...")
-				local betMatchesVictimBet = betPlayersAndTeamsMatch(b, victimBet)
+	-- Shared.Message("onKill> betPlayersAndTeamsMatch(b, attackerBet)...")
+					local betMatchesAttackerBet = betPlayersAndTeamsMatch(b, attackerBet)
+	-- Shared.Message("onKill> betPlayersAndTeamsMatch(b, victimBet)...")
+					local betMatchesVictimBet = betPlayersAndTeamsMatch(b, victimBet)
 
--- Shared.Message(string.format("onKill> ----------------------------------------- betMatchesVictimBet: %s", betMatchesVictimBet))
+	-- Shared.Message(string.format("onKill> ----------------------------------------- betMatchesVictimBet: %s", betMatchesVictimBet))
 
-				if betMatchesAttackerBet then
-					betAppliesToThisKill = true
-					betShouldPayout = true
-				elseif betMatchesVictimBet then
-					betAppliesToThisKill = true
-				end
-				if betAppliesToThisKill then
-					onBetKill(steamId, killerClient, victimClient, b.amount, betShouldPayout)
-					table.remove(bets, index)
-					return true;
-				end
-			end)
+					if betMatchesAttackerBet then
+						betAppliesToThisKill = true
+						betShouldPayout = true
+					elseif betMatchesVictimBet then
+						betAppliesToThisKill = true
+					end
+					if betAppliesToThisKill then
+						onBetKill(steamId, killerClient, victimClient, b.amount, betShouldPayout)
+						table.remove(bets, index)
+						return true;
+					end
+				end)
+			end
 		end
 	end)
 end
