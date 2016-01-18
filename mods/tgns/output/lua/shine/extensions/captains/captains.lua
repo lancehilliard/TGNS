@@ -13,7 +13,7 @@ if Server or Client then
 
 	Plugin.CAPTAINS_DATA = "captains_CAPTAINS_DATA"
 
-	TGNS.RegisterNetworkMessage(Plugin.CAPTAINS_DATA, {d="string(900)"})
+	TGNS.RegisterNetworkMessage(Plugin.CAPTAINS_DATA, {d="string(999)"})
 
 	if Client then
 		local showClientDebug = false
@@ -57,7 +57,7 @@ if Server or Client then
 				--end)
 
 
-				optedInCount = TGNS.TableKeyCount(rolesClientData)
+				optedInCount = data.o
 				captainsClientIndexes = data.c or {}
 				localClientIsCaptain = TGNS.Has(captainsClientIndexes, Client.GetLocalClientIndex())
 				rolesClientDataLastUpdated = Shared.GetTime()
@@ -961,7 +961,7 @@ if Server or Client then
 				               		local tooltipText
 				               		if TGNS.EndsWith(key, "PercentIcon") and i.tooltipText then
 				               			if i.tooltipText == "Kill/Death Ratio" then
-				               				tooltipText = "Kill/Death Ratio (Recent)\n\nThis icon displays only for remarkably high KD.\n\nOpaqueness shows higher KD."
+				               				tooltipText = "Kill/Death Ratio (Recent)\n\nThis icon displays only for remarkably high Marine KD.\n\nOpaqueness shows higher KD."
 				               			else
 				               				tooltipText = string.format("%s Playtime (Recent)\n\nThis icon's transparency shows roughly\nhow much game time this player has spent\nplaying in this role rather than other roles.\n\nOpaqueness shows more relative playtime.", i.tooltipText)
 				               			end
@@ -1005,13 +1005,14 @@ if Server or Client then
 				        local kdPercentIconTransparency = 0
 				        local rolesData = rolesClientData[string.format("c%s", clientIndex)]
 				        if rolesData then
-				        	gorgePercentIconTransparency = rolesData.g
-				        	lerkPercentIconTransparency = rolesData.l
-				        	fadePercentIconTransparency = rolesData.f
-				        	onosPercentIconTransparency = rolesData.o
-				        	marineCommPercentIconTransparency = rolesData.m
-				        	alienCommPercentIconTransparency = rolesData.a
-				        	kdPercentIconTransparency = rolesData.k
+				        	-- {gorgePercent,lerkPercent,fadePercent,onosPercent,marineCommPercent,alienCommPercent,kdPercent}
+				        	gorgePercentIconTransparency = rolesData[1]
+				        	lerkPercentIconTransparency = rolesData[2]
+				        	fadePercentIconTransparency = rolesData[3]
+				        	onosPercentIconTransparency = rolesData[4]
+				        	marineCommPercentIconTransparency = rolesData[5]
+				        	alienCommPercentIconTransparency = rolesData[6]
+				        	kdPercentIconTransparency = rolesData[7]
 				        end
 			        	player["GorgePercentIcon"]:SetColor(Color(1,1,1,gorgePercentIconTransparency))
 			        	player["LerkPercentIcon"]:SetColor(Color(1,1,1,lerkPercentIconTransparency))
@@ -1355,8 +1356,8 @@ if Server or Client then
 		local readyTeams = {}
 		local captainTeamNumbers = {}
 		local gameStarted
-		local readyPlayerClients
-		local readyCaptainClients
+		local readyPlayerClients = {}
+		local readyCaptainClients = {}
 		local timeAtWhichToForceRoundStart
 		local SECONDS_ALLOWED_BEFORE_FORCE_ROUND_START = 270
 		local whenToAllowTeamJoins = 0
@@ -1503,16 +1504,7 @@ if Server or Client then
 		local sendRolesDataToAllPlayers = function(optedInClients)
 			--md:ToAdminNotifyInfo(string.format("sendRolesDataToAllPlayers: optedInClients count: %s", #optedInClients))
 
-			if not TGNS.IsProduction() then
-				local clients = TGNS.GetClientList()
-				if #clients > 0 then
-					captainClients = {}
-					table.insert(captainClients, clients[1])
-					table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
-					Shine.ScreenText.Add(50, {X = 0.05, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, clients[1])
-				end
-			end
-			local data = {c = TGNS.Select(TGNS.Where(captainClients, function(c) return Shine:IsValidClient(c) end), TGNS.GetClientIndex), p=TGNS.ToTable(TGNS.Where(optedInClients, function(c) return Shine:IsValidClient(c) end), function(c) return string.format("c%s", TGNS.GetClientIndex(c)) end, function(c)
+			local data = {o = #TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end), c = TGNS.Select(TGNS.Where(captainClients, function(c) return Shine:IsValidClient(c) end), TGNS.GetClientIndex), p=TGNS.ToTable(TGNS.Where(optedInClients, function(c) return Shine:IsValidClient(c) end), function(c) return string.format("c%s", TGNS.GetClientIndex(c)) end, function(c)
 				local minimumTransparency = 0.1
 				local transparencyBoost = 0.3
 				local gorgePercent = 0
@@ -1550,7 +1542,7 @@ if Server or Client then
 						alienCommPercent = alienCommPercent >= minimumTransparency and alienCommPercent + transparencyBoost or minimumTransparency
 					end
 				end
-				local result = {g=gorgePercent,l=lerkPercent,f=fadePercent,o=onosPercent,m=marineCommPercent,a=alienCommPercent,k=kdPercent}
+				local result = {gorgePercent,lerkPercent,fadePercent,onosPercent,marineCommPercent,alienCommPercent,kdPercent}
 				-- Shared.Message(string.format("ToTable result: %s", json.encode(result)))
 				return result
 			end)}
@@ -1620,11 +1612,6 @@ if Server or Client then
 						end
 					end
 					local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
-
-
-					if not TGNS.IsProduction() then
-						optedInClients = TGNS.GetHumanClientList()
-					end
 
 					-- todo mlh restore this
 					local steamIdsOfOptedInClientsNeedingRoleData = TGNS.Select(TGNS.Where(optedInClients, function(c) return not TGNS.Any(rolesServerData, function(d) return d.PlayerId == TGNS.GetClientSteamId(c) end) end), TGNS.GetClientSteamId)
@@ -2090,6 +2077,26 @@ if Server or Client then
 			end)
 			resetTimerCommand:Help("Reset the Captains pre-game countdown timer.")
 
+			local captainsOptInOneRrCommand = self:BindCommand("sh_captainsforceone", nil, function(client)
+				if captainsModeEnabled then
+					md:ToClientConsole(client, "Captains mode is already enabled. No action taken by sh_captainsforceone.")
+				else
+					local optInClient = TGNS.FirstOrNil(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c) return not TGNS.Has(readyPlayerClients, c) and not TGNS.Has(readyCaptainClients, c) end)
+					if optInClient then
+						if #readyCaptainClients < 2 then
+							addReadyCaptainClient(optInClient)
+							md:ToClientConsole(client, string.format("%s opted in as Captain.", TGNS.GetClientName(optInClient)))
+						else
+							addReadyPlayerClient(optInClient)
+							md:ToClientConsole(client, string.format("%s opted in as Player.", TGNS.GetClientName(optInClient)))
+						end
+					else
+						md:ToClientConsole(client, "Unable to find Ready Room player eligible for opt-in.")
+					end
+				end
+			end)
+			captainsOptInOneRrCommand:Help("Set Captains mod into DEV testing mode.")
+
 			local captainsCommand = self:BindCommand("sh_captains", "captains", function(client, captain1Predicate, captain2Predicate)
 				local player = TGNS.GetPlayer(client)
 				if captainsModeEnabled then
@@ -2458,9 +2465,8 @@ if Server or Client then
 				end)
 				automaticVoteAllowAction = function() end
 				local getRolesDataForAllHumanClients = function() getRolesData(TGNS.Select(TGNS.GetHumanClientList(), TGNS.GetClientSteamId)) end
-				TGNS.ScheduleAction(5, getRolesDataForAllHumanClients)
-				TGNS.ScheduleAction(15, getRolesDataForAllHumanClients)
-				TGNS.ScheduleAction(25, getRolesDataForAllHumanClients)
+				TGNS.ScheduleAction(0, getRolesDataForAllHumanClients)
+				TGNS.ScheduleAction(10, getRolesDataForAllHumanClients)
 			end)
 			voteRestrictCommand:Help("Disallow Captains votes.")
 
@@ -2641,9 +2647,14 @@ if Server or Client then
 			table.insert(confirmedConnectedClients, client)
 			TGNS.AddTempGroup(client, "iwantcaptainscommand_group")
 
-			if not TGNS.IsProduction() then
-				showPickables()
-			end
+			-- if not TGNS.IsProduction() then
+			-- 	local clients = TGNS.GetHumanClientList()
+			-- 	table.insert(captainClients, clients[1])
+			-- 	table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
+			-- 	readyPlayerClients = {clients[1]} -- TGNS.Take(TGNS.Where(TGNS.GetHumanClientList(), function(c) return not TGNS.Has(captainClients, c) end), 14)
+			-- 	TGNS.AddTempGroup(clients[1], "captainsgame_group")
+			-- 	showPickables()
+			-- end
 		end
 
 		OnServerInitialise = function(self)
