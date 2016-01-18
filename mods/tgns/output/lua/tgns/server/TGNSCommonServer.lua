@@ -1278,7 +1278,7 @@ function TGNS.PlayerAction(client, action) PROFILE("TGNS.PlayerAction")
 end
 
 function TGNS.GetPlayerName(player) PROFILE("TGNS.GetPlayerName")
-	local result = player.GetName and player:GetName() or ""
+	local result = (player and player.GetName) and player:GetName() or ""
 	return result
 end
 
@@ -1561,7 +1561,7 @@ function TGNS.GetPlayerMatchingName(name, team) PROFILE("TGNS.GetPlayerMatchingN
 				nameMatchCount = -1
 			end
 		else
-			local index = string.find(string.lower(playerName), string.lower(name)) // case insensitive partial match
+			local index = string.find(string.lower(playerName), string.lower(name), nil, true) // case insensitive partial match without pattern matching
 			if index ~= nil then
 				if team == nil or team == -1 or team == player:GetTeamNumber() then
 					match = player
