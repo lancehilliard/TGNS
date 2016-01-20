@@ -54,7 +54,7 @@ local function showReport(transactions)
 		if top.steamId then
 			local topClient = TGNS.GetClientByNs2Id(top.steamId)
 			if topClient then
-				result = string.format("%s: %s", TGNS.GetClientName(topClient), TGNS.RoundPositiveNumberDown(math.abs(top.net)))
+				result = string.format("%s: %s", TGNS.GetClientName(topClient), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(math.abs(top.net))))
 			end
 		end
 		return result
@@ -69,7 +69,7 @@ local function showReport(transactions)
 		topDisplay = string.format("%s\n  Most Lost:\n    %s", topDisplay and topDisplay or "", topLoserDisplay)
 	end
 	if topDisplay then
-		topDisplay = string.format("SpecBets BETA (total spent last game: %s):%s", TGNS.RoundPositiveNumberDown(math.abs(totalSpent)), topDisplay)
+		topDisplay = string.format("SpecBets BETA (total spent last game: %s):%s", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(math.abs(totalSpent))), topDisplay)
 		Shine.ScreenText.Add(62, {X = 0.2, Y = 0.75, Text = topDisplay, Duration = 60, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 1, IgnoreFormat = true})
 	end
 end
