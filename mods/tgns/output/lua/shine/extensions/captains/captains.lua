@@ -8,6 +8,9 @@ end)
 if Server or Client then
 	local Plugin = {}
 
+	local MAX_NON_CAPTAIN_PLAYERS = 14
+
+
 	local OnClientInitialise = function(self) end
 	local OnServerInitialise = function(self) end
 
@@ -759,9 +762,9 @@ if Server or Client then
 			    
 			    teamNameGUIItem:SetText( teamHeaderText )
 
-				local captainsSlotsRemaining = 14 - optedInCount
+				local captainsSlotsRemaining = MAX_NON_CAPTAIN_PLAYERS - optedInCount
 				captainsSlotsRemaining = captainsSlotsRemaining >= 0 and captainsSlotsRemaining or 0
-			    teamInfoGUIItem:SetText(teamNameText == "Pickable Players" and string.format("Team Choice: %s        Player Choice: %s", teamChoiceCaptainName, playerChoiceCaptainName) or string.format("Slots remaining: %s/14", captainsSlotsRemaining)) -- "Opt-in to play! Press M > Captains > sh_iwantcaptains")
+			    teamInfoGUIItem:SetText(teamNameText == "Pickable Players" and string.format("Team Choice: %s        Player Choice: %s", teamChoiceCaptainName, playerChoiceCaptainName) or string.format("Slots remaining: %s/%s", captainsSlotsRemaining, MAX_NON_CAPTAIN_PLAYERS))
 
 				if teamNameText == "Pickable Players" then
 					teamInfoGUIItem:SetColor(CaptainsCaptainFontColor)
@@ -1366,7 +1369,6 @@ if Server or Client then
 		local automaticVoteAllowAction = function()
 			mayVoteYet = true
 		end
-		local MAX_NON_CAPTAIN_PLAYERS = 14
 		local MIN_CAPTAINS_PLAYERS = 8
 		local lastVoiceWarningTimes = {}
 		local plans = {}
@@ -1968,6 +1970,10 @@ if Server or Client then
 			return recentCaptainsData
 		end
 
+		function Plugin:GetCaptainsNightStartHourLocalServerTime()
+			return CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME
+		end
+
 		function Plugin:UpdatePregame(gamerules)
 			//local result = true
 			if captainsModeEnabled and TGNS.IsGameInPreGame() then
@@ -2287,21 +2293,18 @@ if Server or Client then
 					local isRecentCaptain = TGNS.Has(recentCaptainPlayerIds, optingInSteamId)
 					-- local optingInClientWasNonCaptainPlayerInRecentCaptainsGame = TGNS.Has(recentPlayerPlayerIds, optingInSteamId) and not isRecentCaptain
 					if isSm or isRecentCaptain then
-						if not TGNS.Has(readyPlayerClients, optingInClient) then
-							-- if optingInClientWasNonCaptainPlayerInRecentCaptainsGame then
-							-- 	md:ToPlayerNotifyError(TGNS.GetPlayer(optingInClient), "Early opt-in is not currently available to you (console for details).")
-							-- 	md:ToClientConsole(optingInClient, "Details: You were a non-Captain player in this server's most recent Captains round. So, even")
-							-- 	md:ToClientConsole(optingInClient, "Details: though you're an SM, others who haven't played so recently get a chance to opt-in first.")
-							-- else
-								readyPlayerClients = readyPlayerClients or {}
-								table.insertunique(readyPlayerClients, optingInClient)
-								TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(optingInClient), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
-								getRolesData({TGNS.GetClientSteamId(optingInClient)})
-							-- end
+						readyPlayerClients = readyPlayerClients or {}
+						local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
+						if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS and not TGNS.Has(readyPlayerClients, optingInClient) then
+							table.insertunique(readyPlayerClients, optingInClient)
+							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(optingInClient), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+							getRolesData({TGNS.GetClientSteamId(optingInClient)})
 						end
-						md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), string.format("You will be automatically opted-in when votes are allowed. Thank you for being a %s!", isSm and "Supporting Member" or "recent Captain"))
-					else
-						md:ToPlayerNotifyError(TGNS.GetPlayer(optingInClient), failureMessage)
+						if TGNS.Has(readyPlayerClients, optingInClient) then
+							md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), string.format("You will be automatically opted-in when votes are allowed. Thank you for being a %s!", isSm and "Supporting Member" or "recent Captain"))
+						else
+							md:ToPlayerNotifyError(TGNS.GetPlayer(optingInClient), "Early opt-ins are already FULL! :( -- Ask if anyone is willing to sit out?")
+						end
 					end
 				end
 
@@ -2651,7 +2654,7 @@ if Server or Client then
 			-- 	local clients = TGNS.GetHumanClientList()
 			-- 	table.insert(captainClients, clients[1])
 			-- 	table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
-			-- 	readyPlayerClients = {clients[1]} -- TGNS.Take(TGNS.Where(TGNS.GetHumanClientList(), function(c) return not TGNS.Has(captainClients, c) end), 14)
+			-- 	readyPlayerClients = {clients[1]} -- TGNS.Take(TGNS.Where(TGNS.GetHumanClientList(), function(c) return not TGNS.Has(captainClients, c) end), MAX_NON_CAPTAIN_PLAYERS)
 			-- 	TGNS.AddTempGroup(clients[1], "captainsgame_group")
 			-- 	showPickables()
 			-- end
