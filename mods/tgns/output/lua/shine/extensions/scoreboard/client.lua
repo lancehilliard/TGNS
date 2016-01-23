@@ -294,7 +294,7 @@ function Plugin:Initialise()
 		    	local teamScores = team["GetScores"]()
 				for playerListIndex, player in ipairs(playerList) do
 					local playerRecord = teamScores[playerListIndex]
-					if playerRecord and playerRecord.Ping > 0 then
+					if playerRecord and playerRecord.SteamId > 0 then
 						ingamePlayersCount = ingamePlayersCount + 1
 					end
 				end
