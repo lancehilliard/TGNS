@@ -146,7 +146,7 @@ if Server or Client then
 		end
 
 		local surrenderWeakerTeamIfConditionsAreRight = function()
-			local timeIsRight = not (TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME - 1)
+			local timeIsRight = not (TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= Shine.Plugins.captains:GetCaptainsNightStartHourLocalServerTime() - 1)
 			if timeIsRight then
 				local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
 				
