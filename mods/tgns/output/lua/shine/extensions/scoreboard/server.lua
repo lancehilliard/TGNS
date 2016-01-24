@@ -200,36 +200,32 @@ function Plugin:ClientConnect(client)
 				end
 			end)
 		end
+		if TGNS.Has(vouches, steamId) then
+			vrConfirmed[client] = true
+		end
+		TGNS.ScheduleAction(2, function()
+			if Shine:IsValidClient(client) then
+				local player = TGNS.GetPlayer(client)
+				initScoreboardDecorations(client)
+				TGNS.DoFor(TGNS.GetClientList(), function(c)
+					if vrConfirmed[c] then
+						TGNS.SendNetworkMessageToPlayer(player, self.VR_CONFIRMED, {c=TGNS.GetClientId(c)})
+					end
+					if vrConfirmed[client] then
+						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.VR_CONFIRMED, {c=TGNS.GetClientId(client)})
+					end
+				end)
+				TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_PROGRESS, {b=TGNS.IsGameInProgress()})
+				TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
+				TGNS.SendNetworkMessageToPlayer(player, self.DESIGNATION, {c=TGNS.GetClientCommunityDesignationCharacter(client)})
+			end
+		end)
+		self:AlertApplicationIconForPlayer(TGNS.GetPlayer(client))
 	end
 end
 
 function Plugin:AlertApplicationIconForPlayer(player)
 	TGNS.SendNetworkMessageToPlayer(player, self.ALERT_ICON)
-end
-
-function Plugin:ClientConfirmConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	if TGNS.Has(vouches, steamId) then
-		vrConfirmed[client] = true
-	end
-	TGNS.ScheduleAction(2, function()
-		if Shine:IsValidClient(client) then
-			local player = TGNS.GetPlayer(client)
-			initScoreboardDecorations(client)
-			TGNS.DoFor(TGNS.GetClientList(), function(c)
-				if vrConfirmed[c] then
-					TGNS.SendNetworkMessageToPlayer(player, self.VR_CONFIRMED, {c=TGNS.GetClientId(c)})
-				end
-				if vrConfirmed[client] then
-					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), self.VR_CONFIRMED, {c=TGNS.GetClientId(client)})
-				end
-			end)
-			TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_PROGRESS, {b=TGNS.IsGameInProgress()})
-			TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
-			TGNS.SendNetworkMessageToPlayer(player, self.DESIGNATION, {c=TGNS.GetClientCommunityDesignationCharacter(client)})
-		end
-	end)
-	self:AlertApplicationIconForPlayer(TGNS.GetPlayer(client))
 end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
