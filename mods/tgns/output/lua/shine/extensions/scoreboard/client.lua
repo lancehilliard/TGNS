@@ -99,6 +99,17 @@ TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
 	showCustomNumbersColumn = message.t
 end)
 
+TGNS.HookNetworkMessage(Plugin.APPROVE_RECEIVED_TOTAL, function(message)
+	if message.t > approveReceivedTotal then
+		Shared.PlaySound(Client.GetLocalPlayer(), approveSoundEventName, 0.015)
+	end
+	approveReceivedTotal = message.t
+end)
+
+TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
+	showOptionals = message.t
+end)
+
 TGNS.HookNetworkMessage(Plugin.RECENT_CAPTAINS, function(message)
 	recentCaptainsClientIndexes = TGNS.Split(",", message.c)
 end)
@@ -123,6 +134,99 @@ TGNS.HookNetworkMessage(Plugin.PLAYER_NOTE, function(message)
 	local clientIndex = message.c
 	local note = message.n
 	notes[clientIndex] = note
+end)
+
+TGNS.HookNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, function(message)
+	isApproved[message.c] = false
+end)
+TGNS.HookNetworkMessage(Plugin.DESIGNATION, function(message)
+	communityDesignationCharacter = message.c
+	local welcomeBannerImageNameModifier = communityDesignationCharacter == "S" and "_s" or (communityDesignationCharacter == "P" and "_p" or "")
+	welcomeBannerImageName = string.format("ui/welcome/readyroom1%s.dds", welcomeBannerImageNameModifier)
+end)
+TGNS.HookNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, function(message)
+	isApproved[message.c] = true
+end)
+TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
+	isApproved = {}
+end)
+TGNS.HookNetworkMessage(Plugin.QUERY_ALLOWED, function(message)
+	isQuerying[message.c] = false
+end)
+TGNS.HookNetworkMessage(Plugin.SQUAD_ALLOWED, function(message)
+	isSquading = false
+end)
+TGNS.HookNetworkMessage(Plugin.VR_ALLOWED, function(message)
+	isVring = false
+end)
+TGNS.HookNetworkMessage(Plugin.BADGE_QUERY_ALLOWED, function(message)
+	isQueryingBadge[message.c] = false
+end)
+TGNS.HookNetworkMessage(Plugin.APPROVE_SENT_TOTAL, function(message)
+	approveSentTotal = message.t
+end)
+TGNS.HookNetworkMessage(Plugin.HAS_JETPACK, function(message)
+	hasJetPacks[message.c] = message.h
+end)
+TGNS.HookNetworkMessage(Plugin.HAS_JETPACK_RESET, function(message)
+	hasJetPacks = {}
+end)
+TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
+	showTeamMessages = message.s
+end)
+
+TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
+	gameIsInProgress = message.b
+	if gameIsInProgress then
+		gameIsInProgressLastChanged = Shared.GetTime()
+	else
+		TGNS.DoFor(CHUDOptionsToDisableDuringWinOrLose, function(key) CHUDOptions[key].disabled = false end)
+		tunnelDescriptions = {}
+	end
+end)
+
+TGNS.HookNetworkMessage(Plugin.ARMORDECAY1, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), armorDecay1SoundEventName, 0.025)
+end)
+
+TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
+	lastWinOrLoseWarningWhen = Shared.GetTime()
+end)
+
+TGNS.HookNetworkMessage(Plugin.TOOLTIP_SOUND, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), tooltipSoundEventName, 20.525)
+end)
+
+TGNS.HookNetworkMessage(Plugin.LAPS_BAD, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), badSoundEventName, 0.025)
+end)
+
+TGNS.HookNetworkMessage(Plugin.LAPS_LEG, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), legSoundEventName, 0.025)
+end)
+
+TGNS.HookNetworkMessage(Plugin.LAPS_BEST, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), bestSoundEventName, 0.025)
+end)
+
+TGNS.HookNetworkMessage(Plugin.LAPS_START, function(message)
+	Shared.PlaySound(Client.GetLocalPlayer(), startSoundEventName, 0.025)
+end)
+
+TGNS.HookNetworkMessage(Plugin.SERVER_SIMPLE_NAME, function(message)
+	serverSimpleName = message.n
+end)
+
+TGNS.HookNetworkMessage(Plugin.TEAM_SCORES_DATA, function(message)
+	Shared.ConsoleCommand(string.format("team1 %s", message.mn))
+	Shared.ConsoleCommand(string.format("team2 %s", message.an))
+	Shared.ConsoleCommand(string.format("score1 %s", message.ms))
+	Shared.ConsoleCommand(string.format("score2 %s", message.as))
+end)
+
+TGNS.HookNetworkMessage(Plugin.WYZ, function(message)
+	Shared.ConsoleCommand("connect 23.105.33.54")
 end)
 
 local function inProgressGameShouldProhibitSquadChanging(teamNumber)
@@ -809,53 +913,6 @@ function Plugin:Initialise()
 		end
 		return result
 	end
-	TGNS.HookNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, function(message)
-		isApproved[message.c] = false
-	end)
-	TGNS.HookNetworkMessage(Plugin.DESIGNATION, function(message)
-		communityDesignationCharacter = message.c
-		local welcomeBannerImageNameModifier = communityDesignationCharacter == "S" and "_s" or (communityDesignationCharacter == "P" and "_p" or "")
-		welcomeBannerImageName = string.format("ui/welcome/readyroom1%s.dds", welcomeBannerImageNameModifier)
-	end)
-	TGNS.HookNetworkMessage(Plugin.APPROVE_ALREADY_APPROVED, function(message)
-		isApproved[message.c] = true
-	end)
-	TGNS.HookNetworkMessage(Plugin.APPROVE_RESET, function(message)
-		isApproved = {}
-	end)
-	TGNS.HookNetworkMessage(Plugin.QUERY_ALLOWED, function(message)
-		isQuerying[message.c] = false
-	end)
-	TGNS.HookNetworkMessage(Plugin.SQUAD_ALLOWED, function(message)
-		isSquading = false
-	end)
-	TGNS.HookNetworkMessage(Plugin.VR_ALLOWED, function(message)
-		isVring = false
-	end)
-	TGNS.HookNetworkMessage(Plugin.BADGE_QUERY_ALLOWED, function(message)
-		isQueryingBadge[message.c] = false
-	end)
-	TGNS.HookNetworkMessage(Plugin.APPROVE_RECEIVED_TOTAL, function(message)
-		if message.t > approveReceivedTotal then
-			Shared.PlaySound(Client.GetLocalPlayer(), approveSoundEventName, 0.015)
-		end
-		approveReceivedTotal = message.t
-	end)
-	TGNS.HookNetworkMessage(Plugin.APPROVE_SENT_TOTAL, function(message)
-		approveSentTotal = message.t
-	end)
-	TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
-		showOptionals = message.t
-	end)
-	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK, function(message)
-		hasJetPacks[message.c] = message.h
-	end)
-	TGNS.HookNetworkMessage(Plugin.HAS_JETPACK_RESET, function(message)
-		hasJetPacks = {}
-	end)
-	TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
-		showTeamMessages = message.s
-	end)
 
 	if GUIMarineTeamMessage == nil or GUIAlienTeamMessage == nil then
 		Script.Load("lua/GUIMarineTeamMessage.lua")
@@ -910,60 +967,6 @@ function Plugin:Initialise()
 			-- self.protectedText = nil
 		end
 	end
-
-	 TGNS.HookNetworkMessage(Plugin.ARMORDECAY1, function(message)
-	 	Shared.PlaySound(Client.GetLocalPlayer(), armorDecay1SoundEventName, 0.025)
-	 end)
-
-	TGNS.HookNetworkMessage(Plugin.WINORLOSE_WARNING, function(message)
-		Shared.PlaySound(Client.GetLocalPlayer(), countdownSoundEventName, 0.025)
-		lastWinOrLoseWarningWhen = Shared.GetTime()
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.TOOLTIP_SOUND, function(message)
-		Shared.PlaySound(Client.GetLocalPlayer(), tooltipSoundEventName, 20.525)
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.LAPS_BAD, function(message)
-		Shared.PlaySound(Client.GetLocalPlayer(), badSoundEventName, 0.025)
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.LAPS_LEG, function(message)
-		Shared.PlaySound(Client.GetLocalPlayer(), legSoundEventName, 0.025)
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.LAPS_BEST, function(message)
-		Shared.PlaySound(Client.GetLocalPlayer(), bestSoundEventName, 0.025)
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.LAPS_START, function(message)
-		Shared.PlaySound(Client.GetLocalPlayer(), startSoundEventName, 0.025)
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.SERVER_SIMPLE_NAME, function(message)
-		serverSimpleName = message.n
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
-		gameIsInProgress = message.b
-		if gameIsInProgress then
-			gameIsInProgressLastChanged = Shared.GetTime()
-		else
-			TGNS.DoFor(CHUDOptionsToDisableDuringWinOrLose, function(key) CHUDOptions[key].disabled = false end)
-			tunnelDescriptions = {}
-		end
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.TEAM_SCORES_DATA, function(message)
-		Shared.ConsoleCommand(string.format("team1 %s", message.mn))
-		Shared.ConsoleCommand(string.format("team2 %s", message.an))
-		Shared.ConsoleCommand(string.format("score1 %s", message.ms))
-		Shared.ConsoleCommand(string.format("score2 %s", message.as))
-	end)
-
-	TGNS.HookNetworkMessage(Plugin.WYZ, function(message)
-		Shared.ConsoleCommand("connect 23.105.33.54")
-	end)
 
 	local originalGUIInsight_PlayerHealthbarsUpdatePlayers
 	originalGUIInsight_PlayerHealthbarsUpdatePlayers = Class_ReplaceMethod("GUIInsight_PlayerHealthbars", "UpdatePlayers", function(playerHealthbarsSelf, deltaTime)
