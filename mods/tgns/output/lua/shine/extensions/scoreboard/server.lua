@@ -666,7 +666,7 @@ function Plugin:Initialise()
 	getApprovals()
 
 
-
+	TGNS.ExecuteServerCommand("sh_alltalk false")
 
 
 	return true
