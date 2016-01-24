@@ -399,7 +399,7 @@ function Plugin:TakeDamage( Ent, Damage, Attacker, Inflictor, Point, Direction, 
 			local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
 			local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
 			-- Shine:SendText(client, Shine.BuildScreenMessage(70, 0.5, 0.6, "You cannot do damage.", 6, r, g, b, 1, 3, 0 ) )
-			Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot do damage.", Duration = 6, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
+			Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot do damage. Your team has surrendered.", Duration = 6, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
 			lastNoAttackNoticeTimes[client] = Shared.GetTime()
 		end
 	else
