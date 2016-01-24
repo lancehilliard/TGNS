@@ -51,15 +51,8 @@ function Plugin:ClientConnect(client)
 			badgeNames[client] = badgeNamesCache[steamId]
 			badges[steamId] = badgesCache[steamId]
 			TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(c, client) end)
-		end
-	end
-end
-
-function Plugin:ClientConfirmConnect(client)
-	if badgesModIsLoaded then
-		TGNS.ScheduleAction(1, function()
 			TGNS.DoFor(TGNS.GetClientList(), function(c) tellTargetAboutSource(client, c) end)
-		end)
+		end
 	end
 end
 
