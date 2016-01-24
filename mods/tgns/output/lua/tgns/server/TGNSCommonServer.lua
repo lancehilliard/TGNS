@@ -996,7 +996,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 			r.sent = true
 			-- local requestStartTime = Shared.GetTime()
 			if TGNS.LogHttp or not TGNS.IsProduction() then
-				Shared.Message(string.format("TGNSCommonServer debug> http request #%s: %s (%s unsent)", numberOfHttpRequestsMade, r.url, #unsentRequests))
+				Shared.Message(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url))
 			end
 			numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
 			Shared.SendHTTPRequest(r.url, "GET", function(response)
