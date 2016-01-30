@@ -247,65 +247,70 @@ end
 
 function Plugin:CreateCommands()
 	local botsCommand = self:BindCommand( "sh_bots", "bots", function(client, countModifier)
-		local steamId = TGNS.GetClientSteamId(client)
-		countModifier = tonumber(countModifier)
-		local errorMessage
-		local players = TGNS.GetPlayerList()
-		if countModifier then
-			if self:GetTotalNumberOfBots() == 0 then
-				local atLeastOnePlayerIsOnGameplayTeam = #TGNS.GetAlienClients(players) + #TGNS.GetMarineClients(players) > 0
-				if #players >= PLAYER_COUNT_THRESHOLD then
-					errorMessage = string.format("Bots are used only for seeding the server to %s players.", PLAYER_COUNT_THRESHOLD)
-				elseif atLeastOnePlayerIsOnGameplayTeam then
-					errorMessage = "All players must be in the ReadyRoom before adding initial bots."
-				elseif Shine.Plugins.mapvote:VoteStarted() then
-					errorMessage = "Bots cannot be managed during a map vote."
-				elseif Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
-					errorMessage = "Bots cannot be managed during a Captains Game."
-				end
-			end
+		if TGNS.GetCurrentMapName() == "ns2_tgns_td" then
+			md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Bots are not available on this map.")
 		else
-			errorMessage = "Specify a positive or negative bot count modifier."
-		end
-		if TGNS.HasNonEmptyValue(errorMessage) then
-			md:ToPlayerNotifyError(TGNS.GetPlayer(client), errorMessage)
-		else
-			local proposedTotalCount = self:GetTotalNumberOfBots() + countModifier
-			countModifier = proposedTotalCount <= BOT_COUNT_THRESHOLD and countModifier or (countModifier - (proposedTotalCount - BOT_COUNT_THRESHOLD))
-			if countModifier > 0 then
-				setBotConfig()
-				if not TGNS.IsGameInProgress() then
-					local humanNonSpectatorsNotInSidebar = TGNS.Where(players, function(p)
-						local client = TGNS.GetClient(p)
-						return not TGNS.GetIsClientVirtual(client) and not TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.PlayerIsInSidebar and Shine.Plugins.sidebar:PlayerIsInSidebar(p))
-					end)
-					TGNS.DoFor(humanNonSpectatorsNotInSidebar, function(p)
-						local c = TGNS.GetClient(p)
-						TGNS.SendToTeam(p, kMarineTeamType, true)
-						TGNS.ScheduleAction(2, function() showBotAdvisory(c) end)
-						TGNS.ScheduleAction(8, function() showBotAdvisory(c) end)
-						TGNS.ScheduleAction(16, function() showBotAdvisory(c) end)
-					end)
-					Shine.Plugins.forceroundstart:ForceRoundStart()
-					if not pushSentForThisMap and TGNS.IsProduction() then
-						Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
-						pushSentForThisMap = true
-
-						if startingBotsKarmaLastGiven[steamId] == nil or (Shared.GetTime() - startingBotsKarmaLastGiven[steamId] >= TGNS.ConvertMinutesToSeconds(startingBotsKarmaThrottleInMinutes)) then
-							TGNS.Karma(steamId, "StartingBots")
-							startingBotsKarmaLastGiven[steamId] = Shared.GetTime()
-						end
+			local steamId = TGNS.GetClientSteamId(client)
+			countModifier = tonumber(countModifier)
+			local errorMessage
+			local players = TGNS.GetPlayerList()
+			if countModifier then
+				if self:GetTotalNumberOfBots() == 0 then
+					local atLeastOnePlayerIsOnGameplayTeam = #TGNS.GetAlienClients(players) + #TGNS.GetMarineClients(players) > 0
+					if #players >= PLAYER_COUNT_THRESHOLD then
+						errorMessage = string.format("Bots are used only for seeding the server to %s players.", PLAYER_COUNT_THRESHOLD)
+					elseif atLeastOnePlayerIsOnGameplayTeam then
+						errorMessage = "All players must be in the ReadyRoom before adding initial bots."
+					elseif Shine.Plugins.mapvote:VoteStarted() then
+						errorMessage = "Bots cannot be managed during a map vote."
+					elseif Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() then
+						errorMessage = "Bots cannot be managed during a Captains Game."
 					end
 				end
-				--local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
-				TGNS.ScheduleAction(TGNS.IsGameInProgress() and 0 or 2, function()
-					--TGNS.ExecuteServerCommand(command)
-					OnConsoleAddBots(nil, countModifier, kAlienTeamType)
-				end)
 			else
-				local numberOfBotsToRemove = math.abs(countModifier)
-				numberOfBotsToRemove = numberOfBotsToRemove < self:GetTotalNumberOfBots() and numberOfBotsToRemove or self:GetTotalNumberOfBots() - 1
-				removeBots(players, numberOfBotsToRemove)
+				errorMessage = "Specify a positive or negative bot count modifier."
+			end
+			if TGNS.HasNonEmptyValue(errorMessage) then
+				md:ToPlayerNotifyError(TGNS.GetPlayer(client), errorMessage)
+			else
+				local proposedTotalCount = self:GetTotalNumberOfBots() + countModifier
+				countModifier = proposedTotalCount <= BOT_COUNT_THRESHOLD and countModifier or (countModifier - (proposedTotalCount - BOT_COUNT_THRESHOLD))
+				if countModifier > 0 then
+					setBotConfig()
+					if not TGNS.IsGameInProgress() then
+						local humanNonSpectatorsNotInSidebar = TGNS.Where(players, function(p)
+							local client = TGNS.GetClient(p)
+							return not TGNS.GetIsClientVirtual(client) and not TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.PlayerIsInSidebar and Shine.Plugins.sidebar:PlayerIsInSidebar(p))
+						end)
+						TGNS.DoFor(humanNonSpectatorsNotInSidebar, function(p)
+							local c = TGNS.GetClient(p)
+							TGNS.SendToTeam(p, kMarineTeamType, true)
+							TGNS.ScheduleAction(2, function() showBotAdvisory(c) end)
+							TGNS.ScheduleAction(8, function() showBotAdvisory(c) end)
+							TGNS.ScheduleAction(16, function() showBotAdvisory(c) end)
+						end)
+						Shine.Plugins.forceroundstart:ForceRoundStart()
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Seeding Note: NS2's Play Now button ignores servers with bots.")
+						if not pushSentForThisMap and TGNS.IsProduction() then
+							Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+							pushSentForThisMap = true
+
+							if startingBotsKarmaLastGiven[steamId] == nil or (Shared.GetTime() - startingBotsKarmaLastGiven[steamId] >= TGNS.ConvertMinutesToSeconds(startingBotsKarmaThrottleInMinutes)) then
+								TGNS.Karma(steamId, "StartingBots")
+								startingBotsKarmaLastGiven[steamId] = Shared.GetTime()
+							end
+						end
+					end
+					--local command = string.format("addbot %s %s", countModifier, kAlienTeamType)
+					TGNS.ScheduleAction(TGNS.IsGameInProgress() and 0 or 2, function()
+						--TGNS.ExecuteServerCommand(command)
+						OnConsoleAddBots(nil, countModifier, kAlienTeamType)
+					end)
+				else
+					local numberOfBotsToRemove = math.abs(countModifier)
+					numberOfBotsToRemove = numberOfBotsToRemove < self:GetTotalNumberOfBots() and numberOfBotsToRemove or self:GetTotalNumberOfBots() - 1
+					removeBots(players, numberOfBotsToRemove)
+				end
 			end
 		end
 	end)
@@ -421,65 +426,6 @@ function Plugin:Initialise()
 			GetGamerules():GetTeam(kAlienTeamType):AddTeamResources(100)
 			alienTeamResBonus = 0
 		end
-		-- if TGNS.GetCurrentMapName() == "dev_test" then
-		-- 	TGNS.ScheduleAction(60, function()
-		-- 		local hives = GetEntitiesForTeam( "Hive", kAlienTeamType )
-		-- 		local hive = hives[ math.random(#hives) ]
-		-- 		local chairs = GetEntitiesForTeam( "CommandStation", kMarineTeamType )
-		-- 		local chair = chairs[ math.random(#chairs) ]
-		-- 		local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
-
-		-- 		local numberOfStructures = 25
-		-- 		TGNS.DoTimes(numberOfStructures, function(i)
-		-- 			local structureNames = { Crag.kMapName, Shift.kMapName, Drifter.kMapName, Whip.kMapName, Shade.kMapName }
-		-- 			local structureName = TGNS.GetFirst(TGNS.GetRandomizedElements(structureNames))
-		-- 			local testEntity = CreateEntity(structureName, pos, kAlienTeamType)
-
-		-- 			if testEntity.SetConstructionComplete then
-		-- 				testEntity:SetConstructionComplete()
-		-- 			end
-
-		-- 			local modifier = 3 * (i/numberOfStructures)
-
-		-- 			local originalGetMaxSpeed = testEntity.GetMaxSpeed
-		-- 			testEntity.GetMaxSpeed = function(testEntitySelf)
-		-- 				local result = originalGetMaxSpeed(testEntitySelf)
-		-- 				return result * modifier
-		-- 			end
-
-		-- 			local originalDrifterkMoveSpeed = Drifter.kMoveSpeed
-		-- 			local originalDrifterOnUpdate = Drifter.OnUpdate
-		-- 			testEntity.kDrifterMoveSpeed = originalDrifterkMoveSpeed * modifier
-		-- 			Drifter.OnUpdate = function(drifterSelf, deltaTime)
-		-- 				Drifter.kMoveSpeed = drifterSelf.kDrifterMoveSpeed
-		-- 				originalDrifterOnUpdate(drifterSelf, deltaTime)
-		-- 				Drifter.kMoveSpeed = originalDrifterkMoveSpeed
-		-- 			end
-
-		-- 			if testEntity.matureMaxHealth then
-		-- 				testEntity:SetMaxHealth(testEntity:GetMaxHealth() * modifier)
-		-- 				testEntity.matureMaxHealth = testEntity.matureMaxHealth * modifier
-		-- 				testEntity:SetHealth(testEntity:GetMatureMaxHealth())
-		-- 				testEntity:SetMaxArmor(testEntity:GetMaxArmor() * modifier)
-		-- 				testEntity.matureMaxArmor = testEntity.matureMaxArmor * modifier
-		-- 				testEntity:SetMature()
-		-- 				testEntity:SetArmor(testEntity:GetMatureMaxArmor())
-		-- 			end
-
-		-- 			if testEntity.SetOnFire and math.random() < .5 then
-		-- 				testEntity:SetOnFire(nil, nil)
-		-- 			end
-
-		-- 			testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
-		-- 			TGNS.ScheduleAction(45, function()
-		-- 				testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
-		-- 			end)
-		-- 			TGNS.ScheduleAction(90, function()
-		-- 				testEntity:GiveOrder(kTechId.Move, nil, chair:GetOrigin(), nil, true, true)
-		-- 			end)
-		-- 		end)
-		-- 	end)
-		-- end
 	end)
 
     return true
