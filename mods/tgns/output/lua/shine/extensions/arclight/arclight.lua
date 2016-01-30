@@ -446,8 +446,7 @@ if Server or Client then
 		-- 	return result
 		-- end)
 
-		ServerSponitor.OnEndMatch = function(serverSponitorSelf, winningTeam) end
-		PlayerRanking.GetTrackServer = function(playerRankingSelf) return false end
+		TGNS.DisableUweGameReporting()
 
 		ARC.Deploy = function(arcSelf, commander)
 			if commander then
