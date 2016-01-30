@@ -31,3 +31,11 @@ function TGNS.ModifyAlienMaxSpeeds(alienMaxSpeedModifier)
 		return result
 	end)
 end
+
+function TGNS.ModifyMarineMaxSpeeds(marineMaxSpeedModifier)
+    local originalMarineGetMaxSpeed
+	originalMarineGetMaxSpeed = Class_ReplaceMethod("Marine", "GetMaxSpeed", function(marineSelf, possible)
+		local result = marineMaxSpeedModifier(originalMarineGetMaxSpeed(marineSelf, possible))
+		return result
+	end)
+end
