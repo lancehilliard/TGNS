@@ -10,7 +10,7 @@ function Plugin:Initialise()
 		local result = originalGetIsPlayerValidForCommander(self, player)
 		if result then
 			local numberOfAliveTeammates = #TGNS.Where(TGNS.GetPlayersOnSameTeam(player), TGNS.IsPlayerAlive)
-			local rookieShouldBePreventedFromCommanding = TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20 and numberOfAliveTeammates > 2 and Shine.Plugins.bots:GetTotalNumberOfBots() == 0
+			local rookieShouldBePreventedFromCommanding = TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20 and ((not TGNS.IsGameInProgress()) or (numberOfAliveTeammates > 2)) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0
 			if rookieShouldBePreventedFromCommanding then
 				--if not TGNS.Has(notifiedPlayerIds, playerId) then
 					local playerName = TGNS.GetPlayerName(player)
