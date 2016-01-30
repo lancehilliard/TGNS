@@ -18,6 +18,7 @@ local function giveWaypoint(player, locationName)
 	-- disabled for now, as: 1) you're arguably moving too fast to use waypoints 2) they often show the slowest path (if ever another attempt: use origin that's above ground, not beneath it)
 	-- local locationEntity = TGNS.GetFirst(GetLocationEntitiesNamed(locationName))
 	-- player:GiveOrder(kTechId.Move, locationEntity:GetId(), locationEntity:GetOrigin())
+	-- GetGroundAt(self, location, PhysicsMask.AIMovement)
 end
 
 local function debug(message)
