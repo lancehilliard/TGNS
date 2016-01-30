@@ -1452,7 +1452,8 @@ if Server or Client then
 					local b = 0
 					local secondsRemaining = timeAtWhichToForceRoundStart - now
 					if secondsRemaining >= 1 then
-						message = string.format("Game will force-start in %s.\nType in team chat: !plan", string.DigitalTime(secondsRemaining))
+						--message = string.format("Game will force-start in %s.\nType in team chat: !plan", string.DigitalTime(secondsRemaining))
+						message = string.format("Game will force-start in %s.", string.DigitalTime(secondsRemaining))
 						if secondsRemaining < 30 then
 							r = 255
 							g = 255
