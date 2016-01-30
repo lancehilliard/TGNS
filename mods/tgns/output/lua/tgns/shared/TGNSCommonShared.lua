@@ -64,6 +64,8 @@ function TGNS.HookNetworkMessage(messageName, callback)
 		Server.HookNetworkMessage(messageName, callback)
 	elseif Client then
 		Client.HookNetworkMessage(messageName, callback)
+	elseif Predict then
+		Predict.HookNetworkMessage(messageName, callback)
 	end
 end
 
