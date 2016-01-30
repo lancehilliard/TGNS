@@ -13,7 +13,7 @@ end)
 
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
-TGNS.LogHttp = true
+TGNS.LogHttp = false
 
 -- beginnings of function GetLocationIdByName...
 	-- 	TGNS.DoForPairs(GetLocations(), function(index, location)
@@ -995,7 +995,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 		TGNS.DoFor(unsentScheduledRequests, function(r)
 			r.sent = true
 			-- local requestStartTime = Shared.GetTime()
-			if TGNS.LogHttp or not TGNS.IsProduction() then
+			if TGNS.LogHttp then -- or not TGNS.IsProduction() then
 				Shared.Message(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url))
 			end
 			numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
@@ -1686,20 +1686,23 @@ end
 local originalHookNetworkMessage = Server.HookNetworkMessage
 
 Server.HookNetworkMessage = function(messageName, callback)
-
 	//Print("TGNS Hooking: %s", messageName)
 	originalOnNetworkMessage[messageName] = callback
 	callback = function(...) onNetworkMessage(messageName, ...) end
 	kTGNSNetworkMessageHooks[messageName] = callback
 
 	originalHookNetworkMessage(messageName, callback)
-
 end
 
- TGNS.ScheduleAction(1, function()
+function TGNS.DisableUweGameReporting()
+	ServerSponitor.OnEndMatch = function(serverSponitorSelf, winningTeam) end
+	PlayerRanking.GetTrackServer = function(playerRankingSelf) return false end		
+end
+
+TGNS.ScheduleAction(1, function()
  	TGNS.Config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
  	TGNS.ExecuteEventHooks("TGNSConfigLoaded")
- end)
+end)
 
 -- TGNS.ScheduleAction(2, function() Shared.Message(string.format("All: %s", TGNS.Join(TGNS.GetMapCycleMapNames(), ","))) end)
 -- TGNS.ScheduleAction(3, function() Shared.Message(string.format("Voteable: %s", TGNS.Join(TGNS.GetVoteableMapNames(), ","))) end)
