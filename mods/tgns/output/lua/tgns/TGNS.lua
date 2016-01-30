@@ -1,6 +1,6 @@
 Script.Load("lua/tgns/shared/TGNSMaxSpeeds.lua")
+Script.Load("lua/tgns/shared/TGNSCommonShared.lua")
 if Server or Client then
-	Script.Load("lua/tgns/shared/TGNSCommonShared.lua")
 	Script.Load("lua/tgns/shared/TGNSComprehension.lua")
 	Script.Load("lua/tgns/shared/TGNSMenuDisplayer.lua")
 	Script.Load("lua/tgns/shared/TGNSJsonEndpointTranscoder.lua")
