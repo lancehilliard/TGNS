@@ -27,7 +27,7 @@ local function refundBets(client)
 	if #playerGameBets[steamId] > 0 then
 		local refund = TGNS.GetSumFor(TGNS.Select(playerGameBets[steamId], function(b) return b.amount end))
 		playerBanks[steamId] = playerBanks[steamId] + refund
-		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s cleared. %s refunded. You have %s.", Pluralize(#playerGameBets[steamId], "Spectator Bet"), refund, TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
+		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s cleared. %s refunded. You have %s.", Pluralize(#playerGameBets[steamId], "Spectator Bet"), TGNS.SeparateThousands(refund), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
 	end
 	playerGameBets[steamId] = {}
 end
@@ -230,10 +230,10 @@ local function onBetKill(steamId, killerClient, victimClient, amount, shouldPayo
 		local net = roundedMultipliedAmount - amount
 		persistTransaction(steamId, multipliedAmount, TGNS.GetClientSteamId(killerClient), TGNS.GetClientSteamId(victimClient), 'payout')
 		playerBanks[steamId] = playerBanks[steamId] + multipliedAmount
-		message = string.format("%s killed %s! You won %s on a %s bet (+%s)! You have %s.", killerName, victimName, roundedMultipliedAmount, amount, net, TGNS.RoundPositiveNumberDown(playerBanks[steamId]))
+		message = string.format("%s killed %s! You won %s on a %s bet (+%s)! You have %s.", killerName, victimName, TGNS.SeparateThousands(roundedMultipliedAmount), TGNS.SeparateThousands(amount), TGNS.SeparateThousands(net), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 		messageDisplayer = md.ToPlayerNotifyGreen
 	else
-		message = string.format("%s killed %s. %s for %s to kill %s did not pay out. You have %s.", killerName, victimName, amount, victimName, killerName, TGNS.RoundPositiveNumberDown(playerBanks[steamId]))
+		message = string.format("%s killed %s. %s for %s to kill %s did not pay out. You have %s.", killerName, victimName, TGNS.SeparateThousands(amount), victimName, killerName, TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 		messageDisplayer = md.ToPlayerNotifyRed
 	end
 	local client = TGNS.GetClientByNs2Id(steamId)
@@ -324,9 +324,9 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 						message = string.format("Raise! %s to %s that %s (%s) will kill %s (%s).", originalAmount, newAmount, killerName, killerTeamName, victimName, victimTeamName)
 					else
 						table.insert(playerGameBets[steamId], bet)
-						message = string.format("Bet! %s that %s (%s) will kill %s (%s).", amount, killerName, killerTeamName, victimName, victimTeamName)
+						message = string.format("Bet! %s that %s (%s) will kill %s (%s).", TGNS.SeparateThousands(amount), killerName, killerTeamName, victimName, victimTeamName)
 					end
-					message = string.format("%s You have %s.", message, TGNS.RoundPositiveNumberDown(playerBanks[steamId]))
+					message = string.format("%s You have %s.", message, TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 					md:ToPlayerNotifyInfo(player, message)
 					if not TGNS.IsProduction() then
 						if math.random() < 0.5 then
@@ -343,7 +343,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 						end
 					end
 				else
-					errorMessage = string.format("Bet (%s) halted. Insufficient bank (%s). Earn more by playing full games!", amount, TGNS.RoundPositiveNumberDown(playerBanks[steamId]))
+					errorMessage = string.format("Bet (%s) halted. Insufficient bank (%s). Earn more by playing full games!", TGNS.SeparateThousands(amount), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 				end
 			end
 		else
@@ -351,7 +351,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 		end
 	end
 	if errorMessage then
-		md:ToPlayerNotifyInfo(player, string.format("You have %s.", TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
+		md:ToPlayerNotifyInfo(player, string.format("You have %s.", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
 		md:ToPlayerNotifyError(player, errorMessage)
 		-- todo show some kind of 'get help' message
 	end
@@ -430,7 +430,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		refreshPlayerBank(steamId)
 		TGNS.ScheduleAction(6, function()
 			if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and playerBanks[steamId] > 0 then
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
+				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
 			end
 		end)
 	end
