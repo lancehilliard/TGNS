@@ -381,10 +381,14 @@ function Plugin:CreateCommands()
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
 					md:ToClientConsole(client, "")
 					md:ToClientConsole(client, "Usage: sh_name <name>")
+					md:ToClientConsole(client, "Example: sh_name Tony")
+					md:ToClientConsole(client, "Example: sh_name Tony the Tiger")
+					md:ToClientConsole(client, string.format("Example: sh_name %s", TGNS.GetClientName(client)))
 					md:ToClientConsole(client, "")
 					showSummary(client)
 					md:ToClientConsole(client, "You can get help with this command in our Contact an Admin forum.")
-					md:ToClientConsole(client, "Also, any full admin can fix any BKA you've set for yourself in error. Just ask!")
+					md:ToClientConsole(client, "Any full admin can fix any BKA you've set for yourself in error. Just ask!")
+					md:ToClientConsole(client, "Otherwise, use the Usage/Examples above to set your BKA.")
 				else
 					if warned[client] == newBkaName then
 						if TGNS.GetClientName(client) ~= newBkaName then
