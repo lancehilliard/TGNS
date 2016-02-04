@@ -13,7 +13,7 @@ end
 local function getAfkThresholdInSeconds()
 	local isAggressive = Shared.GetTime() - Shine.Plugins.timedstart:GetWhenFifteenSecondAfkTimerWasLastAdvertised() < 30
 	if not TGNS.IsProduction() then
-		isAggressive = true
+		-- isAggressive = true
 	end
 	local result = isAggressive and 15 or 60
 	return result, isAggressive
