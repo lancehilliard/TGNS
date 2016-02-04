@@ -108,7 +108,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
                 if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
                     table.insert(potentiallyImmuneClients, c)
                 else
-                    slotsDebugMd:ToAdminConsole(string.format("NOW ENABLED: %s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
                     return true
                 end
             end)
@@ -283,7 +283,7 @@ local function IsClientBumped(joiningClient)
                 slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
                 TGNS.Karma(joiningClient, "Bumping")
                 TGNS.DoFor(clientsGivenImmunityViaKarma, function(c)
-                    slotsDebugMd:ToAdminConsole(string.format("NOW ENABLED: %s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
                     TGNS.Karma(c, "PassingTheBump")
                 end)
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
