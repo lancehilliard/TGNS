@@ -325,7 +325,7 @@ if Server or Client then
 	   			teleporter.OnTriggerEntered = function(teleporterSelf, enterEnt, triggerEnt)
 	   				local client = TGNS.GetClient(enterEnt)
 	   				-- debug(string.format("enterEnt: %s", TGNS.GetClientName(client)))
-	   				if playersAreAllowedOutOfBase then
+	   				if client and playersAreAllowedOutOfBase then
 		   				if TGNS.ClientIsMarine(client) then
 			   				voidTheJumpSlowdownUntil[client] = Shared.GetTime() + 2.0
 		   				end
