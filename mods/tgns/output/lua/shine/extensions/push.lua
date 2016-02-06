@@ -3,8 +3,8 @@ local md = TGNSMessageDisplayer.Create("PUSH")
 local Plugin = {}
 
 function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
-	local pushPlayerId = client and TGNS.GetClientSteamId(client) or 0
-	local pushUrl = string.format("%s&i=%s&c=%s&t=%s&m=%s", TGNS.Config.PushEndpointBaseUrl, pushPlayerId, TGNS.UrlEncode(pushChannelId), TGNS.UrlEncode(pushTitle), TGNS.UrlEncode(pushMessage))
+	local sourcePlayerId = client and TGNS.GetClientSteamId(client) or 0
+	local pushUrl = string.format("%s&i=%s&c=%s&t=%s&m=%s", TGNS.Config.PushEndpointBaseUrl, sourcePlayerId, TGNS.UrlEncode(pushChannelId), TGNS.UrlEncode(pushTitle), TGNS.UrlEncode(pushMessage))
 	TGNS.GetHttpAsync(pushUrl, function(pushResponseJson)
 		local pushResponse = json.decode(pushResponseJson) or {}
 		if pushResponse.success then
@@ -16,8 +16,26 @@ function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 			if Shine:IsValidClient(client) then
 				md:ToClientConsole(client, string.format("ERROR: %s. See server log for details.", errorDisplayMessage))
 			end
-			local errorMessage = string.format("%s for NS2ID %s. msg: %s | response: %s | stacktrace: %s", errorDisplayMessage, pushPlayerId, pushResponse.msg, pushResponseJson, pushResponse.stacktrace)
+			local errorMessage = string.format("%s for NS2ID %s. msg: %s | response: %s | stacktrace: %s", errorDisplayMessage, sourcePlayerId, pushResponse.msg, pushResponseJson, pushResponse.stacktrace)
 			TGNS.DebugPrint(string.format("push ERROR: %s", errorMessage))
+		end
+	end)
+
+	pushMessage = string.format("%s - Manage Notifications: http://rr.tacticalgamer.com/Notifications", pushMessage)
+	local notifyUrl = string.format("%s&sourcePlayerId=%s&offeringName=%s&title=%s&message=%s", TGNS.Config.NotifyEndpointBaseUrl, sourcePlayerId, TGNS.UrlEncode(pushChannelId), TGNS.UrlEncode(pushTitle), TGNS.UrlEncode(pushMessage))
+	TGNS.GetHttpAsync(notifyUrl, function(notifyResponseJson)
+		local notifyResponse = json.decode(notifyResponseJson) or {}
+		if notifyResponse.success then
+			if Shine:IsValidClient(client) then
+				md:ToClientConsole(client, string.format("Success. Sent '%s: %s' to subscription '%s'.", pushTitle, pushMessage, pushChannelId))
+			end
+		else
+			local errorDisplayMessage = string.format("Unable to notify title '%s' and message '%s' to subscription '%s'", pushTitle, pushMessage, pushChannelId)
+			if Shine:IsValidClient(client) then
+				md:ToClientConsole(client, string.format("ERROR: %s. See server log for details.", errorDisplayMessage))
+			end
+			local errorMessage = string.format("%s for NS2ID %s. msg: %s | response: %s | stacktrace: %s", errorDisplayMessage, sourcePlayerId, notifyResponse.msg, notifyResponseJson, notifyResponse.stacktrace)
+			TGNS.DebugPrint(string.format("notify ERROR: %s", errorMessage))
 		end
 	end)
 end
