@@ -1716,7 +1716,7 @@ if Server or Client then
 			TGNS.ScheduleAction(2, function()
 				allPlayersWereArtificiallyForcedToReadyRoom = false
 			end)
-			-- Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Game Starting", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+			Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Game Starting", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 			TGNS.DoFor(TGNS.GetPlayerList(), TGNS.AlertApplicationIconForPlayer)
 		end
 
@@ -2012,6 +2012,9 @@ if Server or Client then
 						messageDisplayer = function()
 							TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
 								md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Time for Round 2! Switch to %s!", TGNS.GetOtherPlayingTeamName(TGNS.GetClientTeamName(c))))
+							end)
+							TGNS.ScheduleAction(10, function()
+								md:ToAllNotifyInfo("Put in nominations now for the next map!")
 							end)
 						end
 					else
@@ -2809,7 +2812,7 @@ if Server or Client then
 						end
 					end)
 					if not captainsEventStartPushSent then
-						Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Night", "It's time for Captains Night at TGNS! Password in the forums:\\n\\nhttp://www.tacticalgamer.com/forums/33-Natural-Selection-General-Discussion")
+						Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Night", "It's time for Captains Night at TGNS! Password in the forums: http://www.tacticalgamer.com/forums/33-Natural-Selection-General-Discussion")
 						captainsEventStartPushSent = true
 					end
 				end
