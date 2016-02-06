@@ -292,7 +292,7 @@ function Plugin:CreateCommands()
 						Shine.Plugins.forceroundstart:ForceRoundStart()
 						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Seeding Note: NS2's Play Now button ignores servers with bots.")
 						if not pushSentForThisMap and TGNS.IsProduction() then
-							Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s\\n\\nServer Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+							Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 							pushSentForThisMap = true
 
 							if startingBotsKarmaLastGiven[steamId] == nil or (Shared.GetTime() - startingBotsKarmaLastGiven[steamId] >= TGNS.ConvertMinutesToSeconds(startingBotsKarmaThrottleInMinutes)) then
