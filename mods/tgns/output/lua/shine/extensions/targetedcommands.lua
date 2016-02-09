@@ -198,9 +198,9 @@ local commands = { CreateCommand(
 	), CreateCommand(
 		"sh_afkrr"
 		, "afkrr"
-		, "PREGAMEAFK"
-		, function(client) return TGNS.PlayerAction(client, TGNS.IsPlayerAFK) and TGNS.ClientIsOnPlayingTeam(client) and not TGNS.IsGameInProgress() and not TGNS.IsGameInCountdown() end
-		, "%s must be AFK and on a playing team, and a game must not be in progress."
+		, "AFKRR"
+		, function(client) return TGNS.PlayerAction(client, TGNS.IsPlayerAFK) and TGNS.ClientIsOnPlayingTeam(client) and (not TGNS.IsGameInProgress() or TGNS.GetCurrentGameDurationInSeconds() < 60) end
+		, "%s must be AFK and on a playing team before game start (or during the first minute of the game)."
 		, function(self, client, targetClient, reason, md)
 			afkrr(client, targetClient, self.consoleCommandName)
 		end
