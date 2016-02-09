@@ -71,18 +71,34 @@ if Server or Client then
 				--Shared.Message("------------------------")
 				--Shared.Message("")
 
-				local scoresData = GetScoreData({ kTeamReadyRoom })
+				local scoresData = GetScoreData({ kTeamReadyRoom, kMarineTeamType, kAlienTeamType })
 
 
 				local buildScoresData = function(isForOptedInBoard)
 					local dataName = isForOptedInBoard and "optedInScores" or "notOptedInScores"
 					local getKey = function(s) return string.format("c%s", s.ClientIndex) end
-					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
+					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil and s.EntityTeamNumber == kTeamReadyRoom and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
 			   		local result = TGNS.Where(scoresData, scoresDataPredicate)
 			   		if localClientIsCaptain and isForOptedInBoard then
-			   			TGNS.SortDescending(result, function(s) return s.Skill end)
+			   			TGNS.SortDescending(result, function(s)
+			   				local teamAdditive = 0
+			   				if s.EntityTeamNumber == kMarineTeamType then
+			   					teamAdditive = 50000
+		   					elseif s.EntityTeamNumber == kAlienTeamType then
+		   						teamAdditive = 25000
+		   					end
+			   				return s.Skill + teamAdditive
+			   			end)
 			   		else
-			   			TGNS.SortAscending(result, function(s) return s.Name end)
+			   			TGNS.SortAscending(result, function(s)
+			   				local teamAdditive = ""
+			   				if s.EntityTeamNumber == kMarineTeamType then
+			   					teamAdditive = "            "
+		   					elseif s.EntityTeamNumber == kAlienTeamType then
+		   						teamAdditive = "      "
+		   					end
+			   				return string.format("%s%s", teamAdditive, s.Name)
+			   			end)
 			   		end
 			   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
 			   		datas[dataName] = result
@@ -431,7 +447,7 @@ if Server or Client then
 			    playerNameItem:SetStencilFunc(GUIItem.NotEqual)
 			    playerItem:AddChild(playerNameItem)
 
-			    local currentColumnX = ConditionalValue(GUIScoreboard.screenWidth < 1280, GUIScoreboard.kPlayerItemWidth * 0.7, teamItemWidth - GUIScoreboard.kTeamColumnSpacingX * 10 + (120 * GUIScoreboard.kScalingFactor))
+			    local currentColumnX = ConditionalValue(GUIScoreboard.screenWidth < 1280, GUIScoreboard.kPlayerItemWidth * 0.7, teamItemWidth - GUIScoreboard.kTeamColumnSpacingX * 10 + (80 * GUIScoreboard.kScalingFactor))
 			    
 			    -- // Status text item.
 			    local statusItem = GUIManager:CreateTextItem()
@@ -447,6 +463,7 @@ if Server or Client then
 			    playerItem:AddChild(statusItem)
 			    
 			    -- currentColumnX = currentColumnX + (30 * GUIScoreboard.kScalingFactor) + GUIScoreboard.kTeamColumnSpacingX * 2
+                   currentColumnX = currentColumnX + (60 * GUIScoreboard.kScalingFactor)
 			    
 			    -- // Score text item.
 			    -- local scoreItem = GUIManager:CreateTextItem()
@@ -753,9 +770,14 @@ if Server or Client then
 			    local playersOnTeamText = string.format("%d %s", numPlayers, numPlayers == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS") )
 			    local sortDescription = ""
 			    if numPlayers > 1 then
-				    sortDescription = ""
-				    if teamNameText == "Pickable Players" and localClientIsCaptain then
-				    	sortDescription = ", by Skill"
+				    sortDescription = ", sorted by Name"
+				    if teamNameText == "Pickable Players" then
+				    	sortDescription = ", sorted by Team, then "
+				    	local secondarySortDescription = "Name"
+				    	if localClientIsCaptain then
+				    		secondarySortDescription = "Skill"
+				    	end
+				    	sortDescription = string.format("%s%s", sortDescription, secondarySortDescription)
 				    end
 			    end
 			    local teamHeaderText = string.format("%s (%s%s)", teamNameText, playersOnTeamText, sortDescription)
@@ -873,9 +895,16 @@ if Server or Client then
 			        end
 			        
 			        local statusPos = ConditionalValue(GUIScoreboard.screenWidth < 1280, GUIScoreboard.kPlayerItemWidth + 30, (teamItemWidth - GUIScoreboard.kTeamColumnSpacingX * 10) + 60)
-			        local playerStatus = player["Status"]:GetText()
-			        if playerStatus ~= Locale.ResolveString("STATUS_SPECTATOR") and teamNumber ~= 1 and teamNumber ~= 2 then
-			            player["Status"]:SetText("")
+			        if rolesClientData[string.format("c%s", clientIndex)] then
+			        	playerStatus = ""
+				        if playerRecord.EntityTeamNumber == kMarineTeamType then
+				        	player["Background"]:SetColor(GUIScoreboard.kBlueColor)
+				        	playerStatus = "(M)"
+				        elseif playerRecord.EntityTeamNumber == kAlienTeamType then
+				        	playerStatus = "(A)"
+				        	player["Background"]:SetColor(GUIScoreboard.kRedColor)
+				        end
+			            player["Status"]:SetText(playerStatus)
 			            statusPos = statusPos + GUIScoreboard.kTeamColumnSpacingX * ConditionalValue(GUIScoreboard.screenWidth < 1280, 2.75, 1.75)
 			        end
 			        
@@ -1614,15 +1643,20 @@ if Server or Client then
 							end)
 						end
 					end
+
 					local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 
 					-- todo mlh restore this
-					local steamIdsOfOptedInClientsNeedingRoleData = TGNS.Select(TGNS.Where(optedInClients, function(c) return not TGNS.Any(rolesServerData, function(d) return d.PlayerId == TGNS.GetClientSteamId(c) end) end), TGNS.GetClientSteamId)
+					local playingReadyCaptainClients = TGNS.Where(readyCaptainClients, function(c) return Shine:IsValidClient(c) end)
+					local playingReadyPlayerClients = TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end)
+					local rolesClients = TGNS.Where(TGNS.GetClientList(), function(c) return (TGNS.Has(playingReadyCaptainClients, c) or TGNS.Has(playingReadyPlayerClients, c)) end)
+					local rolesClientsNeedingRoleData = TGNS.Where(rolesClients, function(c) return not TGNS.Any(rolesServerData, function(d) return d.PlayerId == TGNS.GetClientSteamId(c) end) end)
+					local steamIdsOfOptedInClientsNeedingRoleData = TGNS.Select(rolesClientsNeedingRoleData, TGNS.GetClientSteamId)
 					getRolesData(steamIdsOfOptedInClientsNeedingRoleData)
 					--md:ToAdminNotifyInfo(string.format("showPickables: steamIdsOfOptedInClientsNeedingRoleData count: %s", #steamIdsOfOptedInClientsNeedingRoleData))
 
 					-- todo mlh restore this
-					sendRolesDataToAllPlayers(optedInClients)
+					sendRolesDataToAllPlayers(rolesClients)
 
 
 
@@ -1704,7 +1738,7 @@ if Server or Client then
 			TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
 			whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
 			votesAllowedUntil = nil
-			TGNS.ScheduleAction(2, showPickables)
+			TGNS.ScheduleAction(1, showPickables)
 			//Shine.Plugins.afkkick.Config.KickTime = 20
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
 				-- Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
@@ -2475,9 +2509,9 @@ if Server or Client then
 					md:ToPlayerNotifyInfo(p, message)
 				end)
 				automaticVoteAllowAction = function() end
-				local getRolesDataForAllHumanClients = function() getRolesData(TGNS.Select(TGNS.GetHumanClientList(), TGNS.GetClientSteamId)) end
-				TGNS.ScheduleAction(0, getRolesDataForAllHumanClients)
-				TGNS.ScheduleAction(10, getRolesDataForAllHumanClients)
+				local getRolesDataForAllClients = function() getRolesData(TGNS.Select(TGNS.GetClientList(), TGNS.GetClientSteamId)) end
+				TGNS.ScheduleAction(0, getRolesDataForAllClients)
+				TGNS.ScheduleAction(10, getRolesDataForAllClients)
 			end)
 			voteRestrictCommand:Help("Disallow Captains votes.")
 
@@ -2658,14 +2692,20 @@ if Server or Client then
 			table.insert(confirmedConnectedClients, client)
 			TGNS.AddTempGroup(client, "iwantcaptainscommand_group")
 
-			-- if not TGNS.IsProduction() then
-			-- 	local clients = TGNS.GetHumanClientList()
-			-- 	table.insert(captainClients, clients[1])
-			-- 	table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
-			-- 	readyPlayerClients = {clients[1]} -- TGNS.Take(TGNS.Where(TGNS.GetHumanClientList(), function(c) return not TGNS.Has(captainClients, c) end), MAX_NON_CAPTAIN_PLAYERS)
-			-- 	TGNS.AddTempGroup(clients[1], "captainsgame_group")
-			-- 	showPickables()
-			-- end
+			if not TGNS.IsProduction() and not TGNS.GetIsClientVirtual(client) then
+				OnConsoleAddBots(nil, 5, kTeamReadyRoom)
+				local clients = TGNS.GetClientList()
+				table.insert(captainClients, clients[1])
+				table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
+				readyPlayerClients = TGNS.Take(TGNS.Where(clients, function(c) return not TGNS.Has(captainClients, c) end), MAX_NON_CAPTAIN_PLAYERS)
+				TGNS.DoFor(readyPlayerClients, function(c)
+					TGNS.AddTempGroup(c, "captainsgame_group")
+				end)
+				TGNS.DoFor(captainClients, function(c)
+					TGNS.AddTempGroup(c, "captains_group")
+				end)
+				showPickables()
+			end
 		end
 
 		OnServerInitialise = function(self)
