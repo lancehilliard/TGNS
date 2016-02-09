@@ -103,7 +103,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 			Shine.SaveJSONFile({}, seedingTempfilePath)
 			if seedKarmaGiven then
 				Shine.Plugins.push:Push("tgns-seeded", "TGNS seeded!", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
-				md:ToAllNotifyInfo("The server seeded! Yay! Get desktop/mobile notifications when the server seeds: http://rr.tacticalgamer.com/Notifications")
+				md:ToAllNotifyInfo("The server seeded! Yay! Get Steam/desktop/mobile notifications when the server seeds: http://rr.tacticalgamer.com/Notifications")
 			end
 		end)
 	end
