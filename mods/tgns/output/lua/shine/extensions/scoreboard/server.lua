@@ -518,7 +518,7 @@ function Plugin:Initialise()
 	TGNS.HookNetworkMessage(self.REQUEST_AFKRR, function(client, message)
 		local targetClientIndex = message.c
 		local targetClient = TGNS.GetClientById(targetClientIndex)
-		local md = TGNSMessageDisplayer.Create("PREGAMEAFK")
+		local md = TGNSMessageDisplayer.Create("AFKRR")
 		Shine.Plugins.targetedcommands:AfkRr(client, targetClient, md)
 	end)
 
