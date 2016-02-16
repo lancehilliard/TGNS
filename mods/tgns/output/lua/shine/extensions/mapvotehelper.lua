@@ -127,11 +127,30 @@ function Plugin:Initialise()
 
 			local originalStartVote = Shine.Plugins.mapvote.StartVote
 			Shine.Plugins.mapvote.StartVote = function( plugin, NextMap, Force )
-
-				if Server.GetNumPlayersTotal() <= 10 and Shine.Plugins.arclight and Shine.Plugins.arclight.GetArclightMapname then
-					Shine.Plugins.mapvote.Config.ForcedMaps[Shine.Plugins.arclight:GetArclightMapname()] = true
-					Shine.Plugins.mapvote.ForcedMapCount = 1
+				local addArclightToNominations = function()
+					if Server.GetNumPlayersTotal() <= 10 and Shine.Plugins.arclight and Shine.Plugins.arclight.GetArclightMapname and not TGNS.Has(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname()) then
+						table.insert(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname())
+					end
 				end
+				addArclightToNominations()
+
+				local convertNominationsToForcedMaps = function()
+					local forcedMaps = {}
+					TGNS.DoForPairs(Shine.Plugins.mapvote.Config.ForcedMaps, function(mapName, isForced)
+						if isForced then
+							table.insert(forcedMaps, mapName)
+						end
+					end)
+					TGNS.DoFor(Shine.Plugins.mapvote.Vote.Nominated, function(mapName)
+						if not TGNS.Has(forcedMaps, mapName) then
+							Shine.Plugins.mapvote.Config.ForcedMaps[mapName] = true
+							Shine.Plugins.mapvote.ForcedMapCount = (Shine.Plugins.mapvote.ForcedMapCount or 0) + 1
+							-- table.insert(forcedMaps, mapName)
+						end
+					end)
+					Shine.Plugins.mapvote.Vote.Nominated = {}
+				end
+				convertNominationsToForcedMaps()
 
 				originalStartVote( plugin, NextMap, Force )
 				if Shine.Plugins.mapvote:VoteStarted() then
@@ -165,11 +184,14 @@ function Plugin:Initialise()
 		local originalNominateFunc = Shine.Commands.sh_nominate.Func
 		Shine.Commands.sh_nominate.Func = function(client, mapName)
 			local steamId = TGNS.GetClientSteamId(client)
+			mapNominations[steamId] = mapNominations[steamId] or {}
 			local player = TGNS.GetPlayer(client)
 			if mapSetSelected then
 				md:ToPlayerNotifyError(player, "An admin has pre-selected map vote options and disallowed nominations.")
-			elseif mapNominations[steamId] then
-				md:ToPlayerNotifyError(player, string.format("You may nominate only one map. You have already nominated %s.", mapNominations[steamId]))
+			elseif #mapNominations[steamId] > 0 and not TGNS.IsClientSM(client) then
+				md:ToPlayerNotifyError(player, string.format("You may nominate only one map (SMs may nominate two). You have already nominated %s.", mapNominations[steamId]))
+			elseif #mapNominations[steamId] > 1 and TGNS.IsClientSM(client) then
+				md:ToPlayerNotifyError(player, string.format("SMs may nominate only two maps each. You have already nominated %s and %s.", mapNominations[steamId][1], mapNominations[steamId][2]))
 			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps > 0 and TGNS.Has(Shine.Plugins.mapvote.LastMapData, mapName) then
 				md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
 			else
@@ -178,7 +200,7 @@ function Plugin:Initialise()
 				local mapVoteNominationsCollectionContainedMapNameAfterExecutingOriginalFunc = table.contains(Shine.Plugins.mapvote.Vote.Nominated, mapName)
 				if mapVoteNominationsCollectionContainedMapNameAfterExecutingOriginalFunc then
 					if not mapVoteNominationsCollectionContainedMapNameBeforeExecutingOriginalFunc then
-						mapNominations[steamId] = mapName
+						table.insert(mapNominations[steamId], mapName)
 						checkForMaxNominations()
 					end
 				end
