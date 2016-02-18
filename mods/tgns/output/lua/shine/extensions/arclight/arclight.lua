@@ -521,7 +521,7 @@ if Server or Client then
 				Shine.ScreenText.Add(63, {X = 0.8, Y = 0.40, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
 			else
 			-- 	debug(string.format("HelpText: %s: hide", TGNS.GetClientName(client)))
-			 	Shine:RemoveText(client, { ID = 63 } )
+				Shine.ScreenText.End(63, TGNS.GetPlayer(client))
 			end
 			if not Shine.Plugins.mapvote:VoteStarted() then
 				if TGNS.IsClientReadyRoom(client) then
@@ -531,8 +531,8 @@ if Server or Client then
 					message = "\n\nof the other team. Meanwhile, they're doing the same thing! The first team to drive the other team to zero points wins!"
 					Shine.ScreenText.Add(69, {X = 0.2, Y = 0.75, Text = message, Duration = 120, R = rgb.R, G = rgb.G, B = rgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, client)
 				else
-					Shine:RemoveText(client, { ID = 68 } )
-					Shine:RemoveText(client, { ID = 69 } )
+					Shine.ScreenText.End(68, TGNS.GetPlayer(client))
+					Shine.ScreenText.End(69, TGNS.GetPlayer(client))
 				end
 			end
 		end
@@ -699,9 +699,9 @@ if Server or Client then
 			end
 
 			if Shine.Plugins.mapvote:VoteStarted() then
-				Shine:RemoveText(nil, { ID = 63 } )
-				Shine:RemoveText(nil, { ID = 65 } )
-				Shine:RemoveText(nil, { ID = 66 } )
+				Shine.ScreenText.End(63)
+				Shine.ScreenText.End(65)
+				Shine.ScreenText.End(66)
 			else
 				local hillTextMessageDatas = {}
 				TGNS.DoForPairs(pointsRemaining, function(teamNumber, points)
