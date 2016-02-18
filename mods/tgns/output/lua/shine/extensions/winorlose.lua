@@ -23,11 +23,11 @@ local initialNumberOfSecondsToDeduct = 7
 local originalGetCanAttack
 
 local function removeBanners()
-	Shine:RemoveText(nil, { ID = 70 } )
-	Shine:RemoveText(nil, { ID = 71 } )
-	Shine:RemoveText(nil, { ID = 72 } )
-	Shine:RemoveText(nil, { ID = 73 } )
-	Shine:RemoveText(nil, { ID = 74 } )
+	Shine.ScreenText.End(70)
+	Shine.ScreenText.End(71)
+	Shine.ScreenText.End(72)
+	Shine.ScreenText.End(73)
+	Shine.ScreenText.End(74)
 end
 
 local function showVoteUpdateMessageToTeamAndSpectators(teamNumber, message)
