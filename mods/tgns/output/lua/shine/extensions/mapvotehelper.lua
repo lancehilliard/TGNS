@@ -220,9 +220,9 @@ function Plugin:Initialise()
 		local originalExtendMap = Shine.Plugins.mapvote.ExtendMap
 		Shine.Plugins.mapvote.ExtendMap = function(mapVoteSelf, time, nextMap)
 			originalExtendMap(mapVoteSelf, time, nextMap)
-			Shine:RemoveText(nil, { ID = 66 } )
-			Shine:RemoveText(nil, { ID = 67 } )
-			Shine:RemoveText(nil, { ID = 68 } )
+			Shine.ScreenText.End(66)
+			Shine.ScreenText.End(67)
+			Shine.ScreenText.End(68)
 		end
 
 		local originalApplyRTVWinner = Shine.Plugins.mapvote.ApplyRTVWinner
