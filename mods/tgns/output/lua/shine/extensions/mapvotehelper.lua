@@ -189,7 +189,7 @@ function Plugin:Initialise()
 			if mapSetSelected then
 				md:ToPlayerNotifyError(player, "An admin has pre-selected map vote options and disallowed nominations.")
 			elseif #mapNominations[steamId] > 0 and not TGNS.IsClientSM(client) then
-				md:ToPlayerNotifyError(player, string.format("You may nominate only one map (SMs may nominate two). You have already nominated %s.", mapNominations[steamId]))
+				md:ToPlayerNotifyError(player, string.format("You may nominate only one map (SMs may nominate two). You have already nominated %s.", mapNominations[steamId][1]))
 			elseif #mapNominations[steamId] > 1 and TGNS.IsClientSM(client) then
 				md:ToPlayerNotifyError(player, string.format("SMs may nominate only two maps each. You have already nominated %s and %s.", mapNominations[steamId][1], mapNominations[steamId][2]))
 			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps > 0 and TGNS.Has(Shine.Plugins.mapvote.LastMapData, mapName) then
