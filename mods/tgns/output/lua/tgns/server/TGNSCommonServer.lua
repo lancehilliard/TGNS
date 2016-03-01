@@ -929,8 +929,10 @@ function TGNS.GetClientTeamNumber(client) PROFILE("TGNS.GetClientTeamNumber")
 end
 
 function TGNS.GetPlayerTeamNumber(player) PROFILE("TGNS.GetPlayerTeamNumber")
-	local playerTeam = player:GetTeam()
-	local result = playerTeam:GetTeamNumber()
+	-- local playerTeam = player:GetTeam()
+	-- local result = playerTeam:GetTeamNumber()
+	-- return result
+	local result = player:GetTeamNumber()
 	return result
 end
 
