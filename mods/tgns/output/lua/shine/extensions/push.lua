@@ -1,7 +1,7 @@
 local md = TGNSMessageDisplayer.Create("PUSH")
 local pushTempfilePath = "config://tgns/temp/push.json"
 local Plugin = {}
-local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-captains', 'tgns-seeded', 'tgns-test'}
+local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test'}
 
 function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 	local sourcePlayerId = client and TGNS.GetClientSteamId(client) or 0
@@ -74,6 +74,30 @@ local function createPushCommand(plugin, channelId, channelTitle)
 	command:Help(string.format("<title|message> Push message on channel '%s'.", channelTitle))
 end
 
+function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	local numberOfPrimerSignersNecessaryToSendPrimingNotification = 6
+	local numberOfPrimerSignersNecessaryToSendPrimedNotification = 14
+	local playerList = TGNS.GetPlayerList()
+	local playingClients = TGNS.GetPlayingClients(playerList)
+	local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
+	local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
+	if numberOfPrimerSignersAmongPlayingClients >= numberOfPrimerSignersNecessaryToSendPrimedNotification then
+		local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+		if secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0) > TGNS.ConvertHoursToSeconds(3) then
+			self:Push("tgns-primed", "TGNS primed!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendPrimedNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+			pushData.primedLastSentInSeconds = secondsSinceEpoch
+			Shine.SaveJSONFile(pushData, pushTempfilePath)
+		end
+	elseif numberOfPrimerSignersAmongPlayingClients >= numberOfPrimerSignersNecessaryToSendPrimingNotification then
+		local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+		if secondsSinceEpoch - (pushData.primingLastSentInSeconds or 0) > TGNS.ConvertHoursToSeconds(3) then
+			self:Push("tgns-priming", "TGNS priming!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendPrimingNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+			pushData.primingLastSentInSeconds = secondsSinceEpoch
+			Shine.SaveJSONFile(pushData, pushTempfilePath)
+		end
+	end
+end
+
 function Plugin:CreateCommands()
 	createPushCommand(self, "tgns", "TGNS")
 	createPushCommand(self, "tgns-captains", "TGNS Captains")
@@ -83,21 +107,6 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
-
-	TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
-		local numberOfPrimerSignersNecessaryToSendNotification = 14
-		local playerList = TGNS.GetPlayerList()
-		local playingClients = TGNS.GetPlayingClients(playerList)
-		local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
-		if numberOfPrimerSignersAmongPlayingClients >= numberOfPrimerSignersNecessaryToSendNotification then
-			local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
-			if secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0) > TGNS.ConvertHoursToSeconds(3) then
-				self:Push("tgns-primed", "TGNS primed!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
-				pushData.primedLastSentInSeconds = secondsSinceEpoch
-				Shine.SaveJSONFile(pushData, pushTempfilePath)
-			end
-		end
-	end)
 
     return true
 end
