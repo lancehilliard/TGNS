@@ -601,14 +601,16 @@ end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
     local client = TGNS.GetClient(player)
-    inReadyRoomSinceTimes[client] = TGNS.IsPlayerReadyRoom(player) and TGNS.GetSecondsSinceMapLoaded() or nil
-    if TGNS.IsGameplayTeamNumber(newTeamNumber) then
-        if not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
-            table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
-            TGNS.ExecuteEventHooks("OnSlotTaken", client)
+    if client then
+        inReadyRoomSinceTimes[client] = TGNS.IsPlayerReadyRoom(player) and TGNS.GetSecondsSinceMapLoaded() or nil
+        if TGNS.IsGameplayTeamNumber(newTeamNumber) then
+            if not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client) then
+                table.insert(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
+                TGNS.ExecuteEventHooks("OnSlotTaken", client)
+            end
+        elseif newTeamNumber == kSpectatorIndex then
+            TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
         end
-    elseif newTeamNumber == kSpectatorIndex then
-        TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, client)
     end
 end
 
