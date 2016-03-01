@@ -77,7 +77,7 @@ if Server or Client then
 				local buildScoresData = function(isForOptedInBoard)
 					local dataName = isForOptedInBoard and "optedInScores" or "notOptedInScores"
 					local getKey = function(s) return string.format("c%s", s.ClientIndex) end
-					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil end or function(s) return rolesClientData[getKey(s)] == nil and s.EntityTeamNumber == kTeamReadyRoom and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
+					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end or function(s) return rolesClientData[getKey(s)] == nil and s.EntityTeamNumber == kTeamReadyRoom and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
 			   		local result = TGNS.Where(scoresData, scoresDataPredicate)
 			   		if localClientIsCaptain and isForOptedInBoard then
 			   			TGNS.SortDescending(result, function(s)
@@ -1903,6 +1903,7 @@ if Server or Client then
 				if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
 					table.insertunique(readyPlayerClients, client)
 					TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+					md:ToAdminConsole(string.format("%s is opted in.", TGNS.GetClientName(client)))
 					getRolesData({TGNS.GetClientSteamId(client)})
 					TGNS.RemoveAllMatching(readyCaptainClients, client)
 					updateCaptainsReadyProgress(client)
@@ -1956,6 +1957,7 @@ if Server or Client then
 				end
 			end
 			TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+			md:ToAdminConsole(string.format("%s is opted in as a Captain.", TGNS.GetClientName(client)))
 			getRolesData({TGNS.GetClientSteamId(client)})
 			updateCaptainsReadyProgress(client)
 		end
@@ -2337,6 +2339,7 @@ if Server or Client then
 						if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS and not TGNS.Has(readyPlayerClients, optingInClient) then
 							table.insertunique(readyPlayerClients, optingInClient)
 							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(optingInClient), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+							md:ToAdminConsole(string.format("%s opted in early successfully.", TGNS.GetClientName(optingInClient)))
 							getRolesData({TGNS.GetClientSteamId(optingInClient)})
 						end
 						if TGNS.Has(readyPlayerClients, optingInClient) then
@@ -2641,14 +2644,16 @@ if Server or Client then
 		    		if captainsModeEnabled then
 		    			TGNS.AddTempGroup(client, "captainsgame_group")
 		    		elseif not rolandHasBeenUsed then
-		    			md:ToPlayerNotifyInfo(player, "Leaving the team has removed your Captains opt-in.")
 		    			TGNS.RemoveAllMatching(readyPlayerClients, client)
+		    			md:ToPlayerNotifyInfo(player, "Leaving the team has removed your Captains opt-in.")
+		    			md:ToAdminConsole(string.format("%s was opted out upon leaving %s.", TGNS.GetClientName(client), TGNS.GetTeamName(oldTeamNumber)))
 		    		end
 		    	end
 			elseif newTeamNumber == kSpectatorIndex then
 				if TGNS.Has(readyPlayerClients, client) then
-					md:ToPlayerNotifyInfo(player, "Joining Spectator has removed your Captains opt-in.")
 					TGNS.RemoveAllMatching(readyPlayerClients, client)
+					md:ToPlayerNotifyInfo(player, "Joining Spectator has removed your Captains opt-in.")
+					md:ToAdminConsole(string.format("%s was opted out upon joining Spectate.", TGNS.GetClientName(client)))
 				end
 				if captainsModeEnabled then
 					md:ToPlayerNotifyInfo(player, getCaptainsGameStateDescription())
@@ -2693,18 +2698,18 @@ if Server or Client then
 			TGNS.AddTempGroup(client, "iwantcaptainscommand_group")
 
 			if not TGNS.IsProduction() and not TGNS.GetIsClientVirtual(client) then
-				OnConsoleAddBots(nil, 5, kTeamReadyRoom)
-				local clients = TGNS.GetClientList()
-				table.insert(captainClients, clients[1])
-				table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
-				readyPlayerClients = TGNS.Take(TGNS.Where(clients, function(c) return not TGNS.Has(captainClients, c) end), MAX_NON_CAPTAIN_PLAYERS)
-				TGNS.DoFor(readyPlayerClients, function(c)
-					TGNS.AddTempGroup(c, "captainsgame_group")
-				end)
-				TGNS.DoFor(captainClients, function(c)
-					TGNS.AddTempGroup(c, "captains_group")
-				end)
-				showPickables()
+				-- OnConsoleAddBots(nil, 5, kTeamReadyRoom)
+				-- local clients = TGNS.GetClientList()
+				-- table.insert(captainClients, clients[1])
+				-- table.insert(captainClients, #clients > 1 and clients[2] or clients[1])
+				-- readyPlayerClients = TGNS.Take(TGNS.Where(clients, function(c) return not TGNS.Has(captainClients, c) end), MAX_NON_CAPTAIN_PLAYERS)
+				-- TGNS.DoFor(readyPlayerClients, function(c)
+				-- 	TGNS.AddTempGroup(c, "captainsgame_group")
+				-- end)
+				-- TGNS.DoFor(captainClients, function(c)
+				-- 	TGNS.AddTempGroup(c, "captains_group")
+				-- end)
+				-- showPickables()
 			end
 		end
 
