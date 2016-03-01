@@ -242,16 +242,18 @@ end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	if newTeamNumber == kMarineTeamType then
-		local updateJetpackStatus = function(p)
-			TGNS.SendNetworkMessageToPlayer(player, self.HAS_JETPACK, {c=p:GetClientIndex(),h=p:isa("JetpackMarine")})
+	if client then
+		if newTeamNumber == kMarineTeamType then
+			local updateJetpackStatus = function(p)
+				TGNS.SendNetworkMessageToPlayer(player, self.HAS_JETPACK, {c=p:GetClientIndex(),h=p:isa("JetpackMarine")})
+			end
+			local playerList = TGNS.GetPlayerList()
+			TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
+			TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
 		end
-		local playerList = TGNS.GetPlayerList()
-		TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
-		TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
+		squadNumbers[client] = 0
+		initScoreboardDecorations(client)
 	end
-	squadNumbers[client] = 0
-	initScoreboardDecorations(client)
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
