@@ -117,17 +117,19 @@ end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	local steamId = TGNS.GetClientSteamId(client)
-	if TGNS.IsGameInProgress() and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
-		if TGNS.IsGameplayTeamNumber(oldTeamNumber) then
-			local teamExit = {}
-			teamExit.when = Shared.GetTime()
-			teamExit.teamNumber = oldTeamNumber
-			teamExit.teamSizeBeforeExit = #getHumanClients(TGNS.GetTeamClients(oldTeamNumber, TGNS.GetPlayerList())) + 1
-			lastTeamExit[client] = teamExit
-		end
-		if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#getHumanClients(TGNS.GetTeamClients(newTeamNumber)) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) and #TGNS.GetPlayerList() >= 8 then
-			TGNS.Karma(steamId, "FixingTeamSizes")
+	if client then
+		local steamId = TGNS.GetClientSteamId(client)
+		if TGNS.IsGameInProgress() and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
+			if TGNS.IsGameplayTeamNumber(oldTeamNumber) then
+				local teamExit = {}
+				teamExit.when = Shared.GetTime()
+				teamExit.teamNumber = oldTeamNumber
+				teamExit.teamSizeBeforeExit = #getHumanClients(TGNS.GetTeamClients(oldTeamNumber, TGNS.GetPlayerList())) + 1
+				lastTeamExit[client] = teamExit
+			end
+			if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#getHumanClients(TGNS.GetTeamClients(newTeamNumber)) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) and #TGNS.GetPlayerList() >= 8 then
+				TGNS.Karma(steamId, "FixingTeamSizes")
+			end
 		end
 	end
 end
