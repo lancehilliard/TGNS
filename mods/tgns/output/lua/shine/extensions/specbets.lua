@@ -423,16 +423,18 @@ end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	local steamId = TGNS.GetClientSteamId(client)
-	if TGNS.ClientIsOnPlayingTeam(client) then
-		refundBets(client)
-	elseif TGNS.IsClientSpectator(client) then
-		refreshPlayerBank(steamId)
-		TGNS.ScheduleAction(6, function()
-			if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and playerBanks[steamId] > 0 then
-				md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
-			end
-		end)
+	if client then
+		local steamId = TGNS.GetClientSteamId(client)
+		if TGNS.ClientIsOnPlayingTeam(client) then
+			refundBets(client)
+		elseif TGNS.IsClientSpectator(client) then
+			refreshPlayerBank(steamId)
+			TGNS.ScheduleAction(6, function()
+				if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and playerBanks[steamId] > 0 then
+					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
+				end
+			end)
+		end
 	end
 end
 
