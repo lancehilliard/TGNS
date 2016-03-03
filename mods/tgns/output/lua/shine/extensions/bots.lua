@@ -35,9 +35,11 @@ local Plugin = {}
 local function createFreeCragEntity()
 	local hives = GetEntitiesForTeam( "Hive", kAlienTeamType )
 	local hive = hives[ math.random(#hives) ]
-	local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
-	freeCragEntity = CreateEntity("crag", pos, kAlienTeamType)
-	freeCragEntity:SetConstructionComplete()
+	if hive then
+		local pos = GetRandomBuildPosition( kTechId.Crag, hive:GetOrigin(), Crag.kHealRadius - 1 )
+		freeCragEntity = CreateEntity("crag", pos, kAlienTeamType)
+		freeCragEntity:SetConstructionComplete()
+	end
 end
 
 function Plugin:GetTotalNumberOfBots()
