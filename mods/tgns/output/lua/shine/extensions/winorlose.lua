@@ -321,53 +321,57 @@ end
 
 local function OnCommandWinOrLose(client)
 	local player = TGNS.GetPlayer(client)
-	if TGNS.IsGameInProgress() then
-		if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
-			md:ToPlayerNotifyError(player, "WinOrLose in progress.")
-		elseif TGNS.GetSecondsSinceMapLoaded() < mayVoteAt then
-			md:ToPlayerNotifyError(player, "You may not yet WinOrLose.")
-		else
-			--if player:GetTeam():GetNumAliveCommandStructures() <= 2 then
-				local clientID = client:GetUserId()
-				local teamNumber = TGNS.GetPlayerTeamNumber(player)
-				if TGNS.IsGameplayTeamNumber(teamNumber) then
-					if kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning ~= 0 then
-						local alreadyvoted = false
-						for i = #kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, 1, -1 do
-							if kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes[i] == clientID then
-								alreadyvoted = true
-								break
+	if Shine.GetGamemode() == "ns2" then
+		if TGNS.IsGameInProgress() then
+			if kTimeAtWhichWinOrLoseVoteSucceeded > 0 then
+				md:ToPlayerNotifyError(player, "WinOrLose in progress.")
+			elseif TGNS.GetSecondsSinceMapLoaded() < mayVoteAt then
+				md:ToPlayerNotifyError(player, "You may not yet WinOrLose.")
+			else
+				--if player:GetTeam():GetNumAliveCommandStructures() <= 2 then
+					local clientID = client:GetUserId()
+					local teamNumber = TGNS.GetPlayerTeamNumber(player)
+					if TGNS.IsGameplayTeamNumber(teamNumber) then
+						if kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning ~= 0 then
+							local alreadyvoted = false
+							for i = #kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, 1, -1 do
+								if kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes[i] == clientID then
+									alreadyvoted = true
+									break
+								end
+							end
+							if alreadyvoted then
+								chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
+								md:ToPlayerNotifyError(player, chatMessage)
+							else
+								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s could concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+							end
+							UpdateWinOrLoseVotes(teamNumber)
+						else
+							if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + VOTE_START_COOLDOWN <= TGNS.GetSecondsSinceMapLoaded() then
+								kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
+								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+								lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
+								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s could concede. %s Give 100%s until the game is over!", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, "%"))
+							else
+								md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
+								md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
 							end
 						end
-						if alreadyvoted then
-							chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
-							md:ToPlayerNotifyError(player, chatMessage)
-						else
-							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
-							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s could concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
-						end
-						UpdateWinOrLoseVotes(teamNumber)
 					else
-						if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + VOTE_START_COOLDOWN <= TGNS.GetSecondsSinceMapLoaded() then
-							kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
-							table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
-							lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
-							showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s could concede. %s Give 100%s until the game is over!", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, "%"))
-						else
-							md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
-							md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
-						end
+						md:ToPlayerNotifyError(player, "You must be on a team.")
 					end
-				else
-					md:ToPlayerNotifyError(player, "You must be on a team.")
-				end
-			--else
-			--	chatMessage = string.sub(string.format("You may concede only when you have one or two command structures."), 1, kMaxChatLength)
-			--	Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
-			--end
+				--else
+				--	chatMessage = string.sub(string.format("You may concede only when you have one or two command structures."), 1, kMaxChatLength)
+				--	Server.SendNetworkMessage(player, "Chat", BuildChatMessage(false, "PM - " .. DAK.config.language.MessageSender, -1, kTeamReadyRoom, kNeutralTeamType, chatMessage), true)
+				--end
+			end
+		else
+			md:ToPlayerNotifyError(player, "Game is not in progress.")
 		end
 	else
-		md:ToPlayerNotifyError(player, "Game is not in progress.")
+		md:ToPlayerNotifyError(player, "WinOrLose is not supported in this game mode. Use X->Concede.")
 	end
 end
 
@@ -405,6 +409,7 @@ end
 
 function Plugin:Initialise()
     self.Enabled = true
+
 	md = TGNSMessageDisplayer.Create("WINORLOSE")
 	-- originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack", function(self)
 	-- 	local winOrLoseChallengeIsInProgressByMyTeam = kTimeAtWhichWinOrLoseVoteSucceeded > 0 and self:GetTeam() == kTeamWhichWillWinIfWinLoseCountdownExpires
@@ -455,7 +460,7 @@ end
 
 function Plugin:CastVoteByPlayer(gamerules, voteTechId, player)
 	local cancel = false
-	if voteTechId == kTechId.VoteConcedeRound then
+	if voteTechId == kTechId.VoteConcedeRound and Shine.GetGamemode() == "ns2" then
 		TGNS.ClientAction(player, OnCommandWinOrLose)
 		cancel = true
 	end
