@@ -796,8 +796,10 @@ function Plugin:Initialise()
 			    local numResourceNodes = teamInfo[1]:GetNumResourceTowers()
 				local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractor" or "Harvester"
 		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
-		    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
-			    teamInfoGUIItem:SetText(string.format("%s (%s)", originalTeamInfoGuiItemText, Pluralize(numResourceNodes, resourceNodesName)))
+		    	if teamInfoGUIItem then
+			    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
+				    teamInfoGUIItem:SetText(string.format("%s (%s)", originalTeamInfoGuiItemText, Pluralize(numResourceNodes, resourceNodesName)))
+		    	end
 		    end
 		end
 	end
