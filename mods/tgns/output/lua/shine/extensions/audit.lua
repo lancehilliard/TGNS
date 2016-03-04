@@ -146,9 +146,9 @@ function Plugin:Initialise()
 		gameData.WinOrLoseEndGameCountdownValue = currentGame["winOrLoseEndGameCountdownValue"] or EMPTY_VALUE
 		gameData.MarineTeamResourcesTotal = gamerules.team1:GetTotalTeamResources()
 		gameData.AlienTeamResourcesTotal = gamerules.team2:GetTotalTeamResources()
-		gameData.MarineStartLocationName = gamerules.startingLocationNameTeam1
-		gameData.AlienStartLocationName = gamerules.startingLocationNameTeam2
-		gameData.StartingLocationsPathDistance = gamerules.startingLocationsPathDistance
+		gameData.MarineStartLocationName = gamerules.startingLocationNameTeam1 or EMPTY_VALUE
+		gameData.AlienStartLocationName = gamerules.startingLocationNameTeam2 or EMPTY_VALUE
+		gameData.StartingLocationsPathDistance = gamerules.startingLocationsPathDistance or EMPTY_VALUE
 		gameData.BuildNumber = Shared.GetBuildNumber()
 		gameData.MapName = TGNS.GetCurrentMapName()
 		gameData.IncludedBots = currentGame["includedBots"]
