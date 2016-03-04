@@ -81,16 +81,20 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	local playingClients = TGNS.GetPlayingClients(playerList)
 	local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
 	local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
+	local secondsThreshold = TGNS.ConvertHoursToSeconds(3)
 	if numberOfPrimerSignersAmongPlayingClients >= numberOfPrimerSignersNecessaryToSendPrimedNotification then
 		local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
-		if secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0) > TGNS.ConvertHoursToSeconds(3) then
+		local secondsSincePrimedNotifications = secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0)
+		if secondsSincePrimedNotifications >= secondsThreshold then
 			self:Push("tgns-primed", "TGNS primed!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendPrimedNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 			pushData.primedLastSentInSeconds = secondsSinceEpoch
 			Shine.SaveJSONFile(pushData, pushTempfilePath)
 		end
 	elseif numberOfPrimerSignersAmongPlayingClients >= numberOfPrimerSignersNecessaryToSendPrimingNotification then
 		local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
-		if secondsSinceEpoch - (pushData.primingLastSentInSeconds or 0) > TGNS.ConvertHoursToSeconds(3) then
+		local secondsSincePrimingNotifications = secondsSinceEpoch - (pushData.primingLastSentInSeconds or 0)
+		local secondsSincePrimedNotifications = secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0)
+		if secondsSincePrimingNotifications >= secondsThreshold and secondsSincePrimedNotifications >= secondsThreshold then
 			self:Push("tgns-priming", "TGNS priming!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendPrimingNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 			pushData.primingLastSentInSeconds = secondsSinceEpoch
 			Shine.SaveJSONFile(pushData, pushTempfilePath)
