@@ -200,20 +200,29 @@ local function GetPlayingPlayers(clientToExclude)
     return result
 end
 
-local function UpdateReservedSlotsTag(reservedSlotCount)
+local function RemoveTag(partialName)
     local Tags = {}
 
     Server.GetTags( Tags )
 
-    for i = 1, #Tags do
-        local Tag = Tags[ i ]
-
-        if Tag and Tag:find( "R_S" ) then
-            Server.RemoveTag( Tag )
+    TGNS.DoFor(Tags, function(Tag)
+        if Tag and Tag:find(partialName) then
+            Server.RemoveTag(Tag)
         end
-    end
+    end)
+end
 
-    Server.AddTag( "R_S"..reservedSlotCount )
+local function UpdateReservedSlotsTag(reservedSlotCount)
+    RemoveTag("R_S")
+    Server.AddTag("R_S"..reservedSlotCount)
+end
+
+local function UpdateIgnorePlayNowTag(shouldExist)
+    local tagName = "ignore_playnow"
+    RemoveTag(tagName)
+    if shouldExist then
+        Server.AddTag(tagName)
+    end
 end
 
 local function UpdateReservedSlotAmount()
@@ -230,6 +239,8 @@ local function UpdateReservedSlotAmount()
     reservedSlotCount = reservedSlotCount > 0 and reservedSlotCount or 0
     if lastSetReservedSlotAmount ~= reservedSlotCount then
         UpdateReservedSlotsTag(reservedSlotCount)
+        local ignorePlayNowTagShouldExist = ServerIsFull(GetPlayingPlayers())
+        UpdateIgnorePlayNowTag(ignorePlayNowTagShouldExist)
         lastSetReservedSlotAmount = reservedSlotCount
     end
 end
