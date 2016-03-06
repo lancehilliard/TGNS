@@ -162,7 +162,7 @@ if Server or Client then
 
 			local captainsBoardShouldBeShown = function()
 				local rolesClientDataLastUpdatedRecently = rolesClientDataLastUpdated ~= nil and Shared.GetTime() - rolesClientDataLastUpdated < 5
-				return rolesClientDataLastUpdatedRecently and userHasToggledCaptainsBoardDisplayOn and PlayerUI_GetTeamType() == kTeamReadyRoom and not PlayerUI_IsASpectator() and not scoreboardIsBeingShown
+				return rolesClientDataLastUpdatedRecently and userHasToggledCaptainsBoardDisplayOn and not scoreboardIsBeingShown -- and PlayerUI_GetTeamType() == kTeamReadyRoom and not PlayerUI_IsASpectator()
 			end
 
 			local function CreateTeamBackground(color, guiLayer)
