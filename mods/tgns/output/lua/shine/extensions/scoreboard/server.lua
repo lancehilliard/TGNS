@@ -2,7 +2,6 @@ Plugin.HasConfig = true
 Plugin.ConfigName = "scoreboard.json"
 
 local changers = {}
-local clientsReadyForScoreboardData = {}
 local approvalCounts = {}
 local vrConfirmed = {}
 local vrConfirmedBy = {}
@@ -14,6 +13,7 @@ local tunnelDescriptions = {}
 local streamingWebAddresses = {}
 local approveCache = {}
 local approveCacheWasPreloaded = false
+local structuresKilled = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -56,11 +56,6 @@ local function GetPlayerPrefix(sourcePlayer, targetPlayer)
 	return result
 end
 
-local function GetReadyPlayerList()
-	local result = TGNS.GetPlayers(TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(clientsReadyForScoreboardData, c) end))
-	return result
-end
-
 local function SendNetworkMessage(sourcePlayer, targetPlayer)
 	if sourcePlayer and targetPlayer then
 		local sourceClient = TGNS.GetClient(sourcePlayer)
@@ -76,7 +71,8 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourcePlayerHasCarapace = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCarapaceUpgrade(sourcePlayer)
 		local sourcePlayerHasSilence = TGNS.IsPlayerAlive(sourcePlayer) and GetHasSilenceUpgrade(sourcePlayer)
 		local sourcePlayerHasAura = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAuraUpgrade(sourcePlayer)
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasRegeneration, u4=sourcePlayerHasCarapace, u5=sourcePlayerHasSilence, u6=sourcePlayerHasAura, streaming=streamingWebAddresses[sourceClient] or ""})
+		local structuresKilled = structuresKilled[TGNS.GetClient(sourcePlayer)] or 0
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasRegeneration, u4=sourcePlayerHasCarapace, u5=sourcePlayerHasSilence, u6=sourcePlayerHasAura, streaming=streamingWebAddresses[sourceClient] or "", sk=structuresKilled})
 	end
 end
 
@@ -117,13 +113,13 @@ function Plugin:SetTeamScoresData(client, teamScore)
 end
 
 function Plugin:AnnouncePlayerPrefix(player)
-	TGNS.DoFor(GetReadyPlayerList(), function(p)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		SendNetworkMessage(player, p)
 	end)
 end
 
 local function UpdatePlayerPrefixes(player)
-	TGNS.DoFor(GetReadyPlayerList(), function(p)
+	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		SendNetworkMessage(p, player)
 	end)
 end
@@ -132,7 +128,6 @@ local function initScoreboardDecorations(client)
 	if Shine:IsValidClient(client) then
 		local sourcePlayer = TGNS.GetPlayer(client)
 		local sourceSteamId = TGNS.GetClientSteamId(client)
-		table.insert(clientsReadyForScoreboardData, client)
 		if sourcePlayer then
 			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.TOGGLE_OPTIONALS, {t=not TGNS.IsClientStranger(client)})
 			UpdatePlayerPrefixes(sourcePlayer)
@@ -233,10 +228,21 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 end
 
 function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
-	if victimEntity and victimEntity:isa("JetpackMarine") then
-		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-			TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK, {c=victimEntity:GetClientIndex(),h=false})
-		end)
+	if victimEntity then
+		if victimEntity:isa("JetpackMarine") then
+			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+				TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK, {c=victimEntity:GetClientIndex(),h=false})
+			end)
+		end
+	end
+	local victimEntityIsNonCystStructure = HasMixin(victimEntity, "Construct") and not victimEntity:isa("Cyst")
+	if victimEntityIsNonCystStructure then
+		local attackerClient = TGNS.GetClient(attackerEntity)
+		if attackerClient then
+			structuresKilled[attackerClient] = structuresKilled[attackerClient] or 0
+			structuresKilled[attackerClient] = structuresKilled[attackerClient] + 1
+			self:AnnouncePlayerPrefix(attackerEntity)
+		end
 	end
 end
 
@@ -356,6 +362,12 @@ function Plugin:Initialise()
 		if Shine:IsValidClient(client) then
 			self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 		end
+	end)
+	TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
+		structuresKilled = {}
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			self:AnnouncePlayerPrefix(p)
+		end)
 	end)
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
