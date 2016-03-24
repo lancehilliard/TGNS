@@ -465,11 +465,14 @@ function Plugin:CreateCommands()
 end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
+	local client = TGNS.GetClient(player)
 	if newName ~= kDefaultPlayerName and string.len(newName) > 0 then
-		local client = TGNS.GetClient(player)
 		if client and not TGNS.GetIsClientVirtual(client) then
 			local steamId = TGNS.GetClientSteamId(client)
 			AddAka(steamId, newName, false)
+		end
+		if self:PlayerFailsBkaPrerequisite(player) then
+			md:ToAdminConsole(string.format("Player still fails BKA prerequisite after name change. OldName: %s; NewName: %s; BKA: %s", oldName, newName, bkas[client]))
 		end
 	end
 	if TGNS.PlayerIsOnPlayingTeam(player) and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(player) then
