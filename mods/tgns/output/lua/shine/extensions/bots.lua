@@ -430,6 +430,11 @@ function Plugin:Initialise()
 		end
 	end)
 
+	-- local originalPlayerBotUpdateNameAndGender = PlayerBot.UpdateNameAndGender
+	-- PlayerBot.UpdateNameAndGender = function(playerBotSelf)
+	--     -- get BKA SM values from betterknownas batchBkas
+	-- end
+
     return true
 end
 
