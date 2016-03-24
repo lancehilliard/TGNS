@@ -81,11 +81,11 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	local playingClients = TGNS.GetPlayingClients(playerList)
 	local numberOfPrimerSignersAmongPlayingClients = #TGNS.GetPrimerWithGamesClients(TGNS.GetPlayers(playingClients))
 	local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
-	local secondsThreshold = TGNS.ConvertHoursToSeconds(3)
+	local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
 	if numberOfPrimerSignersAmongPlayingClients >= numberOfPrimerSignersNecessaryToSendPrimedNotification then
 		local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
 		local secondsSincePrimedNotifications = secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0)
-		if secondsSincePrimedNotifications >= secondsThreshold then
+		if secondsSincePrimedNotifications >= threeHoursInSeconds then
 			self:Push("tgns-primed", "TGNS primed!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendPrimedNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 			pushData.primedLastSentInSeconds = secondsSinceEpoch
 			Shine.SaveJSONFile(pushData, pushTempfilePath)
@@ -94,10 +94,22 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
 		local secondsSincePrimingNotifications = secondsSinceEpoch - (pushData.primingLastSentInSeconds or 0)
 		local secondsSincePrimedNotifications = secondsSinceEpoch - (pushData.primedLastSentInSeconds or 0)
-		if secondsSincePrimingNotifications >= secondsThreshold and secondsSincePrimedNotifications >= secondsThreshold then
+		if secondsSincePrimingNotifications >= threeHoursInSeconds and secondsSincePrimedNotifications >= threeHoursInSeconds then
 			self:Push("tgns-priming", "TGNS priming!", string.format("%s+ Primer signers playing %s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", numberOfPrimerSignersNecessaryToSendPrimingNotification, TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
 			pushData.primingLastSentInSeconds = secondsSinceEpoch
 			Shine.SaveJSONFile(pushData, pushTempfilePath)
+		end
+	end
+	local client = TGNS.GetClient(player)
+	if client and not TGNS.IsClientReadyRoom(client) then
+		if TGNS.IsClientAdmin(client) or TGNS.IsClientGuardian(client) then
+			local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+			local secondsSinceGuardedNotifications = secondsSinceEpoch - (pushData.guardedLastSentInSeconds or 0)
+			if secondsSinceGuardedNotifications >= threeHoursInSeconds then
+				self:Push("tgns-guarded", "TGNS guarded!", string.format("%s is guarded by %s (%s). Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetClientName(client), TGNS.GetCurrentMapName()))
+				pushData.guardedLastSentInSeconds = secondsSinceEpoch
+				Shine.SaveJSONFile(pushData, pushTempfilePath)
+			end
 		end
 	end
 end
