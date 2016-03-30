@@ -466,6 +466,7 @@ end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
 	local client = TGNS.GetClient(player)
+	local md = TGNSMessageDisplayer.Create()
 	if newName ~= kDefaultPlayerName and string.len(newName) > 0 then
 		if client and not TGNS.GetIsClientVirtual(client) then
 			local steamId = TGNS.GetClientSteamId(client)
@@ -476,7 +477,6 @@ function Plugin:PlayerNameChange(player, newName, oldName)
 		end
 	end
 	if TGNS.PlayerIsOnPlayingTeam(player) and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(player) then
-		local md = TGNSMessageDisplayer.Create()
 		md:ToPlayerNotifyError(player, getBkaPrerequisiteChatAdvisoryMessage())
 		TGNS.SendToTeam(player, kTeamReadyRoom, true)
 	end
