@@ -51,91 +51,100 @@ local function showApproval(sourceClient, targetClient, displayMessage, md)
 end
 
 local function approve(sourceClient, sourcePlayer, sourceSteamId, targetClient, targetClientIndex, targetSteamId, targetClientName, md, reason)
-	if sourceClient ~= targetClient then
-		if targetClient and Shine:IsValidClient(targetClient) then
-			if vrConfirmedWhen[targetClient] == nil or TGNS.GetSecondsSinceMapLoaded() - vrConfirmedWhen[targetClient] > 5 then
-				if not TGNS.GetIsClientVirtual(targetClient) then
-					approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
-					if approvedClients[sourceSteamId][targetSteamId] == nil then
-						if reason == nil or string.len(reason) <= 20 then
-							local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s&re=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds or TGNS.GetSecondsSinceEpoch(), TGNS.UrlEncode(reason or ""))
-							TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
-								local approveResponse = json.decode(approveResponseJson) or {}
-								if approveResponse.success then
-									if TGNS.HasNonEmptyValue(reason) then
-										if not hasEarnedApprovingWithReasonKarma[sourceSteamId] then
-											TGNS.Karma(sourceSteamId, "ApprovingWithReason")
-											hasEarnedApprovingWithReasonKarma[sourceSteamId] = true
-										end
-									else
-										TGNS.Karma(sourceSteamId, "Approving")
-									end
-									if Shine:IsValidClient(sourceClient) then
-										approvedClients[sourceSteamId][targetSteamId] = true
-										approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
-										approveSentTotal[sourceSteamId] = approveSentTotal[sourceSteamId] + 1
-										TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_SENT_TOTAL, {t=approveSentTotal[sourceSteamId]})
-										if Shine:IsValidClient(targetClient) then
-											-- if (TGNS.IsClientStranger(targetClient) and Balance.GetTotalGamesPlayed(targetClient) < TGNS.PRIMER_GAMES_THRESHOLD) and Shine.Plugins.targetedcommands and Shine.Plugins.targetedcommands.Enabled and Shine.Plugins.targetedcommands.Affirm then
-											-- 	Shine.Plugins.targetedcommands:Affirm(sourceClient, targetClient, md)
-											-- end
-											approveReceivedTotal[targetSteamId] = TGNS.GetNumericValueOrZero(approveReceivedTotal[targetSteamId])
-											approveReceivedTotal[targetSteamId] = approveReceivedTotal[targetSteamId] + 1
-											TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(targetClient), Shine.Plugins.scoreboard.APPROVE_RECEIVED_TOTAL, {t=approveReceivedTotal[targetSteamId]})
-											local displayMessage = string.format("^ %s%s", TGNS.GetClientName(targetClient), TGNS.HasNonEmptyValue(reason) and string.format(" (%s)", reason) or "")
-											showApproval(sourceClient, targetClient, displayMessage, md)
-											md:ToClientConsole(targetClient, displayMessage)
-											if not TGNS.HasNonEmptyValue(reason) and math.random() <= 0.10 then
-												md:ToPlayerNotifyInfo(sourcePlayer, "Chat with '^' to Approve with a Reason. Details in console. Chat Example: '^ NSPla Great job!'")
-												md:ToClientConsole(sourceClient, " ")
-												md:ToClientConsole(sourceClient, "Players love knowing why you Approved them!")
-												md:ToClientConsole(sourceClient, " ")
-												md:ToClientConsole(sourceClient, "You can specify a reason (up to 20 chars) when you Approve someone. Use chat or your console:")
-												md:ToClientConsole(sourceClient, " ")
-												md:ToClientConsole(sourceClient, "Start Team Chat with a caret character: ^ NSPla great leadership!")
-												md:ToClientConsole(sourceClient, "-or-")
-												md:ToClientConsole(sourceClient, "Use the console command: sh_approve NSPla great leadership!")
-												md:ToClientConsole(sourceClient, " ")
-												md:ToClientConsole(sourceClient, "In addition to the scoreboard, you can use chat and console /without/ a reason, too.")
-												md:ToClientConsole(sourceClient, " ")
+	local pbr = TGNSPlayerBlacklistRepository.Create("approvals_give")
+	pbr:IsClientBlacklisted(sourceClient, function(isBlacklisted)
+	    if isBlacklisted then
+	    	md:ToPlayerNotifyError(sourcePlayer, "An admin has prevented you from Approving.")
+	    else
+			if sourceClient ~= targetClient then
+	        	if Shine:IsValidClient(sourceClient) then
+					if targetClient and Shine:IsValidClient(targetClient) then
+						if vrConfirmedWhen[targetClient] == nil or TGNS.GetSecondsSinceMapLoaded() - vrConfirmedWhen[targetClient] > 5 then
+							if not TGNS.GetIsClientVirtual(targetClient) then
+								approvedClients[sourceSteamId] = approvedClients[sourceSteamId] or {}
+								if approvedClients[sourceSteamId][targetSteamId] == nil then
+									if reason == nil or string.len(reason) <= 20 then
+										local approveUrl = string.format("%s&i=%s&a=%s&s=%s&t=%s&re=%s", TGNS.Config.ApproveEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.GetSimpleServerName(), startTimeSeconds or TGNS.GetSecondsSinceEpoch(), TGNS.UrlEncode(reason or ""))
+										TGNS.GetHttpAsync(approveUrl, function(approveResponseJson)
+											local approveResponse = json.decode(approveResponseJson) or {}
+											if approveResponse.success then
+												if TGNS.HasNonEmptyValue(reason) then
+													if not hasEarnedApprovingWithReasonKarma[sourceSteamId] then
+														TGNS.Karma(sourceSteamId, "ApprovingWithReason")
+														hasEarnedApprovingWithReasonKarma[sourceSteamId] = true
+													end
+												else
+													TGNS.Karma(sourceSteamId, "Approving")
+												end
+												if Shine:IsValidClient(sourceClient) then
+													approvedClients[sourceSteamId][targetSteamId] = true
+													approveSentTotal[sourceSteamId] = TGNS.GetNumericValueOrZero(approveSentTotal[sourceSteamId])
+													approveSentTotal[sourceSteamId] = approveSentTotal[sourceSteamId] + 1
+													TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_SENT_TOTAL, {t=approveSentTotal[sourceSteamId]})
+													if Shine:IsValidClient(targetClient) then
+														-- if (TGNS.IsClientStranger(targetClient) and Balance.GetTotalGamesPlayed(targetClient) < TGNS.PRIMER_GAMES_THRESHOLD) and Shine.Plugins.targetedcommands and Shine.Plugins.targetedcommands.Enabled and Shine.Plugins.targetedcommands.Affirm then
+														-- 	Shine.Plugins.targetedcommands:Affirm(sourceClient, targetClient, md)
+														-- end
+														approveReceivedTotal[targetSteamId] = TGNS.GetNumericValueOrZero(approveReceivedTotal[targetSteamId])
+														approveReceivedTotal[targetSteamId] = approveReceivedTotal[targetSteamId] + 1
+														TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(targetClient), Shine.Plugins.scoreboard.APPROVE_RECEIVED_TOTAL, {t=approveReceivedTotal[targetSteamId]})
+														local displayMessage = string.format("^ %s%s", TGNS.GetClientName(targetClient), TGNS.HasNonEmptyValue(reason) and string.format(" (%s)", reason) or "")
+														showApproval(sourceClient, targetClient, displayMessage, md)
+														md:ToClientConsole(targetClient, displayMessage)
+														if not TGNS.HasNonEmptyValue(reason) and math.random() <= 0.10 then
+															md:ToPlayerNotifyInfo(sourcePlayer, "Chat with '^' to Approve with a Reason. Details in console. Chat Example: '^ NSPla Great job!'")
+															md:ToClientConsole(sourceClient, " ")
+															md:ToClientConsole(sourceClient, "Players love knowing why you Approved them!")
+															md:ToClientConsole(sourceClient, " ")
+															md:ToClientConsole(sourceClient, "You can specify a reason (up to 20 chars) when you Approve someone. Use chat or your console:")
+															md:ToClientConsole(sourceClient, " ")
+															md:ToClientConsole(sourceClient, "Start Team Chat with a caret character: ^ NSPla great leadership!")
+															md:ToClientConsole(sourceClient, "-or-")
+															md:ToClientConsole(sourceClient, "Use the console command: sh_approve NSPla great leadership!")
+															md:ToClientConsole(sourceClient, " ")
+															md:ToClientConsole(sourceClient, "In addition to the scoreboard, you can use chat and console /without/ a reason, too.")
+															md:ToClientConsole(sourceClient, " ")
+														end
+													end
+												end
+											else
+												if approveResponse.msg == "Too many recent approvals for this player." then
+													md:ToPlayerNotifyError(sourcePlayer, string.format("You must Approve some other players before %s.", targetClientName))
+													TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+												elseif approveResponse.msg == "Too many recent approvals." then
+													md:ToPlayerNotifyError(sourcePlayer, "You have Approved too many players in the last 24 hours.")
+													TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+												else
+													TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to approve NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+													if approvedClients[sourceSteamId][targetSteamId] == nil then
+														md:ToPlayerNotifyError(sourcePlayer, string.format("There was a problem approving %s.", targetClientName))
+														TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
+													end
+												end
 											end
-										end
+										end)
+									else
+										md:ToPlayerNotifyError(sourcePlayer, "Reasons are optional and may not exceed 20 characters.")
 									end
 								else
-									if approveResponse.msg == "Too many recent approvals for this player." then
-										md:ToPlayerNotifyError(sourcePlayer, string.format("You must Approve some other players before %s.", targetClientName))
-										TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-									elseif approveResponse.msg == "Too many recent approvals." then
-										md:ToPlayerNotifyError(sourcePlayer, "You have Approved too many players in the last 24 hours.")
-										TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-									else
-										TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to approve NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
-										if approvedClients[sourceSteamId][targetSteamId] == nil then
-											md:ToPlayerNotifyError(sourcePlayer, string.format("There was a problem approving %s.", targetClientName))
-											TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-										end
-									end
+									md:ToPlayerNotifyError(sourcePlayer, string.format("You may Approve %s only once per game.", targetClientName))
 								end
-							end)
+							else
+								md:ToPlayerNotifyError(sourcePlayer, "Don't encourage the bots.")
+							end
 						else
-							md:ToPlayerNotifyError(sourcePlayer, "Reasons are optional and may not exceed 20 characters.")
+							md:ToPlayerNotifyError(sourcePlayer, string.format("Click again to Approve %s.", TGNS.GetClientName(targetClient)))
 						end
 					else
-						md:ToPlayerNotifyError(sourcePlayer, string.format("You may Approve %s only once per game.", targetClientName))
+						md:ToPlayerNotifyError(sourcePlayer, "There was a problem approving.")
+						TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
 					end
-				else
-					md:ToPlayerNotifyError(sourcePlayer, "Don't encourage the bots.")
-				end
+	        	end
 			else
-				md:ToPlayerNotifyError(sourcePlayer, string.format("Click again to Approve %s.", TGNS.GetClientName(targetClient)))
+				md:ToPlayerNotifyError(sourcePlayer, "Your modesty knows no bounds.")
 			end
-		else
-			md:ToPlayerNotifyError(sourcePlayer, "There was a problem approving.")
-			TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
-		end
-	else
-		md:ToPlayerNotifyError(sourcePlayer, "Your modesty knows no bounds.")
-	end
+	    end
+	end)
 end
 
 local function affirm(client, targetClient, md, commandName)
