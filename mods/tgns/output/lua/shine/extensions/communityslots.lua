@@ -108,7 +108,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
                 if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
                     table.insert(potentiallyImmuneClients, c)
                 else
-                    slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    -- slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
                     return true
                 end
             end)
@@ -267,7 +267,7 @@ local function GetBumpSummary(playerList, bumpingClient, bumpedClient, joinerOrV
     local bumpedClientCommunityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
     local bumpedClientPlayedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(bumpedClient) or 0
     local bumpedClientPlayedDurationClock = TGNS.SecondsToClock(bumpedClientPlayedTimeInSeconds)
-    local result = string.format("%s %s bumping %s %s> %s after %s with S:%s P:%s ?:%s A:%s M:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount, aliensCount, marinesCount)
+    local result = string.format("%s>%s K%s bumping %s %s>%s K%s after %s with S:%s P:%s ?:%s A:%s M:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, TGNS.Karma(bumpingClient), joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, TGNS.Karma(bumpedClient), bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount, aliensCount, marinesCount)
     return result
 end
 
@@ -294,7 +294,7 @@ local function IsClientBumped(joiningClient)
                 slotsDebugMd:ToAdminConsole(GetBumpSummary(playerList, joiningClient, victimClient, "VICTIM"))
                 TGNS.Karma(joiningClient, "Bumping")
                 TGNS.DoFor(clientsGivenImmunityViaKarma, function(c)
-                    slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                    -- slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
                     TGNS.Karma(c, "PassingTheBump")
                 end)
                 TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, victimClient)
@@ -407,12 +407,18 @@ function Plugin:GetBumpMessage(targetName)
     return result
 end
 
+local function isNonSmDuringGameAndLacksBumpKarma(joiningSteamId)
+    local result = TGNS.IsSteamIdPrimerOnly(joiningSteamId) and (TGNS.IsGameInCountdown() or TGNS.IsGameInProgress()) and TGNS.Karma(joiningSteamId) < Shine.Plugins.communityslots.Config.MidGameNonSmBumpKarmaMinimum
+    return result
+end
+
 function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     local result = not TGNS.GetIsClientVirtual(targetClient)
     if result then
         local targetClientHasSlotsPrivilege = not blacklistedClients[targetClient]
         local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
         local joinerIsPrimerSignerWhoIsNotPlayingWithBka = TGNS.IsSteamIdPrimerOnly(joiningSteamId) and not clientSatisfiesBkaRequirement(TGNS.GetClientByNs2Id(joiningSteamId))
+        local joinerIsNonSmDuringGameAndLacksBumpKarma = isNonSmDuringGameAndLacksBumpKarma(joiningSteamId)
         local targetIsSM = TGNS.IsClientSM(targetClient) and targetClientHasSlotsPrivilege
         local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
         local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList) and targetClientHasSlotsPrivilege
@@ -422,7 +428,7 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
         local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
         local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() and targetClientHasSlotsPrivilege
 
-        if joinerIsStranger or joinerIsPrimerSignerWhoIsNotPlayingWithBka or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
+        if joinerIsStranger or joinerIsPrimerSignerWhoIsNotPlayingWithBka or joinerIsNonSmDuringGameAndLacksBumpKarma or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
         then
             result = false
         end
@@ -575,6 +581,9 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
             cancel, victimTeamNumber = IsClientBumped(joiningClient)
         end
         if cancel then
+            if isNonSmDuringGameAndLacksBumpKarma(TGNS.GetClientSteamId(joiningClient)) then
+                tgnsMd:ToPlayerNotifyError(player, string.format("Non-SM Primer signers must have %s+ Karma to bump mid-game. View yours: M > TGNS Portal > Karma", Shine.Plugins.communityslots.Config.MidGameNonSmBumpKarmaMinimum))
+            end
             tgnsMd:ToPlayerNotifyError(player, string.format("Teams are full (%s). You might be able to join Spectate.", fullGameDescriptor))
             TGNS.RemoveAllMatching(clientsWhoAreConnectedEnoughToBeConsideredBumpable, joiningClient)
         else
