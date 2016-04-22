@@ -17,9 +17,9 @@ local lastAnnouncedRemainingPublicSlotsCount
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 local clientConnectTimesInSeconds = {}
 
-local otherServerStaticInfo = {}
-otherServerStaticInfo["Taunt"] = { address = "tgns2.tacticalgamer.com", simpleName = "Chuckle" }
-otherServerStaticInfo["Chuckle"] = { address = "tgns.tacticalgamer.com", simpleName = "Taunt" }
+-- local otherServerStaticInfo = {}
+-- otherServerStaticInfo["Taunt"] = { address = "tgns2.tacticalgamer.com", simpleName = "Chuckle" }
+-- otherServerStaticInfo["Chuckle"] = { address = "tgns.tacticalgamer.com", simpleName = "Taunt" }
 
 local tgnsMd = TGNSMessageDisplayer.Create("TGNS")
 local slotsDebugMd = TGNSMessageDisplayer.Create("SLOTSDEBUG")
