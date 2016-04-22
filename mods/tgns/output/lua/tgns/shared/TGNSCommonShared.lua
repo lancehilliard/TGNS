@@ -221,9 +221,9 @@ end
 function TGNS.IsProduction()
 	local result
 	if Server then
-		result = TGNS.Has({"Taunt","Chuckle"}, TGNS.GetSimpleServerName())
+		result = TGNS.Has({"8v8", "Taunt","Chuckle"}, TGNS.GetSimpleServerName())
 	else
-		result = TGNS.Contains(Client.GetConnectedServerName(), "Taunt") or TGNS.Contains(Client.GetConnectedServerName(), "Chuckle")
+		result = TGNS.Contains(Client.GetConnectedServerName(), "Taunt") or TGNS.Contains(Client.GetConnectedServerName(), "Chuckle") or TGNS.Contains(Client.GetConnectedServerName(), "8v8")
 	end
 	return result
 end
