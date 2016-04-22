@@ -59,12 +59,12 @@ end
 local function SendNetworkMessage(sourcePlayer, targetPlayer)
 	if sourcePlayer and targetPlayer then
 		local sourceClient = TGNS.GetClient(sourcePlayer)
-		local sourcePlayerHasWelder = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(Welder.kMapName) ~= nil
+		local sourcePlayerHasWelder = (TGNS.IsPlayerAlive(sourcePlayer) and TGNS.PlayerIsMarine(sourcePlayer)) and sourcePlayer:GetWeapon(Welder.kMapName) ~= nil
 		local sourcePlayerHasMines = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(LayMines.kMapName) ~= nil
 		local sourcePlayerHasClusterGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(ClusterGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerHasPulseGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(PulseGrenadeThrower.kMapName) ~= nil
-		local sourcePlayerTunnelDescription = tunnelDescriptions[sourcePlayer:GetClientIndex()] or ""
+		local sourcePlayerTunnelDescription = TGNS.PlayerIsAlien(sourcePlayer) and (tunnelDescriptions[sourcePlayer:GetClientIndex()] or "") or ""
 		local sourcePlayerHasCelerity = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCelerityUpgrade(sourcePlayer)
 		local sourcePlayerHasAdrenaline = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAdrenalineUpgrade(sourcePlayer)
 		local sourcePlayerHasRegeneration = TGNS.IsPlayerAlive(sourcePlayer) and GetHasRegenerationUpgrade(sourcePlayer)
@@ -263,7 +263,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
-	tunnelDescriptions = {}
+	-- tunnelDescriptions = {}
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, self.HAS_JETPACK_RESET, {})
 		TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=false})
@@ -365,6 +365,7 @@ function Plugin:Initialise()
 	end)
 	TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 		structuresKilled = {}
+		tunnelDescriptions = {}
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			self:AnnouncePlayerPrefix(p)
 		end)
