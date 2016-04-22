@@ -23,6 +23,13 @@ local function getHumanClients(clients)
 	return result
 end
 
+local function persistKarma(steamId)
+	karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
+	TGNS.RemoveAllWhere(karmaCacheData, function(d) return d.steamId == steamId end)
+	table.insert(karmaCacheData, {lastCachedWhen=TGNS.GetSecondsSinceEpoch(),steamId=steamId,data=karmaCache[steamId]})
+	Shine.SaveJSONFile(karmaCacheData, karmaTempfilePath)
+end
+
 local function refreshKarma(steamId)
 	local karmaCacheDataForClient = TGNS.FirstOrNil(karmaCacheData, function(d) return d.steamId == steamId end)
 	if karmaCacheDataForClient then
@@ -36,6 +43,7 @@ local function refreshKarma(steamId)
 				local karmaResponse = json.decode(karmaResponseJson) or {}
 				if karmaResponse.success then
 					karmaCache[steamId] = karmaResponse.result
+					persistKarma(steamId)
 				else
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
 					TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace))
@@ -58,10 +66,7 @@ local function addKarma(steamId, deltaName)
 			TGNS.GetHttpAsync(url, function(karmaResponseJson)
 				local karmaResponse = json.decode(karmaResponseJson) or {}
 				if karmaResponse.success then
-					karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
-					TGNS.RemoveAllWhere(karmaCacheData, function(d) return d.steamId == steamId end)
-					table.insert(karmaCacheData, {lastCachedWhen=TGNS.GetSecondsSinceEpoch(),steamId=steamId,data=karmaCache[steamId]})
-					Shine.SaveJSONFile(karmaCacheData, karmaTempfilePath)
+					persistKarma(steamId)
 				else
 					karmaCache[steamId] = karmaCache[steamId] - delta
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
@@ -150,6 +155,10 @@ function Plugin:GetKarma(target)
 	return result
 end
 
+function Plugin:CheckConnectionAllowed(steamId)
+	refreshKarma(steamId)
+end
+
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients)
@@ -182,7 +191,7 @@ function Plugin:Initialise()
 	end)
 
 	karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
-	TGNS.RemoveAllWhere(karmaCacheData, function(d) return TGNS.GetSecondsSinceEpoch() - d.lastCachedWhen > TGNS.ConvertDaysToSeconds(14) end)
+	TGNS.RemoveAllWhere(karmaCacheData, function(d) return TGNS.GetSecondsSinceEpoch() - d.lastCachedWhen > TGNS.ConvertHoursToSeconds(6) end)
 	Shine.SaveJSONFile(karmaCacheData, karmaTempfilePath)
 
     return true
