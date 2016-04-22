@@ -1328,7 +1328,7 @@ end
 function TGNS.DisconnectClient(client, reason) PROFILE("TGNS.DisconnectClient")
 	pcall(function()
 		client.DisconnectReason = reason
-		Server.DisconnectClient(client)
+		Server.DisconnectClient(client, reason)
 	end)
 end
 
