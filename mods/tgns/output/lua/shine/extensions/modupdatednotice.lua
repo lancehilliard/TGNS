@@ -6,7 +6,7 @@ local md
 local announceChangedModInterval = 0
 
 local function announceChangedMod()
-	if #TGNS.GetPlayerList() == 0 then
+	if TGNS.GetHumanPlayerCount() == 0 then
 		MapCycle_CycleMap()
 	else
 		md:ToAllNotifyError(string.format("%s mod has updated in Steam Workshop.", changedModName))
