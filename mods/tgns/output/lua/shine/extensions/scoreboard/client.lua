@@ -60,6 +60,8 @@ local lastUpdatedTeamNumbers = 0
 local lastWinOrLoseWarningWhen = 0
 local CHUDOptionsToDisableDuringWinOrLose = {"wps", "minwps"}
 local structuresKilled = {}
+local serverAddress
+
 
 local has = {}
 has.Celerity = {}
@@ -73,6 +75,14 @@ has.Mines = {}
 has.ClusterGrenade = {}
 has.GasGrenade = {}
 has.PulseGrenade = {}
+
+local kFavoriteIconSize = Vector(26, 26, 0)
+local kFavoriteIconPos = Vector(5, 4, 0)
+local kFavoriteTexture = PrecacheAsset("ui/menu/favorite.dds")
+local kNonFavoriteTexture = PrecacheAsset("ui/menu/nonfavorite.dds")
+
+local kFavoriteMouseOverColor = Color(1,1,0,1)
+local kFavoriteColor = Color(1,1,1,0.9)
 
 local streamingWebAddresses = {}
 
@@ -224,6 +234,10 @@ TGNS.HookNetworkMessage(Plugin.SERVER_SIMPLE_NAME, function(message)
 	serverSimpleName = message.n
 end)
 
+TGNS.HookNetworkMessage(Plugin.SERVER_ADDRESS, function(message)
+	serverAddress = message.a
+end)
+
 TGNS.HookNetworkMessage(Plugin.TEAM_SCORES_DATA, function(message)
 	Shared.ConsoleCommand(string.format("team1 %s", message.mn))
 	Shared.ConsoleCommand(string.format("team2 %s", message.an))
@@ -337,14 +351,14 @@ function Plugin:Initialise()
 	Client.PrecacheLocalSound(armorDecay1SoundEventName)
 
 	local scoreboardIsVisible = false
-	local mouseIsHoveringOverPlayerRow = false
+	local mouseIsHoveringOverPlayerRowOrFavoriteIcon = false
 
 	local originalGUIScoreboardUpdate = GUIScoreboard.Update
 	GUIScoreboard.Update = function(self, deltaTime)
 		originalGUIScoreboardUpdate(self, deltaTime)
 
 		scoreboardIsVisible = self.visible
-		mouseIsHoveringOverPlayerRow = false
+		mouseIsHoveringOverPlayerRowOrFavoriteIcon = false
 
     	guiItemTooltipText = nil
     	hoverBadge = nil
@@ -357,7 +371,7 @@ function Plugin:Initialise()
 	            self:UpdateTeam(team)
 		    end
 
-            if guiItemTooltipText and self.badgeNameTooltip and not self.hoverMenu.background:GetIsVisible() and not MainMenu_GetIsOpened() and mouseIsHoveringOverPlayerRow then
+            if guiItemTooltipText and self.badgeNameTooltip and not self.hoverMenu.background:GetIsVisible() and not MainMenu_GetIsOpened() and mouseIsHoveringOverPlayerRowOrFavoriteIcon then
 				self.badgeNameTooltip:SetText(guiItemTooltipText)
 				self.badgeNameTooltip.protectedText = guiItemTooltipText
                 self.badgeNameTooltip:Show(0)
@@ -366,6 +380,11 @@ function Plugin:Initialise()
 	                self.badgeNameTooltip:Hide(0, true)
                 end
             end
+
+    --         if MouseTracker_GetIsVisible() then
+				-- local mouseX, mouseY = Client.GetCursorPosScreen()
+				-- self.gameTimeFavorite:SetColor(GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) and kFavoriteMouseOverColor or kFavoriteColor)
+    --         end
 
 
         else
@@ -412,6 +431,15 @@ function Plugin:Initialise()
 	        local numPlayersConnecting = PlayerUI_GetNumConnectingPlayers()
 	        local gameTimeText = string.format("%s | %s - (%d %s%s) - %d:%02d", serverName, Shared.GetMapName(), ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), numPlayersConnecting > 0 and string.format(", %d %s", numPlayersConnecting, Locale.ResolveString("SB_CONNECTING")) or "", minutes, seconds)
 	        self.gameTime:SetText(gameTimeText)
+		end
+
+		if not self.gameTimeFavorite and serverAddress then
+		    self.gameTimeFavorite = GUIManager:CreateGraphicItem()
+		    self.gameTimeFavorite:SetSize(kFavoriteIconSize)
+		    self.gameTimeFavorite:SetPosition(kFavoriteIconPos)
+		    self.gameTimeFavorite:SetTexture(GetServerIsFavorite(serverAddress) and kFavoriteTexture or kNonFavoriteTexture)
+		    self.gameTimeFavorite:SetColor(kFavoriteColor)
+		    self.gameTimeBackground:AddChild(self.gameTimeFavorite)
 		end
 
 		local playerList = updateTeam["PlayerList"]
@@ -749,7 +777,7 @@ function Plugin:Initialise()
 				if MouseTracker_GetIsVisible() and not guiItemTooltipText and not hoverBadge then
 					local mouseX, mouseY = Client.GetCursorPosScreen()
 					if GUIItemContainsPoint(player["Background"], mouseX, mouseY) then
-						mouseIsHoveringOverPlayerRow = mouseIsHoveringOverPlayerRow or true
+						mouseIsHoveringOverPlayerRowOrFavoriteIcon = mouseIsHoveringOverPlayerRowOrFavoriteIcon or true
 						for i = 1, #guiItems do
 							local guiItem = guiItems[i]
 							if GUIItemContainsPoint(guiItem, mouseX, mouseY) and guiItem:GetIsVisible() then
@@ -764,6 +792,9 @@ function Plugin:Initialise()
 		                        break
 		                    end
 		                end
+		            elseif self.gameTimeFavorite and GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) then
+		            	mouseIsHoveringOverPlayerRowOrFavoriteIcon = mouseIsHoveringOverPlayerRowOrFavoriteIcon or true
+		            	guiItemTooltipText = (GetServerIsFavorite(serverAddress) and "TGNS is in your favorites! Yay!\n\nClick the heart to remove it.\n(not that you'd ever want to...)" or "TGNS isn't in your favorites -- YET.\n\nClick the heart to add it (yayyy!!!).") 
 					end
 				end
 
@@ -820,8 +851,6 @@ function Plugin:Initialise()
 
 	local originalGUIScoreboardSendKeyEvent = GUIScoreboard.SendKeyEvent
 	GUIScoreboard.SendKeyEvent = function(self, key, down)
-
-
 		if self.hoverMenu then
 			if self.hoverPlayerClientIndex ~= 0 then
 				local isCommander = Scoreboard_GetPlayerData(self.hoverPlayerClientIndex, "IsCommander")
@@ -926,6 +955,11 @@ function Plugin:Initialise()
 		        end
 
 		    end
+	        if self.gameTimeFavorite and GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) then
+	        	local serverIsFavorite = GetServerIsFavorite(serverAddress)
+	        	self.gameTimeFavorite:SetTexture(serverIsFavorite and kNonFavoriteTexture or kFavoriteTexture)
+	            SetServerIsFavorite({address=serverAddress}, not serverIsFavorite)
+	        end
 		end
 		return result
 	end
@@ -962,7 +996,7 @@ function Plugin:Initialise()
 	local originalGUIHoverTooltipHide = GUIHoverTooltip.Hide
 	GUIHoverTooltip.Hide = function(self, hideTime, hideProtectedText)
 		if scoreboardIsVisible then
-			-- Shared.Message(string.format("GUIHoverTooltip.Hide: hideTime=%s; hideProtectedText=%s; self.protectedText=%s; MouseTracker_GetIsVisible()=%s; scoreboardIsVisible=%s; mouseIsHoveringOverPlayerRow=%s", hideTime,hideProtectedText, self.protectedText, MouseTracker_GetIsVisible(), scoreboardIsVisible, mouseIsHoveringOverPlayerRow))
+			-- Shared.Message(string.format("GUIHoverTooltip.Hide: hideTime=%s; hideProtectedText=%s; self.protectedText=%s; MouseTracker_GetIsVisible()=%s; scoreboardIsVisible=%s; mouseIsHoveringOverPlayerRowOrFavoriteIcon=%s", hideTime,hideProtectedText, self.protectedText, MouseTracker_GetIsVisible(), scoreboardIsVisible, mouseIsHoveringOverPlayerRowOrFavoriteIcon))
 			-- Shared.Message("GUIHoverTooltip.Hide: 10")
 			if self.protectedText and MouseTracker_GetIsVisible() then
 				-- Shared.Message("GUIHoverTooltip.Hide: 20")

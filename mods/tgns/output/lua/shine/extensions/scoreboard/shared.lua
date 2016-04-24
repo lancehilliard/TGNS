@@ -41,6 +41,7 @@ Plugin.ARMORLESS_HARVESTERS = "scoreboard_ARMORLESS_HARVESTERS"
 Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY = "scoreboard_CHATTING_OR_MENUING_STARTED_RECENTLY"
 Plugin.RECENT_CAPTAINS = "scoreboard_RECENT_CAPTAINS"
 Plugin.TOOLTIP_SOUND = "scoreboard_TOOLTIP_SOUND"
+Plugin.SERVER_ADDRESS = "scoreboard_SERVER_ADDRESS"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean", b="boolean", w="boolean", m="boolean", cg="boolean", gg="boolean", pg="boolean", t="string(100)", u1="boolean", u2="boolean", u3="boolean", u4="boolean", u5="boolean", u6="boolean", streaming="string(100)", sk="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -83,6 +84,7 @@ TGNS.RegisterNetworkMessage(Plugin.ARMORLESS_HARVESTERS, {l="string(100)"})
 TGNS.RegisterNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
 TGNS.RegisterNetworkMessage(Plugin.RECENT_CAPTAINS, {c="string(500)"})
 TGNS.RegisterNetworkMessage(Plugin.TOOLTIP_SOUND, {})
+TGNS.RegisterNetworkMessage(Plugin.SERVER_ADDRESS, {a="string(100)"})
 
 function Plugin:Initialise()
 	self.Enabled = true

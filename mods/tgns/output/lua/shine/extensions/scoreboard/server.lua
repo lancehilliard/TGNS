@@ -198,9 +198,10 @@ function Plugin:ClientConnect(client)
 		if TGNS.Has(vouches, steamId) then
 			vrConfirmed[client] = true
 		end
-		TGNS.ScheduleAction(2, function()
+		local player = TGNS.GetPlayer(client)
+		--TGNS.ScheduleAction(2, function()
 			if Shine:IsValidClient(client) then
-				local player = TGNS.GetPlayer(client)
+				
 				initScoreboardDecorations(client)
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
 					if vrConfirmed[c] then
@@ -214,8 +215,9 @@ function Plugin:ClientConnect(client)
 				TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
 				TGNS.SendNetworkMessageToPlayer(player, self.DESIGNATION, {c=TGNS.GetClientCommunityDesignationCharacter(client)})
 			end
-		end)
-		self:AlertApplicationIconForPlayer(TGNS.GetPlayer(client))
+		--end)
+		self:AlertApplicationIconForPlayer(player)
+		TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.SERVER_ADDRESS, {a=TGNS.Config.ServerAddress})
 	end
 end
 
