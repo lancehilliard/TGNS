@@ -18,11 +18,6 @@ local function debug(message)
 	end
 end
 
-local function getHumanClients(clients)
-	local result = TGNS.Where(clients, function(c) return not TGNS.GetIsClientVirtual(c) end)
-	return result
-end
-
 local function persistKarma(steamId)
 	karmaCacheData = Shine.LoadJSONFile(karmaTempfilePath) or {}
 	TGNS.RemoveAllWhere(karmaCacheData, function(d) return d.steamId == steamId end)
@@ -81,7 +76,7 @@ local function onClientConnect(steamId)
 	refreshKarma(steamId)
 	if Server.GetNumPlayersTotal() <= 8 and Shared.GetTime() > 60 then
 		local seeders = Shine.LoadJSONFile(seedingTempfilePath) or {}
-		local humanClients = getHumanClients(TGNS.GetClientList())
+		local humanClients = TGNS.GetHumanClientList()
 		TGNS.DoFor(humanClients, function(c)
 			local csteamId = TGNS.GetClientSteamId(c)
 			if not TGNS.Has(seeders, csteamId) then
@@ -94,7 +89,7 @@ end
 
 function Plugin:EndGame(gamerules, winningTeam)
 	if Server.GetNumPlayersTotal() >= 12 then
-		local humanClients = getHumanClients(TGNS.GetClientList())
+		local humanClients = TGNS.GetHumanClientList()
 		local humanSteamIds = TGNS.Select(humanClients, TGNS.GetClientSteamId)
 		TGNS.ScheduleAction(2, function()
 			local seedKarmaGiven
@@ -129,10 +124,10 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 				local teamExit = {}
 				teamExit.when = Shared.GetTime()
 				teamExit.teamNumber = oldTeamNumber
-				teamExit.teamSizeBeforeExit = #getHumanClients(TGNS.GetTeamClients(oldTeamNumber, TGNS.GetPlayerList())) + 1
+				teamExit.teamSizeBeforeExit = #TGNS.GetHumanClientList(function(c) return TGNS.GetClientTeamNumber(c) == oldTeamNumber end) + 1
 				lastTeamExit[client] = teamExit
 			end
-			if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#getHumanClients(TGNS.GetTeamClients(newTeamNumber)) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) and #TGNS.GetPlayerList() >= 8 then
+			if TGNS.IsGameplayTeamNumber(newTeamNumber) and lastTeamExit[client] and (lastTeamExit[client].teamNumber ~= newTeamNumber) and (Shared.GetTime() - lastTeamExit[client].when < 10) and ((#TGNS.GetHumanClientList(function(c) return TGNS.GetClientTeamNumber(c) == newTeamNumber end) - 1) - lastTeamExit[client].teamSizeBeforeExit <= -2) and TGNS.GetHumanPlayerCount() >= 8 then
 				TGNS.Karma(steamId, "FixingTeamSizes")
 			end
 		end
@@ -162,7 +157,7 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients)
-		local humanClients = getHumanClients(clients)
+		local humanClients = TGNS.GetHumanClientList(function(c) return TGNS.Has(clients, c) end)
 		if #humanClients >= 8 then
 			local deltaName = (Shine.Plugins.captains and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()) and "FullCaptainsRoundPlayed" or "FullGamePlayed"
 			TGNS.DoFor(humanClients, function(c)
