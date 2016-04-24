@@ -508,6 +508,11 @@ function TGNS.GetHumanClientList(predicate) PROFILE("TGNS.GetHumanClientList")
 	return result
 end
 
+function TGNS.GetHumanPlayerCount()
+	local result = Shine.GetHumanPlayerCount()
+	return result
+end
+
 function TGNS.GetSimpleServerName() PROFILE("TGNS.GetSimpleServerName")
 	return TGNS.Config.ServerSimpleName
 end
@@ -796,6 +801,8 @@ function TGNS.IsClientAFK(client) PROFILE("TGNS.IsClientAFK")
 	return TGNS.IsPlayerAFK(TGNS.GetPlayer(client))
 end
 
+local lastAfkHumanCountQueryWhen = 0
+local lastAfkHumanCount = 0
 function TGNS.IsPlayerAFK(player) PROFILE("TGNS.IsPlayerAFK")
 	-- local result = false
 	-- local AFKKick = Shine.Plugins.improvedafkhandler
@@ -809,7 +816,11 @@ function TGNS.IsPlayerAFK(player) PROFILE("TGNS.IsPlayerAFK")
     local AFKKick = Shine.Plugins.afkkick
     local AFKEnabled = AFKKick and AFKKick.Enabled
     if AFKEnabled then
-            if #TGNS.GetPlayerList() < AFKKick.Config.MinPlayers then
+    		if lastAfkHumanCountQueryWhen + 3 < Shared.GetTime() then
+    			humanPlayerCount = TGNS.GetHumanPlayerCount()
+    			lastAfkHumanCountQueryWhen = Shared.GetTime()
+    		end
+            if humanPlayerCount < AFKKick.Config.MinPlayers then
                 result = false
             else
             	result = TGNS.GetPlayerAfkDurationInSeconds(player) >= AFK_IDLE_THRESHOLD_SECONDS
@@ -1350,7 +1361,7 @@ function TGNS.GetPlayerList() PROFILE("TGNS.GetPlayerList")
 end
 
 function TGNS.GetPlayerCount() PROFILE("TGNS.GetPlayerCount")
-	local result = #TGNS.GetPlayerList()
+	local result = Server.GetNumPlayersTotal()
 	return result
 end
 
