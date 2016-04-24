@@ -49,7 +49,7 @@ function Plugin:Initialise()
 	originalResetGame = TGNS.ReplaceClassMethod("NS2Gamerules", "ResetGame", function(gamerules)
 		local success, result = xpcall(function()
 			if self.Config.enableForBuildNumber == Shared.GetBuildNumber() then
-				if #TGNS.GetPlayerList() > 0 then
+				if TGNS.GetHumanPlayerCount() > 0 then
 				    local spawnSelections = forcedSpawnSelectionOverrides or TGNS.Select(self:GetCurrentMapSpawnSelectionOverridesData(), function(d) return d.spawnSelectionOverride end)
 					if TGNS.Any(spawnSelections) then
 						Server.spawnSelectionOverrides = TGNS.Select(spawnSelections, function(s)
