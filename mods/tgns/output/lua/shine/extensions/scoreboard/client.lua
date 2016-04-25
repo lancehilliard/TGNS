@@ -37,7 +37,8 @@ local squadNumbersHudText
 local squadNumberLastSetTimes = {}
 local WELCOME_MESSAGES = { "Welcome to Tactical Gamer Natural Selection (TGNS)!",
 						  "If you enjoy mature, respectful play, please ask about our reserved slots.",
-						  "To learn more about TGNS, press 'M' and click 'Info'. Enjoy! :)" }
+						  "To learn more about TGNS, press 'M' and click 'Info'. Enjoy! :)",
+						  "( oh, and click the heart at the top of the scoreboard to favorite the server! )" }
 local EXTRA_SECONDS_TO_DISPLAY_BANNER_AFTER_TEXT_MESSAGES = 25
 local communityDesignationCharacter = '?'
 local welcomeBannerImageName
@@ -61,6 +62,11 @@ local lastWinOrLoseWarningWhen = 0
 local CHUDOptionsToDisableDuringWinOrLose = {"wps", "minwps"}
 local structuresKilled = {}
 local serverAddress
+
+local statusColors = {
+    ["Shotgun"] = Color(0,1,0,1), -- green
+    ["FT"] = Color(1,1,0,1), -- yellow
+    ["GL"] = Color(1,0,1,1)} -- magenta
 
 
 local has = {}
@@ -381,10 +387,13 @@ function Plugin:Initialise()
                 end
             end
 
-    --         if MouseTracker_GetIsVisible() then
-				-- local mouseX, mouseY = Client.GetCursorPosScreen()
-				-- self.gameTimeFavorite:SetColor(GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) and kFavoriteMouseOverColor or kFavoriteColor)
-    --         end
+			self.gameTimeFavorite:SetColor(kFavoriteColor)
+            if MouseTracker_GetIsVisible() then
+				local mouseX, mouseY = Client.GetCursorPosScreen()
+				if GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) then
+					self.gameTimeFavorite:SetColor(kFavoriteMouseOverColor)
+				end
+            end
 
 
         else
@@ -571,6 +580,18 @@ function Plugin:Initialise()
 		        	,{n="PlayerAuraIcon",t="ui/badges/aliens/aura.dds",x=-200,l="Aura\n\nThis player has the Aura upgrade."}
 		        	,{n="PlayerStreamingIcon",t="ui/badges/streaming/camera.dds",x=-220,l=function(clientIndex, teamNumber) return string.format("Streaming\n\n%s is streaming!\n\n%s\n\nAre you streaming? Chat '!streaming' to share.", Scoreboard_GetPlayerData(clientIndex, "Name"), streamingWebAddresses[clientIndex]) end}
 		    	}
+
+		    	if teamNumber == kMarineTeamType and ((Client.GetLocalClientTeamNumber() == kMarineTeamType) or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)) then
+		    		local statusText = player.Status:GetText()
+		    		if statusText and statusText ~= "Dead" then
+			    		player.Status:SetColor(Color(1,1,1))
+			    		TGNS.DoForPairs(statusColors, function(weapon, color)
+			    			if TGNS.Contains(statusText, weapon) then
+			    				player.Status:SetColor(color)
+			    			end
+			    		end)
+		    		end
+		    	end
 
 				TGNS.DoFor(icons, function(i)
 					if player[i.n] then
