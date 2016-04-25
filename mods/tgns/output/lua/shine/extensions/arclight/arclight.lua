@@ -17,6 +17,7 @@ if Server or Client then
 	TGNS.RegisterNetworkMessage(Plugin.HILL_SOUND, {i="integer", r="boolean"})
 
 	if Client then
+
 		local hill1SoundEventName = "sound/tgns.fev/hill/1"
 		local hill2SoundEventName = "sound/tgns.fev/hill/2"
 		local hill3SoundEventName = "sound/tgns.fev/hill/3"
@@ -576,7 +577,7 @@ if Server or Client then
 				md:ToClientConsole(client, "---------------")
 				md:ToClientConsole(client, " TGNS ARCLIGHT ")
 				md:ToClientConsole(client, "---------------")
-				md:ToClientConsole(client, string.format("Arclight is used on TGNS to seed the server to %s non-AFK players.", Shine.Plugins.communityslots.Config.PublicSlots))
+				md:ToClientConsole(client, "Arclight is used temporarily on TGNS to seed the server for normal NS2 play!")
 				md:ToClientConsole(client, string.format("When the server reaches %s non-AFK players, the losing team surrenders and normal NS2 play begins.", Shine.Plugins.communityslots.Config.PublicSlots))
 				md:ToClientConsole(client, string.format("During Arclight play: bases are inaccessible -- all fighting happens in %s.", hillLocationName))
 				md:ToClientConsole(client, string.format("During Arclight play: Stand on the platform in %s to drive down the other team's points and win!", hillLocationName))
