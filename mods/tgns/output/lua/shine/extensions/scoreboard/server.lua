@@ -539,10 +539,10 @@ function Plugin:Initialise()
 		Shine.Plugins.targetedcommands:AfkRr(client, targetClient, md)
 	end)
 
-	TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
-		local isLookingUp = not isLookingDown
-		TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
-	end)
+	-- TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
+	-- 	local isLookingUp = not isLookingDown
+	-- 	TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
+	-- end)
  	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)
  		local md = TGNSMessageDisplayer.Create()
  		md:ToAllConsole(string.format("Gametime: %s", string.DigitalTime(gameDurationInSeconds)))
