@@ -2,13 +2,13 @@ local lastKnownLocationNames = {}
 
 local Plugin = {}
 
-function Plugin:OnProcessMove(player, input)
-	local locationName = player:GetLocationName()
-	if locationName ~= lastKnownLocationNames[player] then
-		lastKnownLocationNames[player] = locationName
-		TGNS.ExecuteEventHooks("PlayerLocationChanged", player, locationName)
-	end
-end
+-- function Plugin:OnProcessMove(player, input)
+-- 	local locationName = player:GetLocationName()
+-- 	if locationName ~= lastKnownLocationNames[player] then
+-- 		lastKnownLocationNames[player] = locationName
+-- 		TGNS.ExecuteEventHooks("PlayerLocationChanged", player, locationName)
+-- 	end
+-- end
 
 function Plugin:Initialise()
     self.Enabled = true
