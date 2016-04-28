@@ -9,6 +9,8 @@ local enabled = {}
 local startingRoomNames = {}
 local nextLocationNames = {}
 local trackLowestTimes = {}
+local lastKnownLocationNames = {}
+local onLocationChangedEnabled
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -44,6 +46,7 @@ end
 
 local function disableLaps(client, reason, endTexts)
 	enabled[client] = false
+	onLocationChangedEnabled = TGNS.Any(TGNS.GetClientList(), function(c) return enabled[c] == true end)
 	recentLocations[client] = {}
 	trackStartTimes[client] = {}
 	nextLocationNames[client] = {}
@@ -303,6 +306,7 @@ function Plugin:CreateCommands()
 	    		if not TGNS.IsGameInProgress() then    		if #startingRoomNames > 0 then
 				    	enabled[client] = not enabled[client] == true
 				        if enabled[client] then
+				        	onLocationChangedEnabled = true
 					        md:ToClientConsole(client, string.format("You have %s Laps. Execute sh_laps again to %s it.", enabled[client] and "enabled" or "disabled", enabled[client] and "disable" or "enable"))
 					        md:ToClientConsole(client, "")
 					        md:ToClientConsole(client, "Laps is competitive time trials through stock NS2 maps. Following pre-defined room routes, you")
@@ -342,11 +346,20 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	end
 end
 
+function Plugin:OnProcessMove(player, input)
+	if onLocationChangedEnabled then
+		local locationName = player:GetLocationName()
+		if locationName ~= lastKnownLocationNames[player] then
+			lastKnownLocationNames[player] = locationName
+			OnLocationChanged(player, locationName)
+		end
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create("LAPS")
     self:CreateCommands()
-	TGNS.RegisterEventHook("PlayerLocationChanged", OnLocationChanged)
 
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
