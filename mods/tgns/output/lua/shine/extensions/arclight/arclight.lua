@@ -6,6 +6,7 @@ if ArclightModsEnabled then
 		if Shared.GetMapName() == ArclightMapName then
 			TGNS.ModifyAlienMaxSpeeds(function(maxSpeed) return maxSpeed + (kCelerityAddSpeed or 1.5) end)
 			kStompEnergyCost = kStompEnergyCost * 2
+			kEggGestateTime = kEggGestateTime * 0.1
 		end
 	end)
 end
@@ -552,13 +553,12 @@ if Server or Client then
 			end)
 		end)
 
-		TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
-			local client = TGNS.GetClient(player)
-			if client then
-				showHelpText(client)
-			end
-			--debug(string.format("Location: %s - %s", TGNS.GetPlayerName(player), locationName))
-		end)
+		-- TGNS.RegisterEventHook("PlayerLocationChanged", function(player, locationName)
+		-- 	local client = TGNS.GetClient(player)
+		-- 	if client then
+		-- 		showHelpText(client)
+		-- 	end
+		-- end)
 
 		TGNS.RegisterEventHook("PostJoinTeam", function(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 			local client = TGNS.GetClient(player)
