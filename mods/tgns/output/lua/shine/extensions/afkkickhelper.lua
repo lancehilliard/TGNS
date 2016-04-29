@@ -50,8 +50,7 @@ function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create("AFK")
 
-	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
-		local client = TGNS.GetClient(player)
+	TGNS.RegisterEventHook("AFKChanged", function(client, playerIsAfk)
 		if client and not playerIsAfk then
 			mayEarnRemovedFromPlayByAfkKarma[client] = true
 		end
