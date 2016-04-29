@@ -2864,9 +2864,9 @@ if Server or Client then
 			end)
 
 
-			TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
+			TGNS.RegisterEventHook("AFKChanged", function(client, playerIsAfk)
 				if votesAllowedUntil ~= nil and votesAllowedUntil > TGNS.GetSecondsSinceMapLoaded() and #TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end) == 2 then
-					updateCaptainsReadyProgress(TGNS.GetClient(player))
+					updateCaptainsReadyProgress(client)
 				end
 			end)
 		end
