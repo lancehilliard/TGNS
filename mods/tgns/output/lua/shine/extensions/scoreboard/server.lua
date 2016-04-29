@@ -346,8 +346,8 @@ end
 function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
-	TGNS.RegisterEventHook("AfkChanged", function(player, playerIsAfk)
-		self:AnnouncePlayerPrefix(player)
+	TGNS.RegisterEventHook("AFKChanged", function(client, playerIsAfk)
+		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
 	TGNS.RegisterEventHook("SviChanged", function(client, sviEnabled)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
