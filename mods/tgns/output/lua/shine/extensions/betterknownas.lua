@@ -358,7 +358,7 @@ function Plugin:CreateCommands()
 					bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
 				else
 					if not TGNS.HasNonEmptyValue(newBkaName) then
-						bkaChangeError = "You did not specify a new Better Known As name."
+						bkaChangeError = "You specified no Better Known As name (your preferred player name)."
 					elseif newBkaName == "clear" then
 						bkaChangeError = "You specified a Better Known As name that is not allowed."
 					elseif newBkaName:len() > kMaxNameLength then
@@ -381,6 +381,8 @@ function Plugin:CreateCommands()
 					md:ToClientConsole(client, string.format("ERROR: %s", bkaChangeError))
 					md:ToClientConsole(client, "")
 					md:ToClientConsole(client, "Usage: sh_name <name>")
+					md:ToClientConsole(client, "Use sh_name to specify the name you'll play as on the game server.")
+					md:ToClientConsole(client, "Issue the command with the name you want to use, then follow the instructions.")
 					md:ToClientConsole(client, "Example: sh_name Tony")
 					md:ToClientConsole(client, "Example: sh_name Tony the Tiger")
 					md:ToClientConsole(client, string.format("Example: sh_name %s", TGNS.GetClientName(client)))
