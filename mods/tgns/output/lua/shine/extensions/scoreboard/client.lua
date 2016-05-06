@@ -387,12 +387,14 @@ function Plugin:Initialise()
                 end
             end
 
-			self.gameTimeFavorite:SetColor(kFavoriteColor)
-            if MouseTracker_GetIsVisible() then
-				local mouseX, mouseY = Client.GetCursorPosScreen()
-				if GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) then
-					self.gameTimeFavorite:SetColor(kFavoriteMouseOverColor)
-				end
+            if self.gameTimeFavorite then
+				self.gameTimeFavorite:SetColor(kFavoriteColor)
+	            if MouseTracker_GetIsVisible() then
+					local mouseX, mouseY = Client.GetCursorPosScreen()
+					if GUIItemContainsPoint(self.gameTimeFavorite, mouseX, mouseY) then
+						self.gameTimeFavorite:SetColor(kFavoriteMouseOverColor)
+					end
+	            end
             end
 
 
