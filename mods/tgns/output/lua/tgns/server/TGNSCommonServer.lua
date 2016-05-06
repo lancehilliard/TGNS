@@ -816,7 +816,8 @@ function TGNS.IsPlayerAFK(player) PROFILE("TGNS.IsPlayerAFK")
     local AFKKick = Shine.Plugins.afkkick
     local AFKEnabled = AFKKick and AFKKick.Enabled
     if AFKEnabled then
-    		if lastAfkHumanCountQueryWhen + 3 < Shared.GetTime() then
+    		local humanPlayerCount
+    		if humanPlayerCount == nil or lastAfkHumanCountQueryWhen + 3 < Shared.GetTime() then
     			humanPlayerCount = TGNS.GetHumanPlayerCount()
     			lastAfkHumanCountQueryWhen = Shared.GetTime()
     		end
