@@ -1,4 +1,4 @@
-local NUMBER_OF_SLOTS_TO_LEAVE_FOR_JOINERS_DURING_NON_CAPTAINS_GAMES = 2
+local NUMBER_OF_SLOTS_TO_LEAVE_FOR_JOINERS_DURING_NON_CAPTAINS_GAMES = 1
 local actionslog = { }
 local clientsWhoAreConnectedEnoughToBeConsideredBumpable = {}
 local MESSAGE_PREFIX = "SLOTS"
