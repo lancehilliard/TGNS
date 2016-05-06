@@ -5,22 +5,35 @@ local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
+
+    local restrictions = {
+    	{advisory=function(playerName, teamName) return string.format("Rookies with fewer than 20 TGNS games may not command. %s: help %s fight from the ground!", teamName, playerName) end, test=function(player, numberOfAliveTeammates) 
+    		return TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20
+    	end},
+    	{advisory=function(playerName, teamName) return string.format("Commanders must be vouched as hearing voicecomms. %s: can anyone vouch %s?", teamName, playerName) end, test=function(player, numberOfAliveTeammates)
+    		local client = TGNS.GetClient(player)
+    		return not (Shine.Plugins.scoreboard:IsVouched(client) or TGNS.HasClientSignedPrimer(client))
+    	end}
+    }
+
 	local originalGetIsPlayerValidForCommander
 	originalGetIsPlayerValidForCommander = TGNS.ReplaceClassMethod("CommandStructure", "GetIsPlayerValidForCommander", function(self, player)
 		local result = originalGetIsPlayerValidForCommander(self, player)
 		if result then
+			local playerShouldBePreventedFromCommanding
 			local numberOfAliveTeammates = #TGNS.Where(TGNS.GetPlayersOnSameTeam(player), TGNS.IsPlayerAlive)
-			local rookieShouldBePreventedFromCommanding = TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20 and ((not TGNS.IsGameInProgress()) or (numberOfAliveTeammates > 2)) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0
-			if rookieShouldBePreventedFromCommanding then
-				--if not TGNS.Has(notifiedPlayerIds, playerId) then
-					local playerName = TGNS.GetPlayerName(player)
-					local teamName = TGNS.GetPlayerTeamName(player)
-					md:ToTeamNotifyError(TGNS.GetPlayerTeamNumber(player), string.format("%s: Rookies may not command. %s: help %s fight from the ground!", playerName, teamName, playerName))
-					--table.insert(notifiedPlayerIds, playerId)
-					--TGNS.ScheduleAction(3, function() TGNS.RemoveAllMatching(notifiedPlayerIds, playerId) end)
-				--end
+			if ((not TGNS.IsGameInProgress()) or (numberOfAliveTeammates > 2)) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
+				TGNS.DoFor(restrictions, function(restriction)
+					playerShouldBePreventedFromCommanding = restriction.test(player, playerName, numberOfAliveTeammates)
+					if playerShouldBePreventedFromCommanding then
+						local playerName = TGNS.GetPlayerName(player)
+						local teamName = TGNS.GetPlayerTeamName(player)
+						md:ToTeamNotifyError(TGNS.GetPlayerTeamNumber(player), string.format("%s: %s", playerName, restriction.advisory(playerName, teamName)))
+						return playerShouldBePreventedFromCommanding
+					end
+				end)
 			end
-			result = not rookieShouldBePreventedFromCommanding
+			result = not playerShouldBePreventedFromCommanding
 		end
 		return result
 	end)
