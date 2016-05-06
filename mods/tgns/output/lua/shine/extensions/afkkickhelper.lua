@@ -34,13 +34,16 @@ end
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
     if TGNS.IsPlayerReadyRoom(player) then
-    	if TGNS.IsGameplayTeamNumber(oldTeamNumber) and TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 30 and TGNS.IsPlayerAFK(player) and #TGNS.GetPlayingClients(TGNS.GetPlayerList()) >= 7 and (not (force or shineForce)) then
-    		if mayEarnRemovedFromPlayByAfkKarma[client] then
-	    		TGNS.Karma(client, "RemovedFromPlayByAFK")
-	    		mayEarnRemovedFromPlayByAfkKarma[client] = false
-    		end
+    	if TGNS.IsGameInProgress() then
+	    	if TGNS.IsGameplayTeamNumber(oldTeamNumber) and TGNS.GetCurrentGameDurationInSeconds() > 30 and TGNS.IsPlayerAFK(player) and #TGNS.GetPlayingClients(TGNS.GetPlayerList()) >= 7 and (not (force or shineForce)) then
+	    		if mayEarnRemovedFromPlayByAfkKarma[client] then
+		    		TGNS.Karma(client, "RemovedFromPlayByAFK")
+		    		mayEarnRemovedFromPlayByAfkKarma[client] = false
+	    		end
+	    	end
+	    else
+	    	TGNS.MarkPlayerAFK(player)
     	end
-    	TGNS.MarkPlayerAFK(player)
     elseif not (force or shineForce) then
     	TGNS.ClearPlayerAFK(player)
     end
