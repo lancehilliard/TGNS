@@ -120,8 +120,8 @@ function Plugin:Initialise()
 		local result = originalGetCanPlayerHearPlayer(gamerulesSelf, listenerPlayer, speakerPlayer)
 		if self:PlayerIsInSidebar(speakerPlayer) then
 			result = self:PlayerIsInSidebar(listenerPlayer)
-		-- elseif self:PlayerIsInSidebar(listenerPlayer) then
-		-- 	result = self:PlayerIsInSidebar(speakerPlayer) or ((TGNS.Has(getSidebarParticipantClients(), TGNS.GetClient(listenerPlayer)) and TGNS.IsClientAdmin(TGNS.GetClient(listenerPlayer))) and (Shine.Plugins.lookdown and Shine.Plugins.lookdown.IsPlayerLookingDown and Shine.Plugins.lookdown:IsPlayerLookingDown(listenerPlayer)) and result)
+		elseif self:PlayerIsInSidebar(listenerPlayer) then
+		 	result = self:PlayerIsInSidebar(speakerPlayer) or ((TGNS.Has(getSidebarParticipantClients(), TGNS.GetClient(listenerPlayer)) and TGNS.IsClientAdmin(TGNS.GetClient(listenerPlayer))) and result)
 		end
 		return result
 	end)
