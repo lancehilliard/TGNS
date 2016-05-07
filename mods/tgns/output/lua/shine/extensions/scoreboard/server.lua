@@ -177,6 +177,11 @@ function Plugin:GetApprovalsCount(client)
 	return result
 end
 
+function Plugin:IsVouched(client)
+	local result = vrConfirmed[client]
+	return result
+end
+
 function Plugin:ClientConnect(client)
 	if not TGNS.GetIsClientVirtual(client) then
 		local steamId = TGNS.GetClientSteamId(client)
@@ -389,7 +394,12 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.HookNetworkMessage(self.CHATTING_OR_MENUING_STARTED_RECENTLY, function(client)
-		TGNS.ClearPlayerAFK(TGNS.GetPlayer(client))
+		local wasAfk = TGNS.IsClientAFK(client)
+		local player = TGNS.GetPlayer(client)
+		TGNS.ClearPlayerAFK(player)
+		if wasAfk then
+			self:AnnouncePlayerPrefix(player)
+		end
 	end)
 
 	TGNS.HookNetworkMessage(self.APPROVE_REQUESTED, function(client, message)
@@ -658,14 +668,19 @@ function Plugin:Initialise()
 	local originalEmbryoSetGestationData = Embryo.SetGestationData
 	Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
 		originalEmbryoSetGestationData(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
-		self:AnnouncePlayerPrefix(embryoSelf)
+		local gestationTime = embryoSelf:GetGestationTime(embryoSelf.gestationTypeTechId)
+		local embryoClient = TGNS.GetClient(embryoSelf)
+		TGNS.ScheduleAction(gestationTime, function()
+			if Shine:IsValidClient(embryoClient) then
+				self:AnnouncePlayerPrefix(TGNS.GetPlayer(embryoClient))
+			end
+		end)
 	end
 
 	local function getApprovals()
 		if TGNS.Config and TGNS.Config.ApproveEndpointBaseUrl then
 			local url = TGNS.Config.ApproveEndpointBaseUrl
 			TGNS.GetHttpAsync(url, function(approveResponseJson)
-				-- Shared.Message("approveResponseJson: " .. approveResponseJson)
 				local approveResponse = json.decode(approveResponseJson) or {}
 				if approveResponse.success then
 					TGNS.DoForPairs(approveResponse.result, function(steamId, count)
@@ -684,7 +699,6 @@ function Plugin:Initialise()
 
 
 	TGNS.ExecuteServerCommand("sh_alltalk false")
-
 
 	return true
 end
