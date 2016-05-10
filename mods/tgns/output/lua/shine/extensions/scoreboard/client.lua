@@ -193,6 +193,10 @@ TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
 	showTeamMessages = message.s
 end)
 
+TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
+	TGNSJsonFileTranscoder.EncodeToFile(string.format("config://tgns/RECORDING_BOUNDARY/%s/update.json", message.b), {when=Shared.GetSystemTime()})
+end)
+
 TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
 	gameIsInProgress = message.b
 	if gameIsInProgress then
