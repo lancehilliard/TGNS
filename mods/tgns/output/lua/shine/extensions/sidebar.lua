@@ -121,7 +121,7 @@ function Plugin:Initialise()
 		if self:PlayerIsInSidebar(speakerPlayer) then
 			result = self:PlayerIsInSidebar(listenerPlayer)
 		elseif self:PlayerIsInSidebar(listenerPlayer) then
-		 	result = self:PlayerIsInSidebar(speakerPlayer) or ((TGNS.Has(getSidebarParticipantClients(), TGNS.GetClient(listenerPlayer)) and TGNS.IsClientAdmin(TGNS.GetClient(listenerPlayer))) and result)
+		 	result = self:PlayerIsInSidebar(speakerPlayer)
 		end
 		return result
 	end)
