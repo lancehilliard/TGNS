@@ -149,6 +149,9 @@ function Plugin:Initialise()
 		gameData.MarineStartLocationName = gamerules.startingLocationNameTeam1 or EMPTY_VALUE
 		gameData.AlienStartLocationName = gamerules.startingLocationNameTeam2 or EMPTY_VALUE
 		gameData.StartingLocationsPathDistance = gamerules.startingLocationsPathDistance or EMPTY_VALUE
+		gameData.MarineBonusResourcesAwarded = (Shine.Plugins.tf_comeback and Shine.Plugins.tf_comeback.Enabled and Shine.Plugins.tf_comeback.GetBonusResourcesAwardedSoFar) and Shine.Plugins.tf_comeback:GetBonusResourcesAwardedSoFar(1) or 0
+		gameData.AlienBonusResourcesAwarded = (Shine.Plugins.tf_comeback and Shine.Plugins.tf_comeback.Enabled and Shine.Plugins.tf_comeback.GetBonusResourcesAwardedSoFar) and Shine.Plugins.tf_comeback:GetBonusResourcesAwardedSoFar(2) or 0
+		gameData.StartingLocationsPathDistance = gamerules.startingLocationsPathDistance or EMPTY_VALUE
 		gameData.BuildNumber = Shared.GetBuildNumber()
 		gameData.MapName = TGNS.GetCurrentMapName()
 		gameData.IncludedBots = currentGame["includedBots"]
@@ -214,7 +217,7 @@ function Plugin:Initialise()
 				TGNS.PrintTable(gameData, "gameData", function(x) TGNS.DebugPrint(x) end)
 			end
 		end)
-    end)
+    end, TGNS.HIGHEST_EVENT_HANDLER_PRIORITY)
 
 	local originalAddContinuousScore
 	originalAddContinuousScore = TGNS.ReplaceClassMethod("ScoringMixin", "AddContinuousScore", function(self, name, addAmount, amountNeededToScore, pointsGivenOnScore)
