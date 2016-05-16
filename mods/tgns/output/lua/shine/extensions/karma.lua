@@ -62,6 +62,13 @@ local function addKarma(steamId, deltaName)
 				local karmaResponse = json.decode(karmaResponseJson) or {}
 				if karmaResponse.success then
 					persistKarma(steamId)
+					if TGNS.Has({"Bumping", "Seeding", "VouchingVoicecomm", "ConfirmingYouCanHearVoicecomm", "FixingTeamSizes"}, deltaName) and not TGNS.IsSteamIdSM(steamId) then
+						local message = string.format("You %s %s Karma '%s'. Learn More: M > TGNS Portal > Karma", delta > 0 and "earned" or "spent", math.abs(delta), deltaName)
+						local bumpingClient = TGNS.GetClientByNs2Id(steamId)
+						if Shine:IsValidClient(bumpingClient) then
+							md:ToPlayerNotifyInfo(TGNS.GetPlayer(bumpingClient), message)
+						end
+					end
 				else
 					karmaCache[steamId] = karmaCache[steamId] - delta
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
