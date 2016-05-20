@@ -2284,6 +2284,22 @@ if Server or Client then
 			end)
 			captainsDebugCommand:Help( "Show Captains opt-in status..." )
 
+			local enableCaptainCommand = self:BindCommand( "sh_maycaptain", "maycaptain", function(client, playerPredicate)
+				local player = TGNS.GetPlayer(client)
+				local targetPlayer = TGNS.GetPlayerMatching(playerPredicate, nil)
+				if targetPlayer then
+					local targetClient = TGNS.GetClient(targetPlayer)
+					md:ToAdminNotifyInfo(string.format("%s has allowed %s to use sh_iwillcaptain.", TGNS.GetClientName(client), TGNS.GetClientName(targetClient)))
+					md:ToPlayerNotifyInfo(targetPlayer, string.format("%s has allowed you to use sh_iwillcaptain.", TGNS.GetClientName(client)))
+					TGNS.AddTempGroup(targetClient, "iwillcaptaincommand_group")
+				else
+					md:ToPlayerNotifyError(player, string.format("'%s' does not uniquely match a player.", playerPredicate))
+				end
+			end)
+			enableCaptainCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+			enableCaptainCommand:Help( "<player> Grant sh_iwillcaptain usage to a player." )
+
+
 			local willCaptainsCommand = self:BindCommand("sh_iwillcaptain", "iwillcaptain", function(client)
 				local player = TGNS.GetPlayer(client)
 				if captainsModeEnabled then
