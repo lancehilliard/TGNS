@@ -10,9 +10,9 @@ function Plugin:Initialise()
     	{advisory=function(playerName, teamName) return string.format("Rookies with fewer than 20 TGNS games may not command. %s: help %s fight from the ground!", teamName, playerName) end, test=function(player, numberOfAliveTeammates) 
     		return TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20
     	end},
-    	{advisory=function(playerName, teamName) return string.format("Commanders must be vouched as hearing voicecomms. %s: can anyone vouch %s?", teamName, playerName) end, test=function(player, numberOfAliveTeammates)
+    	{advisory=function(playerName, teamName) return string.format("Commanders must be voicecomm vouched when 3+ Primer signer teammates. %s: can anyone vouch %s?", teamName, playerName) end, test=function(player, numberOfAliveTeammates)
     		local client = TGNS.GetClient(player)
-    		return not (Shine.Plugins.scoreboard:IsVouched(client) or TGNS.HasClientSignedPrimer(client))
+    		return #TGNS.Where(TGNS.GetClients(TGNS.GetPlayersOnSameTeam(player)), TGNS.HasClientSignedPrimerWithGames) >= 3 and not (Shine.Plugins.scoreboard:IsVouched(client) or TGNS.HasClientSignedPrimer(client))
     	end}
     }
 
