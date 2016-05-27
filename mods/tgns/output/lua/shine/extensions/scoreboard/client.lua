@@ -33,7 +33,8 @@ local gameIsInProgressLastChanged
 local gameIsInProgress = false
 local serverSimpleName
 local squadNumbers={}
-local squadNumbersHudText
+local hudTexts = {}
+
 local squadNumberLastSetTimes = {}
 local WELCOME_MESSAGES = { "Welcome to Tactical Gamer Natural Selection (TGNS)!",
 						  "If you enjoy mature, respectful play, please ask about our reserved slots.",
@@ -194,7 +195,8 @@ TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
 end)
 
 TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
-	TGNSJsonFileTranscoder.EncodeToFile(string.format("config://tgns/RECORDING_BOUNDARY/%s/update.json", message.b), {when=Shared.GetSystemTime()})
+	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), TGNS.GetSecondsSinceEpoch(), message.d, TGNS.UrlEncode(message.t))
+	Shared.SendHTTPRequest(url, "GET", function(response) end)
 end)
 
 TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
@@ -291,10 +293,10 @@ local function getTeamQueryTexture(teamNumber)
 end
 
 local function initializeSquadHudText()
-	if squadNumbersHudText then
-		squadNumbersHudText:Remove()
+	if hudTexts.squadNumbersHudText then
+		hudTexts.squadNumbersHudText:Remove()
 	end
-	squadNumbersHudText = Shine.ScreenText.Add( "Squad", {
+	hudTexts.squadNumbersHudText = Shine.ScreenText.Add( "Squad", {
 		X = 0.04, Y = 0.61,
 		Text = "",
 		Duration = math.huge,
@@ -304,7 +306,7 @@ local function initializeSquadHudText()
 		FadeIn = 0.5
 	} )
 
-	function squadNumbersHudText:UpdateText()
+	function hudTexts.squadNumbersHudText:UpdateText()
 		local text = ""
 		local squadNumberLastSetTime = squadNumberLastSetTimes[Client.GetLocalClientIndex()] or 0
 		local secondsSinceSquadNumberLastSet = math.floor(Shared.GetTime() - squadNumberLastSetTime)
@@ -323,8 +325,97 @@ local function initializeSquadHudText()
 	end
 end
 
+local function initializeAlienLifeformsHudText()
+	local updateAlienLifeformsReviewHudText = function(textObj, title, footer, commanderCountPredicate, onosCountPredicate, fadeCountPredicate, lerkCountPredicate, gorgeCountPredicate)
+		local text = ""
+		if not gameIsInProgress then
+			local playerIsAlien = Client.GetLocalClientTeamNumber() == kAlienTeamType
+			local playerIsCommander = Scoreboard_GetPlayerData(Client.GetLocalClientIndex(), "IsCommander")
+			if playerIsAlien then
+				local commanderCount = 0
+				local onosCount = 0
+				local fadeCount = 0
+				local lerkCount = 0
+				local gorgeCount = 0
+				TGNS.DoForPairs(squadNumbers, function(clientIndex, squadNumber)
+					local teamNumber = Scoreboard_GetPlayerData(clientIndex, "EntityTeamNumber")
+					if teamNumber == kAlienTeamType then
+						if squadNumber == 6 then
+							commanderCount = commanderCount + 1
+						elseif squadNumber == 5 then
+							onosCount = onosCount + 1
+						elseif squadNumber == 4 then
+							fadeCount = fadeCount + 1
+						elseif squadNumber == 3 then
+							lerkCount = lerkCount + 1
+						elseif squadNumber == 2 then
+							gorgeCount = gorgeCount + 1
+						end
+					end
+				end)
+				local lines = {}
+				table.insert(lines, title)
+				table.insert(lines, commanderCountPredicate(commanderCount) and string.format("%sx Commander", commanderCount) or "")
+				table.insert(lines, onosCountPredicate(onosCount) and string.format("%sx Onos", onosCount) or "")
+				table.insert(lines, fadeCountPredicate(fadeCount) and string.format("%sx Fade", fadeCount) or "")
+				table.insert(lines, lerkCountPredicate(lerkCount) and string.format("%sx Lerk", lerkCount) or "")
+				table.insert(lines, gorgeCountPredicate(gorgeCount) and string.format("%sx Gorge", gorgeCount) or "")
+				table.insert(lines, footer)
+
+				text = TGNS.Join(lines, "\n")
+			end
+		end
+		textObj:SetText(text)
+	end
+
+	if hudTexts.alienLifeformsReviewHudText1 then
+		hudTexts.alienLifeformsReviewHudText1:Remove()
+	end
+	if hudTexts.alienLifeformsReviewHudText2 then
+		hudTexts.alienLifeformsReviewHudText2:Remove()
+	end
+	hudTexts.alienLifeformsReviewHudText1 = Shine.ScreenText.Add( "AlienLifeformsReviewHudText1", {
+		X = 0.60, Y = 0.6,
+		Text = "",
+		Duration = math.huge,
+		R = 218, G = 165, B = 31,
+		Alignment = TGNS.ShineTextAlignmentMin,
+		Size = 2,
+		FadeIn = 0
+	} )
+	hudTexts.alienLifeformsReviewHudText2 = Shine.ScreenText.Add( "AlienLifeformsReviewHudText2", {
+		X = 0.60, Y = 0.6,
+		Text = "",
+		Duration = math.huge,
+		R = 255, G = 0, B = 0,
+		Alignment = TGNS.ShineTextAlignmentMin,
+		Size = 2,
+		FadeIn = 0
+	} )
+
+	local commanderCountPredicate1 = function(count) return count == 1 end
+	local onosCountPredicate1 = function(count) return count > 0 end
+	local fadeCountPredicate1 = function(count) return count > 0 end
+	local lerkCountPredicate1 = function(count) return count > 0 end
+	local gorgeCountPredicate1 = function(count) return count > 0 end
+
+	local commanderCountPredicate2 = function(count) return count ~= 1 end
+	local onosCountPredicate2 = function(count) return count == 0 end
+	local fadeCountPredicate2 = function(count) return count == 0 end
+	local lerkCountPredicate2 = function(count) return count == 0 end
+	local gorgeCountPredicate2 = function(count) return count == 0 end
+
+	function hudTexts.alienLifeformsReviewHudText1:UpdateText()
+		updateAlienLifeformsReviewHudText(self.Obj, "Planned Roles:", "Click your scoreboard row's circle to choose.", commanderCountPredicate1, onosCountPredicate1, fadeCountPredicate1, lerkCountPredicate1, gorgeCountPredicate1)
+	end
+	function hudTexts.alienLifeformsReviewHudText2:UpdateText()
+		updateAlienLifeformsReviewHudText(self.Obj, "", "", commanderCountPredicate2, onosCountPredicate2, fadeCountPredicate2, lerkCountPredicate2, gorgeCountPredicate2)
+	end
+end
+
 function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
 	initializeSquadHudText()
+	initializeAlienLifeformsHudText()
 end
 
 function Plugin:GetFailsBkaPrerequisite(clientIndex)
@@ -482,7 +573,7 @@ function Plugin:Initialise()
 			        player["Number"]:SetColor(numberColor)
 		        end
 
-				local playerIsBot = playerRecord.Ping == 0
+				local playerIsBot = playerRecord.Ping == 0 and TGNS.StartsWith(playerRecord.Name, "[BOT] ")
 
 		        local tunnelIconTexture = nil
 		        local tunnelDescription = tunnelDescriptions[clientIndex] or ""
@@ -1090,6 +1181,7 @@ function Plugin:Initialise()
 
 
 	initializeSquadHudText()
+	initializeAlienLifeformsHudText()
 
 	local parent, OldUpdateUnitStatusBlip = LocateUpValue( GUIUnitStatus.Update, "UpdateUnitStatusBlip", { LocateRecurse = true } )
 	function SquadUpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCommander, baseResearchRot, showHints, playerTeamType )
@@ -1353,7 +1445,7 @@ function Plugin:Think(deltaTime)
 
 	if hasAfkRelevantActivity then
 		local secondsSinceAfkRelevantActivityAnnounced = math.floor(Shared.GetTime() - afkRelevantActivityAnnouncedAt)
-		if secondsSinceAfkRelevantActivityAnnounced >= 1 then
+		if secondsSinceAfkRelevantActivityAnnounced >= 3 then
 			TGNS.SendNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {}) -- todo rename this message to AFK_RELEVANT_ACTIVITY
 			afkRelevantActivityAnnouncedAt = Shared.GetTime()
 			hasAfkRelevantActivity = false

@@ -86,7 +86,7 @@ TGNS.RegisterNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
 TGNS.RegisterNetworkMessage(Plugin.RECENT_CAPTAINS, {c="string(500)"})
 TGNS.RegisterNetworkMessage(Plugin.TOOLTIP_SOUND, {})
 TGNS.RegisterNetworkMessage(Plugin.SERVER_ADDRESS, {a="string(100)"})
-TGNS.RegisterNetworkMessage(Plugin.RECORDING_BOUNDARY, {b="string(100)"})
+TGNS.RegisterNetworkMessage(Plugin.RECORDING_BOUNDARY, {b="string(100)",d="float", t="string(100)", p="string(30)"})
 
 function Plugin:Initialise()
 	self.Enabled = true
