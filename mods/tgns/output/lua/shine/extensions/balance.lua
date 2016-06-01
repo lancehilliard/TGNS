@@ -279,6 +279,15 @@ local function svBalance(client, forcePlayersToReadyRoom)
 			balanceInProgress = true
 			lastBalanceStartTimeInSeconds = Shared.GetTime()
 			TGNS.ScheduleAction(5, function() BeginBalance(player) end)
+			local playAfkPingSoundToAllReadyRoomPlayers = function(level)
+				TGNS.DoFor(TGNS.GetClientList(TGNS.IsClientReadyRoom), function(c)
+					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.arclight.HILL_SOUND, {i=level})
+				end)
+			end
+			TGNS.DoTimes(3, function(i)
+				TGNS.ScheduleAction(i-1, function() playAfkPingSoundToAllReadyRoomPlayers(4-i) end)
+			end)
+
 			-- TGNS.ScheduleAction(5, function()
 			-- 	local originalGetAllPlayers = Shine.GetAllPlayers
 			-- 	Shine.GetAllPlayers = function(shineSelf)
