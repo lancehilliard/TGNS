@@ -23,6 +23,7 @@ Plugin.HAS_JETPACK_RESET = "scoreboard_HAS_JETPACK_RESET"
 Plugin.SHOW_TEAM_MESSAGES = "scoreboard_SHOW_TEAM_MESSAGES"
 Plugin.WINORLOSE_WARNING = "scoreboard_WINORLOSE_WARNING"
 Plugin.GAME_IN_PROGRESS = "scoreboard_GAME_IN_PROGRESS"
+Plugin.GAME_IN_COUNTDOWN = "scoreboard_GAME_IN_COUNTDOWN"
 Plugin.REQUEST_AFKRR = "scoreboard_REQUEST_AFKRR"
 Plugin.SERVER_SIMPLE_NAME = "scoreboard_SERVER_SIMPLE_NAME"
 Plugin.ALERT_ICON = "scoreboard_ALERT_ICON"
@@ -67,6 +68,7 @@ TGNS.RegisterNetworkMessage(Plugin.HAS_JETPACK_RESET, {})
 TGNS.RegisterNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, {s="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.WINORLOSE_WARNING, {})
 TGNS.RegisterNetworkMessage(Plugin.GAME_IN_PROGRESS, {b="boolean"})
+TGNS.RegisterNetworkMessage(Plugin.GAME_IN_COUNTDOWN, {b="boolean"})
 TGNS.RegisterNetworkMessage(Plugin.REQUEST_AFKRR, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.SERVER_SIMPLE_NAME, {n="string(20)"})
 TGNS.RegisterNetworkMessage(Plugin.ALERT_ICON, {});
@@ -86,7 +88,7 @@ TGNS.RegisterNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
 TGNS.RegisterNetworkMessage(Plugin.RECENT_CAPTAINS, {c="string(500)"})
 TGNS.RegisterNetworkMessage(Plugin.TOOLTIP_SOUND, {})
 TGNS.RegisterNetworkMessage(Plugin.SERVER_ADDRESS, {a="string(100)"})
-TGNS.RegisterNetworkMessage(Plugin.RECORDING_BOUNDARY, {b="string(100)",d="float", t="string(100)", p="string(30)"})
+TGNS.RegisterNetworkMessage(Plugin.RECORDING_BOUNDARY, {b="string(100)",d="float", t="string(100)", p="string(30)", s="integer"})
 
 function Plugin:Initialise()
 	self.Enabled = true

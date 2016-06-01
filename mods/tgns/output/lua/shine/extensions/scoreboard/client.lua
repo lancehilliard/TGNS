@@ -29,8 +29,11 @@ local legSoundEventName = "sound/tgns.fev/laps/leg"
 local bestSoundEventName = "sound/tgns.fev/laps/best"
 local startSoundEventName = "sound/tgns.fev/laps/start"
 local armorDecay1SoundEventName = "sound/tgns.fev/harvesterdecay/armordecay1"
-local gameIsInProgressLastChanged
-local gameIsInProgress = false
+local gameState = {}
+gameState.gameIsInProgressLastSetToTrue = 0
+gameState.gameIsInProgressLastSetToFalse = 0
+gameState.gameIsInProgress = false
+gameState.gameIsInCountdown = false
 local serverSimpleName
 local squadNumbers={}
 local hudTexts = {}
@@ -195,15 +198,20 @@ TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
 end)
 
 TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
-	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), TGNS.GetSecondsSinceEpoch(), message.d, TGNS.UrlEncode(message.t))
+	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), message.s, message.d, TGNS.UrlEncode(message.t))
 	Shared.SendHTTPRequest(url, "GET", function(response) end)
 end)
 
+TGNS.HookNetworkMessage(Plugin.GAME_IN_COUNTDOWN, function(message)
+	gameState.gameIsInCountdown = message.b
+end)
+
 TGNS.HookNetworkMessage(Plugin.GAME_IN_PROGRESS, function(message)
-	gameIsInProgress = message.b
-	if gameIsInProgress then
-		gameIsInProgressLastChanged = Shared.GetTime()
+	gameState.gameIsInProgress = message.b
+	if gameState.gameIsInProgress then
+		gameState.gameIsInProgressLastSetToTrue = Shared.GetTime()
 	else
+		gameState.gameIsInProgressLastSetToFalse = Shared.GetTime()
 		TGNS.DoFor(CHUDOptionsToDisableDuringWinOrLose, function(key)
 			if CHUDOptions and CHUDOptions[key] then
 				CHUDOptions[key].disabled = false
@@ -262,7 +270,7 @@ TGNS.HookNetworkMessage(Plugin.WYZ, function(message)
 end)
 
 local function inProgressGameShouldProhibitSquadChanging(teamNumber)
-	local result = gameIsInProgress and (Shared.GetTime() - gameIsInProgressLastChanged > 30) and teamNumber == kAlienTeamType
+	local result = gameState.gameIsInProgress and (Shared.GetTime() - gameState.gameIsInProgressLastSetToTrue > 30) and teamNumber == kAlienTeamType
 	return result
 end
 
@@ -292,7 +300,7 @@ local function getTeamQueryTexture(teamNumber)
 	return result
 end
 
-local function initializeSquadHudText()
+function hudTexts.initializeSquadHudText()
 	if hudTexts.squadNumbersHudText then
 		hudTexts.squadNumbersHudText:Remove()
 	end
@@ -325,42 +333,63 @@ local function initializeSquadHudText()
 	end
 end
 
-local function initializeAlienLifeformsHudText()
-	local updateAlienLifeformsReviewHudText = function(textObj, title, footer, commanderCountPredicate, onosCountPredicate, fadeCountPredicate, lerkCountPredicate, gorgeCountPredicate)
+function hudTexts.initializeAlienLifeformsHudText()
+	local updateAlienLifeformsReviewHudText = function(textObj, title, commanderCountPredicate, onosCountPredicate, fadeCountPredicate, lerkCountPredicate, gorgeCountPredicate, skulkCountPredicate, noPlansCountPredicate, footerPredicate)
 		local text = ""
-		if not gameIsInProgress then
+		if not gameState.gameIsInProgress and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 then
 			local playerIsAlien = Client.GetLocalClientTeamNumber() == kAlienTeamType
 			local playerIsCommander = Scoreboard_GetPlayerData(Client.GetLocalClientIndex(), "IsCommander")
 			if playerIsAlien then
-				local commanderCount = 0
-				local onosCount = 0
-				local fadeCount = 0
-				local lerkCount = 0
-				local gorgeCount = 0
+				local commanderNames = {}
+				local onosNames = {}
+				local fadeNames = {}
+				local lerkNames = {}
+				local gorgeNames = {}
+				local skulkNames = {}
+				local noPlansNames = {}
 				TGNS.DoForPairs(squadNumbers, function(clientIndex, squadNumber)
 					local teamNumber = Scoreboard_GetPlayerData(clientIndex, "EntityTeamNumber")
 					if teamNumber == kAlienTeamType then
+						local playerName = Scoreboard_GetPlayerData(clientIndex, "Name")
 						if squadNumber == 6 then
-							commanderCount = commanderCount + 1
+							table.insert(commanderNames, playerName)
 						elseif squadNumber == 5 then
-							onosCount = onosCount + 1
+							table.insert(onosNames, playerName)
 						elseif squadNumber == 4 then
-							fadeCount = fadeCount + 1
+							table.insert(fadeNames, playerName)
 						elseif squadNumber == 3 then
-							lerkCount = lerkCount + 1
+							table.insert(lerkNames, playerName)
 						elseif squadNumber == 2 then
-							gorgeCount = gorgeCount + 1
+							table.insert(gorgeNames, playerName)
+						elseif squadNumber == 1 then
+							table.insert(skulkNames, playerName)
+						elseif squadNumber == 0 then
+							table.insert(noPlansNames, playerName)
 						end
 					end
 				end)
+				local getNamesDisplay = function(names)
+					local result = ""
+					if #names >= 1 then
+						local namesToDisplay = TGNS.Take(names, 3)
+						if #names > 3 then
+							table.insert(namesToDisplay, "...")
+						end
+						result = string.format("(%s)", TGNS.Join(TGNS.Select(namesToDisplay, function(n) return TGNS.Truncate(n, 3) end), ", "))
+					end
+					return result
+				end
+
 				local lines = {}
 				table.insert(lines, title)
-				table.insert(lines, commanderCountPredicate(commanderCount) and string.format("%sx Commander", commanderCount) or "")
-				table.insert(lines, onosCountPredicate(onosCount) and string.format("%sx Onos", onosCount) or "")
-				table.insert(lines, fadeCountPredicate(fadeCount) and string.format("%sx Fade", fadeCount) or "")
-				table.insert(lines, lerkCountPredicate(lerkCount) and string.format("%sx Lerk", lerkCount) or "")
-				table.insert(lines, gorgeCountPredicate(gorgeCount) and string.format("%sx Gorge", gorgeCount) or "")
-				table.insert(lines, footer)
+				table.insert(lines, commanderCountPredicate(#commanderNames) and string.format("%sx Commander %s", #commanderNames, getNamesDisplay(commanderNames)) or "")
+				table.insert(lines, onosCountPredicate(#onosNames) and string.format("%sx Onos %s", #onosNames, getNamesDisplay(onosNames)) or "")
+				table.insert(lines, fadeCountPredicate(#fadeNames) and string.format("%sx Fade %s", #fadeNames, getNamesDisplay(fadeNames)) or "")
+				table.insert(lines, lerkCountPredicate(#lerkNames) and string.format("%sx Lerk %s", #lerkNames, getNamesDisplay(lerkNames)) or "")
+				table.insert(lines, gorgeCountPredicate(#gorgeNames) and string.format("%sx Gorge %s", #gorgeNames, getNamesDisplay(gorgeNames)) or "")
+				table.insert(lines, skulkCountPredicate(#skulkNames) and string.format("%sx Skulk/Wildcard %s", #skulkNames, getNamesDisplay(skulkNames)) or "")
+				table.insert(lines, noPlansCountPredicate(#noPlansNames) and string.format("%sx ??? %s", #noPlansNames, getNamesDisplay(noPlansNames)) or "")
+				table.insert(lines, footerPredicate() and "Click your scoreboard row's circle to choose." or "")
 
 				text = TGNS.Join(lines, "\n")
 			end
@@ -398,24 +427,54 @@ local function initializeAlienLifeformsHudText()
 	local fadeCountPredicate1 = function(count) return count > 0 end
 	local lerkCountPredicate1 = function(count) return count > 0 end
 	local gorgeCountPredicate1 = function(count) return count > 0 end
+	local skulkCountPredicate1 = function(count) return true end
+	local noPlansCountPredicate1 = function(count) return false end
+	local footerPredicate1 = function() return false end
 
 	local commanderCountPredicate2 = function(count) return count ~= 1 end
 	local onosCountPredicate2 = function(count) return count == 0 end
 	local fadeCountPredicate2 = function(count) return count == 0 end
 	local lerkCountPredicate2 = function(count) return count == 0 end
 	local gorgeCountPredicate2 = function(count) return count == 0 end
+	local skulkCountPredicate2 = function(count) return false end
+	local noPlansCountPredicate2 = function(count) return count > 0 end
+	local footerPredicate2 = function() return (squadNumbers[Client.GetLocalClientIndex()] or 0) == 0 end
 
 	function hudTexts.alienLifeformsReviewHudText1:UpdateText()
-		updateAlienLifeformsReviewHudText(self.Obj, "Planned Roles:", "Click your scoreboard row's circle to choose.", commanderCountPredicate1, onosCountPredicate1, fadeCountPredicate1, lerkCountPredicate1, gorgeCountPredicate1)
+		updateAlienLifeformsReviewHudText(self.Obj, "Planned Roles:", commanderCountPredicate1, onosCountPredicate1, fadeCountPredicate1, lerkCountPredicate1, gorgeCountPredicate1, skulkCountPredicate1, noPlansCountPredicate1, footerPredicate1)
 	end
 	function hudTexts.alienLifeformsReviewHudText2:UpdateText()
-		updateAlienLifeformsReviewHudText(self.Obj, "", "", commanderCountPredicate2, onosCountPredicate2, fadeCountPredicate2, lerkCountPredicate2, gorgeCountPredicate2)
+		updateAlienLifeformsReviewHudText(self.Obj, "", commanderCountPredicate2, onosCountPredicate2, fadeCountPredicate2, lerkCountPredicate2, gorgeCountPredicate2, skulkCountPredicate2, noPlansCountPredicate2, footerPredicate2)
+	end
+end
+
+function hudTexts.initializeSkillImbalanceHudText()
+	if hudTexts.skillImbalanceHudText then
+		hudTexts.skillImbalanceHudText:Remove()
+	end
+	hudTexts.skillImbalanceHudText = Shine.ScreenText.Add( "SkillImbalanceHudText", {
+		X = 0.3, Y = 0.7,
+		Text = "",
+		Duration = math.huge,
+		R = 0, G = 165, B = 0,
+		Alignment = TGNS.ShineTextAlignmentCenter,
+		Size = 2,
+		FadeIn = 0
+	} )
+
+	function hudTexts.skillImbalanceHudText:UpdateText()
+		local text = ""
+		if not gameState.gameIsInProgress and not gameState.gameIsInCountdown and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 and (Client.GetLocalClientTeamNumber() == kAlienTeamType or Client.GetLocalClientTeamNumber() == kMarineTeamType) then
+			text = string.format("Chat 'switch' if you want to play %s.\n\nIf you see skill imbalance pre-game:\nAsk specific player(s) to switch teams.\nIf they agree, great! If not, you tried. :)", Client.GetLocalClientTeamNumber() == kAlienTeamType and "Marines" or "Aliens")
+		end
+		self.Obj:SetText(text)
 	end
 end
 
 function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
-	initializeSquadHudText()
-	initializeAlienLifeformsHudText()
+	hudTexts.initializeSquadHudText()
+	hudTexts.initializeAlienLifeformsHudText()
+	hudTexts.initializeSkillImbalanceHudText()
 end
 
 function Plugin:GetFailsBkaPrerequisite(clientIndex)
@@ -933,7 +992,7 @@ function Plugin:Initialise()
 
 				if self.hoverMenu then
 					self.hoverMenu:RemoveButtonByText("Mute text")
-					if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) then
+					if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) then
 						self.hoverMenu:RemoveButtonByText("Hive profile")
 						self.hoverMenu:RemoveButtonByText("NS2Stats profile")
 					end
@@ -952,7 +1011,7 @@ function Plugin:Initialise()
 		    teamNameGUIItem:SetText(teamHeaderText)
 		end
 
-		if gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
+		if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
 
 		    local teamInfo = GetEntitiesForTeam("TeamInfo", Client.GetLocalClientTeamNumber())
 		    if teamInfo and #teamInfo > 0 then
@@ -993,7 +1052,7 @@ function Plugin:Initialise()
 
 				local targetPrefix = prefixes[self.hoverPlayerClientIndex] or ""
 				local targetIsSelf = GetSteamIdForClientIndex(self.hoverPlayerClientIndex) == Client.GetSteamId()
-				local targetIsEligibleForAfkRr = teamNumber == Client.GetLocalClientTeamNumber() and (not gameIsInProgress or PlayerUI_GetGameLengthTime() < 60) and TGNS.Contains(targetPrefix, "!") and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType)
+				local targetIsEligibleForAfkRr = teamNumber == Client.GetLocalClientTeamNumber() and (not gameState.gameIsInProgress or PlayerUI_GetGameLengthTime() < 60) and TGNS.Contains(targetPrefix, "!") and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType)
 				local buttons = {
 					{text="TGNS"}
 				  , {text="  Portal: My Badges", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Badges/Manage") end, condition=targetIsSelf}
@@ -1180,8 +1239,9 @@ function Plugin:Initialise()
 
 
 
-	initializeSquadHudText()
-	initializeAlienLifeformsHudText()
+	hudTexts.initializeSquadHudText()
+	hudTexts.initializeAlienLifeformsHudText()
+	hudTexts.initializeSkillImbalanceHudText()
 
 	local parent, OldUpdateUnitStatusBlip = LocateUpValue( GUIUnitStatus.Update, "UpdateUnitStatusBlip", { LocateRecurse = true } )
 	function SquadUpdateUnitStatusBlip( self, blipData, updateBlip, localPlayerIsCommander, baseResearchRot, showHints, playerTeamType )

@@ -217,6 +217,7 @@ function Plugin:ClientConnect(client)
 					end
 				end)
 				TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_PROGRESS, {b=TGNS.IsGameInProgress()})
+				TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_COUNTDOWN, {b=TGNS.IsGameInCountdown()})
 				TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
 				TGNS.SendNetworkMessageToPlayer(player, self.DESIGNATION, {c=TGNS.GetClientCommunityDesignationCharacter(client)})
 			end
@@ -372,21 +373,19 @@ function Plugin:Initialise()
 		end
 	end)
 
-	local sendRecordingBoundary = function(player)
-		TGNS.SendNetworkMessageToPlayer(player, self.RECORDING_BOUNDARY, {b="end", d=gameDurationInSeconds, t=TGNS.GetPlayerTeamName(player), p=TGNS.GetPlayerName(player)})
-	end
-
 	TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 		structuresKilled = {}
 		tunnelDescriptions = {}
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			self:AnnouncePlayerPrefix(p)
-			TGNS.SendNetworkMessageToPlayer(p, self.RECORDING_BOUNDARY, {b="start",d=0,t=TGNS.GetPlayerTeamName(p),p=TGNS.GetPlayerName(p)})
+			TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_COUNTDOWN, {b=true})
+			TGNS.SendNetworkMessageToPlayer(p, self.RECORDING_BOUNDARY, {b="start",d=0,t=TGNS.GetPlayerTeamName(p),p=TGNS.GetPlayerName(p),s=secondsSinceEpoch})
 		end)
 	end)
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_PROGRESS, {b=true})
+			TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_COUNTDOWN, {b=false})
 		end)
 		TGNS.ScheduleAction(NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS, function()
 			if TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS - 2 then
@@ -560,13 +559,13 @@ function Plugin:Initialise()
 	-- 	local isLookingUp = not isLookingDown
 	-- 	TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
 	-- end)
- 	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)
+ 	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds, gameStartTimeInSeconds)
  		local md = TGNSMessageDisplayer.Create()
  		md:ToAllConsole(string.format("Gametime: %s", string.DigitalTime(gameDurationInSeconds)))
 
 		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM - 1, function()
 			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-				TGNS.SendNetworkMessageToPlayer(p, self.RECORDING_BOUNDARY, {b="end", d=gameDurationInSeconds, t=TGNS.GetPlayerTeamName(p), p=TGNS.GetPlayerName(p)})
+				TGNS.SendNetworkMessageToPlayer(p, self.RECORDING_BOUNDARY, {b="end", d=gameDurationInSeconds, t=TGNS.GetPlayerTeamName(p), p=TGNS.GetPlayerName(p), s=gameStartTimeInSeconds})
 			end)
 		end)
  	end)
