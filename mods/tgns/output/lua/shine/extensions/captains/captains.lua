@@ -1555,14 +1555,14 @@ if Server or Client then
 					local lowestRelevantKd = 1.84
 					kdPercent = d.KD >= highestRelevantKd and 1 or (d.KD >= lowestRelevantKd and ((d.KD-lowestRelevantKd)/(highestRelevantKd-lowestRelevantKd))+transparencyBoost or 0)
 					
-					if lifeformSecondsSum > 0 or commSecondsSum > 0 then
-						if lifeformSecondsSum > 0 then
+					if lifeformSecondsSum > 1800 or commSecondsSum > 1800 then
+						if lifeformSecondsSum > 1800 then
 							gorgePercent = math.floor((d.GorgeSeconds / lifeformSecondsSum) * 100) / 100
 							lerkPercent = math.floor((d.LerkSeconds / lifeformSecondsSum) * 100) / 100
 							fadePercent = math.floor((d.FadeSeconds / lifeformSecondsSum) * 100) / 100
 							onosPercent = math.floor((d.OnosSeconds / lifeformSecondsSum) * 100) / 100
 						end
-						if commSecondsSum > 0 then
+						if commSecondsSum > 1800 then
 							marineCommPercent = math.floor((d.MarineCommSeconds / commSecondsSum) * 100) / 100
 							alienCommPercent = math.floor((d.AlienCommSeconds / commSecondsSum) * 100) / 100
 						end
