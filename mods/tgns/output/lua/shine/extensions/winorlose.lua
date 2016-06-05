@@ -19,6 +19,7 @@ local attackEnhancementLastGivenWhen = {}
 local lowestTimeRemainingFromWhichToDeduct = 20
 local maximumAllowableNumberOfSecondsToDeduct = 12
 local initialNumberOfSecondsToDeduct = 7
+local whenBigVotesFailedWithMajorityThisGame = {}
 
 local originalGetCanAttack
 
@@ -82,7 +83,16 @@ end
 
 local function getNumberOfRequiredVotes(potentialVoterPlayers)
 	local votersCount = #TGNS.Where(potentialVoterPlayers, function(p) return not (TGNS.PlayerIsRookie(p) and TGNS.IsPlayerStranger(p)) end)
-	local result = math.floor((votersCount * (Shine.Plugins.winorlose.Config.MinimumPercentage / 100)))
+	local minimumPercentage = Shine.Plugins.winorlose.Config.MinimumPercentage
+	local result = math.floor((votersCount * (minimumPercentage / 100)))
+	if votersCount >= 7 then
+		local votesRequiredToLower = Shine.Plugins.winorlose.Config.RecentFailedMajorityVotesRequiredToLowerPercentage
+		local pastDurationToLower = votesRequiredToLower * 66
+		if #TGNS.Where(whenBigVotesFailedWithMajorityThisGame, function(w) return w >= Shared.GetTime() - pastDurationToLower end) >= votesRequiredToLower then
+			result = math.ceil((votersCount * (51 / 100)))
+		end
+	end
+	TGNS.DebugPrint(string.format("winorlosedebug [%s]: %s voters have minimumPercentage: %s require %s votes with %s", Shared.GetTime(), votersCount, minimumPercentage, result, TGNS.Join(whenBigVotesFailedWithMajorityThisGame, ", ")))
 	return result
 end
 
@@ -285,6 +295,9 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 						kWinOrLoseVoteArray[i].VotingTimeInSeconds = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
+						if (#playerRecords >= 7 and totalvotes > #playerRecords / 2) then
+							table.insert(whenBigVotesFailedWithMajorityThisGame, Shared.GetTime())
+						end
 					else
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
 							chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
@@ -433,6 +446,7 @@ function Plugin:Initialise()
 
 	TGNS.RegisterEventHook("GameStarted", function()
 		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + 5
+		whenBigVotesFailedWithMajorityThisGame = {}
 		
 		-- if not TGNS.IsProduction() then
 		-- 	self:CallWinOrLose(TGNS.GetOtherPlayingTeamNumber(TGNS.GetClientTeamNumber(TGNS.GetFirst(TGNS.GetHumanClientList()))))
