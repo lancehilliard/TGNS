@@ -66,6 +66,7 @@ local lastWinOrLoseWarningWhen = 0
 local CHUDOptionsToDisableDuringWinOrLose = {"wps", "minwps"}
 local structuresKilled = {}
 local serverAddress
+local captainsEnabled
 
 local statusColors = {
     ["Shotgun"] = Color(0,1,0,1), -- green
@@ -464,7 +465,7 @@ function hudTexts.initializeSkillImbalanceHudText()
 
 	function hudTexts.skillImbalanceHudText:UpdateText()
 		local text = ""
-		if not gameState.gameIsInProgress and not gameState.gameIsInCountdown and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 and (Client.GetLocalClientTeamNumber() == kAlienTeamType or Client.GetLocalClientTeamNumber() == kMarineTeamType) then
+		if not captainsEnabled and not gameState.gameIsInProgress and not gameState.gameIsInCountdown and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 and (Client.GetLocalClientTeamNumber() == kAlienTeamType or Client.GetLocalClientTeamNumber() == kMarineTeamType) then
 			text = string.format("Chat 'switch' if you want to play %s.\n\nIf you see skill imbalance pre-game:\nAsk specific player(s) to switch teams.\nIf they agree, great! If not, you tried. :)", Client.GetLocalClientTeamNumber() == kAlienTeamType and "Marines" or "Aliens")
 		end
 		self.Obj:SetText(text)
@@ -628,6 +629,7 @@ function Plugin:Initialise()
 			        local numberColor = Color(0.5, 0.5, 0.5, 1)
 			        if isCaptainsCaptain[clientIndex] == true then
 			        	numberColor = CaptainsCaptainFontColor
+			        	captainsEnabled = true
 			        end
 			        player["Number"]:SetColor(numberColor)
 		        end
