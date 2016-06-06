@@ -67,12 +67,18 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourcePlayerTunnelDescription = TGNS.PlayerIsAlien(sourcePlayer) and (tunnelDescriptions[sourcePlayer:GetClientIndex()] or "") or ""
 		local sourcePlayerHasCelerity = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCelerityUpgrade(sourcePlayer)
 		local sourcePlayerHasAdrenaline = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAdrenalineUpgrade(sourcePlayer)
+		local sourcePlayerHasSilence = TGNS.IsPlayerAlive(sourcePlayer) and GetHasSilenceUpgrade(sourcePlayer)
+
 		local sourcePlayerHasRegeneration = TGNS.IsPlayerAlive(sourcePlayer) and GetHasRegenerationUpgrade(sourcePlayer)
 		local sourcePlayerHasCarapace = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCarapaceUpgrade(sourcePlayer)
-		local sourcePlayerHasSilence = TGNS.IsPlayerAlive(sourcePlayer) and GetHasSilenceUpgrade(sourcePlayer)
+		local sourcePlayerHasCrush = TGNS.IsPlayerAlive(sourcePlayer) and GetHasCrushUpgrade(sourcePlayer)
+
 		local sourcePlayerHasAura = TGNS.IsPlayerAlive(sourcePlayer) and GetHasAuraUpgrade(sourcePlayer)
+		local sourcePlayerHasFocus = TGNS.IsPlayerAlive(sourcePlayer) and GetHasFocusUpgrade(sourcePlayer)
+		local sourcePlayerHasVampirism = TGNS.IsPlayerAlive(sourcePlayer) and GetHasVampirismUpgrade(sourcePlayer)
+
 		local structuresKilled = structuresKilled[TGNS.GetClient(sourcePlayer)] or 0
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasRegeneration, u4=sourcePlayerHasCarapace, u5=sourcePlayerHasSilence, u6=sourcePlayerHasAura, streaming=streamingWebAddresses[sourceClient] or "", sk=structuresKilled})
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasSilence, u4=sourcePlayerHasRegeneration, u5=sourcePlayerHasCarapace, u6=sourcePlayerHasCrush, u7=sourcePlayerHasAura, u8=sourcePlayerHasFocus, u9=sourcePlayerHasVampirism, streaming=streamingWebAddresses[sourceClient] or "", sk=structuresKilled})
 	end
 end
 

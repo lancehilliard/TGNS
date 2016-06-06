@@ -70,6 +70,7 @@ local captainsEnabled
 
 local statusColors = {
     ["Shotgun"] = Color(0,1,0,1), -- green
+    ["MG"] = Color(1,0,0,1), -- green
     ["FT"] = Color(1,1,0,1), -- yellow
     ["GL"] = Color(1,0,1,1)} -- magenta
 
@@ -77,10 +78,16 @@ local statusColors = {
 local has = {}
 has.Celerity = {}
 has.Adrenaline = {}
+has.Silence = {}
+
 has.Regeneration = {}
 has.Carapace = {}
-has.Silence = {}
+has.Crush = {}
+
 has.Aura = {}
+has.Focus = {}
+has.Vampirism = {}
+
 has.Welder = {}
 has.Mines = {}
 has.ClusterGrenade = {}
@@ -97,6 +104,8 @@ local kFavoriteColor = Color(1,1,1,0.9)
 
 local streamingWebAddresses = {}
 
+has.ChangedResolutionSinceAddingGameTimeFavorite = false
+
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
 	isCaptainsCaptain[message.i] = message.c
@@ -108,12 +117,19 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	has.GasGrenade[message.i] = message.gg
 	has.PulseGrenade[message.i] = message.pg
 	tunnelDescriptions[message.i] = message.t
+	
 	has.Celerity[message.i] = message.u1
 	has.Adrenaline[message.i] = message.u2
-	has.Regeneration[message.i] = message.u3
-	has.Carapace[message.i] = message.u4
-	has.Silence[message.i] = message.u5
-	has.Aura[message.i] = message.u6
+	has.Silence[message.i] = message.u3
+
+	has.Regeneration[message.i] = message.u4
+	has.Carapace[message.i] = message.u5
+	has.Crush[message.i] = message.u6
+
+	has.Aura[message.i] = message.u7
+	has.Focus[message.i] = message.u8
+	has.Vampirism[message.i] = message.u9
+
 	streamingWebAddresses[message.i] = message.streaming
 	structuresKilled[message.i] = message.sk
 end)
@@ -476,6 +492,7 @@ function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
 	hudTexts.initializeSquadHudText()
 	hudTexts.initializeAlienLifeformsHudText()
 	hudTexts.initializeSkillImbalanceHudText()
+	has.ChangedResolutionSinceAddingGameTimeFavorite = true
 end
 
 function Plugin:GetFailsBkaPrerequisite(clientIndex)
@@ -542,7 +559,7 @@ function Plugin:Initialise()
                 end
             end
 
-            if self.gameTimeFavorite then
+            if self.gameTimeFavorite and not has.ChangedResolutionSinceAddingGameTimeFavorite then
 				self.gameTimeFavorite:SetColor(kFavoriteColor)
 	            if MouseTracker_GetIsVisible() then
 					local mouseX, mouseY = Client.GetCursorPosScreen()
@@ -599,13 +616,14 @@ function Plugin:Initialise()
 	        self.gameTime:SetText(gameTimeText)
 		end
 
-		if not self.gameTimeFavorite and serverAddress then
+		if (has.ChangedResolutionSinceAddingGameTimeFavorite or not self.gameTimeFavorite) and serverAddress then
 		    self.gameTimeFavorite = GUIManager:CreateGraphicItem()
 		    self.gameTimeFavorite:SetSize(kFavoriteIconSize)
 		    self.gameTimeFavorite:SetPosition(kFavoriteIconPos)
 		    self.gameTimeFavorite:SetTexture(GetServerIsFavorite(serverAddress) and kFavoriteTexture or kNonFavoriteTexture)
 		    self.gameTimeFavorite:SetColor(kFavoriteColor)
 		    self.gameTimeBackground:AddChild(self.gameTimeFavorite)
+		    has.ChangedResolutionSinceAddingGameTimeFavorite = false
 		end
 
 		local playerList = updateTeam["PlayerList"]
@@ -658,13 +676,23 @@ function Plugin:Initialise()
 	        	playerIconShouldDisplay.GasGrenade = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and has.GasGrenade[clientIndex] == true)
 	        	playerIconShouldDisplay.PulseGrenade = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kMarineTeamType)) and has.PulseGrenade[clientIndex] == true)
 	        	playerIconShouldDisplay.Tunnel = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and TGNS.HasNonEmptyValue(tunnelDescription))
+
 				playerIconShouldDisplay.Celerity = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Celerity[clientIndex] == true)
 				playerIconShouldDisplay.Adrenaline = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Adrenaline[clientIndex] == true)
+				playerIconShouldDisplay.Silence = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Silence[clientIndex] == true)
+
 				playerIconShouldDisplay.Regeneration = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Regeneration[clientIndex] == true)
 				playerIconShouldDisplay.Carapace = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Carapace[clientIndex] == true)
-				playerIconShouldDisplay.Silence = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Silence[clientIndex] == true)
+				playerIconShouldDisplay.Crush = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Crush[clientIndex] == true)
+
 				playerIconShouldDisplay.Aura = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Aura[clientIndex] == true)
+				playerIconShouldDisplay.Focus = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Focus[clientIndex] == true)
+				playerIconShouldDisplay.Vampirism = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Vampirism[clientIndex] == true)
+
 		        playerIconShouldDisplay.Streaming = TGNS.HasNonEmptyValue(streamingWebAddresses[clientIndex])
+
+
+
 
 	        	local playerNote = notes[clientIndex]
 
@@ -694,10 +722,15 @@ function Plugin:Initialise()
 				        	tunnelIconTexture = "ui/badges/aliens/OpenTunnel.dds"
 				        	playerIconShouldDisplay.Celerity = true
 				        	playerIconShouldDisplay.Adrenaline = true
+				        	playerIconShouldDisplay.Silence = true
+
 				        	playerIconShouldDisplay.Regeneration = true
 				        	playerIconShouldDisplay.Carapace = true
-				        	playerIconShouldDisplay.Silence = true
+				        	playerIconShouldDisplay.Crush = true
+
 				        	playerIconShouldDisplay.Aura = true
+				        	playerIconShouldDisplay.Focus = true
+				        	playerIconShouldDisplay.Vampirism = true
 			        	end
 			        end
 		        	-- playerIconShouldDisplay.ApproveNote = true
@@ -730,12 +763,19 @@ function Plugin:Initialise()
 		        		local tunnelDescription = tunnelDescriptions[clientIndex] or ""
 		        		return string.format("Gorge Tunnel\n\nThis player has a Gorge Tunnel.\n\nIt's %s in:\n\n%s%s", TGNS.Contains(tunnelDescription, " / ") and "OPEN" or "CLOSED", tunnelDescription, TGNS.Contains(tunnelDescription, " / ") and "\n\nNote: The first entrance listed above is older and\nwill be destroyed if this player drops another." or "")
 		        	end}
+
+		        	,{n="PlayerCelerityIcon",t="ui/badges/aliens/celerity.dds",x=-200,l="Celerity\n\nThis player has the Celerity upgrade."}
+		        	,{n="PlayerAdrenalineIcon",t="ui/badges/aliens/adren.dds",x=-200,l="Adrenaline\n\nThis player has the Adrenaline upgrade."}
+		        	,{n="PlayerSilenceIcon",t="ui/badges/aliens/silence.dds",x=-200,l="Silence\n\nThis player has the Silence upgrade."}
+
+		        	,{n="PlayerAuraIcon",t="ui/badges/aliens/aura.dds",x=-180,l="Aura\n\nThis player has the Aura upgrade."}
+		        	,{n="PlayerFocusIcon",t="ui/badges/aliens/focus.dds",x=-180,l="Focus\n\nThis player has the Focus upgrade."}
+		        	,{n="PlayerVampirismIcon",t="ui/badges/aliens/vampirism.dds",x=-180,l="Vampirism\n\nThis player has the Vampirism upgrade."}
+
 		        	,{n="PlayerRegenerationIcon",t="ui/badges/aliens/regen.dds",x=-160,l="Regeneration\n\nThis player has the Regeneration upgrade."}
 		        	,{n="PlayerCarapaceIcon",t="ui/badges/aliens/cara.dds",x=-160,l="Carapace\n\nThis player has the Carapace upgrade."}
-		        	,{n="PlayerCelerityIcon",t="ui/badges/aliens/celerity.dds",x=-180,l="Celerity\n\nThis player has the Celerity upgrade."}
-		        	,{n="PlayerAdrenalineIcon",t="ui/badges/aliens/adren.dds",x=-180,l="Adrenaline\n\nThis player has the Adrenaline upgrade."}
-		        	,{n="PlayerSilenceIcon",t="ui/badges/aliens/phantom.dds",x=-200,l="Phantom\n\nThis player has the Phantom upgrade."}
-		        	,{n="PlayerAuraIcon",t="ui/badges/aliens/aura.dds",x=-200,l="Aura\n\nThis player has the Aura upgrade."}
+		        	,{n="PlayerCrushIcon",t="ui/badges/aliens/crush.dds",x=-160,l="Crush\n\nThis player has the Crush upgrade."}
+
 		        	,{n="PlayerStreamingIcon",t="ui/badges/streaming/camera.dds",x=-220,l=function(clientIndex, teamNumber) return string.format("Streaming\n\n%s is streaming!\n\n%s\n\nAre you streaming? Chat '!streaming' to share.", Scoreboard_GetPlayerData(clientIndex, "Name"), streamingWebAddresses[clientIndex]) end}
 		    	}
 
@@ -888,6 +928,11 @@ function Plugin:Initialise()
 		        	table.insert(guiItems, player["PlayerAdrenalineIcon"])
 		        	player["PlayerAdrenalineIcon"]:SetIsVisible(playerIconShouldDisplay.Adrenaline)
 		        end
+		        if player["PlayerSilenceIcon"] then
+		        	table.insert(guiItems, player["PlayerSilenceIcon"])
+		        	player["PlayerSilenceIcon"]:SetIsVisible(playerIconShouldDisplay.Silence)
+		        end
+
 		        if player["PlayerRegenerationIcon"] then
 		        	table.insert(guiItems, player["PlayerRegenerationIcon"])
 		        	player["PlayerRegenerationIcon"]:SetIsVisible(playerIconShouldDisplay.Regeneration)
@@ -896,14 +941,31 @@ function Plugin:Initialise()
 		        	table.insert(guiItems, player["PlayerCarapaceIcon"])
 		        	player["PlayerCarapaceIcon"]:SetIsVisible(playerIconShouldDisplay.Carapace)
 		        end
-		        if player["PlayerSilenceIcon"] then
-		        	table.insert(guiItems, player["PlayerSilenceIcon"])
-		        	player["PlayerSilenceIcon"]:SetIsVisible(playerIconShouldDisplay.Silence)
+		        if player["PlayerCrushIcon"] then
+		        	table.insert(guiItems, player["PlayerCrushIcon"])
+		        	player["PlayerCrushIcon"]:SetIsVisible(playerIconShouldDisplay.Crush)
 		        end
+
 		        if player["PlayerAuraIcon"] then
 		        	table.insert(guiItems, player["PlayerAuraIcon"])
 		        	player["PlayerAuraIcon"]:SetIsVisible(playerIconShouldDisplay.Aura)
 		        end
+		        if player["PlayerFocusIcon"] then
+		        	table.insert(guiItems, player["PlayerFocusIcon"])
+		        	player["PlayerFocusIcon"]:SetIsVisible(playerIconShouldDisplay.Focus)
+		        end
+		        if player["PlayerVampirismIcon"] then
+		        	table.insert(guiItems, player["PlayerVampirismIcon"])
+		        	player["PlayerVampirismIcon"]:SetIsVisible(playerIconShouldDisplay.Vampirism)
+		        end
+
+
+
+
+
+
+
+
 		        if player["PlayerStreamingIcon"] then
 		        	table.insert(guiItems, player["PlayerStreamingIcon"])
 		        	player["PlayerStreamingIcon"]:SetIsVisible(playerIconShouldDisplay.Streaming)
