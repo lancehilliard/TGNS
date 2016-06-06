@@ -635,7 +635,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 end
 
 local function sweep()
-    if Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-2 then
+    if Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-1 then
         TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c)
             if TGNS.IsGameInProgress() then
                 local lastTeamChangeTime = inReadyRoomSinceTimes[c]
