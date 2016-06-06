@@ -87,7 +87,7 @@ local function getNumberOfRequiredVotes(potentialVoterPlayers)
 	local result = math.floor((votersCount * (minimumPercentage / 100)))
 	if votersCount >= 7 then
 		local votesRequiredToLower = Shine.Plugins.winorlose.Config.RecentFailedMajorityVotesRequiredToLowerPercentage
-		local pastDurationToLower = votesRequiredToLower * 66
+		local pastDurationToLower = votesRequiredToLower * Shine.Plugins.winorlose.Config.VotingTimeInSeconds
 		if #TGNS.Where(whenBigVotesFailedWithMajorityThisGame, function(w) return w >= Shared.GetTime() - pastDurationToLower end) >= votesRequiredToLower then
 			result = math.ceil((votersCount * (51 / 100)))
 		end
