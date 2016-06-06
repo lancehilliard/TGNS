@@ -8,7 +8,7 @@ function Plugin:PlayerSay(client, networkMessage)
 	local teamOnly = networkMessage.teamOnly
 	local message = StringTrim(networkMessage.message)
 	local clientShouldBeRemovedFromQueue = function(c, t) return not (Shine:IsValidClient(c) and TGNS.GetClientTeamNumber(c) == t) end
-	local isTrade = TGNS.ToLower(message) == "switch"
+	local isTrade = TGNS.ToLower(message) == "switch" or TGNS.ToLower(message) == "'switch'"
 	if isTrade then
 		local teamNumber = TGNS.GetClientTeamNumber(client)
 		local clientIsPlaying = TGNS.IsGameplayTeamNumber(teamNumber)
