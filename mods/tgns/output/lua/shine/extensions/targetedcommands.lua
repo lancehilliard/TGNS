@@ -27,7 +27,7 @@ local function CreateCommand(consoleCommandName, chatCommandName, messageChannel
 end
 
 local log = function(client, targetClient, commandName, reason)
-	local logMessage = string.format("%s executed %s against %s. Reason: %s", TGNS.GetClientNameSteamIdCombo(client), commandName, TGNS.GetClientNameSteamIdCombo(targetClient), reason)
+	local logMessage = string.format("%s executed %s against %s. Reason: %s", client and TGNS.GetClientNameSteamIdCombo(client) or "Console[N/A]", commandName, TGNS.GetClientNameSteamIdCombo(targetClient), reason)
 	TGNS.EnhancedLog(logMessage)
 end
 
@@ -248,6 +248,19 @@ local commands = { CreateCommand(
 		, true
 		, "<player> <reason> Kick player."
 	)
+	, CreateCommand(
+		"sh_portalkick"
+		, nil
+		, "PORTAL"
+		, nil
+		, nil
+		, function(self, client, targetClient, reason, md)
+			TGNS.DisconnectClient(targetClient, reason)
+			log(client, targetClient, self.consoleCommandName, reason)
+		end
+		, true
+		, "<player> <reason> Kick player."
+	)
 }
 
 local Plugin = {}
@@ -280,7 +293,7 @@ function Plugin:CreateCommands()
 	TGNS.DoFor(commands, function(command)
 		local boundCommand = self:BindCommand(command.consoleCommandName, command.chatCommandName, function(client, playerPredicate, reason)
 			local md = TGNSMessageDisplayer.Create(command.messageChannel)
-			local player = TGNS.GetPlayer(client)
+			local player = client and TGNS.GetPlayer(client) or nil
 			if playerPredicate == nil or playerPredicate == "" then
 				md:ToPlayerNotifyError(player, "You must specify a player.")
 			else
