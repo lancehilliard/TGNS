@@ -14,7 +14,7 @@ function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
     TGNS.ScheduleAction(5, function()
-    	if TGNS.GetSecondsSinceServerProcessStarted() < 30 then
+    	if TGNS.GetSecondsSinceServerProcessStarted() < 15 then
     		TGNS.SwitchToMap(TGNS.GetCurrentMapName())
     	end
     end)
