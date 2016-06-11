@@ -638,7 +638,7 @@ function Plugin:Initialise()
 		        local clientIndex = playerRecord.ClientIndex
 
 		        local clientStructuresKilled = structuresKilled[clientIndex] or 0
-	        	player["Kills"]:SetText(string.format("%s(%s)", player["Kills"]:GetText(), clientStructuresKilled))
+	        	player["Kills"]:SetText(string.format("%s [%s]", player["Kills"]:GetText(), clientStructuresKilled))
 
 		        if showCustomNumbersColumn then
 		        	player["Number"]:SetIsVisible(true)
