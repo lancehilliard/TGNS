@@ -270,7 +270,7 @@ local function svBalance(client, forcePlayersToReadyRoom)
 		md:ToPlayerNotifyError(player, "You may not balance while a map vote is in progress.")
 	else
 		local gameState = GetGamerules():GetGameState()
-		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame then
+		if gameState == kGameState.NotStarted or gameState == kGameState.PreGame or gameState == kGameState.WarmUp then
 			md:ToAllNotifyInfo(string.format("%s is sending players to teams. Chat 'switch' if you want the other team.", TGNS.GetClientName(client)))
 			local playingClients = TGNS.GetPlayingClients(TGNS.GetPlayerList())
 			if forcePlayersToReadyRoom then
