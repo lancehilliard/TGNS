@@ -44,6 +44,7 @@ Plugin.RECENT_CAPTAINS = "scoreboard_RECENT_CAPTAINS"
 Plugin.TOOLTIP_SOUND = "scoreboard_TOOLTIP_SOUND"
 Plugin.SERVER_ADDRESS = "scoreboard_SERVER_ADDRESS"
 Plugin.RECORDING_BOUNDARY = "scoreboard_RECORDING_BOUNDARY"
+Plugin.GAME_FEEDBACK = "scoreboard_GAME_FEEDBACK"
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean", b="boolean", w="boolean", m="boolean", cg="boolean", gg="boolean", pg="boolean", t="string(100)", u1="boolean", u2="boolean", u3="boolean", u4="boolean", u5="boolean", u6="boolean", u7="boolean", u8="boolean", u9="boolean", streaming="string(100)", sk="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
@@ -89,6 +90,7 @@ TGNS.RegisterNetworkMessage(Plugin.RECENT_CAPTAINS, {c="string(500)"})
 TGNS.RegisterNetworkMessage(Plugin.TOOLTIP_SOUND, {})
 TGNS.RegisterNetworkMessage(Plugin.SERVER_ADDRESS, {a="string(100)"})
 TGNS.RegisterNetworkMessage(Plugin.RECORDING_BOUNDARY, {b="string(100)",d="float", t="string(100)", p="string(30)", s="integer"})
+TGNS.RegisterNetworkMessage(Plugin.GAME_FEEDBACK, {rating="integer", reasons="string(500)"})
 
 function Plugin:Initialise()
 	self.Enabled = true

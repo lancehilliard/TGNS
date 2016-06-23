@@ -14,6 +14,7 @@ local streamingWebAddresses = {}
 local approveCache = {}
 local approveCacheWasPreloaded = false
 local structuresKilled = {}
+local lastStartTimeSeconds = 0
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -414,6 +415,18 @@ function Plugin:Initialise()
 		-- end
 	end)
 
+	TGNS.HookNetworkMessage(self.GAME_FEEDBACK, function(client, message)
+		local steamId = TGNS.GetClientSteamId(client)
+		local gameFeedbackUrl = string.format("%s&n=%s&t=%s&i=%s&rating=%s&reasons=%s", TGNS.Config.GameFeedbackEndpointBaseUrl, TGNS.GetSimpleServerName(), lastStartTimeSeconds, steamId, message.rating, TGNS.UrlEncode(message.reasons))
+		TGNS.GetHttpAsync(gameFeedbackUrl, function(gameFeedbackResponseJson)
+			local gameFeedbackResponse = json.decode(gameFeedbackResponseJson) or {}
+			if not gameFeedbackResponse.success then
+				TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to record game feedback. msg: %s | response: %s | stacktrace: %s | url: %s", gameFeedbackResponse.msg, gameFeedbackResponseJson, gameFeedbackResponse.stacktrace, gameFeedbackUrl))
+			end
+		end)
+
+	end)
+
 	TGNS.HookNetworkMessage(self.APPROVE_REQUESTED, function(client, message)
 		local md = TGNSMessageDisplayer.Create("APPROVE")
 		local targetClientIndex = message.c
@@ -566,6 +579,7 @@ function Plugin:Initialise()
 	-- 	TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
 	-- end)
  	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds, gameStartTimeInSeconds)
+ 		lastStartTimeSeconds = gameStartTimeInSeconds
  		local md = TGNSMessageDisplayer.Create()
  		md:ToAllConsole(string.format("Gametime: %s", string.DigitalTime(gameDurationInSeconds)))
 

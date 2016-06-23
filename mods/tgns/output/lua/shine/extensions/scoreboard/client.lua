@@ -1551,6 +1551,17 @@ function Plugin:Initialise()
 		return result
 	end
 
+	local originalGUIFeedbackState_EndSendReport = GUIFeedbackState_End.SendReport
+	GUIFeedbackState_End.SendReport = function(GUIFeedbackState_EndSelf)
+		originalGUIFeedbackState_EndSendReport(GUIFeedbackState_EndSelf)
+		local rating = GUIFeedbackState_EndSelf.parent.rating
+		local reasons = {}
+		TGNS.DoFor(GUIFeedbackState_EndSelf.parent.reasons, function(r)
+			table.insert(reasons, Locale.ResolveString(GUIFeedbackState_Reason.Reasons[r][2]))
+		end)
+		TGNS.SendNetworkMessage(Plugin.GAME_FEEDBACK, {rating=rating, reasons=GUIFeedbackState_EndSelf.parent.reasons and json.encode(reasons) or ""})
+	end
+
 	return true
 end
 
