@@ -46,7 +46,7 @@ Plugin.SERVER_ADDRESS = "scoreboard_SERVER_ADDRESS"
 Plugin.RECORDING_BOUNDARY = "scoreboard_RECORDING_BOUNDARY"
 Plugin.GAME_FEEDBACK = "scoreboard_GAME_FEEDBACK"
 
-TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean", b="boolean", w="boolean", m="boolean", cg="boolean", gg="boolean", pg="boolean", t="string(100)", u1="boolean", u2="boolean", u3="boolean", u4="boolean", u5="boolean", u6="boolean", u7="boolean", u8="boolean", u9="boolean", streaming="string(100)", sk="integer"})
+TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean", b="boolean", w="boolean", m="boolean", cg="boolean", gg="boolean", pg="boolean", t="string(100)", u1="boolean", u2="boolean", u3="boolean", u4="boolean", u5="boolean", u6="boolean", u7="boolean", u8="boolean", u9="boolean", streaming="string(100)", rtk="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_REQUESTED, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_MAY_TRY_AGAIN, {c="integer"})
 TGNS.RegisterNetworkMessage(Plugin.APPROVE_RESET, {})

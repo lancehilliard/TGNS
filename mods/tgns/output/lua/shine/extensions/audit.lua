@@ -10,6 +10,8 @@ local function initCurrentGameObject()
 	currentGame["WeldHealth"] = {}
 	currentGame["HealSpray"] = {}
 	currentGame["ClassDurations"] = {}
+	currentGame["HarvestersKilled"] = {}
+	currentGame["ExtractorsKilled"] = {}
 end
 
 local trackedClassData = { {PlayerDataPropertyName="GorgeSeconds", TechId=kTechId.Gorge}, {PlayerDataPropertyName="LerkSeconds", TechId=kTechId.Lerk}, {PlayerDataPropertyName="FadeSeconds", TechId=kTechId.Fade}, {PlayerDataPropertyName="OnosSeconds", TechId=kTechId.Onos} }
@@ -75,6 +77,20 @@ function Plugin:OnEntityKilled(gamerules, victim, attacker, inflictor, point, di
 			victimClassName = victim.layout
 		end
 		currentGame["classKillCounts"][victimClassName] = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"][victimClassName]) + 1
+
+		local attackerClient = TGNS.GetClient(attacker)
+		if attackerClient then
+			local currentGamePersonalCounterToIncrement
+			if victim:isa("Harvester") then
+				currentGamePersonalCounterToIncrement = "HarvestersKilled"
+			elseif victim:isa("Extractor") then
+				currentGamePersonalCounterToIncrement = "ExtractorsKilled"
+			end
+			if currentGamePersonalCounterToIncrement then
+				currentGame[currentGamePersonalCounterToIncrement][attackerClient] = currentGame[currentGamePersonalCounterToIncrement][attackerClient] or {}
+				currentGame[currentGamePersonalCounterToIncrement][attackerClient] = currentGame[currentGamePersonalCounterToIncrement][attackerClient] + 1
+			end
+		end
 	end
 end
 
@@ -141,6 +157,8 @@ function Plugin:Initialise()
 		gameData.GrenadeLauncherMarinesKilled = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"]["GranadeLauncherMarine"])
 		gameData.HivesKilled = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"]["Hive"])
 		gameData.ChairsKilled = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"]["CommandStation"])
+		gameData.HarvestersKilled = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"]["Harvester"])
+		gameData.ExtractorsKilled = TGNS.GetNumericValueOrZero(currentGame["classKillCounts"]["Extractor"])
 		gameData.CaptainsMode = currentGame["isCaptainsMode"] == true
 		gameData.SurrenderTeamNumber = currentGame["surrenderTeamNumber"] or EMPTY_VALUE
 		gameData.WinOrLoseEndGameCountdownValue = currentGame["winOrLoseEndGameCountdownValue"] or EMPTY_VALUE
@@ -181,6 +199,8 @@ function Plugin:Initialise()
 					    		playerData.Stranger = TGNS.IsClientStranger(c)
 					    		playerData.WeldGave = TGNS.GetNumericValueOrZero(currentGame["WeldHealth"][c])
 					    		playerData.HealSprayGave = TGNS.GetNumericValueOrZero(currentGame["HealSpray"][c])
+					    		playerData.HarvestersKilled = TGNS.GetNumericValueOrZero(currentGame["HarvestersKilled"][c])
+					    		playerData.ExtractorsKilled = TGNS.GetNumericValueOrZero(currentGame["ExtractorsKilled"][c])
 
 					    		currentGame["ClassDurations"][c] = currentGame["ClassDurations"][c] or {}
 					    		TGNS.DoFor(trackedClassData, function(d)

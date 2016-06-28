@@ -64,7 +64,7 @@ local lastTeamNumber = {}
 local lastUpdatedTeamNumbers = 0
 local lastWinOrLoseWarningWhen = 0
 local CHUDOptionsToDisableDuringWinOrLose = {"wps", "minwps"}
-local structuresKilled = {}
+local resourceTowersKilled = {}
 local serverAddress
 local captainsEnabled
 
@@ -131,7 +131,7 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	has.Vampirism[message.i] = message.u9
 
 	streamingWebAddresses[message.i] = message.streaming
-	structuresKilled[message.i] = message.sk
+	resourceTowersKilled[message.i] = message.rtk
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -637,8 +637,7 @@ function Plugin:Initialise()
 
 		        local clientIndex = playerRecord.ClientIndex
 
-		        local clientStructuresKilled = structuresKilled[clientIndex] or 0
-	        	player["Kills"]:SetText(string.format("%s [%s]", player["Kills"]:GetText(), clientStructuresKilled))
+	        	player["Kills"]:SetText(string.format("%s [%s]", player["Kills"]:GetText(), resourceTowersKilled[clientIndex] or 0))
 
 		        if showCustomNumbersColumn then
 		        	player["Number"]:SetIsVisible(true)

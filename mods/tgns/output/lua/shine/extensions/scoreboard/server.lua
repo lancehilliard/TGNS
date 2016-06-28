@@ -13,7 +13,7 @@ local tunnelDescriptions = {}
 local streamingWebAddresses = {}
 local approveCache = {}
 local approveCacheWasPreloaded = false
-local structuresKilled = {}
+local resourceTowersKilled = {}
 local lastStartTimeSeconds = 0
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
@@ -78,8 +78,8 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local sourcePlayerHasFocus = TGNS.IsPlayerAlive(sourcePlayer) and GetHasFocusUpgrade(sourcePlayer)
 		local sourcePlayerHasVampirism = TGNS.IsPlayerAlive(sourcePlayer) and GetHasVampirismUpgrade(sourcePlayer)
 
-		local structuresKilled = structuresKilled[TGNS.GetClient(sourcePlayer)] or 0
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasSilence, u4=sourcePlayerHasRegeneration, u5=sourcePlayerHasCarapace, u6=sourcePlayerHasCrush, u7=sourcePlayerHasAura, u8=sourcePlayerHasFocus, u9=sourcePlayerHasVampirism, streaming=streamingWebAddresses[sourceClient] or "", sk=structuresKilled})
+		local resourceTowersKilled = resourceTowersKilled[TGNS.GetClient(sourcePlayer)] or 0
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasSilence, u4=sourcePlayerHasRegeneration, u5=sourcePlayerHasCarapace, u6=sourcePlayerHasCrush, u7=sourcePlayerHasAura, u8=sourcePlayerHasFocus, u9=sourcePlayerHasVampirism, streaming=streamingWebAddresses[sourceClient] or "", rtk=resourceTowersKilled})
 	end
 end
 
@@ -250,12 +250,11 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 			end)
 		end
 	end
-	local victimEntityIsNonCystStructure = HasMixin(victimEntity, "Construct") and not victimEntity:isa("Cyst")
-	if victimEntityIsNonCystStructure then
+	if victimEntity:isa("ResourceTower") then
 		local attackerClient = TGNS.GetClient(attackerEntity)
 		if attackerClient then
-			structuresKilled[attackerClient] = structuresKilled[attackerClient] or 0
-			structuresKilled[attackerClient] = structuresKilled[attackerClient] + 1
+			resourceTowersKilled[attackerClient] = resourceTowersKilled[attackerClient] or 0
+			resourceTowersKilled[attackerClient] = resourceTowersKilled[attackerClient] + 1
 			self:AnnouncePlayerPrefix(attackerEntity)
 		end
 	end
@@ -381,7 +380,7 @@ function Plugin:Initialise()
 	end)
 
 	TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
-		structuresKilled = {}
+		resourceTowersKilled = {}
 		tunnelDescriptions = {}
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			self:AnnouncePlayerPrefix(p)
