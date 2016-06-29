@@ -6,12 +6,15 @@ local function initCurrentGameObject()
 	currentGame = {}
 	currentGame["classKillCounts"] = {}
 	currentGame["classBuildCounts"] = {}
+	currentGame["classBuildCompleteCounts"] = {}
 	currentGame["clients"] = {}
 	currentGame["WeldHealth"] = {}
 	currentGame["HealSpray"] = {}
 	currentGame["ClassDurations"] = {}
 	currentGame["HarvestersKilled"] = {}
 	currentGame["ExtractorsKilled"] = {}
+	currentGame["ParasitesInjested"] = {}
+	currentGame["ParasitesLanded"] = {}
 end
 
 local trackedClassData = { {PlayerDataPropertyName="GorgeSeconds", TechId=kTechId.Gorge}, {PlayerDataPropertyName="LerkSeconds", TechId=kTechId.Lerk}, {PlayerDataPropertyName="FadeSeconds", TechId=kTechId.Fade}, {PlayerDataPropertyName="OnosSeconds", TechId=kTechId.Onos} }
@@ -47,15 +50,23 @@ function Plugin:ClientConfirmConnect(client)
 end
 
 function Plugin:OnConstructInit(building)
-	local originalOnConstruct = building.OnConstruct
-	building.OnConstruct = function(self, builder, newFraction, oldFraction)
-		if oldFraction == 0 and newFraction > 0 then
-			local className = building:GetClassName()
-			currentGame["classBuildCounts"][className] = TGNS.GetNumericValueOrZero(currentGame["classBuildCounts"][className]) + 1
+	local className = building:GetClassName()
+	if className:lower() ~= "cyst" then
+		currentGame["classBuildCounts"][className] = TGNS.GetNumericValueOrZero(currentGame["classBuildCounts"][className]) + 1
+		-- Shared.Message("OnConstructInit - className: " .. tostring(className))
+		local originalSetConstructionComplete = building.SetConstructionComplete
+		building.SetConstructionComplete = function(buildingSelf, builder)
+			originalSetConstructionComplete(buildingSelf, builder)
+			local builderClient = TGNS.GetClient(builder)
+			if builderClient then
+				local className = buildingSelf:GetClassName()
+				-- Shared.Message("SetConstructionComplete - className: " .. tostring(className))
+				currentGame["classBuildCompleteCounts"][builderClient] = currentGame["classBuildCompleteCounts"][builderClient] or {}
+				currentGame["classBuildCompleteCounts"][builderClient][className] = TGNS.GetNumericValueOrZero(currentGame["classBuildCompleteCounts"][builderClient][className]) + 1
+			end
 		end
-		if originalOnConstruct then
-			originalOnConstruct(self, builder, newFraction, oldFraction)
-		end
+
+
 	end
 end
 
@@ -87,7 +98,7 @@ function Plugin:OnEntityKilled(gamerules, victim, attacker, inflictor, point, di
 				currentGamePersonalCounterToIncrement = "ExtractorsKilled"
 			end
 			if currentGamePersonalCounterToIncrement then
-				currentGame[currentGamePersonalCounterToIncrement][attackerClient] = currentGame[currentGamePersonalCounterToIncrement][attackerClient] or {}
+				currentGame[currentGamePersonalCounterToIncrement][attackerClient] = currentGame[currentGamePersonalCounterToIncrement][attackerClient] or 0
 				currentGame[currentGamePersonalCounterToIncrement][attackerClient] = currentGame[currentGamePersonalCounterToIncrement][attackerClient] + 1
 			end
 		end
@@ -201,6 +212,8 @@ function Plugin:Initialise()
 					    		playerData.HealSprayGave = TGNS.GetNumericValueOrZero(currentGame["HealSpray"][c])
 					    		playerData.HarvestersKilled = TGNS.GetNumericValueOrZero(currentGame["HarvestersKilled"][c])
 					    		playerData.ExtractorsKilled = TGNS.GetNumericValueOrZero(currentGame["ExtractorsKilled"][c])
+					    		playerData.ParasitesInjested = TGNS.GetNumericValueOrZero(currentGame["ParasitesInjested"][c])
+					    		playerData.ParasitesLanded = TGNS.GetNumericValueOrZero(currentGame["ParasitesLanded"][c])
 
 					    		currentGame["ClassDurations"][c] = currentGame["ClassDurations"][c] or {}
 					    		TGNS.DoFor(trackedClassData, function(d)
@@ -211,6 +224,19 @@ function Plugin:Initialise()
 					    		playerData.LerkSeconds = currentGame["ClassDurations"][c][kTechId.Lerk] or 0
 					    		playerData.FadeSeconds = currentGame["ClassDurations"][c][kTechId.Fade] or 0
 					    		playerData.OnosSeconds = currentGame["ClassDurations"][c][kTechId.Onos] or 0
+
+					    		playerData.StructuresBuilt = 0
+					    		playerData.HarvestersBuilt = 0
+					    		playerData.ExtractorsBuilt = 0
+					    		TGNS.DoForPairs(currentGame["classBuildCompleteCounts"][c], function(className, count)
+					    			playerData.StructuresBuilt = playerData.StructuresBuilt + 1
+					    			if className == "Harvester" then
+					    				playerData.HarvestersBuilt = playerData.HarvestersBuilt + 1
+					    			elseif className == "Extractor" then
+					    				playerData.ExtractorsBuilt = playerData.ExtractorsBuilt + 1
+					    			end
+
+					    		end)
 
 					    		audit(718, playerData, function(playerDataAuditResponseJson)
 					    			local playerDataAuditResponse = json.decode(playerDataAuditResponseJson) or {}
@@ -247,6 +273,24 @@ function Plugin:Initialise()
 			currentGame[name][client] = TGNS.GetNumericValueOrZero(currentGame[name][client]) + addAmount
 		end
 	end)
+
+	local originalParasiteMixinSetParasited = ParasiteMixin.SetParasited
+	ParasiteMixin.SetParasited = function(parasiteMixinSelf, fromPlayer, durationOverride)
+		local wasParasited = parasiteMixinSelf.parasited
+		originalParasiteMixinSetParasited(parasiteMixinSelf, fromPlayer, durationOverride)
+		if (durationOverride or kParasiteDuration) == kParasiteDuration and not wasParasited then
+			local victimClient = TGNS.GetClient(parasiteMixinSelf)
+			if victimClient then
+				currentGame["ParasitesInjested"][victimClient] = currentGame["ParasitesInjested"][victimClient] or 0
+				currentGame["ParasitesInjested"][victimClient] = currentGame["ParasitesInjested"][victimClient] + 1
+			end
+			local fromClient = TGNS.GetClient(fromPlayer)
+			if fromClient then
+				currentGame["ParasitesLanded"][fromClient] = currentGame["ParasitesLanded"][fromClient] or 0
+				currentGame["ParasitesLanded"][fromClient] = currentGame["ParasitesLanded"][fromClient] + 1
+			end
+		end
+	end
 
 	local originalEmbryoSetGestationData = Embryo.SetGestationData
 	Embryo.SetGestationData = function(embryoSelf, techIds, previousTechId, healthScalar, armorScalar)
