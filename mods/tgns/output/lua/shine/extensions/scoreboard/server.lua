@@ -231,6 +231,11 @@ function Plugin:ClientConnect(client)
 		--end)
 		self:AlertApplicationIconForPlayer(player)
 		TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.SERVER_ADDRESS, {a=TGNS.Config.ServerAddress})
+
+		TGNS.SendNetworkMessageToPlayer(player, self.RECORDING_BOUNDARY, {b="prep",d=0,t=TGNS.GetPlayerTeamName(player),p=TGNS.GetPlayerName(player),s=secondsSinceEpoch})
+
+
+
 	end
 end
 
