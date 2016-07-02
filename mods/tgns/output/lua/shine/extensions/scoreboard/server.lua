@@ -736,6 +736,20 @@ function Plugin:Initialise()
 
 	TGNS.ExecuteServerCommand("sh_alltalk false")
 
+    local originalTeamInfoOnCommanderLogin
+	originalTeamInfoOnCommanderLogin = TGNS.ReplaceClassMethod("TeamInfo", "OnCommanderLogin", function(teamInfoSelf, commanderPlayer, forced)
+		originalTeamInfoOnCommanderLogin(teamInfoSelf, commanderPlayer, forced)
+		if TGNS.PlayerIsAlien(commanderPlayer) then
+			local commanderClient = TGNS.GetClient(commanderPlayer)
+			local commanderClientIndex = TGNS.GetClientIndex(commanderClient)
+			squadNumbers[commanderClient] = 6
+			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+				TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=commanderClientIndex,s=squadNumbers[commanderClient]})	
+			end)
+		end
+	end)
+
+
 	return true
 end
 
