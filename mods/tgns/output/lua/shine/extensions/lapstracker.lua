@@ -356,6 +356,15 @@ function Plugin:OnProcessMove(player, input)
 	end
 end
 
+function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
+	if victimEntity and not TGNS.IsGameInProgress() then
+		local victimClient = TGNS.GetClient(victimEntity)
+		if victimClient and enabled[victimClient] then
+			disableLaps(victimClient, "death", true)
+		end
+	end
+end
+
 function Plugin:Initialise()
     self.Enabled = true
     md = TGNSMessageDisplayer.Create("LAPS")
