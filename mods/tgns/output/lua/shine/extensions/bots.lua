@@ -222,7 +222,8 @@ end
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if not (force or shineForce) then
-		if self:GetTotalNumberOfBots() > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
+		local totalNumberOfBots = self:GetTotalNumberOfBots()
+		if totalNumberOfBots > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
 			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
 			local marineHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kMarineTeamType and not TGNS.GetIsClientVirtual(c) end)
 			local numberOfAllowedAlienPlayers = 1
@@ -235,6 +236,12 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 			--if newTeamNumber ~= kMarineTeamType then
 				md:ToPlayerNotifyError(player, errorMessage)
 				return false
+			end
+		end
+		if alltalk then
+			if totalNumberOfBots == 0 then
+				alltalk = false
+				md:ToAllNotifyInfo("All talk disabled.")
 			end
 		end
 	end
