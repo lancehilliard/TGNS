@@ -578,6 +578,12 @@ function Plugin:Initialise()
 		Shine.Plugins.targetedcommands:AfkRr(client, targetClient, md)
 	end)
 
+	TGNS.HookNetworkMessage(self.REQUEST_STREAMING_ICON, function(client, message)
+		local url = message.u
+		streamingWebAddresses[client] = url
+		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+	end)
+
 	-- TGNS.RegisterEventHook("LookDownChanged", function(player, isLookingDown)
 	-- 	local isLookingUp = not isLookingDown
 	-- 	TGNS.SendNetworkMessageToPlayer(player, self.TOGGLE_CUSTOM_NUMBERS_COLUMN, {t=isLookingUp})
@@ -739,7 +745,7 @@ function Plugin:Initialise()
     local originalTeamInfoOnCommanderLogin
 	originalTeamInfoOnCommanderLogin = TGNS.ReplaceClassMethod("TeamInfo", "OnCommanderLogin", function(teamInfoSelf, commanderPlayer, forced)
 		originalTeamInfoOnCommanderLogin(teamInfoSelf, commanderPlayer, forced)
-		if TGNS.PlayerIsAlien(commanderPlayer) then
+		if TGNS.PlayerIsAlien(commanderPlayer) and not TGNS.IsGameInProgress() then
 			local commanderClient = TGNS.GetClient(commanderPlayer)
 			local commanderClientIndex = TGNS.GetClientIndex(commanderClient)
 			squadNumbers[commanderClient] = 6

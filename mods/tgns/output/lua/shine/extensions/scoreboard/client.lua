@@ -216,7 +216,12 @@ end)
 
 TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
 	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), message.s, message.d, TGNS.UrlEncode(message.t))
-	Shared.SendHTTPRequest(url, "GET", function(response) end)
+	Shared.SendHTTPRequest(url, "GET", function(responseJson)
+		local response = json.decode(responseJson) or {}
+		if response.showIcon then
+			TGNS.SendNetworkMessage(Plugin.REQUEST_STREAMING_ICON, {u="http://rr.tacticalgamer.com/Replay"})
+		end
+	end)
 end)
 
 TGNS.HookNetworkMessage(Plugin.GAME_IN_COUNTDOWN, function(message)
@@ -775,7 +780,7 @@ function Plugin:Initialise()
 		        	,{n="PlayerCarapaceIcon",t="ui/badges/aliens/cara.dds",x=-160,l="Carapace\n\nThis player has the Carapace upgrade."}
 		        	,{n="PlayerCrushIcon",t="ui/badges/aliens/crush.dds",x=-160,l="Crush\n\nThis player has the Crush upgrade."}
 
-		        	,{n="PlayerStreamingIcon",t="ui/badges/streaming/camera.dds",x=-220,l=function(clientIndex, teamNumber) return string.format("Streaming\n\n%s is streaming!\n\n%s\n\nAre you streaming? Chat '!streaming' to share.", Scoreboard_GetPlayerData(clientIndex, "Name"), streamingWebAddresses[clientIndex]) end}
+		        	,{n="PlayerStreamingIcon",t="ui/badges/streaming/camera.dds",x=-220,l=function(clientIndex, teamNumber) return string.format("Streaming/Recording\n\n%s is streaming/recording!\n\nWatch: %s\n\nAre you streaming/recording? Chat '!streaming' to share.", Scoreboard_GetPlayerData(clientIndex, "Name"), streamingWebAddresses[clientIndex]) end}
 		    	}
 
 		    	if teamNumber == kMarineTeamType and ((Client.GetLocalClientTeamNumber() == kMarineTeamType) or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)) then
