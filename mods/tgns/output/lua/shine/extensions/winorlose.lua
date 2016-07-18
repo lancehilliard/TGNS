@@ -92,7 +92,7 @@ local function getNumberOfRequiredVotes(potentialVoterPlayers)
 			result = math.ceil((votersCount * (51 / 100)))
 		end
 	end
-	TGNS.DebugPrint(string.format("winorlosedebug [%s]: %s voters have minimumPercentage: %s require %s votes with %s", Shared.GetTime(), votersCount, minimumPercentage, result, TGNS.Join(whenBigVotesFailedWithMajorityThisGame, ", ")))
+	-- TGNS.DebugPrint(string.format("winorlosedebug [%s]: %s voters have minimumPercentage: %s require %s votes with %s", Shared.GetTime(), votersCount, minimumPercentage, result, TGNS.Join(whenBigVotesFailedWithMajorityThisGame, ", ")))
 	return result
 end
 
