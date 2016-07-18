@@ -1555,13 +1555,18 @@ function Plugin:Initialise()
 		return result
 	end
 
+	-- GUIGameFeedback.kMinPlayTime = 0
 	local originalGUIFeedbackState_EndSendReport = GUIFeedbackState_End.SendReport
 	GUIFeedbackState_End.SendReport = function(GUIFeedbackState_EndSelf)
 		originalGUIFeedbackState_EndSendReport(GUIFeedbackState_EndSelf)
 		local rating = GUIFeedbackState_EndSelf.parent.rating
 		local reasons = {}
 		TGNS.DoFor(GUIFeedbackState_EndSelf.parent.reasons, function(r)
-			table.insert(reasons, Locale.ResolveString(GUIFeedbackState_Reason.Reasons[r][2]))
+			local matchingReasons = TGNS.Where(GUIFeedbackState_Reason.Reasons, function(reason) return reason[1] == r end)
+			if #matchingReasons > 0 then
+				local resolvedReasonString = Locale.ResolveString(matchingReasons[1][2])
+				table.insert(reasons, resolvedReasonString)
+			end
 		end)
 		TGNS.SendNetworkMessage(Plugin.GAME_FEEDBACK, {rating=rating, reasons=GUIFeedbackState_EndSelf.parent.reasons and json.encode(reasons) or ""})
 	end
