@@ -408,19 +408,23 @@ function Plugin:CallWinOrLose(teamNumber)
 	onVoteSuccessful(teamNumber)
 end
 
-function Plugin:TakeDamage( Ent, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
+function Plugin:GetDamageModification( Ent, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
+	local result
 	if kTimeAtWhichWinOrLoseVoteSucceeded > 0 and kCountdownTimeRemaining > 0 and Attacker and Attacker:isa("Player") and Attacker:GetTeamNumber() == kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber() and Ent and Ent:GetTeamNumber() ~= Attacker:GetTeamNumber() then
-		Damage = 0
-		HealthUsed = 0
-		ArmourUsed = 0
-		local client = TGNS.GetClient(Attacker)
-		if client and (lastNoAttackNoticeTimes[client] == nil or lastNoAttackNoticeTimes[client] < Shared.GetTime() - 1) then
-			local teamRgb = TGNS.GetTeamRgb(Attacker:GetTeamNumber())
-			Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot do damage. Your team has surrendered.", Duration = 6, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
-			lastNoAttackNoticeTimes[client] = Shared.GetTime()
+		result = {}
+		result.Damage = 0
+		result.HealthUsed = 0
+		result.ArmourUsed = 0
+		result.NotifyAction = function()
+			local client = TGNS.GetClient(Attacker)
+			if client and (lastNoAttackNoticeTimes[client] == nil or lastNoAttackNoticeTimes[client] < Shared.GetTime() - 1) then
+				local teamRgb = TGNS.GetTeamRgb(Attacker:GetTeamNumber())
+				Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot do damage. Your team has surrendered.", Duration = 6, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
+				lastNoAttackNoticeTimes[client] = Shared.GetTime()
+			end
 		end
 	end
-	return Damage, ArmourUsed, HealthUsed
+	return result
 end
 
 function Plugin:Initialise()

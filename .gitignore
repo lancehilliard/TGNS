@@ -113,6 +113,7 @@
 !mods/tgns/output/lua/shine/extensions/chatchannels.lua
 !mods/tgns/output/lua/shine/extensions/communityslots.lua
 !mods/tgns/output/lua/shine/extensions/disablestockmapvote.lua
+!mods/tgns/output/lua/shine/extensions/damagemodifier.lua
 !mods/tgns/output/lua/shine/extensions/emptymapcycler.lua
 !mods/tgns/output/lua/shine/extensions/endgamecommands.lua
 !mods/tgns/output/lua/shine/extensions/enforceteamsizes.lua

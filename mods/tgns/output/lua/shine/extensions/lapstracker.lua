@@ -11,6 +11,7 @@ local nextLocationNames = {}
 local trackLowestTimes = {}
 local lastKnownLocationNames = {}
 local onLocationChangedEnabled
+local classesAllowedForLaps = {'JetpackMarine','Skulk'}
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -93,9 +94,13 @@ local function OnLocationChanged(player, locationName)
 			if #recentLocations[client] > 1 then
 				TGNS.ScheduleAction(MAXIMUM_ALLOWED_LOCATION_DURATION, function()
 					if enabled[client] and #recentLocations[client] > 1 and Shine:IsValidClient(client) and TGNS.GetLast(recentLocations[client]).time == now then
-						disableLaps(client, "inactivity")
+						disableLaps(client, "inactivity", true)
 					end
 				end)
+				-- Shared.Message(tostring(TGNS.GetPlayerClassName(player)))
+				if not TGNS.Has(classesAllowedForLaps, TGNS.GetPlayerClassName(player)) then
+					disableLaps(client, "player class", true)
+				end
 			end
 			local advisories = {}
 			TGNS.DoForPairs(tracks, function(trackId, trackData)
@@ -319,6 +324,11 @@ function Plugin:CreateCommands()
 					        md:ToClientConsole(client, "")
 					        OnLocationChanged(player, player:GetLocationName())
 					        TGNS.GiveMarinePlayerJetpack(player)
+							TGNS.ScheduleAction(MAXIMUM_ALLOWED_LOCATION_DURATION, function()
+								if enabled[client] and #recentLocations[client] == 1 and Shine:IsValidClient(client) then
+									disableLaps(client, "inactivity", true)
+								end
+							end)
 					    else
 							disableLaps(client, "console command", true)
 				        end
@@ -344,6 +354,26 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	if enabled[client] and not TGNS.IsGameplayTeamNumber(newTeamNumber) then
 		disableLaps(client, "leaving team", true)
 	end
+end
+
+function Plugin:GetDamageModification( Ent, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
+	local result
+	local victimClient = TGNS.GetClient(Ent)
+	local attackerClient = TGNS.GetClient(Attacker)
+	if (victimClient and enabled[victimClient]) or (attackerClient and enabled[attackerClient]) and not TGNS.IsGameInProgress() then
+		result = {}
+		result.Damage = 0
+		result.HealthUsed = 0
+		result.ArmourUsed = 0
+		result.NotifyAction = function()
+			-- if (lastNoAttackNoticeTimes[victimClient] == nil or lastNoAttackNoticeTimes[victimClient] < Shared.GetTime() - 1) then
+			-- 	local teamRgb = TGNS.GetTeamRgb(Attacker:GetTeamNumber())
+			-- 	Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot take damage. You are running laps.", Duration = 6, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
+			-- 	lastNoAttackNoticeTimes[victimClient] = Shared.GetTime()
+			-- end
+		end
+	end
+	return result
 end
 
 function Plugin:OnProcessMove(player, input)
