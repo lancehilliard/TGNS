@@ -361,7 +361,7 @@ local function OnCommandWinOrLose(client)
 								md:ToPlayerNotifyError(player, chatMessage)
 							else
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
-								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s hasn't conceded (but could). %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							end
 							UpdateWinOrLoseVotes(teamNumber)
 						else
@@ -369,7 +369,7 @@ local function OnCommandWinOrLose(client)
 								kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
 								lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
-								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s hasn't conceded (but could). %s Give 100%s until the game is over!", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, "%"))
+								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s Give 100%s until the game is over!", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, "%"))
 							else
 								md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
 								md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
