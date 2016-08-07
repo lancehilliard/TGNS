@@ -215,11 +215,22 @@ TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
 end)
 
 TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
+	local latestTrhVersionDescriptor = "v0.09"
 	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), message.s, message.d, TGNS.UrlEncode(message.t))
 	Shared.SendHTTPRequest(url, "GET", function(responseJson)
 		local response = json.decode(responseJson) or {}
 		if response.showIcon then
 			TGNS.SendNetworkMessage(Plugin.REQUEST_STREAMING_ICON, {u="http://rr.tacticalgamer.com/Replay"})
+		end
+		if response.trhVersion then
+			if response.trhVersion ~= latestTrhVersionDescriptor then
+				Shared.Message(string.format("[TRH] http://rr.tacticalgamer.com/Replay/RecordingHelper has TGNS Recording Helper update (%s).", latestTrhVersionDescriptor))
+			end
+			if response.casterMode then
+				Shared.ConsoleCommand("plus castermode true")
+			else
+				Shared.ConsoleCommand("plus castermode false")
+			end
 		end
 	end)
 end)
@@ -426,7 +437,7 @@ function hudTexts.initializeAlienLifeformsHudText()
 		hudTexts.alienLifeformsReviewHudText2:Remove()
 	end
 	hudTexts.alienLifeformsReviewHudText1 = Shine.ScreenText.Add( "AlienLifeformsReviewHudText1", {
-		X = 0.60, Y = 0.6,
+		X = 0.70, Y = 0.35,
 		Text = "",
 		Duration = math.huge,
 		R = 218, G = 165, B = 31,
@@ -435,7 +446,7 @@ function hudTexts.initializeAlienLifeformsHudText()
 		FadeIn = 0
 	} )
 	hudTexts.alienLifeformsReviewHudText2 = Shine.ScreenText.Add( "AlienLifeformsReviewHudText2", {
-		X = 0.60, Y = 0.6,
+		X = 0.70, Y = 0.35,
 		Text = "",
 		Duration = math.huge,
 		R = 255, G = 0, B = 0,
@@ -475,7 +486,7 @@ function hudTexts.initializeSkillImbalanceHudText()
 		hudTexts.skillImbalanceHudText:Remove()
 	end
 	hudTexts.skillImbalanceHudText = Shine.ScreenText.Add( "SkillImbalanceHudText", {
-		X = 0.3, Y = 0.7,
+		X = 0.2, Y = 0.35,
 		Text = "",
 		Duration = math.huge,
 		R = 0, G = 165, B = 0,
