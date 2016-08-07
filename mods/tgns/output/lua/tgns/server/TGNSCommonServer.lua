@@ -103,7 +103,7 @@ function TGNS.SetEntityArmor(entity, armor) PROFILE("TGNS.SetEntityArmor")
 end
 
 function TGNS.RemoveMarinePlayerJetpack(player) PROFILE("TGNS.RemoveMarinePlayerJetpack")
-	if TGNS.ClientIsMarine(TGNS.GetClient(player)) then
+	if TGNS.ClientIsMarine(TGNS.GetClient(player)) and TGNS.GetPlayerClassName(player) == 'JetpackMarine' then
 	    local activeWeapon = player:GetActiveWeapon()
 	    local activeWeaponMapName = nil
 	    local health = player:GetHealth()
