@@ -93,6 +93,8 @@ has.Mines = {}
 has.ClusterGrenade = {}
 has.GasGrenade = {}
 has.PulseGrenade = {}
+has.usableConnectionAt = 0
+has.queriedServerStatusAt = 0
 
 local kFavoriteIconSize = Vector(26, 26, 0)
 local kFavoriteIconPos = Vector(5, 4, 0)
@@ -604,6 +606,35 @@ function Plugin:Initialise()
 	    -- Shared.Message("MainMenu_GetIsOpened(): " .. tostring(MainMenu_GetIsOpened()))
 	    -- Shared.Message("Shine.VoteMenu.Visible: " .. tostring(Shine.VoteMenu.Visible))
 
+	    if self.connectionProblemsIcon and self.connectionProblemsIcon:GetIsVisible() then
+	    	local connectionProblemsIconColor = self.connectionProblemsIcon:GetColor()
+	    	local connectionProblemsIconIsRed = connectionProblemsIconColor.r == 1 and connectionProblemsIconColor.g == 0 and connectionProblemsIconColor.b == 0
+		    if connectionProblemsIconIsRed then
+		    	local secondsSinceUsableConnection = Shared.GetTime() - has.usableConnectionAt
+		    	if secondsSinceUsableConnection >= 3 then
+		    		local secondsSinceServerQuery = Shared.GetTime() - has.queriedServerStatusAt
+		    		if secondsSinceServerQuery > 1.5 then
+			    		has.queriedServerStatusAt = Shared.GetTime()
+						Shared.SendHTTPRequest("http://rr.tacticalgamer.com/ServerInfo/v1_0", "GET", function(responseJson)
+							local response = json.decode(responseJson) or {}
+							if #response > 0 then
+								local serverInfo = response[1]
+								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
+									-- Shared.Message("DEBUG connect tgns.tacticalgamer.com")
+									Shared.ConsoleCommand("connect tgns.tacticalgamer.com")
+								else
+									-- Shared.Message("DEBUG mapName: " .. tostring(serverInfo.mapName))
+								end
+							end
+						end)
+		    		end
+		    	end
+		    else
+		    	has.usableConnectionAt = Shared.GetTime()
+		    end
+	    else
+	    	has.usableConnectionAt = Shared.GetTime()
+	    end
 	end
 
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
