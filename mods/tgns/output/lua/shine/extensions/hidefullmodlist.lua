@@ -29,7 +29,9 @@ function Plugin:Initialise()
                 end
             end)
             TGNS.ScheduleAction(10, function()
-                Shine.Plugins.push:Push("tgns-admin", "Server started.", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+                if TGNS.IsProduction() then
+                    Shine.Plugins.push:Push("tgns-admin", "Server started.", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+                end
             end)
         end
     end)
