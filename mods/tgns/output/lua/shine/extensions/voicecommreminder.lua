@@ -1,22 +1,31 @@
 local md
+local reminderLastSentWhen = {}
 
 local Plugin = {}
 
 function Plugin:SendVoicecommReminder(sourceClient, targetPlayer)
 	if targetPlayer ~= nil then
-		local targetPlayerTeamNumber = TGNS.GetPlayerTeamNumber(targetPlayer)
-		local firstMessage = string.format("%s: %s, make sure you can respond to voicecomm.", TGNS.GetClientName(sourceClient), TGNS.GetPlayerName(targetPlayer))
-		local secondMessage = "This server requires that from everyone. Press 'y' for team chat."
-		local messageTargetDisplayer = function(player, message) md:ToPlayerNotifyColors(player, message, 240, 230, 130, 255, 0, 0) end 
-		TGNS.DoFor(TGNS.GetPlayers(TGNS.GetTeamClients(targetPlayerTeamNumber)), function(p)
-			if p == targetPlayer then
-				messageTargetDisplayer(p, firstMessage)
-				messageTargetDisplayer(p, secondMessage)
-			else
-				md:ToPlayerNotifyInfo(p, firstMessage)
-				md:ToPlayerNotifyInfo(p, secondMessage)
-			end
-		end)
+		local targetClient = TGNS.GetClient(targetPlayer)
+		reminderLastSentWhen[targetClient] = reminderLastSentWhen[targetClient] or 0
+		if Shared.GetTime() - reminderLastSentWhen[targetClient] > 5 then
+			local targetPlayerTeamNumber = TGNS.GetPlayerTeamNumber(targetPlayer)
+			local firstMessage = string.format("%s: %s, respond to voicecomm (mic optional).", TGNS.GetClientName(sourceClient), TGNS.GetPlayerName(targetPlayer))
+			local secondMessage = "This server requires teamplay. Need chat? Keybind: y"
+			local messageTargetDisplayer = function(player, message) md:ToPlayerNotifyColors(player, message, 240, 230, 130, 255, 0, 0) end 
+			TGNS.DoFor(TGNS.GetPlayers(TGNS.GetTeamClients(targetPlayerTeamNumber)), function(p)
+				if p == targetPlayer then
+					messageTargetDisplayer(p, firstMessage)
+					messageTargetDisplayer(p, secondMessage)
+				else
+					md:ToPlayerNotifyInfo(p, firstMessage)
+					md:ToPlayerNotifyInfo(p, secondMessage)
+				end
+			end)
+			reminderLastSentWhen[targetClient] = Shared.GetTime()
+		else
+			local sourcePlayer = TGNS.GetPlayer(sourceClient)
+			md:ToPlayerNotifyError(sourcePlayer, string.format("%s was just shown a voicecomm reminder.", TGNS.GetPlayerName(targetPlayer)))
+		end
 	end
 end
 
