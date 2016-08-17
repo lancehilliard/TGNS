@@ -786,7 +786,7 @@ if Server or Client then
 
 				local captainsSlotsRemaining = MAX_NON_CAPTAIN_PLAYERS - optedInCount
 				captainsSlotsRemaining = captainsSlotsRemaining >= 0 and captainsSlotsRemaining or 0
-			    teamInfoGUIItem:SetText(teamNameText == "Pickable Players" and string.format("Team Choice: %s        Player Choice: %s", teamChoiceCaptainName, playerChoiceCaptainName) or string.format("Slots remaining: %s/%s", captainsSlotsRemaining, MAX_NON_CAPTAIN_PLAYERS))
+			    teamInfoGUIItem:SetText(teamNameText == "Pickable Players" and string.format("Team/Spawn Choice: %s        Player Choice: %s", teamChoiceCaptainName, playerChoiceCaptainName) or string.format("Slots remaining: %s/%s", captainsSlotsRemaining, MAX_NON_CAPTAIN_PLAYERS))
 
 				if teamNameText == "Pickable Players" then
 					teamInfoGUIItem:SetColor(CaptainsCaptainFontColor)
@@ -1606,7 +1606,7 @@ if Server or Client then
 		end
 
 		local function showPickables()
-			if not TGNS.IsGameInProgress() then
+			if not TGNS.IsGameInProgress() and not TGNS.IsGameInCountdown() then
 				if captainsGamesFinished == 0 then
 					TGNS.ScheduleAction(1.5, showPickables)
 					local allClients = TGNS.GetClientList()
@@ -1618,10 +1618,9 @@ if Server or Client then
 						local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 
 						-- todo mlh comment this out
-						TGNS.DoFor(readyRoomClients, function(c)
-							-- Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), 3, 0, 255, 0, 0, 2, 0))
-							Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
-						end)
+						-- TGNS.DoFor(readyRoomClients, function(c)
+						-- 	Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
+						-- end)
 
 						if teamChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(teamChoiceCaptainClient) then
 							local teamChoiceCaptainTeamNumber = TGNS.GetClientTeamNumber(teamChoiceCaptainClient)
@@ -1671,30 +1670,30 @@ if Server or Client then
 					-- todo mlh comment this out
 					TGNS.SortDescending(optedInClients, TGNS.GetClientHiveSkillRank)
 					-- todo mlh comment this out
-					showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.20, "Opted In")
+					-- showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.20, "Opted In")
 
 					-- todo mlh comment this out
 					TGNS.SortAscending(optedInClients, TGNS.GetClientId)
 					-- todo mlh comment this out
-					showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.20, "Opted In")
+					-- showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.20, "Opted In")
 
 					
 
 					-- todo mlh comment this out
-					showRoster(notOptedInClients, allClients, 55, 56, 57, 0.50, "Not Opted In")
+					-- showRoster(notOptedInClients, allClients, 55, 56, 57, 0.50, "Not Opted In")
 
 					-- todo mlh comment this out
-					TGNS.DoFor(readyRoomClients, function(c)
-						local message
-						if TGNS.Has(captainClients, c) then
-							message = "Captains: Your 'Opted In' list is sorted by Hive Skill rank.\nTop row is highest (left, right), then next row, etc, etc.\nDon't put too much stock in this ranking."
-							message = "Captains:\n\nThe game has sorted your 'Opted In' player list\nby skill level. The top row is highest (left, right),\nand then the next row (left, right), and so on...\n\nThis sort isn't perfect. Choose as you like."
-						else
-							message = #notOptedInClients > 0 and "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'" or " "
-						end
-						-- Shine:SendText(c, Shine.BuildScreenMessage(59, 0.75, 0.70, message, 3, 0, 255, 0, 0, 1, 0 ) )
-						Shine.ScreenText.Add(59, {X = 0.75, Y = 0.70, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
-					end)
+					-- TGNS.DoFor(readyRoomClients, function(c)
+					-- 	local message
+					-- 	if TGNS.Has(captainClients, c) then
+					-- 		message = "Captains: Your 'Opted In' list is sorted by Hive Skill rank.\nTop row is highest (left, right), then next row, etc, etc.\nDon't put too much stock in this ranking."
+					-- 		message = "Captains:\n\nThe game has sorted your 'Opted In' player list\nby skill level. The top row is highest (left, right),\nand then the next row (left, right), and so on...\n\nThis sort isn't perfect. Choose as you like."
+					-- 	else
+					-- 		message = #notOptedInClients > 0 and "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'" or " "
+					-- 	end
+					-- 	-- Shine:SendText(c, Shine.BuildScreenMessage(59, 0.75, 0.70, message, 3, 0, 255, 0, 0, 1, 0 ) )
+					-- 	Shine.ScreenText.Add(59, {X = 0.75, Y = 0.70, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+					-- end)
 
 				else
 					--destroyCaptainsBoard()	
@@ -1767,7 +1766,7 @@ if Server or Client then
 			local numberOfNeededReadyPlayerClients = #playingClients - 2
 			if not rolandHasBeenUsed then
 				numberOfNeededReadyPlayerClients = numberOfNeededReadyPlayerClients >= minimumReadyPlayerClients and numberOfNeededReadyPlayerClients or minimumReadyPlayerClients
-				numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(numberOfNeededReadyPlayerClients * .82)
+				numberOfNeededReadyPlayerClients = TGNS.RoundPositiveNumberDown(numberOfNeededReadyPlayerClients * .75)
 			end
 			local result = numberOfNeededReadyPlayerClients <= MAX_NON_CAPTAIN_PLAYERS and numberOfNeededReadyPlayerClients or MAX_NON_CAPTAIN_PLAYERS
 			return result
@@ -1855,9 +1854,10 @@ if Server or Client then
 						local optinStatusAdvisory = "Press 'M > Captains > sh_iwantcaptains' if you want to play Captains"
 						local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, c)
 						if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
-							optinStatusAdvisory = string.format("You're opted-in as ready to play%s", readyClientIsCaptain and " as a Captain" or "")
+							optinStatusAdvisory = string.format("You're opted-in as ready to play%s (reserved slots disabled during Captains games).", readyClientIsCaptain and " as a Captain" or "")
 						end
-						local secondLineMessage = string.format("%s (%s vs %s)! %s", optinStatusAdvisory, firstCaptainName, secondCaptainName, timeLeftAdvisory)
+						-- local secondLineMessage = string.format("%s (%s vs %s)! %s", optinStatusAdvisory, firstCaptainName, secondCaptainName, timeLeftAdvisory)
+						local secondLineMessage = string.format("%s! %s", optinStatusAdvisory, timeLeftAdvisory)
 						-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, secondLineMessage, 10, 0, 255, 0, 1, 1, 0))
 						Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = secondLineMessage, Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					end)
