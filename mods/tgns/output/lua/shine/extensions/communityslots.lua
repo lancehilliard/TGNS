@@ -13,6 +13,7 @@ local fullSpecSteamIds
 local canNotifyAboutOtherServerSlots = true
 local blacklistedClients = {}
 local lastAnnouncedRemainingPublicSlotsCount
+local trySlotEnabled = {}
 
 local COMMANDER_PROTECTION_DURATION_IN_SECONDS = 60
 local clientConnectTimesInSeconds = {}
@@ -97,32 +98,39 @@ end
 
 local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaDelta)
     local result = nil
-    local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningSteamId) end)
     local clientsGivenImmunityViaKarma = {}
-    if #bumpableClients > 0 then
-        TGNS.SortDescending(bumpableClients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
+    local joiningClient = TGNS.GetClientByNs2Id(joiningSteamId)
+    if not joiningClient or trySlotEnabled[joiningClient] then
+        local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningSteamId) end)
+        if #bumpableClients > 0 then
+            TGNS.SortDescending(bumpableClients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
 
-        local potentiallyImmuneClients = {}
-        if type(passingTheBumpKarmaDelta) == "number" then
-            TGNS.DoFor(bumpableClients, function(c)
-                if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
-                    table.insert(potentiallyImmuneClients, c)
-                else
-                    -- slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
-                    return true
-                end
-            end)
-        end
-        if #potentiallyImmuneClients > 0 and #potentiallyImmuneClients < #bumpableClients then
-            TGNS.DoForReverse(bumpableClients, function(c, i)
-                if TGNS.Has(potentiallyImmuneClients, c) then
-                    table.insert(clientsGivenImmunityViaKarma, c)
-                    table.remove(bumpableClients, i)
-                end
-            end)
-        end
+            local potentiallyImmuneClients = {}
+            if type(passingTheBumpKarmaDelta) == "number" then
+                TGNS.DoFor(bumpableClients, function(c)
+                    if TGNS.Karma(c) >= math.abs(passingTheBumpKarmaDelta) then
+                        table.insert(potentiallyImmuneClients, c)
+                    else
+                        -- slotsDebugMd:ToAdminConsole(string.format("%s (%s Karma) - not enough Karma for slots immunity.", TGNS.GetClientName(c), TGNS.Karma(c)))
+                        return true
+                    end
+                end)
+            end
+            if #potentiallyImmuneClients > 0 and #potentiallyImmuneClients < #bumpableClients then
+                TGNS.DoForReverse(bumpableClients, function(c, i)
+                    if TGNS.Has(potentiallyImmuneClients, c) then
+                        table.insert(clientsGivenImmunityViaKarma, c)
+                        table.remove(bumpableClients, i)
+                    end
+                end)
+            end
 
-        result = TGNS.GetFirst(bumpableClients)
+            result = TGNS.GetFirst(bumpableClients)
+        end
+    else
+        if not TGNS.IsSteamIdStranger(joiningSteamId) then
+            tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(joiningClient), "Use sh_slot to activate whatever reserved slot you have.")
+        end
     end
     return result, clientsGivenImmunityViaKarma
 end
@@ -271,6 +279,13 @@ local function GetBumpSummary(playerList, bumpingClient, bumpedClient, joinerOrV
     return result
 end
 
+local function showSlotRevocationAdvisory(client)
+    tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Your reserved slot is presently revoked. See console for details.")
+    tgnsMd:ToClientConsole(client, "Your reserved slot privilege is presently revoked.")
+    tgnsMd:ToClientConsole(client, "Do not on the server complain or inquire about revoked privileges.")
+    tgnsMd:ToClientConsole(client, "Rather, use the CAA forum: http://rr.tacticalgamer.com/Community")
+end
+
 local function IsClientBumped(joiningClient)
     local result = false
     local victimTeamNumber = nil
@@ -315,10 +330,7 @@ local function IsClientBumped(joiningClient)
                 end
             end
             if blacklistAdvisoryClient then
-                    tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(blacklistAdvisoryClient), "Your reserved slot is presently revoked. See console for details.")
-                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Your reserved slot privilege is presently revoked.")
-                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Do not on the server complain or inquire about revoked privileges.")
-                    tgnsMd:ToClientConsole(blacklistAdvisoryClient, "Rather, use the CAA forum: http://rr.tacticalgamer.com/Community")
+                showSlotRevocationAdvisory(blacklistAdvisoryClient)
             end
         end
     end
@@ -342,16 +354,6 @@ local function PrintBumpCountsReport(client)
     tgnsMd:ToClientConsole(client, string.format("Victims: %s (%s Primer Only; %s Stranger)", bumpCounts.totalVictims, bumpCounts.primerOnlyVictims, bumpCounts.strangerVictims))
     tgnsMd:ToClientConsole(client, string.format("Rejects: %s (%s Primer Only; %s Stranger)", bumpCounts.totalRejects, bumpCounts.primerOnlyRejects, bumpCounts.strangerRejects))
 end
-
--- local function getCountOfPlayersWhoCanBumpTarget(targetClient, playerList, steamIds)
---     local result = 0
---     TGNS.DoFor(steamIds, function(steamId)
---         if Shine.Plugins.communityslots:IsTargetBumpable(targetClient, playerList, steamId) then
---             result = result + 1
---         end
---     end)
---     return result
--- end
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -417,7 +419,7 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
     if result then
         local targetClientHasSlotsPrivilege = not blacklistedClients[targetClient]
         local joinerIsStranger = TGNS.IsSteamIdStranger(joiningSteamId)
-        local joinerIsPrimerSignerWhoIsNotPlayingWithBka = TGNS.IsSteamIdPrimerOnly(joiningSteamId) and not clientSatisfiesBkaRequirement(TGNS.GetClientByNs2Id(joiningSteamId))
+        local joinerIsPrimerSignerWhoIsNotPlayingWithBka = TGNS.IsSteamIdPrimerOnly(joiningSteamId) and not clientSatisfiesBkaRequirement(joiningClient)
         local joinerIsNonSmDuringGameAndLacksBumpKarma = isNonSmDuringGameAndLacksBumpKarma(joiningSteamId)
         local targetIsSM = TGNS.IsClientSM(targetClient) and targetClientHasSlotsPrivilege
         local targetIsProtectedCommander = IsTargetProtectedCommander(targetClient)
@@ -516,6 +518,18 @@ function Plugin:CreateCommands()
         PrintBumpCountsReport(client)
     end)
     logCommand:Help("View the Community Slots log.")
+
+    local trySlotCommand = self:BindCommand("sh_slot", "slot", function(client)
+        local player = TGNS.GetPlayer(client)
+        if blacklistedClients[client] then
+            showSlotRevocationAdvisory(client)
+        else
+            trySlotEnabled[client] = true
+            tgnsMd:ToPlayerNotifyInfo(player, "Reserved slots logic enabled for your client until the end of the map.")
+        end
+    end, true)
+    trySlotCommand:Help("Enable whatever reserved slot you might have.")
+
     local showTimesCommand = self:BindCommand( "sh_showtimes", "showtimes", TGNSConnectedTimesTracker.PrintConnectedDurations)
     showTimesCommand:Help("View connected time of each client.")
     local fullSpecCommand = self:BindCommand( "sh_fullspec", "fs", function(client)
