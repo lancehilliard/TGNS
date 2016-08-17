@@ -403,6 +403,11 @@ function Plugin:CreateCommands()
 								OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
 								md:ToAdminConsole(string.format("%s set BKA successfully.", TGNS.GetClientName(client)))
 								showSummary(client)
+								TGNS.ScheduleAction(0, function()
+									if Balance.GetTotalGamesPlayed(client) == PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and newBkaName == TGNS.GetClientName(client) then
+										md:ToAllNotifyInfo(string.format("%s read sh_name output carefully and set BKA successfully.", TGNS.GetClientName(client)))
+									end
+								end)
 							end
 						end)
 					else
