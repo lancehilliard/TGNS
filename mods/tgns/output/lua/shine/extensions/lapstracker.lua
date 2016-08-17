@@ -308,35 +308,40 @@ function Plugin:CreateCommands()
 
 		if TGNS.ClientIsOnPlayingTeam(client) then
 			if not TGNS.IsClientCommander(client) then
-	    		if not TGNS.IsGameInProgress() then    		if #startingRoomNames > 0 then
-				    	enabled[client] = not enabled[client] == true
-				        if enabled[client] then
-				        	onLocationChangedEnabled = true
-					        md:ToClientConsole(client, string.format("You have %s Laps. Execute sh_laps again to %s it.", enabled[client] and "enabled" or "disabled", enabled[client] and "disable" or "enable"))
-					        md:ToClientConsole(client, "")
-					        md:ToClientConsole(client, "Laps is competitive time trials through stock NS2 maps. Following pre-defined room routes, you")
-					        md:ToClientConsole(client, "race against your own past times and those of other players. Each map has multiple tracks, each")
-					        md:ToClientConsole(client, "defined as a list of sequential room names. Try to move through each track as fast as possible!")
-					        md:ToClientConsole(client, "")
-					        md:ToClientConsole(client, "If you haven't yet seen http://rr.tacticalgamer.com/Laps, you might read the Help there before continuing.")
-					        md:ToClientConsole(client, "")
-					        md:ToClientConsole(client, "Otherwise, you're ready to race! Starting rooms are displayed on screen!")
-					        md:ToClientConsole(client, "")
-					        OnLocationChanged(player, player:GetLocationName())
-					        TGNS.GiveMarinePlayerJetpack(player)
-							TGNS.ScheduleAction(MAXIMUM_ALLOWED_LOCATION_DURATION, function()
-								if enabled[client] and #recentLocations[client] == 1 and Shine:IsValidClient(client) then
-									disableLaps(client, "inactivity", true)
-								end
-							end)
-					    else
-							disableLaps(client, "console command", true)
-				        end
-		    		else
-		    			md:ToClientConsole(client, "ERROR: No tracks are defined for this map.")
-		    		end
+				if TGNS.IsClientAlive(client) then
+		    		if not TGNS.IsGameInProgress() then
+		    			if #startingRoomNames > 0 then
+					    	enabled[client] = not enabled[client] == true
+					        if enabled[client] then
+					        	onLocationChangedEnabled = true
+						        md:ToClientConsole(client, string.format("You have %s Laps. Execute sh_laps again to %s it.", enabled[client] and "enabled" or "disabled", enabled[client] and "disable" or "enable"))
+						        md:ToClientConsole(client, "")
+						        md:ToClientConsole(client, "Laps is competitive time trials through stock NS2 maps. Following pre-defined room routes, you")
+						        md:ToClientConsole(client, "race against your own past times and those of other players. Each map has multiple tracks, each")
+						        md:ToClientConsole(client, "defined as a list of sequential room names. Try to move through each track as fast as possible!")
+						        md:ToClientConsole(client, "")
+						        md:ToClientConsole(client, "If you haven't yet seen http://rr.tacticalgamer.com/Laps, you might read the Help there before continuing.")
+						        md:ToClientConsole(client, "")
+						        md:ToClientConsole(client, "Otherwise, you're ready to race! Starting rooms are displayed on screen!")
+						        md:ToClientConsole(client, "")
+						        OnLocationChanged(player, player:GetLocationName())
+						        TGNS.GiveMarinePlayerJetpack(player)
+								TGNS.ScheduleAction(MAXIMUM_ALLOWED_LOCATION_DURATION, function()
+									if enabled[client] and #recentLocations[client] == 1 and Shine:IsValidClient(client) then
+										disableLaps(client, "inactivity", true)
+									end
+								end)
+						    else
+								disableLaps(client, "console command", true)
+					        end
+			    		else
+			    			md:ToClientConsole(client, "ERROR: No tracks are defined for this map.")
+			    		end
+					else
+						md:ToClientConsole(client, "ERROR: You may not enable Laps during gameplay.")
+					end
 				else
-					md:ToClientConsole(client, "ERROR: You may not enable Laps during gameplay.")
+					md:ToClientConsole(client, "ERROR: You must be alive to enable Laps.")
 				end
 			else
 				md:ToClientConsole(client, string.format("Exit the %s before executing sh_laps.", TGNS.GetTeamCommandStructureCommonName(TGNS.GetPlayerTeamNumber(player))))
@@ -351,7 +356,7 @@ end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
-	if enabled[client] and not TGNS.IsGameplayTeamNumber(newTeamNumber) then
+	if enabled[client] then
 		disableLaps(client, "leaving team", true)
 	end
 end
