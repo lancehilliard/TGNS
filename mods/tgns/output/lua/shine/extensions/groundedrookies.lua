@@ -19,7 +19,7 @@ function Plugin:Initialise()
 	local originalGetIsPlayerValidForCommander
 	originalGetIsPlayerValidForCommander = TGNS.ReplaceClassMethod("CommandStructure", "GetIsPlayerValidForCommander", function(self, player)
 		local result = originalGetIsPlayerValidForCommander(self, player)
-		if result then
+		if result and not Shine.Plugins.communityslots:IsClientRecentCommander(TGNS.GetClient(player)) then
 			local playerShouldBePreventedFromCommanding
 			local numberOfAliveTeammates = #TGNS.Where(TGNS.GetPlayersOnSameTeam(player), TGNS.IsPlayerAlive)
 			if ((not TGNS.IsGameInProgress()) or (numberOfAliveTeammates > 2)) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
