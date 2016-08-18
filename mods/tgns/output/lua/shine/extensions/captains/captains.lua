@@ -1551,8 +1551,8 @@ if Server or Client then
 				if d then
 					local lifeformSecondsSum = d.GorgeSeconds + d.LerkSeconds + d.FadeSeconds + d.OnosSeconds
 					local commSecondsSum = d.MarineCommSeconds + d.AlienCommSeconds
-					local highestRelevantKd = 2.3
-					local lowestRelevantKd = 1.84
+					local highestRelevantKd = 4.2
+					local lowestRelevantKd = 3.6
 					kdPercent = d.KD >= highestRelevantKd and 1 or (d.KD >= lowestRelevantKd and ((d.KD-lowestRelevantKd)/(highestRelevantKd-lowestRelevantKd))+transparencyBoost or 0)
 					
 					if lifeformSecondsSum > 1800 or commSecondsSum > 1800 then
