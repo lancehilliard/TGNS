@@ -356,6 +356,7 @@ function Plugin:CreateCommands()
 				local newBkaIsOldBkaExceptQuotes = (TGNS.HasNonEmptyValue(newBkaName) and TGNS.HasNonEmptyValue(bkaData.BKA)) and ((TGNS.Replace(newBkaName, "\"", "") == bkaData.BKA) or (TGNS.Replace(bkaData.BKA, "\"", "") == newBkaName)) or false
 				if timeRemainingBeforePlayerMayChangeOwnBkaInSeconds > 0 and TGNS.HasNonEmptyValue(newBkaName) and not newBkaIsOldBkaExceptQuotes then
 					bkaChangeError = string.format("%s cooldown in progress since %s (GMT). An admin can always edit your Better Known As.", PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE, bkaData.BKAPlayerModifiedAtGmtString)
+					md:ToAdminConsole(string.format("%s is in sh_name cooldown. Current BKA is '%s'.", TGNS.GetClientName(client), bkaData.BKA))
 				else
 					if not TGNS.HasNonEmptyValue(newBkaName) then
 						bkaChangeError = "You specified no Better Known As name (your preferred player name)."
