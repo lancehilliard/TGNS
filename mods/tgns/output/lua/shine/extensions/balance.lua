@@ -210,6 +210,8 @@ local function SendNextPlayer()
 		teamAverageGetter = GetHiveRankAverage
 	end
 
+	local afkPlayerNamesCommaDelimited = TGNS.Join(TGNS.Select(TGNS.Where(TGNS.GetPlayerList(), TGNS.IsPlayerAFK), TGNS.GetPlayerName), ", ")
+	table.insert(balanceLog, string.format("AFK players: %s", afkPlayerNamesCommaDelimited))
 	local playerList = (Shine.Plugins.communityslots and Shine.Plugins.communityslots.GetPlayersForNewGame) and Shine.Plugins.communityslots:GetPlayersForNewGame() or TGNS.GetPlayerList()
 	if Shine.Plugins.sidebar and Shine.Plugins.sidebar.PlayerIsInSidebar then
 		playerList = TGNS.Where(playerList, function(p) return not Shine.Plugins.sidebar:PlayerIsInSidebar(p) end)
