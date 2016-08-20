@@ -1854,7 +1854,7 @@ if Server or Client then
 						local optinStatusAdvisory = "Press 'M > Captains > sh_iwantcaptains' if you want to play Captains"
 						local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, c)
 						if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
-							optinStatusAdvisory = string.format("You're opted-in as ready to play%s (reserved slots disabled during Captains games).", readyClientIsCaptain and " as a Captain" or "")
+							optinStatusAdvisory = string.format("You're opted-in as ready to play%s (reserved slots disabled during Captains games)", readyClientIsCaptain and " as a Captain" or "")
 						end
 						-- local secondLineMessage = string.format("%s (%s vs %s)! %s", optinStatusAdvisory, firstCaptainName, secondCaptainName, timeLeftAdvisory)
 						local secondLineMessage = string.format("%s! %s", optinStatusAdvisory, timeLeftAdvisory)
