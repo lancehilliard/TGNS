@@ -1879,6 +1879,22 @@ if Server or Client then
 			end
 		end
 
+		local function removeReadyRoomAfkToMakeRoomForNewReadyPlayerClient(newReadyPlayerClientOptIn)
+			if not TGNS.Has(readyPlayerClients, newReadyPlayerClientOptIn) then
+				local playingReadyPlayerClients = TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end)
+				if #playingReadyPlayerClients >= MAX_NON_CAPTAIN_PLAYERS then
+					local afkReadyRoomReadyPlayerClient = TGNS.FirstOrNil(TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and TGNS.IsClientReadyRoom(c) end))
+					if afkReadyRoomReadyPlayerClient then
+	    				TGNS.RemoveAllMatching(readyPlayerClients, afkReadyRoomReadyPlayerClient)
+						md:ToPlayerNotifyInfo(TGNS.GetPlayer(afkReadyRoomReadyPlayerClient), "You were removed from Captains opt-in due to AFK.")
+	    				if captainsModeEnabled then
+		    				md:ToAllNotifyInfo(string.format("%s is no longer opted in to Captains (AFK).", TGNS.GetClientName(afkReadyRoomReadyPlayerClient)))
+	    				end
+					end
+				end
+			end
+		end
+
 		local function addReadyPlayerClient(client)
 			if votesAllowedUntil == nil then
 				votesAllowedUntil = TGNS.GetSecondsSinceMapLoaded() + OPTIN_VOTE_DURATION + 2
@@ -1898,6 +1914,7 @@ if Server or Client then
 			if TGNS.Has(readyPlayerClients, client) then
 				updateCaptainsReadyProgress(client)
 			else
+				removeReadyRoomAfkToMakeRoomForNewReadyPlayerClient(client)
 				local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
 				local player = TGNS.GetPlayer(client)
 				if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
@@ -2351,6 +2368,7 @@ if Server or Client then
 					local optingInClientDidNotPlayInRecentCaptainsGame = not (TGNS.Has(recentPlayerPlayerIds, optingInSteamId) or isRecentCaptain)
 					if isSm or isRecentCaptain or optingInClientDidNotPlayInRecentCaptainsGame then
 						readyPlayerClients = readyPlayerClients or {}
+						removeReadyRoomAfkToMakeRoomForNewReadyPlayerClient(optingInClient)
 						local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
 						if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS and not TGNS.Has(readyPlayerClients, optingInClient) then
 							table.insertunique(readyPlayerClients, optingInClient)
