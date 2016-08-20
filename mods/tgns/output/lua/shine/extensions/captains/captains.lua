@@ -97,7 +97,7 @@ if Server or Client then
 		   					elseif s.EntityTeamNumber == kAlienTeamType then
 		   						teamAdditive = "      "
 		   					end
-			   				return string.format("%s%s", teamAdditive, s.Name)
+			   				return string.format("%s%s", teamAdditive, TGNS.ToLower(s.Name))
 			   			end)
 			   		end
 			   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
