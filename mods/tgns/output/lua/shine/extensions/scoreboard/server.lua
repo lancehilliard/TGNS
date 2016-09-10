@@ -695,6 +695,13 @@ function Plugin:Initialise()
 	 		local clientIndex = TGNS.GetClientIndex(client)
 	 		tunnelDescriptions[clientIndex] = tunnelDescription
 	 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
+	 		if TGNS.HasNonEmptyValue(tunnelDescription) then
+		 		local messagePlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) or TGNS.PlayerIsAlien(p) end)
+		 		local tunnelsMd = TGNSMessageDisplayer.Create("TUNNELS")
+		 		TGNS.DoFor(messagePlayers, function(p)
+		 			tunnelsMd:ToPlayerNotifyInfo(p, string.format("%s has %s tunnel%s", TGNS.GetClientName(client), tunnelDescription, #exitLocationNames == 2 and "!" or " entrance."))
+		 		end)
+	 		end
  		end
  	end
 
