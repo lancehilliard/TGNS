@@ -183,7 +183,7 @@ if Server or Client then
 		Server.SetConfigSetting("force_even_teams_on_join", false)
 
 		local WaveTextChannelId = 72
-		local waveStartDelayInSeconds = 15
+		local waveStartDelayInSeconds = 25
 		local structures = {}
 		local allWaveStructuresDeployed = {}
 		local currentGameStartWhen = 0
