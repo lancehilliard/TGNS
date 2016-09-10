@@ -9,6 +9,8 @@ local enabled = {}
 local startingRoomNames = {}
 local nextLocationNames = {}
 local trackLowestTimes = {}
+local trackBestTimes = {}
+local trackBestNames = {}
 local lastKnownLocationNames = {}
 local onLocationChangedEnabled
 local classesAllowedForLaps = {'JetpackMarine','Skulk'}
@@ -65,14 +67,24 @@ end
 
 local function showLowestTime(client, trackId)
 	local player = TGNS.GetPlayer(client)
+	local className = TGNS.GetPlayerClassName(player)
+	local trackData = tracks[trackId]
+	local message = string.format("%s\n(%s %s)\n\n", trackData.name, Shared.GetBuildNumber(), className)
+
 	trackLowestTimes[client] = trackLowestTimes[client] or {}
 	trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
 	trackStartTimes[client] = trackStartTimes[client] or {}
-	local className = TGNS.GetPlayerClassName(player)
 	if trackLowestTimes[client][trackId][className] ~= nil and trackLowestTimes[client][trackId][className] > 0 and trackStartTimes[client][trackId] then
-		local trackData = tracks[trackId]
-		local mapDescriptor = string.format("%s (%s)", trackData.name, Shared.GetBuildNumber())
-		local message = string.format("%s\nYour Best Time (%s):\n%s", mapDescriptor, className, getTrackDurationDisplay(trackLowestTimes[client][trackId][className]))
+		message = string.format("%sYour Best Time:\n%s\n\n", message, getTrackDurationDisplay(trackLowestTimes[client][trackId][className]))
+	end
+
+	trackBestTimes[trackId] = trackBestTimes[trackId] or {}
+	trackBestNames[trackId] = trackBestNames[trackId] or {}
+	if trackBestTimes[trackId][className] ~= nil and trackBestTimes[trackId][className] > 0 and trackStartTimes[client][trackId] then
+		message = string.format("%s%s Best Time:\n%s", message, TGNS.HasNonEmptyValue(trackBestNames[trackId][className]) and trackBestNames[trackId][className] or "Overall", getTrackDurationDisplay(trackBestTimes[trackId][className]))
+	end
+
+	if TGNS.HasNonEmptyValue(message) then
 		Shine.ScreenText.Add(97, {X = 0.8, Y = 0.3, Text = message, Duration = MAXIMUM_ALLOWED_LOCATION_DURATION, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
 	end
 end
@@ -112,7 +124,7 @@ local function OnLocationChanged(player, locationName)
 					trackLowestTimes[client] = trackLowestTimes[client] or {}
 					local className = TGNS.GetPlayerClassName(player)
 					trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
-					if trackLowestTimes[client][trackId][className] == nil then
+					-- if trackLowestTimes[client][trackId][className] == nil then
 						local url = string.format("%s&i=%s&t=%s&b=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(className))
 						TGNS.GetHttpAsync(url, function(lapsResponseJson)
 							local lapsResponse = json.decode(lapsResponseJson) or {}
@@ -121,11 +133,21 @@ local function OnLocationChanged(player, locationName)
 									trackLowestTimes[client][trackId][className] = lapsResponse.seconds
 									showLowestTime(client, trackId)
 								end
+								if lapsResponse.bestSeconds > 0 then
+									trackBestTimes[trackId] = trackBestTimes[trackId] or {}
+									trackBestTimes[trackId][className] = lapsResponse.bestSeconds
+									showLowestTime(client, trackId)
+								end
+								if TGNS.HasNonEmptyValue(lapsResponse.bestBkaName) then
+									trackBestNames[trackId] = trackBestNames[trackId] or {}
+									trackBestNames[trackId][className] = lapsResponse.bestBkaName
+									showLowestTime(client, trackId)
+								end
 							else
 								TGNS.DebugPrint(string.format("laps ERROR: Unable to access laps data for playerid %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetClientSteamId(client), lapsResponse.msg, lapsResponseJson, lapsResponse.stacktrace))
 							end
 						end)					
-					end
+					-- end
 				end
 			end)
 
@@ -181,8 +203,14 @@ local function OnLocationChanged(player, locationName)
 						end
 						trackLowestTimes[client] = trackLowestTimes[client] or {}
 						trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
+
 						local className = TGNS.GetPlayerClassName(player)
+						trackBestTimes[trackId] = trackBestTimes[trackId] or {}
+						trackBestNames[trackId] = trackBestNames[trackId] or {}
+
 						local lowestPreviousTime = trackLowestTimes[client][trackId][className]
+						local bestPreviousTime = trackBestTimes[trackId][className]
+						local bestPreviousName = trackBestNames[trackId][className]
 						local url = string.format("%s&i=%s&t=%s&b=%s&s=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(trackDuration), TGNS.UrlEncode(className))
 						TGNS.GetHttpAsync(url, function(lapsResponseJson)
 							local lapsResponse = json.decode(lapsResponseJson) or {}
@@ -194,10 +222,19 @@ local function OnLocationChanged(player, locationName)
 								md:ToClientConsole(client, "When he verifies this notification in the server log, he'll add the time manually for you.")
 								md:ToClientConsole(client, "")
 								trackLowestTimes[client][trackId][className] = lowestPreviousTime
+								trackBestTimes[trackId][className] = bestPreviousTime
+								trackBestNames[trackId][className] = bestPreviousName
+								showLowestTime(client, trackId)
 							end
 						end)
 						trackLowestTimes[client][trackId][className] = trackDuration <= (trackLowestTimes[client][trackId][className] or trackDuration) and trackDuration or trackLowestTimes[client][trackId][className]
-						if trackLowestTimes[client][trackId][className] < (lowestPreviousTime or 0) then
+						trackBestTimes[trackId][className] = trackDuration <= (trackBestTimes[trackId][className] or trackDuration) and trackDuration or trackBestTimes[trackId][className]
+						if trackLowestTimes[client][trackId][className] <= trackBestTimes[trackId][className] then
+							trackBestTimes[trackId][className] = trackLowestTimes[client][trackId][className]
+							trackBestNames[trackId][className] = TGNS.GetClientName(client)
+							showLowestTime(client, trackId)
+						end
+						if trackLowestTimes[client][trackId][className] < (lowestPreviousTime or 0) or trackBestTimes[trackId][className] < (bestPreviousTime or 0) then
 							TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_BEST, {})
 						else
 							TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.LAPS_START, {})
@@ -309,7 +346,7 @@ function Plugin:CreateCommands()
 		if TGNS.ClientIsOnPlayingTeam(client) then
 			if not TGNS.IsClientCommander(client) then
 				if TGNS.IsClientAlive(client) then
-		    		if not TGNS.IsGameInProgress() then
+		    		if not (TGNS.IsGameInProgress() or TGNS.IsGameInCountdown()) then
 		    			if #startingRoomNames > 0 then
 					    	enabled[client] = not enabled[client] == true
 					        if enabled[client] then
@@ -326,11 +363,11 @@ function Plugin:CreateCommands()
 						        md:ToClientConsole(client, "")
 						        OnLocationChanged(player, player:GetLocationName())
 						        TGNS.GiveMarinePlayerJetpack(player)
-								TGNS.ScheduleAction(MAXIMUM_ALLOWED_LOCATION_DURATION, function()
-									if enabled[client] and #recentLocations[client] == 1 and Shine:IsValidClient(client) then
-										disableLaps(client, "inactivity", true)
-									end
-								end)
+								-- TGNS.ScheduleAction(MAXIMUM_ALLOWED_LOCATION_DURATION, function()
+								-- 	if enabled[client] and #recentLocations[client] == 1 and Shine:IsValidClient(client) then
+								-- 		disableLaps(client, "inactivity", true)
+								-- 	end
+								-- end)
 						    else
 								disableLaps(client, "console command", true)
 					        end
@@ -405,11 +442,16 @@ function Plugin:Initialise()
     md = TGNSMessageDisplayer.Create("LAPS")
     self:CreateCommands()
 
-	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
+	TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
 			if enabled[c] then
 				disableLaps(c, "game start", true)
 			end
+			TGNS.ScheduleAction(3, function()
+				if enabled[c] and Shine:IsValidClient(c) then
+					disableLaps(c, "game start", true)
+				end
+			end)
 		end)
 	end)
 	
