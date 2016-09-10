@@ -1883,7 +1883,7 @@ if Server or Client then
 			if not TGNS.Has(readyPlayerClients, newReadyPlayerClientOptIn) then
 				local playingReadyPlayerClients = TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end)
 				if #playingReadyPlayerClients >= MAX_NON_CAPTAIN_PLAYERS then
-					local afkReadyRoomReadyPlayerClient = TGNS.FirstOrNil(TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and TGNS.IsClientReadyRoom(c) end))
+					local afkReadyRoomReadyPlayerClient = TGNS.FirstOrNil(TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and TGNS.IsClientReadyRoom(c) and TGNS.GetPlayerAfkDurationInSeconds(TGNS.GetPlayer(c)) >= 60 end))
 					if afkReadyRoomReadyPlayerClient then
 	    				TGNS.RemoveAllMatching(readyPlayerClients, afkReadyRoomReadyPlayerClient)
 						md:ToPlayerNotifyInfo(TGNS.GetPlayer(afkReadyRoomReadyPlayerClient), "You were removed from Captains opt-in due to AFK.")
@@ -2783,7 +2783,8 @@ if Server or Client then
 					if result ~= true then
 						if lastVoiceWarningTimes[speakerClient] == nil or lastVoiceWarningTimes[speakerClient] < Shared.GetTime() - 2 then
 							-- Shine:SendText(speakerClient, Shine.BuildScreenMessage(50, 0.2, 0.25, "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", 3, 0, 255, 0, 0, 4, 0 ) )
-							Shine.ScreenText.Add(50, {X = 0.2, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, speakerClient)
+							-- Shine.ScreenText.Add(50, {X = 0.2, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, speakerClient)
+							md:ToPlayerNotifyError(speakerPlayer, "Others cannot hear you. Only Captains and Admins may use voicecomm while teams are being selected.")
 							lastVoiceWarningTimes[speakerClient] = Shared.GetTime()
 						end
 					end
