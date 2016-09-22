@@ -102,9 +102,17 @@ function Plugin:CreateCommands()
 		local chatCommand = self:BindCommand(command, nil, function(client, message)
 			ProcessChatCommand(client, channel, command, message or "")
 		end, true)
-		chatCommand:AddParam{ Type = "string", TakeRestofLine = true, Optional = true }
+		chatCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
 		chatCommand:Help(channel.help)
 	end)
+
+	local printAllConsolesCommand = self:BindCommand("sh_printallconsoles", nil, function(client, channel, message)
+		local consolesMd = TGNSMessageDisplayer.Create(channel)
+		consolesMd:ToAllConsole(message)
+	end)
+	printAllConsolesCommand:AddParam{ Type = "string", }
+	printAllConsolesCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	printAllConsolesCommand:Help("<channel> <message> Print message to all client consoles")
 end
 
 function Plugin:Initialise()
