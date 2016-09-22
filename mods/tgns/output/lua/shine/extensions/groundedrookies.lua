@@ -1,14 +1,45 @@
 --local notifiedPlayerIds = {}
 local md = TGNSMessageDisplayer.Create()
+local exemptRookies = {}
 
 local Plugin = {}
+
+function Plugin:CreateCommands()
+	local exemptCommand = self:BindCommand( "sh_letrookiecommand", nil, function(client, playerPredicate)
+		local player = TGNS.GetPlayer(client)
+		if playerPredicate == nil or playerPredicate == "" then
+			md:ToPlayerNotifyError(player, "You must specify a player.")
+		else
+			local targetPlayer = TGNS.GetPlayerMatching(playerPredicate, nil)
+			if targetPlayer ~= nil then
+				local targetClient = TGNS.GetClient(targetPlayer)
+				if targetClient then
+					if TGNS.PlayerIsRookie(targetPlayer) then
+						exemptRookies[targetClient] = true
+						md:ToPlayerNotifyInfo(player, string.format("%s may command.", TGNS.GetClientName(targetClient)))
+					else
+						md:ToPlayerNotifyError(player, string.format("%s is not a Rookie.", TGNS.GetClientName(targetClient)))
+					end
+				else
+					md:ToPlayerNotifyError(player, string.format("Error locating %s client.", TGNS.GetPlayerName(targetPlayer)))
+				end
+			else
+				md:ToPlayerNotifyError(player, string.format("'%s' does not uniquely match a player.", playerPredicate))
+			end
+		end
+	end, true)
+	exemptCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	exemptCommand:Help( "<player> Allow player to command." )
+end
 
 function Plugin:Initialise()
     self.Enabled = true
 
     local restrictions = {
     	{advisory=function(playerName, teamName) return string.format("Rookies with fewer than 20 TGNS games may not command. %s: help %s fight from the ground!", teamName, playerName) end, test=function(player, numberOfAliveTeammates) 
-    		return TGNS.PlayerIsRookie(player) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20
+    		local client = TGNS.GetClient(player)
+    		local playerIsExempt = client and exemptRookies[client] or false
+    		return (TGNS.PlayerIsRookie(player) and not playerIsExempt) and Balance.GetTotalGamesPlayed(TGNS.GetClient(player)) < 20
     	end},
     	{advisory=function(playerName, teamName) return string.format("Commanders must be voicecomm vouched when 3+ Primer signer teammates. %s: can anyone vouch %s?", teamName, playerName) end, test=function(player, numberOfAliveTeammates)
     		local client = TGNS.GetClient(player)
@@ -37,6 +68,7 @@ function Plugin:Initialise()
 		end
 		return result
 	end)
+	self:CreateCommands()
     return true
 end
 
