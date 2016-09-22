@@ -20,12 +20,15 @@ function Plugin:SendVoicecommReminder(sourceClient, targetPlayer)
 					md:ToPlayerNotifyInfo(p, firstMessage)
 					md:ToPlayerNotifyInfo(p, secondMessage)
 					local c = TGNS.GetClient(p)
-					TGNS.ScheduleAction(22, function()
+					local reminderAction
+					reminderAction = function()
 						if Shine:IsValidClient(sourceClient) and Shine:IsValidClient(targetClient) and Shine:IsValidClient(c) and TGNS.ClientsAreTeammates(sourceClient, targetClient) and TGNS.ClientsAreTeammates(sourceClient, c) and not Shine.Plugins.scoreboard:IsVouched(targetClient) then
 							local tp = TGNS.GetPlayer(targetClient)
-							md:ToPlayerNotifyYellow(TGNS.GetPlayer(c), string.format("%s: Vouch %s (^) or: sh_vrkick %s (chat: !vrkick %s)", TGNS.GetClientName(sourceClient), TGNS.GetPlayerName(tp), TGNS.GetPlayerGameId(tp), TGNS.GetPlayerGameId(tp)))
+							md:ToPlayerNotifyYellow(TGNS.GetPlayer(c), string.format("%s: Vouch %s (^) or chat: !vrkick %s", TGNS.GetClientName(sourceClient), TGNS.GetPlayerName(tp), TGNS.GetPlayerGameId(tp), TGNS.GetPlayerGameId(tp)))
+							TGNS.ScheduleAction(30, reminderAction)
 						end
-					end)
+					end
+					TGNS.ScheduleAction(22, reminderAction)
 				end
 			end)
 			reminderLastSentWhen[targetClient] = Shared.GetTime()
