@@ -148,7 +148,7 @@ function Plugin:CreateCommands()
     	announceSvi(client)
     	showCurrentSpecMode(player, true)
     end, true)
-    modCommand:AddParam{ Type = "string", TakeRestofLine = true, Optional = true }
+    modCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
     modCommand:Help( "Adjust what voicecomms you hear in Spectate." )
 end
 
