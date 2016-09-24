@@ -95,6 +95,7 @@ has.GasGrenade = {}
 has.PulseGrenade = {}
 has.usableConnectionAt = 0
 has.queriedServerStatusAt = 0
+has.muteAbility = {}
 
 local kFavoriteIconSize = Vector(26, 26, 0)
 local kFavoriteIconPos = Vector(5, 4, 0)
@@ -149,6 +150,11 @@ end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
 	showOptionals = message.t
+end)
+
+TGNS.HookNetworkMessage(Plugin.ENABLE_MUTE, function(message)
+	Shared.Message("Plugin.ENABLE_MUTE")
+	has.muteAbility[Client.GetLocalClientIndex()] = true
 end)
 
 TGNS.HookNetworkMessage(Plugin.RECENT_CAPTAINS, function(message)
@@ -1115,6 +1121,9 @@ function Plugin:Initialise()
 					if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) then
 						self.hoverMenu:RemoveButtonByText("Hive profile")
 						self.hoverMenu:RemoveButtonByText("NS2Stats profile")
+					end
+					if not has.muteAbility[Client.GetLocalClientIndex()] then
+						self.hoverMenu:RemoveButtonByText(Locale.ResolveString("SB_MENU_MUTE_VOICE"))
 					end
 				end
 			end

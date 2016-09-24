@@ -325,6 +325,25 @@ function Plugin:CreateCommands()
 	end)
 	approvalsCountsCommand:Help( "Show approval counts." )
 
+	local enableMuteCommand = self:BindCommand( "sh_enablemute", nil, function(client, playerPredicate)
+		local player = TGNS.GetPlayer(client)
+		if playerPredicate == nil or playerPredicate == "" then
+			md:ToPlayerNotifyError(player, "You must specify a player.")
+		else
+			local targetPlayer = TGNS.GetPlayerMatching(playerPredicate, nil)
+			if targetPlayer ~= nil then
+				local targetClient = TGNS.GetClient(targetPlayer)
+				TGNS.SendNetworkMessageToPlayer(targetPlayer, self.ENABLE_MUTE)
+				local mutesMd = TGNSMessageDisplayer.Create("MUTES")
+				mutesMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Mute enabled for %s.", TGNS.GetClientName(targetClient)))
+			else
+				md:ToPlayerNotifyError(player, string.format("'%s' does not uniquely match a player.", playerPredicate))
+			end
+		end
+	end)
+	enableMuteCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	enableMuteCommand:Help( "<player> Enable player to mute other players." )
+
 	local textTestCommand = self:BindCommand( "sh_texttest", "tt", function(client, message, x, y)
 		-- Shine:SendText(client, Shine.BuildScreenMessage(81, x, y, message, 15, 255, 255, 255, 1, 1, 0 ) )
 		Shine.ScreenText.Add(81, {X = x, Y = y, Text = message, Duration = 15, R = 255, G = 255, B = 255, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, client)
