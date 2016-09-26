@@ -1453,7 +1453,7 @@ if Server or Client then
 				timeAtWhichToForceRoundStart = 0
 				TGNS.ScheduleAction(2, function()
 					if not (TGNS.IsGameInCountdown() or TGNS.IsGameInProgress()) then
-						TGNS.ForceGameStart()
+						TGNS.ForceGameStart(true)
 						TGNS.ScheduleAction(kCountDownLength + 2, function()
 							readyTeams["Marines"] = false
 							readyTeams["Aliens"] = false
@@ -1482,7 +1482,7 @@ if Server or Client then
 					local secondsRemaining = timeAtWhichToForceRoundStart - now
 					if secondsRemaining >= 1 then
 						--message = string.format("Game will force-start in %s.\nType in team chat: !plan", string.DigitalTime(secondsRemaining))
-						message = string.format("Game will force-start in %s.", string.DigitalTime(secondsRemaining))
+						message = string.format("Game will force-start in %s.\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", string.DigitalTime(secondsRemaining))
 						if secondsRemaining < 30 then
 							r = 255
 							g = 255
@@ -2067,7 +2067,8 @@ if Server or Client then
 								md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Time for Round 2! Switch to %s!", TGNS.GetOtherPlayingTeamName(TGNS.GetClientTeamName(c))))
 							end)
 							TGNS.ScheduleAction(10, function()
-								md:ToAllNotifyInfo("Put in nominations now for the next map!")
+								local nominationsMd = TGNSMessageDisplayer.Create("MAPCYCLE")
+								nominationsMd:ToAllNotifyInfo("Put in nominations now for the next map!")
 							end)
 						end
 					else
