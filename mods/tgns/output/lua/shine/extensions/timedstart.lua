@@ -23,7 +23,7 @@ local function showTimeRemaining()
 			if secondsRemaining >= 1 then
 				local duration = secondsRemaining < 3 and 5 or 1.5
 				local secondsRemainingDescription = secondsRemaining <= 3 and "a few" or secondsRemaining
-				local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nPer team with no Commander at game\nstart, one randomly selected player will\nbegin without any personal resources.", secondsRemainingDescription)
+				local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", secondsRemainingDescription)
 				Shine.ScreenText.Add(51, {X = 0.5, Y = 0.40, Text = message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
 				fifteenSecondAfkTimerWasLastAdvertisedAt = Shared.GetTime()
 
@@ -44,33 +44,7 @@ local function showTimeRemaining()
 
 				if secondsRemaining == 1 then
 					TGNS.ScheduleAction(0.5, function()
-						local clientsToTakeStartingPersonalResourcesFrom = {}
-					    local originalTeamInfoReset = TeamInfo.Reset
-					    local teamHasCommander = {}
-					    teamHasCommander[kMarineTeamType] = GetTeamHasCommander(kMarineTeamType)
-					    teamHasCommander[kAlienTeamType] = GetTeamHasCommander(kAlienTeamType)
-					    TeamInfo.Reset = function(teamInfoSelf)
-					    	originalTeamInfoReset(teamInfoSelf)
-					    	if GetGamerules():GetGameState() == kGameState.NotStarted then
-					    		local teamNumber = teamInfoSelf:GetTeamNumber()
-					    		if not teamHasCommander[teamNumber] then
-							    	local players = teamInfoSelf.team:GetPlayers()
-							    	if #players > 0 then
-								    	if teamInfoSelf.lastCommLoginTime == 0 then
-								    		table.insert(clientsToTakeStartingPersonalResourcesFrom, TGNS.GetClient(TGNS.GetFirst(TGNS.GetRandomizedElements(players))))
-								    		teamInfoSelf.lastCommLoginTime = Shared.GetTime()
-								    	end
-							    	end
-					    		end
-					    	end
-						end
-						TGNS.ForceGameStart()
-						TGNS.DoFor(clientsToTakeStartingPersonalResourcesFrom, function(c)
-							local playerToTakeStartingPersonalResourcesFrom = TGNS.GetPlayer(c)
-				    		TGNS.SetPlayerResources(playerToTakeStartingPersonalResourcesFrom, 0)
-				    		md:ToTeamNotifyInfo(TGNS.GetClientTeamNumber(c), string.format("%s started without a Commander. One teammate lost personal resources.", TGNS.GetClientTeamName(c)))
-						end)
-						TeamInfo.Reset = originalTeamInfoReset
+						TGNS.ForceGameStart(true)
 					end)
 				else
 					secondsRemaining = secondsRemaining - 1
