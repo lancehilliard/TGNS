@@ -77,6 +77,7 @@ end
 local function refreshPlayerBank(steamId)
 	local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
 	TGNS.GetHttpAsync(url, function(betResponseJson)
+		-- TGNS.DebugPrint(string.format("betResponseJson: %s", betResponseJson))
 		local betResponse = json.decode(betResponseJson) or {}
 		if betResponse.success then
 			playerBanks[steamId] = betResponse.result
