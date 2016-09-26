@@ -102,6 +102,17 @@ local function onVoteSuccessful(teamNumber)
 	local chatMessage = string.sub(string.format("WinOrLose! %s surrendered and can't %s! End it in %s secs, or THEY WIN!", teamName, threateningActionName, Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds), 1, kMaxChatLength)
 	md:ToAllNotifyInfo(chatMessage)
 
+	if math.random() < 0.1 then
+		TGNS.ScheduleAction(7, function()
+			if TGNS.IsGameInProgress() then
+				local nominationsMd = TGNSMessageDisplayer.Create("MAPCYCLE")
+				TGNS.DoFor(TGNS.GetPlayers(TGNS.GetTeamClients(teamNumber)), function(p)
+					nominationsMd:ToPlayerNotifyInfo(p, "Put in nominations now for the next map!")
+				end)
+			end
+		end)
+	end
+
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
 	numberOfSecondsToDeductFromCountdownTimeRemaining = initialNumberOfSecondsToDeduct
@@ -290,13 +301,22 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						--	end
 						--end)
 						--chatMessage = string.sub(string.format("Concede vote expired. Abstained: %s", TGNS.Join(abstainedNames, ", ")), 1, kMaxChatLength)
-						chatMessage = "Concede vote expired."
+						chatMessage = "Concede vote expired"
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
 						kWinOrLoseVoteArray[i].VotingTimeInSeconds = 0
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 						if (#playerRecords >= 7 and totalvotes > #playerRecords / 2) then
 							table.insert(whenBigVotesFailedWithMajorityThisGame, Shared.GetTime())
+							local teamSteamIds = TGNS.Select(TGNS.GetTeamClients(i), TGNS.GetClientSteamId)
+							local abstainerSteamIds = TGNS.Where(teamSteamIds, function(steamId) return not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, steamId) end)
+							local abstainerPlayers = TGNS.Select(abstainerSteamIds, function(steamId) return TGNS.GetPlayerMatchingSteamId(steamId) end)
+							local randomizedAbstainerPlayers = TGNS.GetRandomizedElements(abstainerPlayers)
+							local randomAbstainerPlayer = TGNS.GetFirst(randomizedAbstainerPlayers)
+							local randomAbstainerPlayerName = TGNS.GetPlayerName(randomAbstainerPlayer)
+							chatMessage = string.format("%s with majority. %s: make sure there's a team plan!", chatMessage, randomAbstainerPlayerName)
+						else
+							chatMessage = string.format("%s.", chatMessage)
 						end
 					else
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
