@@ -1056,13 +1056,44 @@ function TGNS.IsGameStartingState(gameState) PROFILE("TGNS.IsGameStartingState")
 	return result
 end
 
-function TGNS.ForceGameStart() PROFILE("TGNS.ForceGameStart")
+function TGNS.ForceGameStart(takePersonalResourcesFromOneRandomPlayerOnAnyTeamWithoutCommander) PROFILE("TGNS.ForceGameStart")
+	local clientsToTakeStartingPersonalResourcesFrom = {}
+	local originalTeamInfoReset = TeamInfo.Reset
+	if takePersonalResourcesFromOneRandomPlayerOnAnyTeamWithoutCommander then
+	    local teamHasCommander = {}
+	    teamHasCommander[kMarineTeamType] = GetTeamHasCommander(kMarineTeamType)
+	    teamHasCommander[kAlienTeamType] = GetTeamHasCommander(kAlienTeamType)
+	    TeamInfo.Reset = function(teamInfoSelf)
+	    	originalTeamInfoReset(teamInfoSelf)
+	    	if GetGamerules():GetGameState() == kGameState.NotStarted then
+	    		local teamNumber = teamInfoSelf:GetTeamNumber()
+	    		if not teamHasCommander[teamNumber] then
+			    	local players = teamInfoSelf.team:GetPlayers()
+			    	if #players > 0 then
+				    	if teamInfoSelf.lastCommLoginTime == 0 then
+				    		table.insert(clientsToTakeStartingPersonalResourcesFrom, TGNS.GetClient(TGNS.GetFirst(TGNS.GetRandomizedElements(players))))
+				    		teamInfoSelf.lastCommLoginTime = Shared.GetTime()
+				    	end
+			    	end
+	    		end
+	    	end
+		end
+	end
 	local gamerules = GetGamerules()
     gamerules:ResetGame()
     gamerules:SetGameState(kGameState.Countdown)
 	TGNS.ResetAllPlayerScores()
     gamerules.countdownTime = kCountDownLength
     gamerules.lastCountdownPlayed = nil
+	if takePersonalResourcesFromOneRandomPlayerOnAnyTeamWithoutCommander then
+		local gameStartMd = TGNSMessageDisplayer.Create("NOCOMM")
+		TGNS.DoFor(clientsToTakeStartingPersonalResourcesFrom, function(c)
+			local playerToTakeStartingPersonalResourcesFrom = TGNS.GetPlayer(c)
+			TGNS.SetPlayerResources(playerToTakeStartingPersonalResourcesFrom, 0)
+			gameStartMd:ToTeamNotifyInfo(TGNS.GetClientTeamNumber(c), string.format("%s started without a Commander. One teammate lost personal resources.", TGNS.GetClientTeamName(c)))
+		end)
+		TeamInfo.Reset = originalTeamInfoReset
+	end
 end
 
 function TGNS.ResetAllPlayerScores() PROFILE("TGNS.ResetAllPlayerScores")
