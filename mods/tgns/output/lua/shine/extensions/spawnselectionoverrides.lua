@@ -65,7 +65,7 @@ function Plugin:Initialise()
 			end
 		end, debug.traceback)
 		if not success then
-			TGNS.EnhancedLog(string.format("spawnselectionoverrides ERROR (%s): %s", Shared.GetTime(), result))
+			TGNS.DebugPrint(string.format("spawnselectionoverrides ERROR (%s): %s", Shared.GetTime(), result))
 		end
 		originalResetGame(gamerules)
 		-- TGNS.ScheduleAction(2, function()
