@@ -15,11 +15,6 @@ TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
 TGNS.LogHttp = false
 
--- beginnings of function GetLocationIdByName...
-	-- 	TGNS.DoForPairs(GetLocations(), function(index, location)
-	-- 		Shared.Message(string.format("%s: %s", index, location:GetName()))
-	-- 	end)
-
 function TGNS.GetEntityLocationName(entity) PROFILE("TGNS.GetEntityLocationName")
 	local result = entity:GetLocationName()
 	return result
@@ -175,10 +170,38 @@ function TGNS.IsPlayerHallucination(player) PROFILE("TGNS.IsPlayerHallucination"
 	return result
 end
 
-function TGNS.DebugPrint(message) PROFILE("TGNS.DebugPrint")
+function TGNS.Log(message)
+	Shared.Message(message)
+end
+
+function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
-	local messageWithStamp = string.format("%s %s", stamp, message)
-	Shine:DebugPrint(messageWithStamp)
+	message = string.format("%s%s", stamp, message)
+	if copyToMainLog then
+		Shared.Message(string.format(" Debug: %s", stamp))
+	end
+
+	-- Shine:DebugPrint(message)
+	local DebugFile = "config://TGNSDebugLog.txt"
+	local File, Err = io.open( DebugFile, "r" )
+	local Data = ""
+
+	if File then
+		Data = File:read( "*all" )
+		File:close()
+	end
+
+	--If the file gets too big, empty it and start again.
+	if #Data > 51200 then
+		Data = ""
+	end
+
+	File, Err = io.open( DebugFile, "w+" )
+
+	if not File then return end
+
+	File:write( Data, message, "\n" )
+	File:close()
 end
 
 function TGNS.GetPlayerDeaths(player) PROFILE("TGNS.GetPlayerDeaths")
@@ -888,7 +911,6 @@ function TGNS.ForcePlayersToReadyRoom(players) PROFILE("TGNS.ForcePlayersToReady
 end
 
 function TGNS.SendToTeam(player, teamNumber, force) PROFILE("TGNS.SendToTeam")
-	Shared.Message(string.format("TGNS.SendToTeam: Sending %s to team %s...", TGNS.GetPlayerName(player), teamNumber))
 	return GetGamerules():JoinTeam(player, teamNumber, force)
 end
 
@@ -974,7 +996,6 @@ local function ProcessScheduledActions() PROFILE("ProcessScheduledActions")
 				scheduledActionsErrorCount = scheduledActionsErrorCounts[scheduledAction.what] and scheduledActionsErrorCounts[scheduledAction.what] or 1
 				if scheduledActionsErrorCount <= 1 then
 					local errorTemplate = "ScheduledAction Error (#%s @ %s): %s"
-					--TGNS.EnhancedLog(string.format(errorTemplate, scheduledActionsErrorCount, Shared.GetTime(), result))
 					TGNS.DebugPrint(string.format(errorTemplate, scheduledActionsErrorCount, Shared.GetTime(), result))
 					scheduledActionsErrorCount = scheduledActionsErrorCount + 1
 					scheduledActionsErrorCounts[scheduledAction.what] = scheduledActionsErrorCount
@@ -1000,7 +1021,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 			r.sent = true
 			-- local requestStartTime = Shared.GetTime()
 			if TGNS.LogHttp then -- or not TGNS.IsProduction() then
-				Shared.Message(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url))
+				TGNS.DebugPrint(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url), true)
 			end
 			numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
 			Shared.SendHTTPRequest(r.url, "GET", function(response)
@@ -1738,8 +1759,3 @@ TGNS.ScheduleAction(1, function()
  	TGNS.Config = TGNSJsonFileTranscoder.DecodeFromFile("config://TGNS.json")
  	TGNS.ExecuteEventHooks("TGNSConfigLoaded")
 end)
-
--- TGNS.ScheduleAction(2, function() Shared.Message(string.format("All: %s", TGNS.Join(TGNS.GetMapCycleMapNames(), ","))) end)
--- TGNS.ScheduleAction(3, function() Shared.Message(string.format("Voteable: %s", TGNS.Join(TGNS.GetVoteableMapNames(), ","))) end)
--- TGNS.ScheduleAction(4, function() Shared.Message(string.format("Mod: %s", TGNS.Join(TGNS.GetMapCycleModMapNames(), ","))) end)
--- TGNS.ScheduleAction(5, function() Shared.Message(string.format("Stock: %s", TGNS.Join(TGNS.GetMapCycleStockMapNames(), ","))) end)
