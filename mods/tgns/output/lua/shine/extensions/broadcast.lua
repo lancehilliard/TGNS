@@ -69,7 +69,7 @@ function Plugin:CreateCommands()
 			md:ToPlayerNotifyError(player, "You must specify a message.")
 		else
 			self:Broadcast(client, message)
-			TGNS.EnhancedLog(string.format("%s executed sh_broadcast with message '%s'.", TGNS.GetClientNameSteamIdCombo(client), message))
+			TGNS.Log(string.format("%s executed sh_broadcast with message '%s'.", TGNS.GetClientNameSteamIdCombo(client), message))
 		end
 	end)
 	broadcastCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
