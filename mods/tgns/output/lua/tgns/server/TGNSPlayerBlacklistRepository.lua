@@ -27,7 +27,7 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 					pbrCache[blacklistTypeName][steamId] = isBlacklisted
 					callback(isBlacklisted)
 				else
-					Shared.Message("PlayerBlacklistRepository ERROR: Unable to access data.")
+					TGNS.DebugPrint("PlayerBlacklistRepository ERROR: Unable to access data.", true)
 					callback(false)
 				end
 			end)
@@ -43,7 +43,6 @@ local function getBlacklists()
 	if TGNS.Config and TGNS.Config.BlacklistEndpointBaseUrl then
 		local url = TGNS.Config.BlacklistEndpointBaseUrl
 		TGNS.GetHttpAsync(url, function(blacklistResponseJson)
-			-- Shared.Message("blacklistResponseJson: " .. blacklistResponseJson)
 			local blacklistResponse = json.decode(blacklistResponseJson) or {}
 			if blacklistResponse.success then
 				TGNS.DoFor(blacklistResponse.result, function(r)
