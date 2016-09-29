@@ -35,8 +35,6 @@ function TGNSConnectedTimesTracker.PrintConnectedDurations(client)
 	local md = TGNSMessageDisplayer.Create("CONNECTEDTIMES")
 	local printConnectedTime = function(c)
 		local connectedTimeInSeconds = TGNSConnectedTimesTracker.GetClientConnectedTimeInSeconds(c)
-		-- Shared.Message("connectedTimeInSeconds: " .. tostring(connectedTimeInSeconds))
-		-- Shared.Message("Shared.GetSystemTime(): " .. tostring(Shared.GetSystemTime()))
 		local playedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c)
 		local gamesCount = Balance and Balance.GetTotalGamesPlayed and Balance.GetTotalGamesPlayed(c) or "?"
 		md:ToClientConsole(client, string.format("%s%s> %s: %s/%s %s", TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) and "!" or "", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(Shared.GetSystemTime() - connectedTimeInSeconds), TGNS.SecondsToClock(playedTimeInSeconds), string.format("(games: %s%s)", gamesCount, TGNS.IsClientCommander(c) and "; Commander" or "")))
