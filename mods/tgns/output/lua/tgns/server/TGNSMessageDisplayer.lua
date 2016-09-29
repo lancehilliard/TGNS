@@ -88,14 +88,12 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
 			SendChatMessage(player, message, self.messagesChannel)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s chat: %s", TGNS.GetClientName(client), message))
 		end
 	end
 
 	function result:ToClientConsole(client, message)
 		if not TGNS.GetIsClientVirtual(client) then
 			SendConsoleMessage(client, message, self.messagesChannel)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s console: %s", TGNS.GetClientName(client), message))
 		end
 	end
 
@@ -103,14 +101,12 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			TGNS.PlayerAction(c, function(p) SendChatMessage(p, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR)) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To admin chat: %s", message))
 	end
 
 	function result:ToAdminConsole(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			SendConsoleMessage(c, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR))
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To admin console: %s", message))
 	end
 
 	function result:ToPlayersChat(players, message)
@@ -118,7 +114,6 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 			SendChatMessage(p, message, self.messagesChannel)
 		end)
 		local playerNames = TGNS.Join(TGNS.Select(players, TGNS.GetPlayerName), ",")
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s chat: %s", playerNames, message))
 	end
 
 	function result:ToClientsConsole(clients, message)
@@ -126,55 +121,47 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 			SendConsoleMessage(c, message, self.messagesChannel)
 		end)
 		local clientNames = TGNS.Join(TGNS.Select(clients, TGNS.GetClientName), ",")
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s console: %s", clientNames, message))
 	end
 
 	function result:ToAllConsole(message)
 		TGNS.DoFor(TGNS.GetClientList(), function(c)
 			SendConsoleMessage(c, message, self.messagesChannel)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To all console: %s", message))
 	end
 
 	function result:ToTeamChat(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) SendChatMessage(p, message, self.messagesChannel, true) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To team %s chat: %s", teamNumber, message))
 	end
 
 	function result:ToTeamConsole(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			SendConsoleMessage(c, message, self.messagesChannel)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To team %s console: %s", teamNumber, message))
 	end
 
 	function result:ToAllChat(message)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			SendChatMessage(p, message, self.messagesChannel)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To all chat: %s", message))
 	end
 
 	function result:ToPlayerNotifyInfo(player, message)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyInfo(player, message, self.messagesChannel, infoPrefixRed, infoPrefixGreen, infoPrefixBlue)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyinfo: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
 	function result:ToPlayerNotifyColors(player, message, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
 		NotifyColors(player, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyinfo: %s", TGNS.GetPlayerName(player), message))
 	end
 
 	function result:ToPlayerNotifyError(player, message)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyError(player, message, self.messagesChannel)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyerror: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
@@ -182,7 +169,6 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyRed(player, message, self.messagesChannel)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyred: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
@@ -190,7 +176,6 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyYellow(player, message, self.messagesChannel)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifyyellow: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
@@ -198,7 +183,6 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		local client = TGNS.GetClient(player)
 		if not TGNS.GetIsClientVirtual(client) then
 			NotifyGreen(player, message, self.messagesChannel)
-			Shared.Message(string.format("TGNSMessageDisplayer: To %s notifygreen: %s", TGNS.GetPlayerName(player), message))
 		end
 	end
 
@@ -206,70 +190,60 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			NotifyInfo(p, message, self.messagesChannel, infoPrefixRed, infoPrefixGreen, infoPrefixBlue)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To all notifyinfo: %s", message))
 	end
 
 	function result:ToAllNotifyError(message)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			NotifyError(p, message, self.messagesChannel)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To all notifyerror: %s", message))
 	end
 
 	function result:ToTeamNotifyColors(teamNumber, message, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyColors(p, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To team %s notifyinfo: %s", teamNumber, message))
 	end
 
 	function result:ToTeamNotifyInfo(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel, infoPrefixRed, infoPrefixGreen, infoPrefixBlue) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To team %s notifyinfo: %s", teamNumber, message))
 	end
 
 	function result:ToTeamNotifyError(teamNumber, message)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyError(p, message, self.messagesChannel) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To team %s notifyerror: %s", teamNumber, message))
 	end
 
 	function result:ToAdminNotifyInfo(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR), infoPrefixRed, infoPrefixGreen, infoPrefixBlue) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyinfo: %s", message))
 	end
 
 	function result:ToAdminNotifyError(message)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyError(p, message, string.format("%s%s", self.messagesChannel, ADMINONLY_CHANNEL_DECORATOR)) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To admin notifyerror: %s", message))
 	end
 
 	function result:ToAuthorizedNotifyInfo(message, commandName)
 		TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c) return TGNS.ClientCanRunCommand(c, commandName) end), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyInfo(p, message, self.messagesChannel, infoPrefixRed, infoPrefixGreen, infoPrefixBlue) end)
 		end)
-		Shared.Message(string.format("TGNSMessageDisplayer: To %s authorized notifyinfo: %s", commandName, message))
 	end
 
 	-- function result:ToTeamTickerInfo(teamNumber, message)
 	-- 	TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 	-- 		ShowTickerInfo(c, message, messagesChannel)
 	-- 	end)
-	-- 	Shared.Message(string.format("TGNSMessageDisplayer: To team %s ticker info: %s", teamNumber, message))
 	-- end
 
 	-- function result:ToAllTickerInfo(message)
 	-- 	TGNS.DoFor(TGNS.GetClients(TGNS.GetPlayerList()), function(c)
 	-- 		ShowTickerInfo(c, message, messagesChannel)
 	-- 	end)
-	-- 	Shared.Message(string.format("TGNSMessageDisplayer: To all ticker info: %s", message))
 	-- end
 
 	return result
