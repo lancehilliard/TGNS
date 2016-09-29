@@ -45,10 +45,6 @@ local __EventHooks = {}
 local __CPUStartTime = os.clock()
 local __LastMapChange = __CPUStartTime
 
-function TGNS.PrintInfo(message)
-	print(message)
-end
-
 function TGNS.RegisterNetworkMessage(messageName, variables)
 	assert.falsy(__NetworkMessages[messageName])
 	variables = variables or {}
