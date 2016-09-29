@@ -36,21 +36,21 @@ TGNSServerInfoGetter.GetInfoBySimpleServerName = function(simpleServerName, call
 	end)
 end
 
-// local function PublicSlotsRemainingChanged(simpleServerName, publicSlotsRemaining, playingPlayersCount)
-// 	dr.Load(simpleServerName, function(loadResponse)
-// 		if loadResponse.success then
-// 			local data = loadResponse.value
-// 			data.publicSlotsRemaining = publicSlotsRemaining
-// 			data.lastUpdatedInSeconds = TGNS.GetSecondsSinceEpoch()
-// 			data.playingPlayersCount = playingPlayersCount
-// 			dr.Save(data, simpleServerName, function(saveResponse)
-// 				if not saveResponse.success then
-// 					Shared.Message("ServerInfoGetter ERROR: unable to save data")
-// 				end
-// 			end)
-// 		else
-// 			Shared.Message("ServerInfoGetter ERROR: unable to access data")
-// 		end
-// 	end)
-// end
-// TGNS.RegisterEventHook("PublicSlotsRemainingChanged", PublicSlotsRemainingChanged)
+-- local function PublicSlotsRemainingChanged(simpleServerName, publicSlotsRemaining, playingPlayersCount)
+-- 	dr.Load(simpleServerName, function(loadResponse)
+-- 		if loadResponse.success then
+-- 			local data = loadResponse.value
+-- 			data.publicSlotsRemaining = publicSlotsRemaining
+-- 			data.lastUpdatedInSeconds = TGNS.GetSecondsSinceEpoch()
+-- 			data.playingPlayersCount = playingPlayersCount
+-- 			dr.Save(data, simpleServerName, function(saveResponse)
+-- 				if not saveResponse.success then
+-- 					TGNS.DebugPrint("ServerInfoGetter ERROR: unable to save data", true)
+-- 				end
+-- 			end)
+-- 		else
+-- 			TGNS.DebugPrint("ServerInfoGetter ERROR: unable to access data", true)
+-- 		end
+-- 	end)
+-- end
+-- TGNS.RegisterEventHook("PublicSlotsRemainingChanged", PublicSlotsRemainingChanged)
