@@ -28,7 +28,7 @@ end
 
 local log = function(client, targetClient, commandName, reason)
 	local logMessage = string.format("%s executed %s against %s. Reason: %s", client and TGNS.GetClientNameSteamIdCombo(client) or "Console[N/A]", commandName, TGNS.GetClientNameSteamIdCombo(targetClient), reason)
-	TGNS.EnhancedLog(logMessage)
+	TGNS.Log(logMessage)
 end
 
 local function showApproval(sourceClient, targetClient, displayMessage, md)
