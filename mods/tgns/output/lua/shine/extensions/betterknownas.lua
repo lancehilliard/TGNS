@@ -513,6 +513,21 @@ function Plugin:Initialise()
 	end
 	batchLoadBkas()
 
+	TGNS.ScheduleAction(30, function()
+		TGNS.GetHttpAsync(TGNS.Config.BotNamesEndpointBaseUrl, function(botNamesResponseJson)
+			local botNamesResponse = json.decode(botNamesResponseJson) or {}
+			if botNamesResponse.success then
+				local playerBotUpdateNameAndGenderUpValues = Shine.GetUpValues(PlayerBot.UpdateNameAndGender)
+				local originalkBotPersonalSettings = playerBotUpdateNameAndGenderUpValues.kBotPersonalSettings
+				local customkBotPersonalSettings = TGNS.Select(botNamesResponse.names, function(n) return {name=n, isMale=true} end)
+				TGNS.DoFor(originalkBotPersonalSettings, function(s) table.insert(customkBotPersonalSettings, s) end)
+				Shine.SetUpValues(PlayerBot.UpdateNameAndGender, { kBotPersonalSettings = customkBotPersonalSettings })
+				-- TGNS.PrintTable(customkBotPersonalSettings, "customkBotPersonalSettings")
+			else
+				TGNS.DebugPrint(string.format("botNames ERROR: Unable to access bot names data. msg: %s | response: %s | stacktrace: %s", botNamesResponse.msg, botNamesResponseJson, botNamesResponse.stacktrace))
+			end
+		end)
+	end)
     return true
 end
 
