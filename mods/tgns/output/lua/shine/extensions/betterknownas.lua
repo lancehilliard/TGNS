@@ -282,7 +282,7 @@ function Plugin:CreateCommands()
 				local targetSteamId = TGNS.GetClientSteamId(targetClient)
 				self:ShowCurrentBka(client, targetSteamId, "Better Known As", "Aliases", "WHOIS")
 				local logMessage = string.format("%s executed whois against %s.", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetClientNameSteamIdCombo(targetClient))
-				TGNS.EnhancedLog(logMessage)
+				TGNS.Log(logMessage)
 			else
 				md:ToClientConsole(client, string.format("'%s' does not uniquely match a player.", playerPredicate))
 				ShowWhoisUsage(client)
