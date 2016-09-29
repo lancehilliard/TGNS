@@ -50,10 +50,6 @@ function TGNS.Shuffle(elements)
 	table.Shuffle(elements)
 end
 
-function TGNS.PrintInfo(message)
-	Shared.Message(message)
-end
-
 function TGNS.RegisterNetworkMessage(messageName, variables)
 	variables = variables or {}
 	Shared.RegisterNetworkMessage(messageName, variables)
@@ -103,11 +99,6 @@ end
 function TGNS.GetCurrentMapName()
 	local result = Shared.GetMapName()
 	return result
-end
-
-function TGNS.EnhancedLog(message)
-	Shine:LogString(message)
-	Shared.Message(message)
 end
 
 function TGNS.IndexOf(s, part)
@@ -350,11 +341,13 @@ function TGNS.UrlEncode(str) PROFILE("TGNS.UrlEncode")
 end
 
 function TGNS.PrintTable(t, tableDescription, printAction) PROFILE("TGNS.PrintTable")
-	printAction = printAction and printAction or function(x) Shared.Message(x) end
-	local keys = {}
-	for key,value in pairs(t) do table.insert(keys, key) end
-	TGNS.SortAscending(keys, function(k) return tostring(k) end)
-	TGNS.DoFor(keys, function(k)
-		printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
-	end)
+	if not TGNS.IsProduction() then
+		printAction = printAction and printAction or function(x) Shared.Message(x) end
+		local keys = {}
+		for key,value in pairs(t) do table.insert(keys, key) end
+		TGNS.SortAscending(keys, function(k) return tostring(k) end)
+		TGNS.DoFor(keys, function(k)
+			printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
+		end)
+	end
 end
