@@ -58,7 +58,7 @@ local function handlePushCommand(plugin, client, commandName, channelId, pushInp
 	local inputIsValid, title, message = validatePushInput(pushInput)
 	if inputIsValid then
 		plugin:Push(channelId, title, message, client)
-		TGNS.EnhancedLog(string.format("%s executed %s with title '%s' and message '%s' to channel '%s'.", TGNS.GetClientNameSteamIdCombo(client), commandName, title, message, channelId))
+		TGNS.Log(string.format("%s executed %s with title '%s' and message '%s' to channel '%s'.", TGNS.GetClientNameSteamIdCombo(client), commandName, title, message, channelId))
 	else
 		md:ToClientConsole(client, "You must specify a title and message delimited by pipe (|). Example: Alert|This is a message.")
 	end
