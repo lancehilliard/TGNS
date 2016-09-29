@@ -31,11 +31,10 @@ function TGNSPlayerPreferredRepository.Create(preferredTypeName)
 						local preferredData = loadResponse.value
 						local preferreds = preferredData.preferreds
 						isPreferred = TGNS.Any(preferreds, function(p) return p.plugin == self.preferredTypeName and p.id == steamId end)
-						--Shared.Message("IsClientPreferred: " .. steamId .. " for " .. self.preferredTypeName .. " = " .. tostring(isPreferred))
 						isPreferredCache[preferredTypeName][steamId] = isPreferred
 						callback(isPreferred)
 					else
-						Shared.Message("PlayerPreferredRepository ERROR: Unable to access data.")
+						TGNS.DebugPrint("PlayerPreferredRepository ERROR: Unable to access data.", true)
 						callback(false)
 					end
 				end)
@@ -50,7 +49,6 @@ local function getPreferreds()
 	if TGNS.Config and TGNS.Config.PreferredEndpointBaseUrl then
 		local url = TGNS.Config.PreferredEndpointBaseUrl
 		TGNS.GetHttpAsync(url, function(preferredResponseJson)
-			-- Shared.Message("preferredResponseJson: " .. preferredResponseJson)
 			local preferredResponse = json.decode(preferredResponseJson) or {}
 			if preferredResponse.success then
 				TGNS.DoFor(preferredResponse.result, function(r)
