@@ -470,7 +470,7 @@ if Server or Client then
 								balanceCache[client] = loadResponse.value
 							end
 						else
-							Shared.Message("balance ERROR: unable to access data")
+							TGNS.DebugPrint("balance ERROR: unable to access data", true)
 						end
 					end)
 				end
@@ -633,11 +633,11 @@ if Server or Client then
 
 								end
 							else
-								Shared.Message("balance ERROR: unable to save data")
+								TGNS.DebugPrint("balance ERROR: unable to save data", true)
 							end
 						end)
 					else
-						Shared.Message("balance ERROR: unable to access data")
+						TGNS.DebugPrint("balance ERROR: unable to access data", true)
 					end
 				end)
 			end)

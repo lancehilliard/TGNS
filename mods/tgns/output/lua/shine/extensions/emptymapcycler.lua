@@ -11,7 +11,7 @@ function Plugin:Initialise()
     TGNS.ScheduleAction(120, function()
     	if mapMightBeBroken == true then
             local nextMapName = TGNS.GetNextMapName()
-            Shared.Message(string.format("emptymapcycler cycling to %s...", nextMapName))
+            TGNS.DebugPrint(string.format("emptymapcycler cycling to %s...", nextMapName), true)
 	    	TGNS.SwitchToMap(nextMapName)
     	end
     end)

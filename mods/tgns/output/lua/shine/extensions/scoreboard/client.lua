@@ -153,7 +153,6 @@ TGNS.HookNetworkMessage(Plugin.TOGGLE_OPTIONALS, function(message)
 end)
 
 TGNS.HookNetworkMessage(Plugin.ENABLE_MUTE, function(message)
-	Shared.Message("Plugin.ENABLE_MUTE")
 	has.muteAbility[Client.GetLocalClientIndex()] = true
 end)
 

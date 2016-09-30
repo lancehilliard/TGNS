@@ -74,7 +74,7 @@ function Plugin:ShowCurrentBka(client, targetSteamId, bkaHeader, akasHeader, pre
 
 
 		else
-			Shared.Message("betterknownas ERROR: unable to access data")
+			TGNS.DebugPrint("betterknownas ERROR: unable to access data", true)
 			whoisMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access data.")
 		end
 	end)
@@ -171,7 +171,7 @@ local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllA
 					if saveResponse.success then
 						callback(true)
 					else
-						Shared.Message("betterknownas ERROR: Unable to save data")
+						TGNS.DebugPrint("betterknownas ERROR: Unable to save data", true)
 						callback(false)
 					end
 				end)
@@ -179,7 +179,7 @@ local function AddAka(targetSteamId, newBkaName, allowClearParameterToRemoveAllA
 				callback(true)
 			end
 		else
-			Shared.Message("betterknownas ERROR: Unable to access data")
+			TGNS.DebugPrint("betterknownas ERROR: Unable to access data", true)
 			callback(false)
 		end
 	end)
@@ -247,7 +247,7 @@ function Plugin:ClientConnect(client)
 				else
 					dataFetchFailedFor[client] = true
 					TGNS.ExecuteEventHooks("BkaChanged", client)
-					Shared.Message("betterknownas ERROR: unable to access data")
+					TGNS.DebugPrint("betterknownas ERROR: unable to access data", true)
 				end
 				--local fetchDuration = TGNS.GetSecondsSinceEpoch() - connectMomentInSeconds
 				--table.insert(fetchDurations, fetchDuration)
@@ -324,7 +324,7 @@ function Plugin:CreateCommands()
 							OnBkaChanged(client, targetClient, bkaData, newBkaName, "BKA", "AKAs", "BKA", true)
 						else
 							md:ToClientConsole(client, "ERROR: Unable to access BKA data. BKA not changed.")
-							Shared.Message("betterknownas ERROR: unable to access data")
+							TGNS.DebugPrint("betterknownas ERROR: unable to access data", true)
 						end
 					end)
 				end
@@ -431,7 +431,7 @@ function Plugin:CreateCommands()
 				md:ToClientConsole(client, "")
 			else
 				md:ToClientConsole(client, "ERROR: Unable to access sh_name data. sh_name not changed.")
-				Shared.Message("betterknownas ERROR: Unable to access data.")
+				TGNS.DebugPrint("betterknownas ERROR: Unable to access data.", true)
 			end
 		end)
 	end, true)

@@ -501,7 +501,7 @@ local function refreshFullSpecData()
                 local fullSpecData = loadResponse.value
                 fullSpecSteamIds = fullSpecData.enrolled
             else
-                Shared.Message("communityslots ERROR: unable to load fullSpecSteamIds")
+                TGNS.DebugPrint("communityslots ERROR: unable to load fullSpecSteamIds", true)
             end
         end)
     end

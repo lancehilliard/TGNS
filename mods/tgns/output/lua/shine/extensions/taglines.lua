@@ -46,7 +46,7 @@ local function ShowCurrentTagline(client)
 				taglineMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Your current tagline: " .. taglineMessage)
 			end
 		else
-			Shared.Message("taglines ERROR: Unable to access data.")
+			TGNS.DebugPrint("taglines ERROR: Unable to access data.", true)
 			taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
 		end
 		taglineMd:ToClientConsole(client, "")
@@ -82,12 +82,12 @@ function Plugin:CreateCommands()
 							ShowCurrentTagline(client)
 						else
 							taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to save tagline.")
-							Shared.Message("taglines ERROR: Unable to save data.")
+							TGNS.DebugPrint("taglines ERROR: Unable to save data.", true)
 						end
 					end)
 				else
 					taglineMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access tagline data.")
-					Shared.Message("taglines ERROR: Unable to access data.")
+					TGNS.DebugPrint("taglines ERROR: Unable to access data.", true)
 				end
 			end)
 		end
@@ -109,7 +109,7 @@ function Plugin:ClientConnect(client)
 						unescapedTaglineMessages[client] = getUnescapedTaglineMessage(tagline.message)
 					end
 				else
-					Shared.Message("taglines ERROR: Unable to access data.")
+					TGNS.DebugPrint("taglines ERROR: Unable to access data.", true)
 				end
 			end)
 		end

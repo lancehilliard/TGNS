@@ -49,7 +49,7 @@ function Plugin:ClientConnect(client)
 					updateLength(client, length)
 				end
 			else
-				Shared.Message(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)))
+				TGNS.DebugPrint(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)), true)
 			end
 		end)
 	end
@@ -86,14 +86,14 @@ function Plugin:CreateCommands()
 						else
 							md:ToClientConsole(client, string.format("Unable to save wrap length percentage (you did everything right). %s", getWraplengthDescription(client, wraplengthData)))
 							showHelp(client)
-							Shared.Message(string.format("wraplength ERROR: Unable to save data for %s", TGNS.GetClientNameSteamIdCombo(client)))
+							TGNS.DebugPrint(string.format("wraplength ERROR: Unable to save data for %s", TGNS.GetClientNameSteamIdCombo(client)), true)
 						end
 					end)
 				end
 			else
 				md:ToClientConsole(client, string.format("Unable to access or change wrap length percentage (you did everything right). %s", getWraplengthDescription(client, wraplengthData)))
 				showHelp(client)
-				Shared.Message(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)))
+				TGNS.DebugPrint(string.format("wraplength ERROR: Unable to access data for %s", TGNS.GetClientNameSteamIdCombo(client)), true)
 			end
 		end)
 	end, true)

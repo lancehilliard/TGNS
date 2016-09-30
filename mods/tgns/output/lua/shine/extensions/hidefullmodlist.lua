@@ -16,8 +16,6 @@ function Plugin:Initialise()
     self:CreateCommands()
     TGNS.ScheduleAction(0, function()
         if TGNS.GetSecondsSinceServerProcessStarted() < 60 then
-            Shared.Message("Server.GetNumActiveMods(): " .. tostring(Server.GetNumActiveMods()))
-            Shared.Message("TGNS.GetSecondsSinceServerProcessStarted(): " .. tostring(TGNS.GetSecondsSinceServerProcessStarted()))
             local serverHasJustStartedAndHasMadeAllModsActiveOnFirstMap = Server.GetNumActiveMods() >= NUMBER_OF_ACTIVE_MODS_INDICATIVE_OF_A_SERVER_RESTART
             if serverHasJustStartedAndHasMadeAllModsActiveOnFirstMap then
                 Shared.Message("Switching first map to prevent all clients from having to download all mods...")

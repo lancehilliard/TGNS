@@ -64,11 +64,11 @@ function Plugin:Initialise()
 				end)
 				dr.Save(data, monthlyNumber, function(saveResponse)
 					if not saveResponse.success then
-						Shared.Message(string.format("gamestracker ERROR: Unable to save data. msg: '%s'; stacktrace: '%s'", saveResponse.msg, saveResponse.stacktrace))
+						TGNS.DebugPrint(string.format("gamestracker ERROR: Unable to save data. msg: '%s'; stacktrace: '%s'", saveResponse.msg, saveResponse.stacktrace), true)
 					end
 				end)
 			else
-				Shared.Message("gamestracker ERROR: Unable to access data.")
+				TGNS.DebugPrint("gamestracker ERROR: Unable to access data.", true)
 			end
 		end)
 	end)

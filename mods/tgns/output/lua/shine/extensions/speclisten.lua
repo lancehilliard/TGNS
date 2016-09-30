@@ -79,7 +79,7 @@ function Plugin:ClientConfirmConnect(client)
 				if loadResponse.success then
 					initClient(client, loadResponse.value.specmode, loadResponse.value.specpriority)
 				else
-					Shared.Message("specmode ERROR: Unable to access data.")
+					TGNS.DebugPrint("specmode ERROR: Unable to access data.", true)
 				end
 			end
 		end)
@@ -134,14 +134,14 @@ function Plugin:CreateCommands()
 						if saveResponse.success then
 							specmodesCache[steamId] = nil
 						else
-							Shared.Message("specmode ERROR: Unable to save data.")
+							TGNS.DebugPrint("specmode ERROR: Unable to save data.", true)
 						end
 					end)
 				else
 					if Shine:IsValidClient(client) then
 						md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Unable to access specmode data.")
 					end
-					Shared.Message("taglines ERROR: Unable to access data.")
+					TGNS.DebugPrint("specmode ERROR: Unable to access data.", true)
 				end
 			end)
     	end

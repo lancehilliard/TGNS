@@ -43,12 +43,12 @@ local function CreateRole(displayName, candidatesDescription, groupName, message
 		callback = callback or function() end
 		pdr:Save(pdrData, function(saveResponse)
 			if saveResponse.success then
-				Shared.Message("persistedDataName: " .. tostring(persistedDataName))
-				Shared.Message("pdrData.steamId: " .. tostring(pdrData.steamId))
+				-- Shared.Message("persistedDataName: " .. tostring(persistedDataName))
+				-- Shared.Message("pdrData.steamId: " .. tostring(pdrData.steamId))
 				pdrCache[persistedDataName][pdrData.steamId] = pdrData
 				callback(true)
 			else
-				Shared.Message("teamroles ERROR: Unable to save data.")
+				TGNS.DebugPrint("teamroles ERROR: Unable to save data.", true)
 				callback(false)
 			end
 		end)
@@ -214,7 +214,7 @@ function Plugin:ClientConnect(client)
 					pdr:Load(steamId, function(loadResponse)
 						pdrCache[roleName][steamId] = loadResponse.value
 						if not loadResponse.success then
-							Shared.Message("teamroles ERROR: Unable to access PDR data.")
+							TGNS.DebugPrint("teamroles ERROR: Unable to access PDR data.", true)
 						end
 					end)
 				end

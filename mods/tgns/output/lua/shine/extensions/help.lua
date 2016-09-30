@@ -37,8 +37,6 @@ function Plugin:CreateCommands()
 		local history = histories[client] or {}
 		local pageNumber = tostring(history.search) == tostring(search) and (history.pageNumber or 0) + 1 or 1
 		pageNumber = commandsAppearOnPage(#commandNames, pageNumber) and pageNumber or 1
-		Shared.Message("pageNumber: " .. tostring(pageNumber))
-		Shared.Message("search: " .. tostring(search))
 		local firstIndexToShow, lastIndexToShow = getBoundaryIndexes(pageNumber)
 		firstIndexToShow = firstIndexToShow <= #commandNames and firstIndexToShow or #commandNames
 		lastIndexToShow = lastIndexToShow <= #commandNames and lastIndexToShow or #commandNames

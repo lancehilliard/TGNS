@@ -29,7 +29,7 @@ local function processNewMessageData()
 				end)
 			end
 		else
-			Shared.Message("broadcast ERROR: unable to access data.")
+			TGNS.DebugPrint("broadcast ERROR: unable to access data.", true)
 		end
 	end)
 end

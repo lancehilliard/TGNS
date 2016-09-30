@@ -21,7 +21,7 @@ local function AnnounceAbandonedResources(client, resources)
 	local debugMessage = string.format("%s abandoned %s resources.", TGNS.GetClientName(client), math.floor(resources))
 	if math.floor(resources) > 0 then
 		-- md:ToAdminConsole(debugMessage)
-		Shared.Message(debugMessage)
+		-- Shared.Message(debugMessage)
 	end
 end
 
