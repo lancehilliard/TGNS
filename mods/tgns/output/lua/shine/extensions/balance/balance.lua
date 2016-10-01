@@ -379,7 +379,7 @@ if Server or Client then
 										else
 											local minimumDelayBetweenAdvisories = 180
 											if TGNS.ClientIsAlien(victimClient) then
-												local personalResources = TGNS.GetClientResources(c)
+												local personalResources = TGNS.GetClientResources(victimClient)
 												onosBalanceAdvisoryLastShownAt[victimClient] = onosBalanceAdvisoryLastShownAt[victimClient] or (minimumDelayBetweenAdvisories * -1)
 												if personalResources >= kOnosCost * .72 and onosBalanceAdvisoryLastShownAt[victimClient] < Shared.GetTime() - minimumDelayBetweenAdvisories then
 													md:ToPlayerNotifyInfo(victimPlayer, onosBalanceAdvisory)
