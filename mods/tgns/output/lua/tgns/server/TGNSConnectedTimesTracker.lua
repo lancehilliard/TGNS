@@ -28,7 +28,7 @@ end
 
 function TGNSConnectedTimesTracker.PrintConnectedDurations(client)
 	local humanClients = TGNS.GetHumanClientList()
-	TGNS.SortDescending(humanClients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
+	TGNS.SortDescending(humanClients, Balance.GetTotalGamesPlayed)
 	local humanStrangers = TGNS.Where(humanClients, TGNS.IsClientStranger)
 	local humanPrimerOnlys = TGNS.Where(humanClients, TGNS.IsPrimerOnlyClient)
 	local humanSupportingMembers = TGNS.Where(humanClients, TGNS.IsClientSM)
