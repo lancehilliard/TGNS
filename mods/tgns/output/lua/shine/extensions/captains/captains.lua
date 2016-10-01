@@ -79,7 +79,7 @@ if Server or Client then
 					local getKey = function(s) return string.format("c%s", s.ClientIndex) end
 					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end or function(s) return rolesClientData[getKey(s)] == nil and s.EntityTeamNumber == kTeamReadyRoom and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
 			   		local result = TGNS.Where(scoresData, scoresDataPredicate)
-			   		if localClientIsCaptain and isForOptedInBoard then
+			   		-- if localClientIsCaptain and isForOptedInBoard then
 			   			TGNS.SortDescending(result, function(s)
 			   				local teamAdditive = 0
 			   				if s.EntityTeamNumber == kMarineTeamType then
@@ -89,17 +89,17 @@ if Server or Client then
 		   					end
 			   				return s.Skill + teamAdditive
 			   			end)
-			   		else
-			   			TGNS.SortAscending(result, function(s)
-			   				local teamAdditive = ""
-			   				if s.EntityTeamNumber == kMarineTeamType then
-			   					teamAdditive = "            "
-		   					elseif s.EntityTeamNumber == kAlienTeamType then
-		   						teamAdditive = "      "
-		   					end
-			   				return string.format("%s%s", teamAdditive, TGNS.ToLower(s.Name))
-			   			end)
-			   		end
+			   		-- else
+			   		-- 	TGNS.SortAscending(result, function(s)
+			   		-- 		local teamAdditive = ""
+			   		-- 		if s.EntityTeamNumber == kMarineTeamType then
+			   		-- 			teamAdditive = "            "
+		   			-- 		elseif s.EntityTeamNumber == kAlienTeamType then
+		   			-- 			teamAdditive = "      "
+		   			-- 		end
+			   		-- 		return string.format("%s%s", teamAdditive, TGNS.ToLower(s.Name))
+			   		-- 	end)
+			   		-- end
 			   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
 			   		datas[dataName] = result
 			   		debug(string.format("total: %s; optedIn: %s; %s: %s; datas: %s", #scoresData, optedInCount, dataName, #result, json.encode(datas)))
@@ -772,12 +772,13 @@ if Server or Client then
 			    if numPlayers > 1 then
 				    sortDescription = ", sorted by Name"
 				    if teamNameText == "Pickable Players" then
-				    	sortDescription = ", sorted by Team, then "
-				    	local secondarySortDescription = "Name"
-				    	if localClientIsCaptain then
-				    		secondarySortDescription = "Skill"
-				    	end
-				    	sortDescription = string.format("%s%s", sortDescription, secondarySortDescription)
+				    	sortDescription = ", sorted by Team, then Skill"
+				    -- 	sortDescription = ", sorted by Team, then "
+				    -- 	local secondarySortDescription = "Name"
+				    -- 	if localClientIsCaptain then
+				    -- 		secondarySortDescription = "Skill"
+				    -- 	end
+				    -- 	sortDescription = string.format("%s%s", sortDescription, secondarySortDescription)
 				    end
 			    end
 			    local teamHeaderText = string.format("%s (%s%s)", teamNameText, playersOnTeamText, sortDescription)
@@ -1660,20 +1661,20 @@ if Server or Client then
 
 
 					-- todo mlh comment this out
-					local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and not TGNS.ClientIsOnPlayingTeam(c) end)
+					-- local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and not TGNS.ClientIsOnPlayingTeam(c) end)
 
 					-- todo mlh comment this out
-					local renderCaptainClients = TGNS.Where(allClients, function(c) return TGNS.Has(captainClients, c) end)
+					-- local renderCaptainClients = TGNS.Where(allClients, function(c) return TGNS.Has(captainClients, c) end)
 					-- todo mlh comment this out
-					local renderOtherClients = TGNS.Where(allClients, function(c) return not TGNS.Has(renderCaptainClients, c) end)
+					-- local renderOtherClients = TGNS.Where(allClients, function(c) return not TGNS.Has(renderCaptainClients, c) end)
 
 					-- todo mlh comment this out
-					TGNS.SortDescending(optedInClients, TGNS.GetClientHiveSkillRank)
+					-- TGNS.SortDescending(optedInClients, TGNS.GetClientHiveSkillRank)
 					-- todo mlh comment this out
 					-- showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.20, "Opted In")
 
 					-- todo mlh comment this out
-					TGNS.SortAscending(optedInClients, TGNS.GetClientId)
+					-- TGNS.SortAscending(optedInClients, TGNS.GetClientId)
 					-- todo mlh comment this out
 					-- showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.20, "Opted In")
 
