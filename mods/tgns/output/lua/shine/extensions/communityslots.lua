@@ -103,7 +103,7 @@ local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaD
     if not joiningClient or trySlotEnabled[joiningClient] then
         local bumpableClients = TGNS.GetMatchingClients(playerList, function(c,p) return Shine.Plugins.communityslots:IsTargetBumpable(c, playerList, joiningSteamId) end)
         if #bumpableClients > 0 then
-            TGNS.SortDescending(bumpableClients, TGNSConnectedTimesTracker.GetPlayedTimeInSeconds)
+            TGNS.SortDescending(bumpableClients, Balance.GetTotalGamesPlayed)
 
             local potentiallyImmuneClients = {}
             if type(passingTheBumpKarmaDelta) == "number" then
@@ -275,7 +275,7 @@ local function GetBumpSummary(playerList, bumpingClient, bumpedClient, joinerOrV
     local bumpedClientCommunityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(bumpedClient)
     local bumpedClientPlayedTimeInSeconds = TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(bumpedClient) or 0
     local bumpedClientPlayedDurationClock = TGNS.SecondsToClock(bumpedClientPlayedTimeInSeconds)
-    local result = string.format("%s>%s K%s bumping %s %s>%s K%s after %s with S:%s P:%s ?:%s A:%s M:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, TGNS.Karma(bumpingClient), joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, TGNS.Karma(bumpedClient), bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount, aliensCount, marinesCount)
+    local result = string.format("%s>%s K%s bumping %s %s>%s K%s G%s after %s with S:%s P:%s ?:%s A:%s M:%s", bumpingClientCommunityDesignationCharacter, bumpingClientName, TGNS.Karma(bumpingClient), joinerOrVictim, bumpedClientCommunityDesignationCharacter, bumpedClientName, TGNS.Karma(bumpedClient), Balance.GetTotalGamesPlayed(bumpedClient), bumpedClientPlayedDurationClock, supportingMembersCount, primerOnlysCount, strangersCount, aliensCount, marinesCount)
     return result
 end
 
@@ -390,12 +390,6 @@ function Plugin:GetPlayersForNewGame()
     TGNS.DoFor(supportingMemberPlayers, addToPrioritizedPlayers)
     TGNS.DoFor(otherPrimerOnlyPlayers, addToPrioritizedPlayers)
     TGNS.DoFor(otherStrangerPlayers, addToPrioritizedPlayers)
-
-    -- TGNS.DebugPrint("Prioritized players for new game:")
-    -- TGNS.DoFor(prioritizedPlayers, function(p, index)
-    --     local c = TGNS.GetClient(p)
-    --     TGNS.DebugPrint(string.format("%s. %s%s> %s (%s)", index, TGNS.IsPlayerAFK(p) and "!" or "", TGNS.GetClientCommunityDesignationCharacter(c), TGNS.GetClientName(c), TGNS.SecondsToClock(TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(c))))
-    -- end)
 
     local result = TGNS.Take(prioritizedPlayers, Shine.Plugins.communityslots.Config.PublicSlots)
     return result
