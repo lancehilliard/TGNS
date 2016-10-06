@@ -7,6 +7,26 @@ local fifteenSecondAfkTimerWasLastAdvertisedAt = 0
 
 local Plugin = {}
 
+function Plugin:WarnPlayersOfImminentGameStart(playerList, secondsRemainingUntilGameStart)
+	local warnPlayers = function(level, shouldRepeat)
+		local playingClients = TGNS.GetPlayingClients(playerList)
+		local warnPlayer = function(p) TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.arclight.HILL_SOUND, {i=level, r=shouldRepeat}) end
+		TGNS.DoFor(TGNS.GetPlayers(playingClients), warnPlayer)
+		if #playingClients < Shine.Plugins.communityslots.Config.PublicSlots then
+			TGNS.DoFor(TGNS.GetReadyRoomPlayers(playerList), warnPlayer)
+		end
+	end
+	secondsRemainingUntilGameStart = math.floor(secondsRemainingUntilGameStart)
+	if secondsRemainingUntilGameStart <= 60 then
+		if secondsRemainingUntilGameStart % 10 == 0 then
+			warnPlayers(secondsRemainingUntilGameStart/10, true)
+		end
+		if secondsRemainingUntilGameStart <= 10 then
+			warnPlayers(secondsRemainingUntilGameStart)
+		end
+	end
+end
+
 local function showTimeRemaining()
 	local playerList = TGNS.GetPlayerList()
 	local marinePlayerCount = #TGNS.GetMarineClients(playerList)
@@ -27,20 +47,7 @@ local function showTimeRemaining()
 				Shine.ScreenText.Add(51, {X = 0.5, Y = 0.40, Text = message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
 				fifteenSecondAfkTimerWasLastAdvertisedAt = Shared.GetTime()
 
-				local warnPlayers = function(level, shouldRepeat)
-					local playingClients = TGNS.GetPlayingClients(playerList)
-					local warnPlayer = function(p) TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.arclight.HILL_SOUND, {i=level, r=shouldRepeat}) end
-					TGNS.DoFor(TGNS.GetPlayers(playingClients), warnPlayer)
-					if #playingClients < Shine.Plugins.communityslots.Config.PublicSlots then
-						TGNS.DoFor(TGNS.GetReadyRoomPlayers(playerList), warnPlayer)
-					end
-				end
-				if secondsRemaining % 10 == 0 then
-					warnPlayers(secondsRemaining/10, true)
-				end
-				if secondsRemaining <= 10 then
-					warnPlayers(secondsRemaining)
-				end
+				Shine.Plugins.timedstart:WarnPlayersOfImminentGameStart(playerList, secondsRemaining)
 
 				if secondsRemaining == 1 then
 					TGNS.ScheduleAction(0.5, function()
