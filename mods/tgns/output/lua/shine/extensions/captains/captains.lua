@@ -1489,6 +1489,11 @@ if Server or Client then
 							g = 255
 							b = 0
 						end
+
+						if Shine.Plugins.timedstart and Shine.Plugins.timedstart.WarnPlayersOfImminentGameStart then
+							Shine.Plugins.timedstart:WarnPlayersOfImminentGameStart(TGNS.GetPlayerList(), secondsRemaining)
+						end
+
 						TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
 					else
 						message = "Planning time expired.\nGame is force-starting now."
