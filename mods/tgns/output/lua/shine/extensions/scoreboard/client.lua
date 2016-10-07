@@ -1631,6 +1631,13 @@ function Plugin:Initialise()
 		TGNS.SendNetworkMessage(Plugin.GAME_FEEDBACK, {rating=rating, reasons=GUIFeedbackState_EndSelf.parent.reasons and json.encode(reasons) or ""})
 	end
 
+	local originalGUIFeedbackState_EndInitialize = GUIFeedbackState_End.Initialize
+	GUIFeedbackState_End.Initialize = function(GUIFeedbackState_Endself, guiElement)
+		originalGUIFeedbackState_EndInitialize(GUIFeedbackState_Endself, guiElement)
+		GUIFeedbackState_Endself.closeTime = GUIFeedbackState_Endself.closeTime - 1
+	end
+
+
 	return true
 end
 
