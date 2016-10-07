@@ -82,7 +82,7 @@ end
 
 local function Log(message)
     table.insert(actionslog, message)
-    TGNS.Log(message)
+    -- TGNS.Log(message)
 end
 
 local function IsTargetProtectedCommander(targetClient)
