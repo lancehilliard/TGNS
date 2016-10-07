@@ -176,13 +176,13 @@ end
 
 function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
-	message = string.format("%s%s", stamp, message)
+	message = string.format("%s %s", stamp, message)
 	if copyToMainLog then
 		Shared.Message(string.format(" Debug: %s", stamp))
 	end
 
 	-- Shine:DebugPrint(message)
-	local DebugFile = "config://TGNSDebugLog.txt"
+	local DebugFile = "config://tgns/DebugLog.txt"
 	local File, Err = io.open( DebugFile, "r" )
 	local Data = ""
 
