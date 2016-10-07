@@ -318,7 +318,7 @@ local function OnLocationChanged(player, locationName)
 						end
 					end
 					local size = trackStartTimes[client][a.i] and 3 or 1
-					local duration = #recentLocations[client] > 1 and MAXIMUM_ALLOWED_LOCATION_DURATION or 100000
+					local duration = #recentLocations[client] > 1 and MAXIMUM_ALLOWED_LOCATION_DURATION or 60
 					Shine.ScreenText.Add(channelId, {X = 0.5, Y = y, Text = string.format("%s:", a.l), Duration = duration, R = left_r, G = left_g, B = left_b, Alignment = TGNS.ShineTextAlignmentMax, Size = size, FadeIn = 0, IgnoreFormat = true}, client)
 					channelId = channelId + 1
 					Shine.ScreenText.Add(channelId, {X = 0.5, Y = y, Text = string.format(" %s", a.r), Duration = duration, R = right_r, G = right_g, B = right_b, Alignment = TGNS.ShineTextAlignmentMin, Size = size, FadeIn = 0, IgnoreFormat = true}, client)
