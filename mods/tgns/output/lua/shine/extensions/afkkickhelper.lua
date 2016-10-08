@@ -10,16 +10,18 @@ local function resetAfk(client)
 	end
 end
 
-local function getAfkThresholdInSeconds()
-	local isAggressive = Shared.GetTime() - Shine.Plugins.timedstart:GetWhenFifteenSecondAfkTimerWasLastAdvertised() < 30
-	if not TGNS.IsProduction() then
-		-- isAggressive = true
-	end
-	local result = isAggressive and 15 or 60
-	return result, isAggressive
+local Plugin = {}
+
+local function isTimedStart()
+	local result = Shared.GetTime() - Shine.Plugins.timedstart:GetWhenFifteenSecondAfkTimerWasLastAdvertised() < 30
+	return result
 end
 
-local Plugin = {}
+function Plugin:GetAfkThresholdInSeconds(player)
+	-- Shared.Message("TGNS.HasPlayerSignedPrimerWithGames: " .. tostring(TGNS.HasPlayerSignedPrimerWithGames(p)))
+	local result = isTimedStart() and (TGNS.HasPlayerSignedPrimerWithGames(player) and 30 or 15) or 60
+	return result
+end
 
 -- function Plugin:OnProcessMove(player, input)
 -- 	if bit.band(input.commands, Move.Use) ~= 0 then
@@ -70,11 +72,10 @@ function Plugin:Initialise()
 
 	local processAfkPlayers
 	processAfkPlayers = function()
-		local afkThresholdInSeconds, isAggressive = getAfkThresholdInSeconds();
-		local afkScenarioDescriptor = isAggressive and " (pre/early game)" or ""
-		TGNS.ScheduleAction(isAggressive and 1 or 15, processAfkPlayers)
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
+			local afkThresholdInSeconds = self:GetAfkThresholdInSeconds(p);
+			local afkScenarioDescriptor = isTimedStart() and " (pre/early game)" or ""
 			if TGNS.IsPlayerAFK(p) then
 				local lastMoveTime = Shine.Plugins.afkkick:GetLastMoveTime(c)
 				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= afkThresholdInSeconds) and TGNS.ClientIsOnPlayingTeam(c) then
@@ -109,6 +110,7 @@ function Plugin:Initialise()
 				end
 			end
 		end)
+		TGNS.ScheduleAction(isTimedStart() and 1 or 15, processAfkPlayers)
 	end
 	TGNS.ScheduleAction(15, processAfkPlayers)
     return true
