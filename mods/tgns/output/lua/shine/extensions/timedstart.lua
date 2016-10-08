@@ -43,8 +43,11 @@ local function showTimeRemaining()
 			if secondsRemaining >= 1 then
 				local duration = secondsRemaining < 3 and 5 or 1.5
 				local secondsRemainingDescription = secondsRemaining <= 3 and "a few" or secondsRemaining
-				local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", secondsRemainingDescription)
-				Shine.ScreenText.Add(51, {X = 0.5, Y = 0.40, Text = message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true})
+				TGNS.DoFor(TGNS.GetClientList(), function(c)
+					local p = TGNS.GetPlayer(c)
+					local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", secondsRemainingDescription) -- , Shine.Plugins.afkkickhelper:GetAfkThresholdInSeconds(p)
+					Shine.ScreenText.Add(51, {X = 0.5, Y = 0.40, Text = message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
+				end)
 				fifteenSecondAfkTimerWasLastAdvertisedAt = Shared.GetTime()
 
 				Shine.Plugins.timedstart:WarnPlayersOfImminentGameStart(playerList, secondsRemaining)
