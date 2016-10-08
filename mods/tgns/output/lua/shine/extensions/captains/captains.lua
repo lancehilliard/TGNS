@@ -2535,22 +2535,15 @@ if Server or Client then
 				votesAllowedUntil = nil
 				rolandHasBeenUsed = true
 				local player = TGNS.GetPlayer(client)
+
 				TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-					-- local c = TGNS.GetClient(p)
-					-- local earlyOptInEntitlementDescriptor
-					-- if TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(c)) then
-					-- 	earlyOptInEntitlementDescriptor = "a recent Captain"
-					-- elseif TGNS.IsClientSM(c) then
-					-- 	earlyOptInEntitlementDescriptor = "an SM"
-					-- end
-					-- local message = "Captains will resume soon."
-					-- if earlyOptInEntitlementDescriptor then
-					-- 	message = string.format("%s Opt-in early NOW (thanks for being %s!).", message, earlyOptInEntitlementDescriptor)
-					-- else
-					-- 	message = string.format("%s SMs, recent Captains, and players not active in the last Captains game: opt-in early now.", message)
-					-- end
-					local message = "Captains will resume soon. SMs, recent Captains, and players not active in the last Captains game: opt-in early now."
-					md:ToPlayerNotifyInfo(p, message)
+					TGNS.SendToTeam(p, kSpectatorIndex, true)
+				end)
+				TGNS.ScheduleAction(0.5, function()
+					TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+						md:ToPlayerNotifyInfo(p, "Captains will resume soon.")
+						md:ToPlayerNotifyInfo(p, "SMs, recent Captains, and players not active in the last Captains game: return to Ready Room and opt-in early now.")
+					end)
 				end)
 				automaticVoteAllowAction = function() end
 				local getRolesDataForAllClients = function() getRolesData(TGNS.Select(TGNS.GetClientList(), TGNS.GetClientSteamId)) end
