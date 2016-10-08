@@ -1405,28 +1405,55 @@ function Plugin:Initialise()
 	local originalGUIVoiceChatUpdate
 	originalGUIVoiceChatUpdate = Class_ReplaceMethod("GUIVoiceChat", "Update", function(guivoicechatself, deltaTime)
 		originalGUIVoiceChatUpdate(guivoicechatself, deltaTime)
-		if Client.GetLocalClientTeamNumber() == kSpectatorIndex and Client.GetScreenHeight() >= 1080 then
-			local numAliens = 0
-			local allPlayers = ScoreboardUI_GetAllScores()
-		    // How many items per player.
-		    for i = 1, #allPlayers do
-		        if allPlayers[i].EntityTeamNumber == kAlienTeamType then
-		        	numAliens = numAliens + 1
-		        end
-		    end
-		    if numAliens >= 7 then
-		    	yOffset = 35
-		    	if numAliens >= 8 then
-		    		yOffset = yOffset + 45
-		    	end
-			    for i, bar in ipairs(guivoicechatself.chatBars) do
-			        if bar.Background:GetIsVisible() then
-				    	local position = bar.Background:GetPosition()
-				    	position.y = position.y + yOffset
-				    	bar.Background:SetPosition(position)
+		if Client.GetLocalClientTeamNumber() == kSpectatorIndex then
+			if Client.GetScreenHeight() >= 1080 then
+				local numAliens = 0
+				local allPlayers = ScoreboardUI_GetAllScores()
+			    // How many items per player.
+			    for i = 1, #allPlayers do
+			        if allPlayers[i].EntityTeamNumber == kAlienTeamType then
+			        	numAliens = numAliens + 1
 			        end
 			    end
-		    end
+			    if numAliens >= 7 then
+			    	yOffset = 35
+			    	if numAliens >= 8 then
+			    		yOffset = yOffset + 45
+			    	end
+				    for i, bar in ipairs(guivoicechatself.chatBars) do
+				        if bar.Background:GetIsVisible() then
+					    	local position = bar.Background:GetPosition()
+					    	position.y = position.y + yOffset
+					    	bar.Background:SetPosition(position)
+				        end
+				    end
+			    end
+			end
+			local marineCommanderName
+			local alienCommanderName
+			TGNS.DoFor(ScoreboardUI_GetAllScores(), function(s)
+				if s.IsCommander then
+					if s.EntityTeamNumber == kMarineTeamType then
+						marineCommanderName = s.Name
+					else
+						alienCommanderName = s.Name
+					end
+				end
+			end)
+			TGNS.DoForPairs(guivoicechatself.chatBars, function(index, bar)
+		        if bar.Background:GetIsVisible() then
+			    	local chatBarPlayerName = bar.Name:GetText()
+			    	local commanderNamePrefix
+			    	if chatBarPlayerName == marineCommanderName then
+			    		commanderNamePrefix = "MC"
+			    	elseif chatBarPlayerName == alienCommanderName then
+			    		commanderNamePrefix = "AC"
+			    	end
+			    	if commanderNamePrefix then
+			    		bar.Name:SetText(string.format("[%s] %s", commanderNamePrefix, bar.Name:GetText()))
+			    	end
+		        end
+			end)
 		end
 	end)
 
