@@ -1219,8 +1219,8 @@ end
 
 function TGNS.HasSteamIdSignedPrimerWithGames(steamId) PROFILE("TGNS.HasSteamIdSignedPrimerWithGames")
 	local result = TGNS.HasSteamIdSignedPrimer(steamId)
-	if result == true and Shine.Plugins.Balance and Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId then
-		result = Shine.Plugins.Balance.GetTotalGamesPlayedBySteamId(steamId) >= TGNS.PRIMER_GAMES_THRESHOLD
+	if result == true and Balance and Balance.GetTotalGamesPlayedBySteamId then
+		result = Balance.GetTotalGamesPlayedBySteamId(steamId) >= TGNS.PRIMER_GAMES_THRESHOLD
 	end
 	return result
 end
