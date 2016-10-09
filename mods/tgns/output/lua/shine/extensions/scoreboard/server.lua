@@ -718,7 +718,13 @@ function Plugin:Initialise()
 		 		local messagePlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerSpectator(p) or TGNS.PlayerIsAlien(p) end)
 		 		local tunnelsMd = TGNSMessageDisplayer.Create("TUNNELS")
 		 		TGNS.DoFor(messagePlayers, function(p)
-		 			tunnelsMd:ToPlayerNotifyInfo(p, string.format("%s has %s tunnel%s", TGNS.GetClientName(client), tunnelDescription, #exitLocationNames == 2 and "!" or " entrance."))
+		 			local message
+		 			if #exitLocationNames == 2 then
+		 				message = string.format("an OPEN tunnel: %s <-> %s", exitLocationNames[1], exitLocationNames[2])
+		 			else
+		 				message = string.format("a CLOSED tunnel: %s", exitLocationNames[1])
+		 			end
+		 			tunnelsMd:ToPlayerNotifyInfo(p, string.format("%s has %s", TGNS.GetClientName(client), message))
 		 		end)
 	 		end
  		end
