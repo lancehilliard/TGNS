@@ -22,6 +22,10 @@ if Server or Client then
 
 	if Server then
 
+		Plugin.HasConfig = true
+		Plugin.ConfigName = "balance.json"
+
+
 		onosBalanceAdvisory = string.format("Onos cost %s. Bone Shield only heals if taking damage, and saps energy while healing.", kOnosCost)
 		local playerBanks = {}
 
@@ -353,6 +357,74 @@ if Server or Client then
 			-- harvesterDecayEnabled = false
 		end
 
+		function Plugin:MapChange()
+			if self.LaneInfosError then
+				TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s", TGNS.GetCurrentMapName()))
+			end
+		end
+
+		function Plugin:GetOpenLaneMessage(player)
+			local teamNumber = TGNS.GetPlayerTeamNumber(player)
+			-- TGNS.Log("GetOpenLaneMessage...")
+			local result
+
+			self.LaneInfosError = true
+			local laneInfos = {}
+			TGNS.DoForPairs(self.Config.LaneInfos, function(mapName, mapInfos)
+				if TGNS.GetCurrentMapName() == mapName then
+					self.LaneInfosError = false
+					local mapLocationNames = TGNS.Select(GetLocations(), function(l) return l:GetName() end)
+					TGNS.DoForPairs(mapInfos, function(spawnLocationName, spawnLocationInfos)
+						TGNS.DoForPairs(spawnLocationInfos, function(laneName, laneLocationNames)
+							if TGNS.Has(mapLocationNames, spawnLocationName) and TGNS.All(laneLocationNames, function(n) return TGNS.Has(mapLocationNames, n) end) then
+								table.insert(laneInfos, {spawnLocationName=spawnLocationName, displayName=laneName, locationNames=laneLocationNames})
+							else
+								self.LaneInfosError = true
+							end
+						end)
+					end)
+				end
+			end)
+
+			if TGNS.Any(laneInfos) then
+				local spawnLocationName
+				local potentialSpawnEntities = {}
+				if teamNumber == kMarineTeamType then
+					potentialSpawnEntities = GetEntitiesForTeam("InfantryPortal", kMarineTeamType)
+				elseif teamNumber == kAlienTeamType then
+					potentialSpawnEntities = GetEntitiesForTeam("Egg", kAlienTeamType)
+				end
+				-- TGNS.Log(string.format("potentialSpawnEntities: %s", #potentialSpawnEntities))
+				potentialSpawnEntities = TGNS.Where(potentialSpawnEntities, TGNS.StructureIsAlive)
+				-- TGNS.Log(string.format("potentialSpawnEntities: %s", #potentialSpawnEntities))
+				local possibleSpawnLocationNames = {}
+				TGNS.DoFor(potentialSpawnEntities, function(e)
+					-- TGNS.Log("potentialSpawnEntities: " .. tostring(TGNS.GetEntityLocationName(e)))
+					TGNS.InsertDistinctly(possibleSpawnLocationNames, TGNS.GetEntityLocationName(e))
+				end)
+				-- TGNS.Log("#possibleSpawnLocationNames: " .. #possibleSpawnLocationNames)
+				if #possibleSpawnLocationNames == 1 then
+					local spawnLocationName = TGNS.GetFirst(possibleSpawnLocationNames)
+					-- TGNS.Log("spawnLocationName: " .. tostring(spawnLocationName))
+					local aliveTeamNonCommanderPlayers = TGNS.Where(TGNS.GetPlayers(TGNS.Where(TGNS.GetTeamClients(teamNumber), function(c) return not TGNS.IsClientCommander(c) end)), TGNS.IsPlayerAlive)
+					-- TGNS.Log("#aliveTeamNonCommanderPlayers: " .. tostring(#aliveTeamNonCommanderPlayers))
+					local occupiedLocations = TGNS.Select(aliveTeamNonCommanderPlayers, TGNS.GetPlayerLocationName)
+					-- TGNS.Log("occupiedLocations: " .. TGNS.Join(occupiedLocations, ", "))
+					laneInfos = TGNS.Where(laneInfos, function(i) return i.spawnLocationName == spawnLocationName and not TGNS.Has(occupiedLocations, spawnLocationName) and TGNS.All(i.locationNames, function(n) return not TGNS.Has(occupiedLocations, n) end) end)
+					-- TGNS.Log("#laneInfos: " .. tostring(#laneInfos))
+					if #laneInfos == 1 then
+						result = string.format("Is %s lane open?", TGNS.GetFirst(laneInfos).displayName)
+					end
+				end
+			end
+			if not result and TGNS.PlayerIsRookie(player) then
+				result = "Which lanes are open? (If you don't know what a lane is, please ask!)"
+			end
+
+			-- TGNS.Log("result: " .. tostring(result))
+			return result
+		end
+
 		function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
 			if TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() < TGNS.ConvertMinutesToSeconds(3) then
 				if victimEntity then
@@ -373,8 +445,11 @@ if Server or Client then
 											local minimumDelayBetweenAdvisories = 60
 											lanesAdvisoryLastShownAt[victimClient] = lanesAdvisoryLastShownAt[victimClient] or (minimumDelayBetweenAdvisories * -1)
 											if lanesAdvisoryLastShownAt[victimClient] < Shared.GetTime() - minimumDelayBetweenAdvisories then
-												lanesMd:ToPlayerNotifyInfo(victimPlayer, "Which lanes are open? (If you don't know what a lane is, please ask!)")
-												lanesAdvisoryLastShownAt[victimClient] = Shared.GetTime()
+												local openLaneMessage = self:GetOpenLaneMessage(victimPlayer)
+												if openLaneMessage then
+													lanesMd:ToPlayerNotifyInfo(victimPlayer, openLaneMessage)
+													lanesAdvisoryLastShownAt[victimClient] = Shared.GetTime()
+												end
 											end
 										else
 											local minimumDelayBetweenAdvisories = 180
@@ -732,6 +807,31 @@ if Server or Client then
 			md:ToAllNotifyInfo("These messages are printed in your console (` key).")
 		end)
 
+		-- spawn IPs farther from one another (WIP; build 309)
+		-- local originalGetRandomBuildPosition = GetRandomBuildPosition
+		-- GetRandomBuildPosition = function(techId, aroundPos, maxDist)
+		-- 	local getRandomBuildPositionResult
+		-- 	local originalGetRandomPointsWithinRadius = GetRandomPointsWithinRadius
+		-- 	local originalGetRandomSpawnForCapsule = GetRandomSpawnForCapsule
+		-- 	if techId == kTechId.InfantryPortal then
+		-- 		GetRandomPointsWithinRadius = function(center, minRadius, maxRadius, maxHeight, numPoints, minDistance, filter, validationFunc)
+		-- 			return originalGetRandomPointsWithinRadius(center, minRadius, maxRadius, maxHeight, numPoints, 20, filter, validationFunc)
+		-- 		end
+		-- 		GetRandomSpawnForCapsule = function(capsuleHeight, capsuleRadius, origin, minRange, maxRange, filter, validationFunc)
+		-- 			local getRandomSpawnForCapsuleResult = originalGetRandomSpawnForCapsule(capsuleHeight, capsuleRadius, origin, maxRange, maxRange, filter, validationFunc)
+		-- 			if not getRandomSpawnForCapsuleResult then
+		-- 				Shared.Message("Unable to find distant IPs... reverting to stock behavior...")
+		-- 				getRandomSpawnForCapsuleResult = originalGetRandomSpawnForCapsule(capsuleHeight, capsuleRadius, origin, minRange, maxRange, filter, validationFunc)
+		-- 			end
+		-- 			return getRandomSpawnForCapsuleResult
+		-- 		end
+		-- 	end
+		-- 	getRandomBuildPositionResult = originalGetRandomBuildPosition(techId, aroundPos, maxDist)
+		-- 	GetRandomSpawnForCapsule = originalGetRandomSpawnForCapsule
+		-- 	GetRandomPointsWithinRadius = originalGetRandomPointsWithinRadius
+		-- 	return getRandomBuildPositionResult
+		-- end
+
 	    return true
 
 	end
@@ -743,6 +843,18 @@ if Server or Client then
 		if Server then
 			self:CreateCommands()
 			OnServerInitialise()
+
+			-- if not TGNS.IsProduction() then
+			-- 	TGNS.ScheduleActionInterval(3, function()
+			-- 		local client = TGNS.GetFirst(TGNS.GetClientList())
+			-- 		local message = self:GetOpenLaneMessage(TGNS.GetPlayer(client))
+			-- 		if message then
+			-- 			local debugMd = TGNSMessageDisplayer.Create("LANESDEBUG")
+			-- 			debugMd:ToAllNotifyInfo(message)
+			-- 		end
+			-- 	end)
+			-- end
+			
 		end
 
 		return true
