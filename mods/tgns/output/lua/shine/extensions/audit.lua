@@ -237,6 +237,7 @@ function Plugin:Initialise()
 					    			end
 
 					    		end)
+					    		playerData.IPV4 = IPAddressToString(Server.GetClientAddress(c))
 
 					    		audit(718, playerData, function(playerDataAuditResponseJson)
 					    			local playerDataAuditResponse = json.decode(playerDataAuditResponseJson) or {}
