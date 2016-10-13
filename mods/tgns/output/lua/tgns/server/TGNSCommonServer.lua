@@ -15,6 +15,32 @@ TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
 TGNS.LogHttp = false
 
+function TGNS.ReadyRoomClientGive(client, className, teamNumber, extraValues)
+    local player = TGNS.GetPlayer(client)
+    local playerTeamNumber = TGNS.GetPlayerTeamNumber(player)
+    
+    if playerTeamNumber == kTeamReadyRoom then
+    
+        local newPlayer = player:Replace(className, playerTeamNumber, nil, nil, extraValues)
+        newPlayer:SetDesiredCameraDistance(0)
+
+        if teamNumber == kTeam1Index and (className == "marine" or className == "jetpackmarine") and newPlayer.lastWeaponList then
+            for i = #newPlayer.lastWeaponList, 1, -1 do
+                if newPlayer.lastWeaponList[i] ~= "axe" then
+                    newPlayer:GiveItem(newPlayer.lastWeaponList[i])
+                end
+            end
+        end
+        
+        if teamNumber == kTeam2Index and newPlayer.lastUpgradeList then            
+            newPlayer.upgrade1 = newPlayer.lastUpgradeList[1] or 1
+            newPlayer.upgrade2 = newPlayer.lastUpgradeList[2] or 1
+            newPlayer.upgrade3 = newPlayer.lastUpgradeList[3] or 1
+        end
+        
+    end
+end
+
 function TGNS.GetEntityLocationName(entity) PROFILE("TGNS.GetEntityLocationName")
 	local result = entity:GetLocationName()
 	return result
