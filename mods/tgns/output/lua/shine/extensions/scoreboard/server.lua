@@ -275,6 +275,22 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			local playerList = TGNS.GetPlayerList()
 			TGNS.DoFor(TGNS.GetMarinePlayers(playerList), updateJetpackStatus)
 			TGNS.DoFor(TGNS.GetSpectatorPlayers(playerList), updateJetpackStatus)
+		elseif TGNS.IsPlayerReadyRoom(player) then
+			-- if player.GiveJetpack then
+			-- 	player:GiveJetpack()
+			-- 	local giveFuel
+			-- 	giveFuel = function()
+			-- 		if Shine:IsValidClient(client) and TGNS.IsClientReadyRoom(client) then
+			-- 			local jetpackPlayer = TGNS.GetPlayer(client)
+			-- 			if jetpackPlayer.SetFuel then
+			-- 				jetpackPlayer:SetFuel(1)
+			-- 				TGNS.ScheduleAction(1, giveFuel)
+			-- 			end
+			-- 		end
+			-- 	end
+			-- 	giveFuel()
+			-- end
+			-- TGNS.ClientGive(client, "onos", kTeam2Index)
 		end
 		squadNumbers[client] = 0
 		initScoreboardDecorations(client)
@@ -787,6 +803,9 @@ function Plugin:Initialise()
 		end
 	end)
 
+	-- GetSeason = function()
+	-- 	return Seasons.kWinter
+	-- end
 
 	return true
 end

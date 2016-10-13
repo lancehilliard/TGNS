@@ -1117,8 +1117,8 @@ function Plugin:Initialise()
 
 				if self.hoverMenu then
 					self.hoverMenu:RemoveButtonByText("Mute text")
+					self.hoverMenu:RemoveButtonByText("Hive profile")
 					if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) then
-						self.hoverMenu:RemoveButtonByText("Hive profile")
 						self.hoverMenu:RemoveButtonByText("NS2Stats profile")
 					end
 					if not has.muteAbility[Client.GetLocalClientIndex()] then
@@ -1664,6 +1664,17 @@ function Plugin:Initialise()
 		GUIFeedbackState_Endself.closeTime = GUIFeedbackState_Endself.closeTime - 1
 	end
 
+	local originalGUIIssuesDisplayUpdate = GUIIssuesDisplay.Update
+	GUIIssuesDisplay.Update = function(guiIssuesDisplaySelf, deltaTime)
+		originalGUIIssuesDisplayUpdate(guiIssuesDisplaySelf, deltaTime)
+		if not gameIsInProgress and guiIssuesDisplaySelf.serverPerformanceProblemsIcon then
+			guiIssuesDisplaySelf.serverPerformanceProblemsIcon:SetIsVisible(false)
+		end
+	end
+
+	-- IsSeasonForThrowing = function()
+	-- 	return true
+	-- end
 
 	return true
 end
