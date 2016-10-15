@@ -571,7 +571,7 @@ end
 //end
 //TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
-local function getMaximumEffectiveSpectatorCount()
+function Plugin:GetMaximumEffectiveSpectatorCount()
     local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
     local result = captainsModeIsEnabled and getCommunitySlotsCount() or getMaximumSpectatorsCount()
     return result
@@ -607,7 +607,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
         end
     elseif newTeamNumber == kSpectatorIndex then
         if not (force or shineForce) then
-            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= getMaximumEffectiveSpectatorCount()
+            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self:GetMaximumEffectiveSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
             if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and not TGNS.PlayerIsRookie(player) then
                 tgnsMd:ToPlayerNotifyError(player, string.format("Mid-game spectate is available only when teams are %s.", fullGameDescriptor))
@@ -683,7 +683,7 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
         if ServerIsFull(nonSpectatorPlayers) then
             local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
             local joinerWillingToSpectate = TGNS.Has(fullSpecSteamIds, joiningSteamId) or TGNS.HasSteamIdSignedPrimer(joiningSteamId)
-            result = bumpableClient ~= nil or (joinerWillingToSpectate and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < getMaximumEffectiveSpectatorCount())
+            result = bumpableClient ~= nil or (joinerWillingToSpectate and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
         end
     end
     return result

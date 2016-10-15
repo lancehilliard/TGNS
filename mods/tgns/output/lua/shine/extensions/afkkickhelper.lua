@@ -19,7 +19,7 @@ end
 
 function Plugin:GetAfkThresholdInSeconds(player)
 	-- Shared.Message("TGNS.HasPlayerSignedPrimerWithGames: " .. tostring(TGNS.HasPlayerSignedPrimerWithGames(p)))
-	local result = isTimedStart() and (TGNS.HasPlayerSignedPrimerWithGames(player) and 30 or 15) or 60
+	local result = (isTimedStart() and not TGNS.IsPlayerSpectator(player)) and (TGNS.HasPlayerSignedPrimerWithGames(player) and 30 or 15) or 60
 	return result
 end
 
@@ -72,19 +72,23 @@ function Plugin:Initialise()
 
 	local processAfkPlayers
 	processAfkPlayers = function()
+		local clientIsVulnerableToAfk = function(c)
+			local result = TGNS.ClientIsOnPlayingTeam(c) or (TGNS.IsClientSpectator(c) and #TGNS.Where(TGNS.GetClientList(), TGNS.IsClientSpectator) >= Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
+			return result
+		end
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
 			local p = TGNS.GetPlayer(c)
 			local afkThresholdInSeconds = self:GetAfkThresholdInSeconds(p);
 			local afkScenarioDescriptor = isTimedStart() and " (pre/early game)" or ""
 			if TGNS.IsPlayerAFK(p) then
 				local lastMoveTime = Shine.Plugins.afkkick:GetLastMoveTime(c)
-				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= afkThresholdInSeconds) and TGNS.ClientIsOnPlayingTeam(c) then
+				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= afkThresholdInSeconds) and clientIsVulnerableToAfk(c) then
 					local lastWarnTime = lastWarnTimes[c] or 0
 					if Shared.GetTime() - lastWarnTime > 10 then
 						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid being sent to Ready Room.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor))
 						lastWarnTimes[c] = Shared.GetTime()
 						local playAfkPingSoundToClient = function(level)
-							if Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and TGNS.ClientIsOnPlayingTeam(c) then
+							if Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and clientIsVulnerableToAfk(c) then
 								TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.arclight.HILL_SOUND, {i=level})
 							end
 						end
