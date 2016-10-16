@@ -154,8 +154,8 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		end
 	end
 
-	function result:ToPlayerNotifyColors(player, message, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
-		NotifyColors(player, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
+	function result:ToPlayerNotifyColors(player, message, channelRed, channelBlue, channelGreen, messageRed, messageGreen, messageBlue)
+		NotifyColors(player, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageGreen, messageBlue)
 	end
 
 	function result:ToPlayerNotifyError(player, message)
@@ -201,6 +201,30 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 	function result:ToTeamNotifyColors(teamNumber, message, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen)
 		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
 			TGNS.PlayerAction(c, function(p) NotifyColors(p, message, self.messagesChannel, channelRed, channelBlue, channelGreen, messageRed, messageBlue, messageGreen) end)
+		end)
+	end
+
+	function result:ToTeamNotifyMarineColor(teamNumber, message)
+		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
+			TGNS.PlayerAction(c, function(p) NotifyColors(p, message, self.messagesChannel, 255, 255, 255, TGNS.MARINE_COLOR_R, TGNS.MARINE_COLOR_G, TGNS.MARINE_COLOR_B) end)
+		end)
+	end
+
+	function result:ToAllNotifyMarineColor(message)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			NotifyColors(p, message, self.messagesChannel, 255, 255, 255, TGNS.MARINE_COLOR_R, TGNS.MARINE_COLOR_G, TGNS.MARINE_COLOR_B)
+		end)
+	end
+
+	function result:ToTeamNotifyAlienColor(teamNumber, message)
+		TGNS.DoFor(TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList()), function(c)
+			TGNS.PlayerAction(c, function(p) NotifyColors(p, message, self.messagesChannel, 255, 255, 255, TGNS.ALIEN_COLOR_R, TGNS.ALIEN_COLOR_G, TGNS.ALIEN_COLOR_B) end)
+		end)
+	end
+
+	function result:ToAllNotifyAlienColor(message)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			NotifyColors(p, message, self.messagesChannel, 255, 255, 255, TGNS.ALIEN_COLOR_R, TGNS.ALIEN_COLOR_G, TGNS.ALIEN_COLOR_B)
 		end)
 	end
 
