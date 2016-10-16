@@ -102,8 +102,13 @@ local function showCurrentSpecMode(player, showIfNil)
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
+	local client = TGNS.GetClient(player)
 	if newTeamNumber == kSpectatorIndex then
-		showCurrentSpecMode(player)
+		TGNS.ScheduleAction(10, function()
+			if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) then
+				showCurrentSpecMode(TGNS.GetPlayer(client))
+			end
+		end)
 	end
 end
 
