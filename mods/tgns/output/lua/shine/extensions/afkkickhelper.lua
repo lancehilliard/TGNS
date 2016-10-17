@@ -73,7 +73,7 @@ function Plugin:Initialise()
 	local processAfkPlayers
 	processAfkPlayers = function()
 		local clientIsVulnerableToAfk = function(c)
-			local result = TGNS.ClientIsOnPlayingTeam(c) or (TGNS.IsClientSpectator(c) and #TGNS.Where(TGNS.GetClientList(), TGNS.IsClientSpectator) >= Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
+			local result = TGNS.ClientIsOnPlayingTeam(c) or (Server.GetNumPlayersTotal() >= Server.GetMaxPlayers() - 2 and TGNS.IsClientSpectator(c) and #TGNS.Where(TGNS.GetClientList(), TGNS.IsClientSpectator) >= Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
 			return result
 		end
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
