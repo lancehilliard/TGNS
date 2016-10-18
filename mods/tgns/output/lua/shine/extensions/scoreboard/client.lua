@@ -611,45 +611,6 @@ function Plugin:Initialise()
 	    -- Shared.Message("MainMenu_GetIsOpened(): " .. tostring(MainMenu_GetIsOpened()))
 	    -- Shared.Message("Shine.VoteMenu.Visible: " .. tostring(Shine.VoteMenu.Visible))
 
-	    if self.connectionProblemsIcon and self.connectionProblemsIcon:GetIsVisible() then
-	    	local connectionProblemsIconColor = self.connectionProblemsIcon:GetColor()
-	    	local connectionProblemsIconIsRed = connectionProblemsIconColor.r == 1 and connectionProblemsIconColor.g == 0 and connectionProblemsIconColor.b == 0
-		    if connectionProblemsIconIsRed then
-		    	local secondsSinceUsableConnection = Shared.GetTime() - has.usableConnectionAt
-		    	if secondsSinceUsableConnection >= 3 then
-		    		local secondsSinceServerQuery = Shared.GetTime() - has.queriedServerStatusAt
-		    		if secondsSinceServerQuery > 1.5 then
-			    		has.queriedServerStatusAt = Shared.GetTime()
-						Shared.SendHTTPRequest("http://rr.tacticalgamer.com/ServerInfo/v1_0", "GET", function(responseJson)
-							local response = json.decode(responseJson) or {}
-							if #response > 0 then
-								local serverInfo = response[1]
-								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
-									-- Shared.Message("DEBUG connect tgns.tacticalgamer.com")
-									local delayInSeconds = 7 + math.random() * 3
-									Shine.Timer.Simple(delayInSeconds, function() Shared.ConsoleCommand("connect tgns.tacticalgamer.com") end)
-									hudTexts.reconnectingText = Shine.ScreenText.Add( "Reconnecting", {
-										X = 0.05, Y = 0.55,
-										Text = "Reconnecting to game server. Please wait.",
-										Duration = math.huge,
-										R = 0, G = 255, B = 0,
-										Alignment = 0,
-										Size = 3,
-										FadeIn = 0.5
-									} )
-								else
-									-- Shared.Message("DEBUG mapName: " .. tostring(serverInfo.mapName))
-								end
-							end
-						end)
-		    		end
-		    	end
-		    else
-		    	has.usableConnectionAt = Shared.GetTime()
-		    end
-	    else
-	    	has.usableConnectionAt = Shared.GetTime()
-	    end
 	end
 
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
@@ -1672,6 +1633,52 @@ function Plugin:Initialise()
 		if not gameIsInProgress and guiIssuesDisplaySelf.serverPerformanceProblemsIcon then
 			guiIssuesDisplaySelf.serverPerformanceProblemsIcon:SetIsVisible(false)
 		end
+
+	    if guiIssuesDisplaySelf.connectionProblemsIcon and guiIssuesDisplaySelf.connectionProblemsIcon:GetIsVisible() then
+	    	local connectionProblemsIconColor = guiIssuesDisplaySelf.connectionProblemsIcon:GetColor()
+	    	local connectionProblemsIconIsRed = connectionProblemsIconColor.r == 1 and connectionProblemsIconColor.g == 0 and connectionProblemsIconColor.b == 0
+		    if connectionProblemsIconIsRed then
+		    	local secondsSinceUsableConnection = Shared.GetTime() - has.usableConnectionAt
+		    	if secondsSinceUsableConnection >= 3 then
+		    		if hudTexts.reconnectingText == nil then
+		    			hudTexts.reconnectingText = Shine.ScreenText.Add( "Reconnecting", {
+							X = 0.05, Y = 0.55,
+							Text = "Checking to see if game server crashed.\n\n(Check your Internet connection, too.)",
+							Duration = math.huge,
+							R = 0, G = 255, B = 0,
+							Alignment = 0,
+							Size = 3,
+							FadeIn = 0.5
+						} )
+		    		end
+		    		local secondsSinceServerQuery = Shared.GetTime() - has.queriedServerStatusAt
+		    		if secondsSinceServerQuery > 1.5 then
+			    		has.queriedServerStatusAt = Shared.GetTime()
+						Shared.SendHTTPRequest("http://rr.tacticalgamer.com/ServerInfo/v1_0", "GET", function(responseJson)
+							local response = json.decode(responseJson) or {}
+							if #response > 0 then
+								local serverInfo = response[1]
+								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
+									-- Shared.Message("DEBUG connect tgns.tacticalgamer.com")
+									local delayInSeconds = 7 + math.random() * 3
+									Shine.Timer.Simple(delayInSeconds, function() Shared.ConsoleCommand("connect tgns.tacticalgamer.com") end)
+									function hudTexts.reconnectingText:UpdateText()
+										self.Obj:SetText("Game server crashed. Reconnecting now. Please wait.")
+									end
+								else
+									-- Shared.Message("DEBUG mapName: " .. tostring(serverInfo.mapName))
+								end
+							end
+						end)
+		    		end
+		    	end
+		    else
+		    	has.usableConnectionAt = Shared.GetTime()
+		    end
+	    else
+	    	has.usableConnectionAt = Shared.GetTime()
+	    end
+
 	end
 
 	-- IsSeasonForThrowing = function()
