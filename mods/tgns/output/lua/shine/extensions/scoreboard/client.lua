@@ -1659,7 +1659,6 @@ function Plugin:Initialise()
 							if #response > 0 then
 								local serverInfo = response[1]
 								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
-									-- Shared.Message("DEBUG connect tgns.tacticalgamer.com")
 									local delayInSeconds = 7 + math.random() * 3
 									Shine.Timer.Simple(delayInSeconds, function() Shared.ConsoleCommand("connect tgns.tacticalgamer.com") end)
 									function hudTexts.reconnectingText:UpdateText()
