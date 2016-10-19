@@ -164,22 +164,17 @@ function Plugin:Initialise()
 
 	TGNS.ScheduleAction(5, function()
 		local originalVoteFunc = Shine.Commands.sh_vote.Func
+		Shared.Message("originalVoteFunc: " .. tostring(originalVoteFunc))
 		Shine.Commands.sh_vote.Func = function(client, mapName)
-			local originalNotify = Shine.Plugins.mapvote.Notify
-			Shine.Plugins.mapvote.Notify = function(notifySelf, player, message, format, ...)
-				if message ~= "You %s %s (%s for this, %i total)" then
-					originalNotify(notifySelf, player, message, format, ...)
-				end
+			local originalVote = Shine.Plugins.mapvote.Vote.Voted[client]
+			originalVoteFunc(client, mapName)
+			if originalVote ~= Shine.Plugins.mapvote.Vote.Voted[client] then
 				local steamId = TGNS.GetClientSteamId(client)
 				if not earnedVoteKarma[steamId] then
-					TGNS.ScheduleAction(10, function()
-						TGNS.Karma(steamId, "MapVoting")
-					end)
+					TGNS.Karma(steamId, "MapVoting")
 					earnedVoteKarma[steamId] = true
 				end
 			end
-			originalVoteFunc(client, mapName)
-			Shine.Plugins.mapvote.Notify = originalNotify
 		end
 
 		local originalNominateFunc = Shine.Commands.sh_nominate.Func
