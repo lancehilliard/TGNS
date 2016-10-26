@@ -164,7 +164,6 @@ function Plugin:Initialise()
 
 	TGNS.ScheduleAction(5, function()
 		local originalVoteFunc = Shine.Commands.sh_vote.Func
-		Shared.Message("originalVoteFunc: " .. tostring(originalVoteFunc))
 		Shine.Commands.sh_vote.Func = function(client, mapName)
 			local originalVote = Shine.Plugins.mapvote.Vote.Voted[client]
 			originalVoteFunc(client, mapName)
