@@ -1147,6 +1147,7 @@ function Plugin:Initialise()
 				  , {text="  Portal: My Badges", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Badges/Manage") end, condition=targetIsSelf}
 				  , {text="  Portal: My Karma", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Karma") end, condition=targetIsSelf}
 				  , {text="  Portal: My Laps", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Laps/Manage") end, condition=targetIsSelf}
+				  , {text="  Portal: My Tagline", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Tagline/Manage") end, condition=targetIsSelf}
 				  , {text="  Portal: My Settings", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/My/Settings") end, condition=targetIsSelf}
 				  , {text="  Send to RR (pre/early-game AFK)", callback=function(data) TGNS.SendNetworkMessage(Plugin.REQUEST_AFKRR, {c=self.hoverPlayerClientIndex}) end, condition=targetIsEligibleForAfkRr}
 				  , {text="  Admin Feedback", callback=function(data) Client.ShowWebpage(string.format("http://rr.tacticalgamer.com/Feedback/Index?i=%s&n=%s&s=%s", data.ns2id, url_encode(data.playerName), url_encode(data.serverSimpleName))) end, condition=not targetIsSelf}
