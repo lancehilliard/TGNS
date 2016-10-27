@@ -1685,6 +1685,23 @@ function Plugin:Initialise()
 	-- 	return true
 	-- end
 
+
+
+
+
+	-- local fogIsLifted = false
+	-- local originalGUIMinimapUpdate = GUIMinimap.Update
+	-- GUIMinimap.Update = function(guiMinimapSelf, deltaTime)
+	-- 	-- if fogIsLifted or not gameState.gameIsInProgress then
+	-- 	-- 	guiMinimapSelf:ResetAll()
+	-- 	-- end
+	-- 	originalGUIMinimapUpdate(guiMinimapSelf, deltaTime)
+	-- end
+
+	-- TGNS.HookNetworkMessage(Plugin.FOG_NEEDS_LIFT, function(message)
+	-- 	fogIsLifted = message.b
+	-- end)
+
 	return true
 end
 

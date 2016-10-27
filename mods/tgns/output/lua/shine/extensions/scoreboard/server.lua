@@ -328,6 +328,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 			end
 		end)
 	end
+
 end
 
 function Plugin:CreateCommands()
@@ -806,6 +807,32 @@ function Plugin:Initialise()
 	-- GetSeason = function()
 	-- 	return Seasons.kWinter
 	-- end
+
+
+
+	-- local fogIsLifted = false
+
+	-- local function setFogLiftState(shouldFogBeLifted)
+	-- 	fogIsLifted = shouldFogBeLifted
+	-- 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+	-- 		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.FOG_NEEDS_LIFT, {b=shouldFogBeLifted})	
+	-- 	end)
+	-- 	TGNS.DoForPairs(EntityListToTable(Shared.GetEntitiesWithClassname("MapBlip")), function(index, blip) blip:Update() end)
+	-- end
+
+	-- local originalMapBlipGetIsSighted = MapBlip.GetIsSighted
+	-- MapBlip.GetIsSighted = function(mapBlipSelf) return fogIsLifted and true or originalMapBlipGetIsSighted(mapBlipSelf) end
+
+	-- TGNS.RegisterEventHook("WinOrLoseCalled", function(teamNumber)
+	-- 	setFogLiftState(true)
+	-- end)
+
+	-- TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
+		-- setFogLiftState(true)
+		-- TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+		-- 	setFogLiftState(false)
+		-- end)
+	-- end)
 
 	return true
 end
