@@ -803,8 +803,8 @@ if Server or Client then
 
 		TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 			md:ToAllNotifyInfo(string.format("Marines get extra IP and lose %s resources.", extraIpCost))
-			md:ToAllNotifyInfo(onosBalanceAdvisory)
-			md:ToAllNotifyInfo("These messages are printed in your console (` key).")
+			-- md:ToAllNotifyInfo(onosBalanceAdvisory)
+			-- md:ToAllNotifyInfo("These messages are printed in your console (` key).")
 		end)
 
 		-- spawn IPs farther from one another (WIP; build 309)
