@@ -13,7 +13,7 @@ local function tellTargetAboutSource(targetClient, sourceClient)
 	local sourceClientSteamId = TGNS.GetClientSteamId(sourceClient)
 	local sourceBadge = badges[sourceClientSteamId]
 	if badgeName and sourceBadge and kBadges[badgeName] then
-		SetFormalBadgeName(badgeName, string.format('%s (TGNS)\n%s\n\nWhich TGNS badges do you have?\nFind out: M > TGNS Portal > Badges\nOr: http://rr.tacticalgamer.com', sourceBadge.DisplayName, sourceBadge.Description))
+		SetFormalBadgeName(badgeName, string.format('%s (TGNS)\n%s\n\nWhich TGNS badges do you have?\nFind out: http://rr.tacticalgamer.com\nOr: M > TGNS Portal > Badges\nOr: Click your scoreboard row', sourceBadge.DisplayName, sourceBadge.Description))
 		Server.SendNetworkMessage(targetClient, "Badge", { clientIndex = TGNS.GetClientId(sourceClient), badge = kBadges[badgeName], badgerow = 1 }, true)
 		-- if targetClientBadgeLabels[targetClient] ~= nil and not TGNS.Has(targetClientBadgeLabels[targetClient], badgeName) then
 		-- 	Server.SendNetworkMessage(targetClient, Shine.Plugins.scoreboard.BADGE_DISPLAY_LABEL, { n = badgeName, l = string.format('%s (TGNS)\n%s', sourceBadge.DisplayName, sourceBadge.Description) }, true)
@@ -73,7 +73,7 @@ function Plugin:Initialise()
     end)
 
     local function getBadges()
-    	if TGNS.Config and TGNS.Config.ScoreboardBadgesEndpointBaseUrl and badgesModIsLoaded then
+    	if TGNS.Config and TGNS.Config.ScoreboardBadgesEndpointBaseUrl then
 			local url = TGNS.Config.ScoreboardBadgesEndpointBaseUrl
 			TGNS.GetHttpAsync(url, function(scoreboardBadgesResponseJson)
 				local scoreboardBadgesResponse = json.decode(scoreboardBadgesResponseJson) or {}
@@ -81,17 +81,17 @@ function Plugin:Initialise()
 					TGNS.DoForPairs(scoreboardBadgesResponse.result, function(steamId, badges)
 						local badge = TGNS.GetFirst(badges)
 						local badgeName = string.format("tgns%s", badge.ID)
-						-- if kBadges[badgeName] then
+						if kBadges[badgeName] then
 							badgeNamesCache[tonumber(steamId)] = badgeName
 							badgesCache[tonumber(steamId)] = badge
-						-- end
+						end
 					end)
 				else
 					TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data. url: %s | msg: %s | response: %s | stacktrace: %s", url, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
 				end
 			end)
 		else
-			TGNS.ScheduleAction(4, getBadges)
+			TGNS.ScheduleAction(0, getBadges)
     	end
     end
     getBadges()
