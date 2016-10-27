@@ -3,6 +3,8 @@ local mapNominations = {}
 local mapSetSelected = false
 local gamesPlayedOnCurrentMap = 0
 local earnedVoteKarma = {}
+-- local voteMoveModifier = function() end
+-- local voteMovementAdvisoryLastShownAt = {}
 
 local function show(mapVoteSummaries, totalVotes)
 	-- local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
@@ -112,6 +114,10 @@ function Plugin:CreateCommands()
 	setmapvoteCommand:Help("<mapSetName> Configure the map vote for a named set of maps.")
 end
 
+-- function Plugin:OnProcessMove(player, input)
+-- 	voteMoveModifier(player, input)
+-- end
+
 function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
@@ -132,6 +138,16 @@ function Plugin:Initialise()
 					if Server.GetNumPlayersTotal() <= 10 and Shine.Plugins.arclight and Shine.Plugins.arclight.GetArclightMapname and not TGNS.Has(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname()) then
 						table.insert(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname())
 					end
+					-- voteMoveModifier = function(player, input)
+					-- 	local client = TGNS.GetClient(player)
+					-- 	if not Shine.Plugins.mapvote.Vote.Voted[client] then
+					-- 		input.move:Scale(0)
+					-- 		if Shared.GetTime() - (voteMovementAdvisoryLastShownAt[client] or 0) > .5 then
+					-- 			Shine.ScreenText.Add(41, {X = 0.5, Y = 0.35, Text = "Vote for a map to move.\n( instructions are at the top right of your screen )", Duration = 1, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+					-- 			voteMovementAdvisoryLastShownAt[client] = Shared.GetTime()
+					-- 		end
+					-- 	end
+					-- end
 				end
 				addArclightToNominations()
 
@@ -173,6 +189,7 @@ function Plugin:Initialise()
 					TGNS.Karma(steamId, "MapVoting")
 					earnedVoteKarma[steamId] = true
 				end
+				Shine.ScreenText.End(41)
 			end
 		end
 
