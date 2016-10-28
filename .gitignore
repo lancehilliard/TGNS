@@ -16,6 +16,7 @@
 !mods/tgns/preview.jpg
 
 # And then whitelist mod sound files
+!mods/tgns/fmod/fmoddesigner44463win-installer.exe
 !mods/tgns/fmod/readme.txt
 !mods/tgns/fmod/assets/armordecay1.wav
 !mods/tgns/fmod/assets/buttonclick.wav

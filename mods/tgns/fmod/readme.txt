@@ -1,6 +1,4 @@
-FMOD 4.38.00 installer:
-
-http://www.fmod.org/download/fmodex/tool/win/fmoddesigner43800win-installer.exe
+) Install FMOD Designer 4.44.63 (fmoddesigner44463win-installer.exe)
 
 ) Open tgns.fdp in FMOD Designer
 
