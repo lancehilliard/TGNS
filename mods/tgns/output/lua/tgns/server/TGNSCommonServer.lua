@@ -209,9 +209,6 @@ end
 function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
 	message = string.format("%s %s", stamp, message)
-	if copyToMainLog then
-		Shared.Message(string.format(" Debug: %s", stamp))
-	end
 
 	-- Shine:DebugPrint(message)
 	local DebugFile = "config://tgns/DebugLog.txt"
@@ -230,10 +227,16 @@ function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
 
 	File, Err = io.open( DebugFile, "w+" )
 
-	if not File then return end
+	if File then
+		File:write( Data, message, "\n" )
+		File:close()
+		if copyToMainLog then
+			Shared.Message(string.format(" Debug: %s", stamp))
+		end
+	else
+		Shared.Message(string.format(" Debug FAILURE: %s", message))
+	end
 
-	File:write( Data, message, "\n" )
-	File:close()
 end
 
 function TGNS.GetPlayerDeaths(player) PROFILE("TGNS.GetPlayerDeaths")
