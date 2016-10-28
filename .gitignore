@@ -97,6 +97,9 @@
 !mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/shared.lua
+!mods/tgns/output/lua/shine/extensions/sprayhelper/client.lua
+!mods/tgns/output/lua/shine/extensions/sprayhelper/server.lua
+!mods/tgns/output/lua/shine/extensions/sprayhelper/shared.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/client.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/server.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/shared.lua
