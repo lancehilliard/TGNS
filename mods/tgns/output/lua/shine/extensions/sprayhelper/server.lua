@@ -52,32 +52,38 @@ function Plugin:PlayerSay(client, networkMessage)
 		-- local teamOnly = networkMessage.teamOnly
 		local message = StringTrim(networkMessage.message)
 		if TGNS.ToLower(message) == "keep" then
+			local player = TGNS.GetPlayer(client)
 			if TGNS.IsClientSM(client) then
 				local spray = lastSprays[client]
 				if spray then
 					if TGNS.Contains(spray.path, TGNS.GetClientSteamId(client)) then
+						local clientName = TGNS.GetClientName(client)
 						local url = string.format("%s&mapName=%s&path=%s&x=%s&y=%s&z=%s&yaw=%s&roll=%s&pitch=%s&playerid=%s", TGNS.Config.SpraysEndpointBaseUrl, TGNS.UrlEncode(spray.mapName), TGNS.UrlEncode(spray.path), TGNS.UrlEncode(spray.x), TGNS.UrlEncode(spray.y), TGNS.UrlEncode(spray.z), TGNS.UrlEncode(spray.yaw), TGNS.UrlEncode(spray.roll), TGNS.UrlEncode(spray.pitch), TGNS.UrlEncode(spray.playerid))
 						TGNS.GetHttpAsync(url, function(responseJson)
 							local response = json.decode(responseJson) or {}
 							if response.success then
-								md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Spray kept. It will appear at all times for all users.")
+								if TGNS.IsGameInProgress() then
+									md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Spray kept. It will appear at all times for all users.")
+								else
+									md:ToAllNotifyInfo(string.format("Spray kept for %s. It will appear at all times for all users.", clientName))
+								end
 								lastSprays[client] = nil
 								updateFetchedSprays()
 							else
-								md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Spray not kept.")
+								md:ToPlayerNotifyError(player, "Spray not kept. Unexpected error.")
 								TGNS.DebugPrint(string.format("sprayhelper ERROR: Unable to persist spray. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
 							end
 						end)
 					else
-						md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Only personalized sprays may be kept on the game server. Create a CAA thread to submit your personalized spray image.")
+						md:ToPlayerNotifyError(player, "Only personalized sprays may be kept on the game server. Create a CAA thread to submit your personalized spray image.")
 						return ""
 					end
 				else
-					md:ToPlayerNotifyError(TGNS.GetPlayer(client), "No new spray. Spray and try again.")
+					md:ToPlayerNotifyError(player, "No new spray. Spray and try again.")
 					return ""
 				end
 			else
-				md:ToPlayerNotifyError(TGNS.GetPlayer(client), "Only Supporting Members may keep sprays on the server.")
+				md:ToPlayerNotifyError(player, "Only Supporting Members may keep sprays on the server.")
 				return ""
 			end
 		end
