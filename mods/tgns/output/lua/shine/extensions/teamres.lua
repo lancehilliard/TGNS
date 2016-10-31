@@ -58,7 +58,7 @@ end
 
 local function AnnounceReceivedResources(player, resources)
 	local message = string.format("%s got %s resources from a departed teammate.", TGNS.GetPlayerName(player), math.floor(resources))
-	if math.floor(resources) > 0 then
+	if math.floor(resources) > 0 and Shine.GetGamemode() == "ns2" then
 		md:ToPlayerNotifyInfo(player, message)
 		md:ToAdminConsole(message)
 	end
