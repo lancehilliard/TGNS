@@ -17,17 +17,22 @@ function Plugin:Initialise()
         return MaxWidth
     end
 
-    local originalWordWrapFunction = WordWrap
-    WordWrap = function( Label, Text, XPos, MaxWidth, MaxLines )
-        MaxWidth = getMaxWidth(MaxWidth)
-        return originalWordWrapFunction( Label, Text, XPos, MaxWidth, MaxLines )
+    local originalGUIChatAddMessage = GUIChat.AddMessage
+    GUIChat.AddMessage = function(guiChatSelf, playerColor, playerName, messageColor, messageText, isCommander, isRookie)
+        local originalWordWrapFunction = WordWrap
+        WordWrap = function( Label, Text, XPos, MaxWidth, MaxLines )
+            MaxWidth = getMaxWidth(MaxWidth)
+            return originalWordWrapFunction( Label, Text, XPos, MaxWidth, MaxLines )
+        end
+        originalGUIChatAddMessage(guiChatSelf, playerColor, playerName, messageColor, messageText, isCommander, isRookie)
+        WordWrap = originalWordWrapFunction
     end
 
-    local originalTextWrapFunction = TextWrap
-    TextWrap = function( Label, Text, XPos, MaxWidth )
-        MaxWidth = getMaxWidth(MaxWidth)
-        return originalTextWrapFunction( Label, Text, XPos, MaxWidth )
-    end
+    -- local originalTextWrapFunction = TextWrap
+    -- TextWrap = function( Label, Text, XPos, MaxWidth )
+    --     MaxWidth = getMaxWidth(MaxWidth)
+    --     return originalTextWrapFunction( Label, Text, XPos, MaxWidth )
+    -- end
 
 	return true
 end
