@@ -407,7 +407,7 @@ local function OnCommandWinOrLose(client)
 			md:ToPlayerNotifyError(player, "Game is not in progress.")
 		end
 	else
-		md:ToPlayerNotifyError(player, "WinOrLose is not supported in this game mode. Use X->Concede.")
+		md:ToPlayerNotifyError(player, "WinOrLose is not supported in this game mode.")
 	end
 end
 
