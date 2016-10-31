@@ -5,7 +5,7 @@ function Plugin:Initialise()
 
 	local originalGUIScoreboardSendKeyEvent = GUIScoreboard.SendKeyEvent
 	GUIScoreboard.SendKeyEvent = function(guiScoreboardSelf, key, down)
-		if (GetIsBinding(key, "Reload")) and down and TGNS.Has({kTeamInvalid, kTeamReadyRoom}, Client.GetLocalClientTeamNumber()) then
+		if (GetIsBinding(key, "Reload")) and down and TGNS.Has({kTeamInvalid, kTeamReadyRoom}, Client.GetLocalClientTeamNumber()) and not ChatUI_EnteringChatMessage() then
 			TGNS.SendNetworkMessage(Plugin.SPRAY_REQUESTED, {})
 		end
 		return originalGUIScoreboardSendKeyEvent(guiScoreboardSelf, key, down)
