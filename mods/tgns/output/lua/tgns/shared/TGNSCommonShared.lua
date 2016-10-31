@@ -346,7 +346,7 @@ function TGNS.UrlEncode(str) PROFILE("TGNS.UrlEncode")
 end
 
 function TGNS.PrintTable(t, tableDescription, printAction) PROFILE("TGNS.PrintTable")
-	if not TGNS.IsProduction() then
+	-- if not TGNS.IsProduction() then
 		printAction = printAction and printAction or function(x) Shared.Message(x) end
 		local keys = {}
 		for key,value in pairs(t) do table.insert(keys, key) end
@@ -354,5 +354,5 @@ function TGNS.PrintTable(t, tableDescription, printAction) PROFILE("TGNS.PrintTa
 		TGNS.DoFor(keys, function(k)
 			printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
 		end)
-	end
+	-- end
 end
