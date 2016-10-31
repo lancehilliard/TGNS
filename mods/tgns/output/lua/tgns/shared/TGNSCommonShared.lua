@@ -163,6 +163,11 @@ function TGNS.ConvertSecondsToMinutes(seconds)
 	return result
 end
 
+function TGNS.ConvertSecondsToHours(seconds)
+	local result = TGNS.ConvertSecondsToMinutes(seconds) / 60
+	return result
+end
+
 function TGNS.ConvertMinutesToSeconds(minutes)
 	local result = minutes * 60
 	return result
