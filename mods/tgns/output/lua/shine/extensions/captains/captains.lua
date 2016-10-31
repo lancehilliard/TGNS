@@ -2326,38 +2326,42 @@ if Server or Client then
 
 			local willCaptainsCommand = self:BindCommand("sh_iwillcaptain", "iwillcaptain", function(client)
 				local player = TGNS.GetPlayer(client)
-				if captainsModeEnabled then
-					md:ToPlayerNotifyError(player, "Captains Game is already active.")
-				-- elseif TGNS.IsGameInProgress() and not TGNS.ClientIsOnPlayingTeam(client) then
-				-- 	md:ToPlayerNotifyError(player, "You must be on a team to opt-in during gameplay.")
-				elseif #getPlayingClients() < MIN_CAPTAINS_PLAYERS and not rolandHasBeenUsed then
-					md:ToPlayerNotifyError(player, string.format("The combined player count of both teams must be %s+ before you can offer to Captain.", MIN_CAPTAINS_PLAYERS))
-				elseif mayVoteYet ~= true and not TGNS.IsGameInProgress() then
-					md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment. Console for details.")
-					md:ToClientConsole(client, "Captains voting is restricted for a minute or two after a mapchange to")
-					md:ToClientConsole(client, "allow all players to connect and be able to fully participate in votes.")
-					md:ToClientConsole(client, "Admins can also restrict votes manually, but that typically only happens during")
-					md:ToClientConsole(client, "our passworded Captains Night events on Friday nights (TGNS forums for details).")
-				elseif TGNS.IsPlayerSpectator(player) then
-					md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
-				elseif Shine.Plugins.mapvote:VoteStarted() then
-					md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
-				elseif votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
-					md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
-				elseif TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 15 and votesAllowedUntil ~= math.huge then
-					md:ToPlayerNotifyError(player, "Game duration > 0:15. It's too late this game to opt-in as a Captain.")
-				else
-					local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
-					if #playingReadyCaptainClients < 2 or TGNS.Has(readyCaptainClients, client) then
-						addReadyCaptainClient(client)
+				if Shine.GetGamemode() == "ns2" then
+					if captainsModeEnabled then
+						md:ToPlayerNotifyError(player, "Captains Game is already active.")
+					-- elseif TGNS.IsGameInProgress() and not TGNS.ClientIsOnPlayingTeam(client) then
+					-- 	md:ToPlayerNotifyError(player, "You must be on a team to opt-in during gameplay.")
+					elseif #getPlayingClients() < MIN_CAPTAINS_PLAYERS and not rolandHasBeenUsed then
+						md:ToPlayerNotifyError(player, string.format("The combined player count of both teams must be %s+ before you can offer to Captain.", MIN_CAPTAINS_PLAYERS))
+					elseif mayVoteYet ~= true and not TGNS.IsGameInProgress() then
+						md:ToPlayerNotifyError(player, "Captains voting is restricted at the moment. Console for details.")
+						md:ToClientConsole(client, "Captains voting is restricted for a minute or two after a mapchange to")
+						md:ToClientConsole(client, "allow all players to connect and be able to fully participate in votes.")
+						md:ToClientConsole(client, "Admins can also restrict votes manually, but that typically only happens during")
+						md:ToClientConsole(client, "our passworded Captains Night events on Friday nights (TGNS forums for details).")
+					elseif TGNS.IsPlayerSpectator(player) then
+						md:ToPlayerNotifyError(player, "You may not use this command as a spectator.")
+					elseif Shine.Plugins.mapvote:VoteStarted() then
+						md:ToPlayerNotifyError(player, "Captains Game requests cannot be managed during a map vote.")
+					elseif votesAllowedUntil ~= nil and votesAllowedUntil < TGNS.GetSecondsSinceMapLoaded() then
+						md:ToPlayerNotifyError(player, "This map's Captains vote failed to pass.")
+					elseif TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > 15 and votesAllowedUntil ~= math.huge then
+						md:ToPlayerNotifyError(player, "Game duration > 0:15. It's too late this game to opt-in as a Captain.")
 					else
-						md:ToPlayerNotifyError(player, "Two players have already opted in to be Captain.")
-						local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
-						if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
-							md:ToPlayerNotifyError(player, "Opting you in as non-Captain instead...")
-							addReadyPlayerClient(client)
+						local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
+						if #playingReadyCaptainClients < 2 or TGNS.Has(readyCaptainClients, client) then
+							addReadyCaptainClient(client)
+						else
+							md:ToPlayerNotifyError(player, "Two players have already opted in to be Captain.")
+							local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
+							if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
+								md:ToPlayerNotifyError(player, "Opting you in as non-Captain instead...")
+								addReadyPlayerClient(client)
+							end
 						end
 					end
+				else
+					md:ToPlayerNotifyError(player, "Not supported in this game mode.")
 				end
 			end)
 			willCaptainsCommand:Help("Tell you're willing to lead a team in a Captains Game.")
