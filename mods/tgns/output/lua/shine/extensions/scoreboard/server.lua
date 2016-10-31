@@ -61,6 +61,9 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 	if sourcePlayer and targetPlayer then
 		local sourceClient = TGNS.GetClient(sourcePlayer)
 		local sourcePlayerHasWelder = (TGNS.IsPlayerAlive(sourcePlayer) and TGNS.PlayerIsMarine(sourcePlayer)) and sourcePlayer:GetWeapon(Welder.kMapName) ~= nil
+		if Shine.GetGamemode() == "Infested" then
+			sourcePlayerHasWelder = false
+		end
 		local sourcePlayerHasMines = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(LayMines.kMapName) ~= nil
 		local sourcePlayerHasClusterGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(ClusterGrenadeThrower.kMapName) ~= nil
 		local sourcePlayerHasGasGrenades = TGNS.IsPlayerAlive(sourcePlayer) and sourcePlayer:GetWeapon(GasGrenadeThrower.kMapName) ~= nil
