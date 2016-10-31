@@ -69,22 +69,22 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	end
 end
 
-function Plugin:PlayerSay(client, networkMessage)
-	local cancel = false
-	local teamOnly = networkMessage.teamOnly
-	local message = StringTrim(networkMessage.message)
-	if not teamOnly then
-		TGNS.PlayerAction(client, function(p)
-			if TGNS.IsPlayerSpectator(p) and not TGNS.IsClientAdmin(client) then
-				md:ToPlayerNotifyError(p, "Spectators may chat only to other Spectators.")
-				cancel = true
-			end
-		end)
-	end
-	if cancel then
-		return ""
-	end
-end
+-- function Plugin:PlayerSay(client, networkMessage)
+-- 	local cancel = false
+-- 	local teamOnly = networkMessage.teamOnly
+-- 	local message = StringTrim(networkMessage.message)
+-- 	if not teamOnly then
+-- 		TGNS.PlayerAction(client, function(p)
+-- 			if TGNS.IsPlayerSpectator(p) and not TGNS.IsClientAdmin(client) then
+-- 				md:ToPlayerNotifyError(p, "Spectators may chat only to other Spectators.")
+-- 				cancel = true
+-- 			end
+-- 		end)
+-- 	end
+-- 	if cancel then
+-- 		return ""
+-- 	end
+-- end
 
 function Plugin:Initialise()
     self.Enabled = true
