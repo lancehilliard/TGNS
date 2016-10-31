@@ -1050,37 +1050,41 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 
 
 	local unsentRequests = TGNS.Where(scheduledRequests, function(r) return r.sent ~= true end)
-	if #unsentRequests > 0 and TGNS.ShouldProcessHttpRequests then
+	if #unsentRequests > 0 then
 		local unsentScheduledRequests = TGNS.Take(unsentRequests, TGNS.Config and TGNS.Config.HttpRequestsPerSecond or 1)
 		TGNS.DoFor(unsentScheduledRequests, function(r)
-			r.sent = true
-			-- local requestStartTime = Shared.GetTime()
-			if TGNS.LogHttp then -- or not TGNS.IsProduction() then
-				TGNS.DebugPrint(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url), true)
-			end
-			numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
-			Shared.SendHTTPRequest(r.url, "GET", function(response)
-				-- local requestDuration = Shared.GetTime() - requestStartTime
-				TGNS.RemoveAllMatching(scheduledRequests, r)
-				if #scheduledRequests == 0 then
-					waitingCountDebugLogger(0)
+			if TGNS.ShouldProcessHttpRequests then
+				r.sent = true
+				-- local requestStartTime = Shared.GetTime()
+				if TGNS.LogHttp then -- or not TGNS.IsProduction() then
+					TGNS.DebugPrint(string.format("TGNSCommonServer debug> http request #%s: %s", numberOfHttpRequestsMade, r.url), true)
 				end
-				r.callback(response)
-				-- if requestDuration > 1 then
-				-- 	local urlWithoutScheme = TGNS.Substring(r.url, 8)
-				-- 	local documentBaseIndex = TGNS.IndexOf(urlWithoutScheme, "/")
-				-- 	local queryStringBaseIndex = TGNS.IndexOf(urlWithoutScheme, "?") + 1
-				-- 	local partialUrl = TGNS.Substring(urlWithoutScheme, documentBaseIndex, queryStringBaseIndex - documentBaseIndex)
-				-- 	local partialQuery = TGNS.Substring(urlWithoutScheme, queryStringBaseIndex)
-				-- 	if TGNS.IndexOf(r.url, "4155") > 0 then
-				-- 		partialQuery = TGNS.Substring(urlWithoutScheme, queryStringBaseIndex + 27)
-				-- 		local ampersandIndex = TGNS.IndexOf(partialQuery, "&")
-				-- 		partialQuery = TGNS.Substring(partialQuery, ampersandIndex + 1)
-				-- 	end
-				-- 	local debugUrl = string.format("%s%s", partialUrl, partialQuery)
-				-- 	TGNS.DebugPrint(string.format("HTTP Request duration: %s seconds waiting for %s", requestDuration, debugUrl))
-				-- end
-			end)
+				numberOfHttpRequestsMade = numberOfHttpRequestsMade + 1
+				Shared.SendHTTPRequest(r.url, "GET", function(response)
+					-- local requestDuration = Shared.GetTime() - requestStartTime
+					TGNS.RemoveAllMatching(scheduledRequests, r)
+					if #scheduledRequests == 0 then
+						waitingCountDebugLogger(0)
+					end
+					r.callback(response)
+					-- if requestDuration > 1 then
+					-- 	local urlWithoutScheme = TGNS.Substring(r.url, 8)
+					-- 	local documentBaseIndex = TGNS.IndexOf(urlWithoutScheme, "/")
+					-- 	local queryStringBaseIndex = TGNS.IndexOf(urlWithoutScheme, "?") + 1
+					-- 	local partialUrl = TGNS.Substring(urlWithoutScheme, documentBaseIndex, queryStringBaseIndex - documentBaseIndex)
+					-- 	local partialQuery = TGNS.Substring(urlWithoutScheme, queryStringBaseIndex)
+					-- 	if TGNS.IndexOf(r.url, "4155") > 0 then
+					-- 		partialQuery = TGNS.Substring(urlWithoutScheme, queryStringBaseIndex + 27)
+					-- 		local ampersandIndex = TGNS.IndexOf(partialQuery, "&")
+					-- 		partialQuery = TGNS.Substring(partialQuery, ampersandIndex + 1)
+					-- 	end
+					-- 	local debugUrl = string.format("%s%s", partialUrl, partialQuery)
+					-- 	TGNS.DebugPrint(string.format("HTTP Request duration: %s seconds waiting for %s", requestDuration, debugUrl))
+					-- end
+				end)
+			else
+				TGNS.DebugPrint(string.format("Not allowed to SendHTTPRequest for: %s", r.url))
+			end
 		end)
 		waitingCountDebugLogger(#unsentRequests)
 	end
