@@ -15,7 +15,7 @@ TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
 TGNS.LogHttp = false
 
-function TGNS.SendChatMessage(fromPlayer, toPlayers, teamOnly)
+function TGNS.SendChatMessage(fromPlayer, toPlayers, teamOnly, message)
 	TGNS.DoFor(toPlayers, function(toPlayer)
         Server.SendNetworkMessage(toPlayer, "Chat", BuildChatMessage(teamOnly, TGNS.GetPlayerName(fromPlayer), TGNS.PlayerIsOnPlayingTeam(fromPlayer) and fromPlayer:GetLocationId() or TGNS.READYROOM_LOCATION_ID, fromPlayer:GetTeamNumber(), fromPlayer:GetTeamType(), message), true)
     end)
