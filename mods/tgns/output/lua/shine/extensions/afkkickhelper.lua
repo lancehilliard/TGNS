@@ -74,6 +74,9 @@ function Plugin:Initialise()
 	processAfkPlayers = function()
 		local clientIsVulnerableToAfk = function(c)
 			local result = TGNS.ClientIsOnPlayingTeam(c) or (Server.GetNumPlayersTotal() >= Server.GetMaxPlayers() - 2 and TGNS.IsClientSpectator(c) and #TGNS.Where(TGNS.GetClientList(), TGNS.IsClientSpectator) >= Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
+			if result and Shine.GetGamemode() == "Infested" and TGNS.ClientIsMarine(c) and not TGNS.IsClientAlive(c) then
+				result = false
+			end
 			return result
 		end
 		TGNS.DoFor(TGNS.GetHumanClientList(), function(c)
