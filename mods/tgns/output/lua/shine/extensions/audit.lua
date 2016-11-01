@@ -142,7 +142,6 @@ function Plugin:Initialise()
 	end)
 	TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam, gameDurationInSeconds)
 		TGNS.DoFor(clients, addClientClassDuration)
-		TGNS.DebugPrint(string.format("FullGamePlayed[%s]", currentGame["startTimeSeconds"]))
 		local gamerules = GetGamerules()
     	local gameData = {}
     	gameData.StartTimeSeconds = currentGame["startTimeSeconds"]
