@@ -1288,9 +1288,13 @@ function Plugin:Initialise()
 								local serverInfo = response[1]
 								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
 									local delayInSeconds = 7 + math.random() * 3
-									Shine.Timer.Simple(delayInSeconds, function() Shared.ConsoleCommand("connect tgns.tacticalgamer.com") end)
-									function hudTexts.reconnectingText:UpdateText()
-										self.Obj:SetText("Game server crashed. Reconnecting now. Please wait.")
+									Shine.Timer.Simple(delayInSeconds, function() 
+										Shared.ConsoleCommand("connect tgns.tacticalgamer.com")
+									end)
+									if hudTexts.reconnectingText then
+										function hudTexts.reconnectingText:UpdateText()
+											self.Obj:SetText("Game server crashed. Reconnecting now. Please wait.")
+										end
 									end
 								else
 									-- Shared.Message("DEBUG mapName: " .. tostring(serverInfo.mapName))
@@ -1301,9 +1305,13 @@ function Plugin:Initialise()
 		    	end
 		    else
 		    	has.usableConnectionAt = Shared.GetTime()
+		    	Shine.ScreenText.Remove( "Reconnecting" )
+		    	hudTexts.reconnectingText = nil
 		    end
 	    else
 	    	has.usableConnectionAt = Shared.GetTime()
+	    	Shine.ScreenText.Remove( "Reconnecting" )
+	    	hudTexts.reconnectingText = nil
 	    end
 
 	end
