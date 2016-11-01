@@ -25,6 +25,18 @@ function TGNS.ReplaceClassMethod(className, methodName, method)
 	return Shine.ReplaceClassMethod(className, methodName, method)
 end
 
+function TGNS.DoWithConfig(action, property)
+	local doAction
+	doAction = function()
+		if TGNS.Config and (property == nil or TGNS.Config[property] ~= nil) then
+			action()
+		else
+			TGNS.ScheduleAction(0, doAction)
+		end
+	end
+	doAction()
+end
+
 function TGNS.GetTeamRgb(teamNumber)
 	local r, g, b
 	if teamNumber == kMarineTeamType or teamNumber == kAlienTeamType then
