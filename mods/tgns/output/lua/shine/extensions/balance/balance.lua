@@ -349,17 +349,21 @@ if Server or Client then
 		-- end
 
 		function Plugin:EndGame(gamerules, winningTeam)
-			mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
-			preventTeamJoinMessagesDueToRecentEndGame = true
-			TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
-				preventTeamJoinMessagesDueToRecentEndGame = false
-			end)
-			-- harvesterDecayEnabled = false
+			if Shine.GetGamemode() == "ns2" then
+				mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
+				preventTeamJoinMessagesDueToRecentEndGame = true
+				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+					preventTeamJoinMessagesDueToRecentEndGame = false
+				end)
+				-- harvesterDecayEnabled = false
+			end
 		end
 
 		function Plugin:MapChange()
-			if self.LaneInfosError then
-				TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s", TGNS.GetCurrentMapName()))
+			if Shine.GetGamemode() == "ns2" then
+				if self.LaneInfosError then
+					TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s", TGNS.GetCurrentMapName()))
+				end
 			end
 		end
 
@@ -426,45 +430,47 @@ if Server or Client then
 		end
 
 		function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflictorEntity, point, direction)
-			if TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() < TGNS.ConvertMinutesToSeconds(3) then
-				if victimEntity then
-					local victimClient = TGNS.GetClient(victimEntity)
-					if victimClient then
-						TGNS.ScheduleAction(3, function()
-							if Shine:IsValidClient(victimClient) then
-								local victimPlayer = TGNS.GetPlayer(victimClient)
-								local playerIsAboutToSpawn
-								if TGNS.ClientIsMarine(victimClient) then
-									playerIsAboutToSpawn = victimPlayer.GetIsRespawning and victimPlayer:GetIsRespawning()
-								elseif TGNS.ClientIsAlien(victimClient) then
-									playerIsAboutToSpawn = victimPlayer:GetTeam():GetActiveEggCount() >= 2
-								end
-								if playerIsAboutToSpawn then
-									if TGNS.IsGameInProgress() then
-										if TGNS.GetCurrentGameDurationInSeconds() < TGNS.ConvertMinutesToSeconds(3) then
-											local minimumDelayBetweenAdvisories = 60
-											lanesAdvisoryLastShownAt[victimClient] = lanesAdvisoryLastShownAt[victimClient] or (minimumDelayBetweenAdvisories * -1)
-											if lanesAdvisoryLastShownAt[victimClient] < Shared.GetTime() - minimumDelayBetweenAdvisories then
-												local openLaneMessage = self:GetOpenLaneMessage(victimPlayer)
-												if openLaneMessage then
-													lanesMd:ToPlayerNotifyInfo(victimPlayer, openLaneMessage)
-													lanesAdvisoryLastShownAt[victimClient] = Shared.GetTime()
+			if Shine.GetGamemode() == "ns2" then
+				if TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() < TGNS.ConvertMinutesToSeconds(3) then
+					if victimEntity then
+						local victimClient = TGNS.GetClient(victimEntity)
+						if victimClient then
+							TGNS.ScheduleAction(3, function()
+								if Shine:IsValidClient(victimClient) then
+									local victimPlayer = TGNS.GetPlayer(victimClient)
+									local playerIsAboutToSpawn
+									if TGNS.ClientIsMarine(victimClient) then
+										playerIsAboutToSpawn = victimPlayer.GetIsRespawning and victimPlayer:GetIsRespawning()
+									elseif TGNS.ClientIsAlien(victimClient) then
+										playerIsAboutToSpawn = victimPlayer:GetTeam():GetActiveEggCount() >= 2
+									end
+									if playerIsAboutToSpawn then
+										if TGNS.IsGameInProgress() then
+											if TGNS.GetCurrentGameDurationInSeconds() < TGNS.ConvertMinutesToSeconds(3) then
+												local minimumDelayBetweenAdvisories = 60
+												lanesAdvisoryLastShownAt[victimClient] = lanesAdvisoryLastShownAt[victimClient] or (minimumDelayBetweenAdvisories * -1)
+												if lanesAdvisoryLastShownAt[victimClient] < Shared.GetTime() - minimumDelayBetweenAdvisories then
+													local openLaneMessage = self:GetOpenLaneMessage(victimPlayer)
+													if openLaneMessage then
+														lanesMd:ToPlayerNotifyInfo(victimPlayer, openLaneMessage)
+														lanesAdvisoryLastShownAt[victimClient] = Shared.GetTime()
+													end
 												end
-											end
-										else
-											local minimumDelayBetweenAdvisories = 180
-											if TGNS.ClientIsAlien(victimClient) then
-												local personalResources = TGNS.GetClientResources(victimClient)
-												onosBalanceAdvisoryLastShownAt[victimClient] = onosBalanceAdvisoryLastShownAt[victimClient] or (minimumDelayBetweenAdvisories * -1)
-												if personalResources >= kOnosCost * .72 and onosBalanceAdvisoryLastShownAt[victimClient] < Shared.GetTime() - minimumDelayBetweenAdvisories then
-													md:ToPlayerNotifyInfo(victimPlayer, onosBalanceAdvisory)
+											else
+												local minimumDelayBetweenAdvisories = 180
+												if TGNS.ClientIsAlien(victimClient) then
+													local personalResources = TGNS.GetClientResources(victimClient)
+													onosBalanceAdvisoryLastShownAt[victimClient] = onosBalanceAdvisoryLastShownAt[victimClient] or (minimumDelayBetweenAdvisories * -1)
+													if personalResources >= kOnosCost * .72 and onosBalanceAdvisoryLastShownAt[victimClient] < Shared.GetTime() - minimumDelayBetweenAdvisories then
+														md:ToPlayerNotifyInfo(victimPlayer, onosBalanceAdvisory)
+													end
 												end
 											end
 										end
 									end
 								end
-							end
-						end)
+							end)
+						end
 					end
 				end
 			end
@@ -473,9 +479,9 @@ if Server or Client then
 		function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 			local client = TGNS.GetClient(player)
 			if not balanceInProgress and not preventTeamJoinMessagesDueToRecentEndGame and (TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber)) and not TGNS.GetIsClientVirtual(client) then
-				local playerList = TGNS.GetPlayerList()
-				local marinesCount = #TGNS.GetMarineClients(playerList)
-				local aliensCount = #TGNS.GetAlienClients(playerList)
+				-- local playerList = TGNS.GetPlayerList()
+				-- local marinesCount = #TGNS.GetMarineClients(playerList)
+				-- local aliensCount = #TGNS.GetAlienClients(playerList)
 				md:ToAllConsole(string.format("%s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
 				-- TGNS.DebugPrint(string.format("%s: %s -> %s (Marines: %s; Aliens: %s)", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player), marinesCount, aliensCount))
 			end
@@ -489,36 +495,38 @@ if Server or Client then
 		end
 
 		function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
-			if not (force or shineForce) then
-				if balanceInProgress and not (TGNS.IsTeamNumberSpectator(newTeamNumber) or TGNS.IsPlayerSpectator(player)) then
-					md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
-					return false
+			if Shine.GetGamemode() == "ns2" then
+				if not (force or shineForce) then
+					if balanceInProgress and not (TGNS.IsTeamNumberSpectator(newTeamNumber) or TGNS.IsPlayerSpectator(player)) then
+						md:ToPlayerNotifyError(player, "Balance is currently assigning players to teams.")
+						return false
+					end
+					-- local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
+					-- local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
+					-- if BalanceStartedRecently() and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
+					-- 	local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
+					-- 	if playerTeamIsSizedCorrectly then
+					-- 		local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
+					-- 		md:ToPlayerNotifyError(player, message)
+					-- 		return false
+					-- 	end
+					-- end
+
+
+					-- if newTeamNumber == kAlienTeamType and extraShouldBeEnforcedToMarines() then
+					-- 	md:ToPlayerNotifyError(player, "Marines get the extra player on this server. If you can quickly and")
+					-- 	md:ToPlayerNotifyError(player, "politely persuade anyone to go Marines for you, feel free. Don't harass.")
+					-- 	TGNS.RespawnPlayer(player)
+					-- 	return false
+					-- 	--return true, kMarineTeamType
+					-- end
+
 				end
-				-- local playerIsOnPlayingTeam = TGNS.PlayerIsOnPlayingTeam(player)
-				-- local playerMustStayOnPlayingTeamUntilBalanceIsOver = not TGNS.ClientAction(player, TGNS.IsClientAdmin)
-				-- if BalanceStartedRecently() and playerIsOnPlayingTeam and playerMustStayOnPlayingTeamUntilBalanceIsOver then
-				-- 	local playerTeamIsSizedCorrectly = not TGNS.PlayerTeamIsOverbalanced(player, TGNS.GetPlayerList())
-				-- 	if playerTeamIsSizedCorrectly then
-				-- 		local message = string.format("%s may not switch teams within %s seconds of Balance.", TGNS.GetPlayerName(player), RECENT_BALANCE_DURATION_IN_SECONDS)
-				-- 		md:ToPlayerNotifyError(player, message)
-				-- 		return false
-				-- 	end
-				-- end
-
-
-				-- if newTeamNumber == kAlienTeamType and extraShouldBeEnforcedToMarines() then
-				-- 	md:ToPlayerNotifyError(player, "Marines get the extra player on this server. If you can quickly and")
-				-- 	md:ToPlayerNotifyError(player, "politely persuade anyone to go Marines for you, feel free. Don't harass.")
-				-- 	TGNS.RespawnPlayer(player)
-				-- 	return false
-				-- 	--return true, kMarineTeamType
-				-- end
-
+			    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
+				if TGNS.IsPlayerSpectator(player) and TGNS.IsPlayerAFK(player) and serverIsUpdatingToReadyRoom then
+			    	return false
+			   	end
 			end
-		    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
-			if TGNS.IsPlayerSpectator(player) and TGNS.IsPlayerAFK(player) and serverIsUpdatingToReadyRoom then
-		    	return false
-		   	end
 		end
 
 		updateTotalGamesPlayedCache = function(client, totalGamesPlayed)
@@ -558,18 +566,22 @@ if Server or Client then
 		end
 
 		function Plugin:ClientConfirmConnect(client)
-			if not firstClientProcessed then
-				mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
-				firstClientProcessed = true
+
+			if Shine.GetGamemode() == "ns2" then
+				if not firstClientProcessed then
+					mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
+					firstClientProcessed = true
+				end
+				local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #(GetPlayerBalance(p).scoresPerMinute or {}) < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
+				if playerHasTooFewLocalScoresPerMinute then
+					local steamId = TGNS.GetClientSteamId(client)
+					-- TGNSNs2StatsProxy.AddSteamId(steamId)
+				end
+				if balanceCache[client] == nil then
+					refreshBalanceData(client)
+				end
 			end
-			local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #(GetPlayerBalance(p).scoresPerMinute or {}) < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
-			if playerHasTooFewLocalScoresPerMinute then
-				local steamId = TGNS.GetClientSteamId(client)
-				-- TGNSNs2StatsProxy.AddSteamId(steamId)
-			end
-			if balanceCache[client] == nil then
-				refreshBalanceData(client)
-			end
+
 		end
 
 		-- local function toggleBucketClient(sourceClient, targetClient, bucketName)
@@ -624,27 +636,29 @@ if Server or Client then
 
 		function Plugin:CreateCommands()
 
-			local balanceCommand = self:BindCommand("sh_balance", "balance", svBalance)
-			balanceCommand:Help("Balance players across teams.")
+			if Shine.GetGamemode() == "ns2" then
+				local balanceCommand = self:BindCommand("sh_balance", "balance", svBalance)
+				balanceCommand:Help("Balance players across teams.")
 
-			local balanceCommand = self:BindCommand("sh_forcebalance", "forcebalance", function(client) svBalance(client, true) end)
-			balanceCommand:Help("Balance players across teams (after forced RR).")
+				local balanceCommand = self:BindCommand("sh_forcebalance", "forcebalance", function(client) svBalance(client, true) end)
+				balanceCommand:Help("Balance players across teams (after forced RR).")
 
-			-- local commandersCommand = self:BindCommand("sh_comm", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "Commanders") end)
-			-- commandersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
-			-- commandersCommand:Help("<player> Toggle player in Comm bucket")
+				-- local commandersCommand = self:BindCommand("sh_comm", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "Commanders") end)
+				-- commandersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+				-- commandersCommand:Help("<player> Toggle player in Comm bucket")
 
-			-- local bestPlayersCommand = self:BindCommand("sh_best", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BestPlayers") end)
-			-- bestPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
-			-- bestPlayersCommand:Help("<player> Toggle player in Best bucket")
+				-- local bestPlayersCommand = self:BindCommand("sh_best", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BestPlayers") end)
+				-- bestPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+				-- bestPlayersCommand:Help("<player> Toggle player in Best bucket")
 
-			-- local betterPlayersCommand = self:BindCommand("sh_better", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BetterPlayers") end)
-			-- betterPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
-			-- betterPlayersCommand:Help("<player> Toggle player in Better bucket")
+				-- local betterPlayersCommand = self:BindCommand("sh_better", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "BetterPlayers") end)
+				-- betterPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+				-- betterPlayersCommand:Help("<player> Toggle player in Better bucket")
 
-			-- local goodPlayersCommand = self:BindCommand("sh_good", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "GoodPlayers") end)
-			-- goodPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
-			-- goodPlayersCommand:Help("<player> Toggle player in Good bucket")
+				-- local goodPlayersCommand = self:BindCommand("sh_good", nil, function(client, playerPredicate) toggleBucketPlayer(client, playerPredicate, "GoodPlayers") end)
+				-- goodPlayersCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
+				-- goodPlayersCommand:Help("<player> Toggle player in Good bucket")
+			end
 
 
 
@@ -669,53 +683,56 @@ if Server or Client then
 
 		TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam)
 
-			local addWinToBalance = function(balance)
-				balance.wins = balance.wins + 1
-				balance.total = balance.total + 1
-				if balance.wins + balance.losses > 100 then
-					balance.losses = balance.losses - 1
-				end
-			end
-			local addLossToBalance = function(balance)
-				balance.losses = balance.losses + 1
-				balance.total = balance.total + 1
-				if balance.wins + balance.losses > 100 then
-					balance.wins = balance.wins - 1
-				end
-			end
-
-			TGNS.DoFor(clients, function(c)
-				local player = TGNS.GetPlayer(c)
-				local changeBalanceFunction = TGNS.PlayerIsOnTeam(player, winningTeam) and addWinToBalance or addLossToBalance
-				local steamId = TGNS.GetClientSteamId(c)
-				pdr:Load(steamId, function(loadResponse)
-					if loadResponse.success then
-						local balance = loadResponse.value
-						changeBalanceFunction(balance)
-						AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
-						pdr:Save(balance, function(saveResponse)
-							if saveResponse.success then
-								if Shine:IsValidClient(c) then
-									updateTotalGamesPlayedCache(c, balance.total)
-									balanceCache[c] = loadResponse.value
-									
-
-
-									balanceCacheData = Shine.LoadJSONFile(balanceTempfilePath) or {}
-									TGNS.RemoveAllWhere(balanceCacheData, function(d) return d.steamId == steamId end)
-									table.insert(balanceCacheData, {lastCachedWhen=TGNS.GetSecondsSinceEpoch(),steamId=steamId,data=balanceCache[c]})
-									Shine.SaveJSONFile(balanceCacheData, balanceTempfilePath)
-
-								end
-							else
-								TGNS.DebugPrint("balance ERROR: unable to save data", true)
-							end
-						end)
-					else
-						TGNS.DebugPrint("balance ERROR: unable to access data", true)
+			if Shine.GetGamemode() == "ns2" then
+				local addWinToBalance = function(balance)
+					balance.wins = balance.wins + 1
+					balance.total = balance.total + 1
+					if balance.wins + balance.losses > 100 then
+						balance.losses = balance.losses - 1
 					end
+				end
+				local addLossToBalance = function(balance)
+					balance.losses = balance.losses + 1
+					balance.total = balance.total + 1
+					if balance.wins + balance.losses > 100 then
+						balance.wins = balance.wins - 1
+					end
+				end
+
+				TGNS.DoFor(clients, function(c)
+					local player = TGNS.GetPlayer(c)
+					local changeBalanceFunction = TGNS.PlayerIsOnTeam(player, winningTeam) and addWinToBalance or addLossToBalance
+					local steamId = TGNS.GetClientSteamId(c)
+					pdr:Load(steamId, function(loadResponse)
+						if loadResponse.success then
+							local balance = loadResponse.value
+							changeBalanceFunction(balance)
+							AddScorePerMinuteData(balance, TGNS.GetPlayerScorePerMinute(player))
+							pdr:Save(balance, function(saveResponse)
+								if saveResponse.success then
+									if Shine:IsValidClient(c) then
+										updateTotalGamesPlayedCache(c, balance.total)
+										balanceCache[c] = loadResponse.value
+										
+
+
+										balanceCacheData = Shine.LoadJSONFile(balanceTempfilePath) or {}
+										TGNS.RemoveAllWhere(balanceCacheData, function(d) return d.steamId == steamId end)
+										table.insert(balanceCacheData, {lastCachedWhen=TGNS.GetSecondsSinceEpoch(),steamId=steamId,data=balanceCache[c]})
+										Shine.SaveJSONFile(balanceCacheData, balanceTempfilePath)
+
+									end
+								else
+									TGNS.DebugPrint("balance ERROR: unable to save data", true)
+								end
+							end)
+						else
+							TGNS.DebugPrint("balance ERROR: unable to access data", true)
+						end
+					end)
 				end)
-			end)
+			end
+
 		end)
 		-- npdr = TGNSDataRepository.Create("notedplayers", function(data)
 	 --        data.Commanders = data.Commanders or {}
@@ -738,11 +755,14 @@ if Server or Client then
 		    --     end
 		    -- end)
 		end)
-		JoinRandomTeam = function(player)
-	        local team1Players = GetGamerules():GetTeam(kTeam1Index):GetNumPlayers()
-	        local team2Players = GetGamerules():GetTeam(kTeam2Index):GetNumPlayers()
-	        Server.ClientCommand(player, team2Players < team1Players and "jointeamtwo" or "jointeamone")
-	    end
+
+		if Shine.GetGamemode() == "ns2" then
+			JoinRandomTeam = function(player)
+		        local team1Players = GetGamerules():GetTeam(kTeam1Index):GetNumPlayers()
+		        local team2Players = GetGamerules():GetTeam(kTeam2Index):GetNumPlayers()
+		        Server.ClientCommand(player, team2Players < team1Players and "jointeamtwo" or "jointeamone")
+		    end
+		end
 
 	    -- TGNS.ScheduleAction(10, function()
 	    -- 		local minutesToDecayFullArmorToNoArmor = 4.5
@@ -785,27 +805,29 @@ if Server or Client then
 		Shine.SaveJSONFile(balanceCacheData, balanceTempfilePath)
 
 
-    	local extraIpCost = kInfantryPortalCost/2
-	    local originalMarineTeamSpawnInitialStructures = MarineTeam.SpawnInitialStructures
-	    MarineTeam.SpawnInitialStructures = function(selfx, techPoint)
-	    	local originalGetNumPlayers = selfx.GetNumPlayers
-	    	-- if selfx:GetNumPlayers() == 8 then
-		    	selfx.GetNumPlayers = function(selfy)
-		    		return originalGetNumPlayers(selfy) + 9
-		    	end
-		    	selfx:AddTeamResources(-extraIpCost)
-	    	-- end
-	    	local tower, commandStation = originalMarineTeamSpawnInitialStructures(selfx, techPoint)
+		if Shine.GetGamemode() == "ns2" then
+	    	local extraIpCost = kInfantryPortalCost/2
+		    local originalMarineTeamSpawnInitialStructures = MarineTeam.SpawnInitialStructures
+		    MarineTeam.SpawnInitialStructures = function(selfx, techPoint)
+		    	local originalGetNumPlayers = selfx.GetNumPlayers
+		    	-- if selfx:GetNumPlayers() == 8 then
+			    	selfx.GetNumPlayers = function(selfy)
+			    		return originalGetNumPlayers(selfy) + 9
+			    	end
+			    	selfx:AddTeamResources(-extraIpCost)
+		    	-- end
+		    	local tower, commandStation = originalMarineTeamSpawnInitialStructures(selfx, techPoint)
 
-	    	selfx.GetNumPlayers = originalGetNumPlayers
-	    	return tower, commandStation
+		    	selfx.GetNumPlayers = originalGetNumPlayers
+		    	return tower, commandStation
+			end
+
+			TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
+				md:ToAllNotifyInfo(string.format("Marines get extra IP and lose %s resources.", extraIpCost))
+				-- md:ToAllNotifyInfo(onosBalanceAdvisory)
+				-- md:ToAllNotifyInfo("These messages are printed in your console (` key).")
+			end)
 		end
-
-		TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
-			md:ToAllNotifyInfo(string.format("Marines get extra IP and lose %s resources.", extraIpCost))
-			-- md:ToAllNotifyInfo(onosBalanceAdvisory)
-			-- md:ToAllNotifyInfo("These messages are printed in your console (` key).")
-		end)
 
 		-- spawn IPs farther from one another (WIP; build 309)
 		-- local originalGetRandomBuildPosition = GetRandomBuildPosition
