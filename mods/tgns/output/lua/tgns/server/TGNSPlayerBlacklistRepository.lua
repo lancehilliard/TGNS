@@ -39,8 +39,8 @@ function TGNSPlayerBlacklistRepository.Create(blacklistTypeName)
 	return result
 end
 
-local function getBlacklists()
-	if TGNS.Config and TGNS.Config.BlacklistEndpointBaseUrl then
+Event.Hook("MapPostLoad", function()
+	TGNS.DoWithConfig(function()
 		local url = TGNS.Config.BlacklistEndpointBaseUrl
 		TGNS.GetHttpAsync(url, function(blacklistResponseJson)
 			local blacklistResponse = json.decode(blacklistResponseJson) or {}
@@ -56,9 +56,5 @@ local function getBlacklists()
 				TGNS.DebugPrint(string.format("blacklist ERROR: Unable to access blacklist data. url: %s | msg: %s | response: %s | stacktrace: %s", url, blacklistResponse.msg, blacklistResponseJson, blacklistResponse.stacktrace))
 			end
 		end)
-	else
-		TGNS.ScheduleAction(0, getBlacklists)
-	end
-end
-
-Event.Hook("MapPostLoad", getBlacklists)
+	end)
+end)

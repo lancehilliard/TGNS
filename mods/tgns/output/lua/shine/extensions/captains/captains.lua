@@ -2839,32 +2839,26 @@ if Server or Client then
 				-- end)
 			end)
 
-			local fetchRecentCaptainPlayerIds
-			fetchRecentCaptainPlayerIds = function()
-				if TGNS.Config and TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl then
-					local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
-					TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
-						local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
-						if recentCaptainPlayerIdsResponse.success then
-							-- if #recentCaptainPlayerIdsResponse.recentcaptains > 0 then
-							-- 	TGNS.DoFor(recentCaptainPlayerIdsResponse.recentcaptains, function(i)
-							-- 		table.insert(recentCaptainPlayerIds, i)
-							-- 	end)
-							-- end
-							if #recentCaptainPlayerIdsResponse.recentplayers > 0 then
-								TGNS.DoFor(recentCaptainPlayerIdsResponse.recentplayers, function(i)
-									table.insert(recentPlayerPlayerIds, i)
-								end)
-							end
-						else
-							TGNS.DebugPrint(string.format("captains ERROR: Unable to access recentcaptainplayerids data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), recentCaptainPlayerIdsResponse.msg, recentCaptainPlayerIdsResponseJson, recentCaptainPlayerIdsResponse.stacktrace))
+			TGNS.DoWithConfig(function()
+				local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
+				TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
+					local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
+					if recentCaptainPlayerIdsResponse.success then
+						-- if #recentCaptainPlayerIdsResponse.recentcaptains > 0 then
+						-- 	TGNS.DoFor(recentCaptainPlayerIdsResponse.recentcaptains, function(i)
+						-- 		table.insert(recentCaptainPlayerIds, i)
+						-- 	end)
+						-- end
+						if #recentCaptainPlayerIdsResponse.recentplayers > 0 then
+							TGNS.DoFor(recentCaptainPlayerIdsResponse.recentplayers, function(i)
+								table.insert(recentPlayerPlayerIds, i)
+							end)
 						end
-					end)
-				else
-					TGNS.ScheduleAction(0, fetchRecentCaptainPlayerIds)
-				end
-			end
-			fetchRecentCaptainPlayerIds()
+					else
+						TGNS.DebugPrint(string.format("captains ERROR: Unable to access recentcaptainplayerids data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), recentCaptainPlayerIdsResponse.msg, recentCaptainPlayerIdsResponseJson, recentCaptainPlayerIdsResponse.stacktrace))
+					end
+				end)
+			end)
 
 			local originalServerSetPassword = Server.SetPassword
 			local function disallowPasswordAfterMidnightOnSaturdays()

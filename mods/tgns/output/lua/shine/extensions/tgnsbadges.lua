@@ -72,29 +72,24 @@ function Plugin:Initialise()
 	    badgesModIsLoaded = GiveBadge and Shine.GetUpValue(GiveBadge, "sServerBadges") ~= nil
     end)
 
-    local function getBadges()
-    	if TGNS.Config and TGNS.Config.ScoreboardBadgesEndpointBaseUrl then
-			local url = TGNS.Config.ScoreboardBadgesEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(scoreboardBadgesResponseJson)
-				local scoreboardBadgesResponse = json.decode(scoreboardBadgesResponseJson) or {}
-				if scoreboardBadgesResponse.success then
-					TGNS.DoForPairs(scoreboardBadgesResponse.result, function(steamId, badges)
-						local badge = TGNS.GetFirst(badges)
-						local badgeName = string.format("tgns%s", badge.ID)
-						if kBadges[badgeName] then
-							badgeNamesCache[tonumber(steamId)] = badgeName
-							badgesCache[tonumber(steamId)] = badge
-						end
-					end)
-				else
-					TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data. url: %s | msg: %s | response: %s | stacktrace: %s", url, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getBadges)
-    	end
-    end
-    getBadges()
+    TGNS.DoWithConfig(function()
+		local url = TGNS.Config.ScoreboardBadgesEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(scoreboardBadgesResponseJson)
+			local scoreboardBadgesResponse = json.decode(scoreboardBadgesResponseJson) or {}
+			if scoreboardBadgesResponse.success then
+				TGNS.DoForPairs(scoreboardBadgesResponse.result, function(steamId, badges)
+					local badge = TGNS.GetFirst(badges)
+					local badgeName = string.format("tgns%s", badge.ID)
+					if kBadges[badgeName] then
+						badgeNamesCache[tonumber(steamId)] = badgeName
+						badgesCache[tonumber(steamId)] = badge
+					end
+				end)
+			else
+				TGNS.DebugPrint(string.format("tgnsbadges ERROR: Unable to access badge display data. url: %s | msg: %s | response: %s | stacktrace: %s", url, scoreboardBadgesResponse.msg, scoreboardBadgesResponseJson, scoreboardBadgesResponse.stacktrace))
+			end
+		end)
+    end)
 
     return true
 end

@@ -45,8 +45,8 @@ function TGNSPlayerPreferredRepository.Create(preferredTypeName)
 	return result
 end
 
-local function getPreferreds()
-	if TGNS.Config and TGNS.Config.PreferredEndpointBaseUrl then
+Event.Hook("MapPostLoad", function()
+	TGNS.DoWithConfig(function()
 		local url = TGNS.Config.PreferredEndpointBaseUrl
 		TGNS.GetHttpAsync(url, function(preferredResponseJson)
 			local preferredResponse = json.decode(preferredResponseJson) or {}
@@ -62,9 +62,5 @@ local function getPreferreds()
 				TGNS.DebugPrint(string.format("preferred ERROR: Unable to access preferred data. url: %s | msg: %s | response: %s | stacktrace: %s", url, preferredResponse.msg, preferredResponseJson, preferredResponse.stacktrace))
 			end
 		end)
-	else
-		TGNS.ScheduleAction(0, getPreferreds)
-	end
-end
-
-Event.Hook("MapPostLoad", getPreferreds)
+	end)
+end)

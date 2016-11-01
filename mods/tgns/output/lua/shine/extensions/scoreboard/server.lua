@@ -659,24 +659,6 @@ function Plugin:Initialise()
 	 	Shine.Plugins.afkkick.PostPlayerInfoUpdate = function(self, playerInfo, player) end
  	end)
 
- 	local getRecentVouchData
- 	getRecentVouchData = function()
-	 	if TGNS.Config and TGNS.Config.VouchesEndpointBaseUrl then
-			local vouchesUrl = string.format("%s&h=3", TGNS.Config.VouchesEndpointBaseUrl)
-			TGNS.GetHttpAsync(vouchesUrl, function(vouchesResponseJson)
-				local vouchesResponse = json.decode(vouchesResponseJson) or {}
-				if vouchesResponse.success then
-					vouches = vouchesResponse.result
-				else
-					TGNS.DebugPrint(string.format("vouches ERROR: Unable to access vouches data. msg: %s | response: %s | stacktrace: %s", vouchesResponse.msg, vouchesResponseJson, vouchesResponse.stacktrace))
-				end
-			end)
-	 	else
-	 		TGNS.ScheduleAction(0, getRecentVouchData)
-	 	end
- 	end
- 	getRecentVouchData();
-
  	local originalSelectableMixinSetHotGroupNumber = SelectableMixin.SetHotGroupNumber
  	SelectableMixin.SetHotGroupNumber = function(mixinSelf, hotGroupNumber)
  		originalSelectableMixinSetHotGroupNumber(mixinSelf, hotGroupNumber)
@@ -771,26 +753,30 @@ function Plugin:Initialise()
 		end)
 	end
 
-	local function getApprovals()
-		if TGNS.Config and TGNS.Config.ApproveEndpointBaseUrl then
-			local url = TGNS.Config.ApproveEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(approveResponseJson)
-				local approveResponse = json.decode(approveResponseJson) or {}
-				if approveResponse.success then
-					TGNS.DoForPairs(approveResponse.result, function(steamId, count)
-						approveCache[tonumber(steamId)] = count
-					end)
-					approveCacheWasPreloaded = true
-				else
-					TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approve data. url: %s | msg: %s | response: %s | stacktrace: %s", url, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getApprovals)
-		end
-	end
-	getApprovals()
+	TGNS.DoWithConfig(function()
+		local vouchesUrl = string.format("%s&h=3", TGNS.Config.VouchesEndpointBaseUrl)
+		TGNS.GetHttpAsync(vouchesUrl, function(vouchesResponseJson)
+			local vouchesResponse = json.decode(vouchesResponseJson) or {}
+			if vouchesResponse.success then
+				vouches = vouchesResponse.result
+			else
+				TGNS.DebugPrint(string.format("vouches ERROR: Unable to access vouches data. msg: %s | response: %s | stacktrace: %s", vouchesResponse.msg, vouchesResponseJson, vouchesResponse.stacktrace))
+			end
+		end)
 
+		local url = TGNS.Config.ApproveEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(approveResponseJson)
+			local approveResponse = json.decode(approveResponseJson) or {}
+			if approveResponse.success then
+				TGNS.DoForPairs(approveResponse.result, function(steamId, count)
+					approveCache[tonumber(steamId)] = count
+				end)
+				approveCacheWasPreloaded = true
+			else
+				TGNS.DebugPrint(string.format("approvals ERROR: Unable to access approve data. url: %s | msg: %s | response: %s | stacktrace: %s", url, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+			end
+		end)
+	end)
 
 	TGNS.ExecuteServerCommand("sh_alltalk false")
 

@@ -138,25 +138,20 @@ function Plugin:Initialise()
 	end)
 	self:CreateCommands()
 
-	local function getTaglines()
-		if TGNS.Config and TGNS.Config.TaglinesEndpointBaseUrl then
-			local url = TGNS.Config.TaglinesEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(taglinesResponseJson)
-				local taglinesResponse = json.decode(taglinesResponseJson) or {}
-				if taglinesResponse.success then
-					TGNS.DoForPairs(taglinesResponse.result, function(steamId, steamIdData)
-						taglinesCache[tonumber(steamId)] = steamIdData
-					end)
-					taglinesCacheWasPreloaded = true
-				else
-					TGNS.DebugPrint(string.format("taglines ERROR: Unable to access taglines data. url: %s | msg: %s | response: %s | stacktrace: %s", url, taglinesResponse.msg, taglinesResponseJson, taglinesResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getTaglines)
-		end
-	end
-	getTaglines()
+	TGNS.DoWithConfig(function()
+		local url = TGNS.Config.TaglinesEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(taglinesResponseJson)
+			local taglinesResponse = json.decode(taglinesResponseJson) or {}
+			if taglinesResponse.success then
+				TGNS.DoForPairs(taglinesResponse.result, function(steamId, steamIdData)
+					taglinesCache[tonumber(steamId)] = steamIdData
+				end)
+				taglinesCacheWasPreloaded = true
+			else
+				TGNS.DebugPrint(string.format("taglines ERROR: Unable to access taglines data. url: %s | msg: %s | response: %s | stacktrace: %s", url, taglinesResponse.msg, taglinesResponseJson, taglinesResponse.stacktrace))
+			end
+		end)
+	end)
 
     return true
 end

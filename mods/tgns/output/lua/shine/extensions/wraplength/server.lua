@@ -110,25 +110,20 @@ function Plugin:Initialise()
 		return data
 	end)
 
-	local function getWraplengths()
-		if TGNS.Config and TGNS.Config.WraplengthEndpointBaseUrl then
-			local url = TGNS.Config.WraplengthEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(wraplengthResponseJson)
-				local wraplengthResponse = json.decode(wraplengthResponseJson) or {}
-				if wraplengthResponse.success then
-					TGNS.DoForPairs(wraplengthResponse.result, function(steamId, steamIdData)
-						wraplengthsCache[tonumber(steamId)] = steamIdData
-					end)
-					wraplengthsCacheWasPreloaded = true
-				else
-					TGNS.DebugPrint(string.format("wraplength ERROR: Unable to access wraplengths data. url: %s | msg: %s | response: %s | stacktrace: %s", url, wraplengthResponse.msg, wraplengthResponseJson, wraplengthResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getWraplengths)
-		end
-	end
-	getWraplengths()
+    TGNS.DoWithConfig(function()
+		local url = TGNS.Config.WraplengthEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(wraplengthResponseJson)
+			local wraplengthResponse = json.decode(wraplengthResponseJson) or {}
+			if wraplengthResponse.success then
+				TGNS.DoForPairs(wraplengthResponse.result, function(steamId, steamIdData)
+					wraplengthsCache[tonumber(steamId)] = steamIdData
+				end)
+				wraplengthsCacheWasPreloaded = true
+			else
+				TGNS.DebugPrint(string.format("wraplength ERROR: Unable to access wraplengths data. url: %s | msg: %s | response: %s | stacktrace: %s", url, wraplengthResponse.msg, wraplengthResponseJson, wraplengthResponse.stacktrace))
+			end
+		end)
+    end)
 
 	return true
 end

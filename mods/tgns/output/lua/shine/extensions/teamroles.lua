@@ -250,25 +250,20 @@ function Plugin:Initialise()
 		end
 	end)
 
-	local function getGuardians()
-		if TGNS.Config and TGNS.Config.GuardiansEndpointBaseUrl then
-			local url = TGNS.Config.GuardiansEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(guardiansResponseJson)
-				local guardiansResponse = json.decode(guardiansResponseJson) or {}
-				if guardiansResponse.success then
-					TGNS.DoFor(guardiansResponse.result, function(steamId)
-						pdrCache["guardian"][steamId] = {steamId=steamId, optin=true}
-					end)
-					rolePdrCacheWasPreloaded["guardian"] = true
-				else
-					TGNS.DebugPrint(string.format("teamroles ERROR: Unable to access guardians data. url: %s | msg: %s | response: %s | stacktrace: %s", url, guardiansResponse.msg, guardiansResponseJson, guardiansResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getGuardians)
-		end
-	end
-	getGuardians()
+	TGNS.DoWithConfig(function()
+		local url = TGNS.Config.GuardiansEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(guardiansResponseJson)
+			local guardiansResponse = json.decode(guardiansResponseJson) or {}
+			if guardiansResponse.success then
+				TGNS.DoFor(guardiansResponse.result, function(steamId)
+					pdrCache["guardian"][steamId] = {steamId=steamId, optin=true}
+				end)
+				rolePdrCacheWasPreloaded["guardian"] = true
+			else
+				TGNS.DebugPrint(string.format("teamroles ERROR: Unable to access guardians data. url: %s | msg: %s | response: %s | stacktrace: %s", url, guardiansResponse.msg, guardiansResponseJson, guardiansResponse.stacktrace))
+			end
+		end)
+	end)
 
 	return true
 end

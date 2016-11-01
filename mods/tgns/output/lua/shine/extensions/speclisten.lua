@@ -192,26 +192,20 @@ function Plugin:Initialise()
 		end
 	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
 
-	local function getSpecModes()
-		if TGNS.Config and TGNS.Config.SpecModeEndpointBaseUrl then
-			local url = TGNS.Config.SpecModeEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(specModeResponseJson)
-				local specModeResponse = json.decode(specModeResponseJson) or {}
-				if specModeResponse.success then
-					TGNS.DoForPairs(specModeResponse.result, function(steamId, steamIdData)
-						specmodesCache[tonumber(steamId)] = steamIdData
-					end)
-					specmodesCacheWasPreloaded = true
-				else
-					TGNS.DebugPrint(string.format("speclisten ERROR: Unable to access specMode data. url: %s | msg: %s | response: %s | stacktrace: %s", url, specModeResponse.msg, specModeResponseJson, specModeResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getSpecModes)
-		end
-	end
-	getSpecModes()
-
+	TGNS.DoWithConfig(function()
+		local url = TGNS.Config.SpecModeEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(specModeResponseJson)
+			local specModeResponse = json.decode(specModeResponseJson) or {}
+			if specModeResponse.success then
+				TGNS.DoForPairs(specModeResponse.result, function(steamId, steamIdData)
+					specmodesCache[tonumber(steamId)] = steamIdData
+				end)
+				specmodesCacheWasPreloaded = true
+			else
+				TGNS.DebugPrint(string.format("speclisten ERROR: Unable to access specMode data. url: %s | msg: %s | response: %s | stacktrace: %s", url, specModeResponse.msg, specModeResponseJson, specModeResponse.stacktrace))
+			end
+		end)
+	end)
 
     return true
 end

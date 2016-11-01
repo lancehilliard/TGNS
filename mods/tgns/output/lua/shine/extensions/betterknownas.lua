@@ -494,26 +494,18 @@ function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
 
-	local batchLoadBkas
-	batchLoadBkas = function()
-		if TGNS.Config and TGNS.Config.BkaEndpointBaseUrl then
-			TGNS.GetHttpAsync(TGNS.Config.BkaEndpointBaseUrl, function(bkaResponseJson)
-				local bkaResponse = json.decode(bkaResponseJson) or {}
-				if bkaResponse.success then
-					TGNS.DoFor(bkaResponse.result, function(d)
-						batchBkas[d.id] = d.bka
-					end)
-				else
-					TGNS.DebugPrint(string.format("bka ERROR: Unable to access bka data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), bkaResponse.msg, bkaResponseJson, bkaResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, batchLoadBkas)
-		end
-	end
-	batchLoadBkas()
+	TGNS.DoWithConfig(function()
+		TGNS.GetHttpAsync(TGNS.Config.BkaEndpointBaseUrl, function(bkaResponseJson)
+			local bkaResponse = json.decode(bkaResponseJson) or {}
+			if bkaResponse.success then
+				TGNS.DoFor(bkaResponse.result, function(d)
+					batchBkas[d.id] = d.bka
+				end)
+			else
+				TGNS.DebugPrint(string.format("bka ERROR: Unable to access bka data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), bkaResponse.msg, bkaResponseJson, bkaResponse.stacktrace))
+			end
+		end)
 
-	TGNS.ScheduleAction(30, function()
 		TGNS.GetHttpAsync(TGNS.Config.BotNamesEndpointBaseUrl, function(botNamesResponseJson)
 			local botNamesResponse = json.decode(botNamesResponseJson) or {}
 			if botNamesResponse.success then

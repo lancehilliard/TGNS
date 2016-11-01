@@ -90,26 +90,20 @@ function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
 
-	local function getAutoExecs()
-		if TGNS.Config and TGNS.Config.AutoExecEndpointBaseUrl then
-			local url = TGNS.Config.AutoExecEndpointBaseUrl
-			TGNS.GetHttpAsync(url, function(autoExecsResponseJson)
-				local autoExecsResponse = json.decode(autoExecsResponseJson) or {}
-				if autoExecsResponse.success then
-					TGNS.DoForPairs(autoExecsResponse.result, function(steamId, steamIdData)
-						autoExecsCache[tonumber(steamId)] = steamIdData
-					end)
-					autoExecsCacheWasPreloaded = true
-				else
-					TGNS.DebugPrint(string.format("autoExecs ERROR: Unable to access autoExecs data. url: %s | msg: %s | response: %s | stacktrace: %s", url, autoExecsResponse.msg, autoExecsResponseJson, autoExecsResponse.stacktrace))
-				end
-			end)
-		else
-			TGNS.ScheduleAction(0, getAutoExecs)
-		end
-	end
-	getAutoExecs()
-
+    TGNS.DoWithConfig(function()
+		local url = TGNS.Config.AutoExecEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(autoExecsResponseJson)
+			local autoExecsResponse = json.decode(autoExecsResponseJson) or {}
+			if autoExecsResponse.success then
+				TGNS.DoForPairs(autoExecsResponse.result, function(steamId, steamIdData)
+					autoExecsCache[tonumber(steamId)] = steamIdData
+				end)
+				autoExecsCacheWasPreloaded = true
+			else
+				TGNS.DebugPrint(string.format("autoExecs ERROR: Unable to access autoExecs data. url: %s | msg: %s | response: %s | stacktrace: %s", url, autoExecsResponse.msg, autoExecsResponseJson, autoExecsResponse.stacktrace))
+			end
+		end)
+    end)
 
     return true
 end

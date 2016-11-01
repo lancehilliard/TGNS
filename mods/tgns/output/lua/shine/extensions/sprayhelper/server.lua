@@ -148,14 +148,7 @@ function Plugin:Initialise()
 	end)
 
 
-	local function getSprays()
-		if TGNS.Config and TGNS.Config.SpraysEndpointBaseUrl then
-			updateFetchedSprays()
-		else
-			TGNS.ScheduleAction(0, getSprays)
-		end
-	end
-	getSprays()
+	TGNS.DoWithConfig(updateFetchedSprays)
 
 	return true
 end
