@@ -1,3 +1,5 @@
+TGNSElixerVersion = 1.8
+
 Script.Load("lua/tgns/shared/TGNSMaxSpeeds.lua")
 Script.Load("lua/tgns/shared/TGNSCommonShared.lua")
 if Server or Client then
