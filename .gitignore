@@ -355,8 +355,25 @@
 !mods/tgns/source/ui/captains/LerkSkill.psd
 !mods/tgns/source/ui/captains/OnosSkill.psd
 
+# whitelist sprays (material and PSD files)
 !mods/tgns/source/ui/sprays/tgns.psd
+!mods/tgns/output/ui/sprays/tgns.material
 !mods/tgns/source/ui/sprays/160301.psd
+!mods/tgns/output/ui/sprays/160301.material
+!mods/tgns/source/ui/sprays/2321845.psd
+!mods/tgns/output/ui/sprays/2321845.material
+!mods/tgns/source/ui/sprays/4392671.psd
+!mods/tgns/output/ui/sprays/4392671.material
+!mods/tgns/source/ui/sprays/6287842.psd
+!mods/tgns/output/ui/sprays/6287842.material
+!mods/tgns/source/ui/sprays/9081504.psd
+!mods/tgns/output/ui/sprays/9081504.material
+!mods/tgns/source/ui/sprays/9329083.psd
+!mods/tgns/output/ui/sprays/9329083.material
+!mods/tgns/source/ui/sprays/15924490.psd
+!mods/tgns/output/ui/sprays/15924490.material
+!mods/tgns/source/ui/sprays/41757063.psd
+!mods/tgns/output/ui/sprays/41757063.material
 
 
 !mods/tgns/source/ui/badges/streaming/camera.psd
