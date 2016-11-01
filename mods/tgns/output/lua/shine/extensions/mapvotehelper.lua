@@ -112,6 +112,11 @@ function Plugin:CreateCommands()
 	end)
 	setmapvoteCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
 	setmapvoteCommand:Help("<mapSetName> Configure the map vote for a named set of maps.")
+
+	local warnRestartCommand = self:BindCommand("sh_warnrestart", nil, function(client, setName)
+		Shine.ScreenText.Add(41, {X = 0.5, Y = 0.35, Text = "Server restarting to ns2_tram.\nPlease wait.", Duration = 30, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true})
+	end)
+	warnRestartCommand:Help("Warn all that server is about to restart.")
 end
 
 -- function Plugin:OnProcessMove(player, input)
@@ -237,16 +242,31 @@ function Plugin:Initialise()
 			Shine.ScreenText.End(68)
 		end
 
-		local originalApplyRTVWinner = Shine.Plugins.mapvote.ApplyRTVWinner
-		Shine.Plugins.mapvote.ApplyRTVWinner = function( mapVoteSelf, Time, Choice )
-			TGNS.ShouldProcessHttpRequests = false
-			originalApplyRTVWinner( mapVoteSelf, Time, Choice )
-		end
+		-- local originalApplyRTVWinner = Shine.Plugins.mapvote.ApplyRTVWinner
+		-- Shine.Plugins.mapvote.ApplyRTVWinner = function( mapVoteSelf, Time, Choice )
+		-- 	originalApplyRTVWinner( mapVoteSelf, Time, Choice )
+		-- end
 
-		local originalApplyNextMapWinner = Shine.Plugins.mapvote.ApplyNextMapWinner
-		Shine.Plugins.mapvote.ApplyNextMapWinner = function( mapVoteSelf, Time, Choice, MentionMap )
-			TGNS.ShouldProcessHttpRequests = false
-			originalApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
+		-- local originalApplyNextMapWinner = Shine.Plugins.mapvote.ApplyNextMapWinner
+		-- Shine.Plugins.mapvote.ApplyNextMapWinner = function( mapVoteSelf, Time, Choice, MentionMap )
+		-- 	originalApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
+		-- end
+
+		local originalProcessResults = Shine.Plugins.mapvote.ProcessResults
+		Shine.Plugins.mapvote.ProcessResults = function(mapVoteSelf, choice)
+			originalProcessResults(mapVoteSelf, choice)
+			if choice == "ns2_tram" then -- and TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted()) > 24/4 then
+				local url = string.format("%s&s=%s&c=%s&t=1&a=false", TGNS.Config.ServerCommandEndpointBaseUrl, TGNS.UrlEncode(TGNS.Config.ServerSimpleName), TGNS.UrlEncode("sh_warnrestart"))
+				Shared.Message("url: " .. tostring(url))
+				TGNS.GetHttpAsync(url, function(responseJson)
+					local response = json.decode(responseJson) or {}
+					if not response.success then
+						TGNS.DebugPrint(string.format("mapvotehelper ERROR: Unable to request restart. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
+					end
+				end)
+			else
+				TGNS.ShouldProcessHttpRequests = false
+			end
 		end
 	end)
 
