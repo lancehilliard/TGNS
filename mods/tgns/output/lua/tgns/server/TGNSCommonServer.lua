@@ -230,9 +230,7 @@ function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
 	if File then
 		File:write( Data, message, "\n" )
 		File:close()
-		if copyToMainLog then
-			Shared.Message(string.format(" Debug: %s", stamp))
-		end
+		Shared.Message(string.format(" Debug: %s", copyToMainLog and message or stamp))
 	else
 		Shared.Message(string.format(" Debug FAILURE: %s", message))
 	end
