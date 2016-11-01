@@ -1,7 +1,7 @@
 local md = TGNSMessageDisplayer.Create("PUSH")
 local pushTempfilePath = "config://tgns/temp/push.json"
 local Plugin = {}
-local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test', 'tgns-admin'}
+local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-infested', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test', 'tgns-admin'}
 
 function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 	local sourcePlayerId = client and TGNS.GetClientSteamId(client) or 0
@@ -123,6 +123,24 @@ end
 function Plugin:Initialise()
     self.Enabled = true
 	self:CreateCommands()
+
+	TGNS.DoWithConfig(function()
+		if Shine.GetGamemode() == "Infested" then
+			TGNS.ScheduleAction(60, function()
+				if TGNS.IsGameInProgress() then
+					local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
+					local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
+					local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+					local secondsSinceInfestedNotifications = secondsSinceEpoch - (pushData.infestedLastSentInSeconds or 0)
+					if secondsSinceInfestedNotifications >= threeHoursInSeconds then
+						self:Push("tgns-infested", "TGNS Infested!", string.format("%s is Infested! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetCurrentMapName()))
+						pushData.infestedLastSentInSeconds = secondsSinceEpoch
+						Shine.SaveJSONFile(pushData, pushTempfilePath)
+					end
+				end
+			end)
+		end
+	end)
 
     return true
 end
