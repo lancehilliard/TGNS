@@ -128,18 +128,26 @@ function Plugin:Initialise()
 
 	TGNS.DoWithConfig(function()
 		if Shine.GetGamemode() == "Infested" then
-			TGNS.ScheduleAction(60, function()
-				if TGNS.IsGameInProgress() then
-					local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
-					local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
-					local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
-					local secondsSinceInfestedNotifications = secondsSinceEpoch - (pushData.infestedLastSentInSeconds or 0)
-					if secondsSinceInfestedNotifications >= threeHoursInSeconds then
-						self:Push("tgns-infested", "TGNS Infested!", string.format("%s is Infested! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetCurrentMapName()))
-						pushData.infestedLastSentInSeconds = secondsSinceEpoch
-						Shine.SaveJSONFile(pushData, pushTempfilePath)
-					end
+			local function sendInfestedNotification()
+				local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
+				local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
+				local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+				local secondsSinceInfestedNotifications = secondsSinceEpoch - (pushData.infestedLastSentInSeconds or 0)
+				if secondsSinceInfestedNotifications >= threeHoursInSeconds then
+					self:Push("tgns-infested", "TGNS Infested!", string.format("%s is Infested! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetCurrentMapName()))
+					pushData.infestedLastSentInSeconds = secondsSinceEpoch
+					Shine.SaveJSONFile(pushData, pushTempfilePath)
 				end
+			end
+			TGNS.ScheduleAction(60, function()
+				Shared.Message("Infested 60 seconds passed...")
+				if TGNS.IsGameInCountdown() or TGNS.IsGameInProgress() then
+					sendInfestedNotification()
+				end
+				TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
+					Shared.Message("Infested GameCountdownStarted...")
+					sendInfestedNotification()
+				end)
 			end)
 		end
 	end)
