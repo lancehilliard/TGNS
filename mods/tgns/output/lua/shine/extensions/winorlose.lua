@@ -308,9 +308,9 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 						if (#playerRecords >= 7 and totalvotes > #playerRecords / 2) then
 							table.insert(whenBigVotesFailedWithMajorityThisGame, Shared.GetTime())
-							local teamSteamIds = TGNS.Select(TGNS.GetTeamClients(i), TGNS.GetClientSteamId)
-							local abstainerSteamIds = TGNS.Where(teamSteamIds, function(steamId) return not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, steamId) end)
-							local abstainerPlayers = TGNS.Select(abstainerSteamIds, function(steamId) return TGNS.GetPlayerMatchingSteamId(steamId) end)
+							local teamClientIds = TGNS.Select(TGNS.GetTeamClients(i), TGNS.GetClientId)
+							local abstainerClientIds = TGNS.Where(teamClientIds, function(clientId) return not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, clientId) end)
+							local abstainerPlayers = TGNS.Select(abstainerClientIds, function(clientId) return TGNS.GetPlayerById(clientId) end)
 							local randomizedAbstainerPlayers = TGNS.GetRandomizedElements(abstainerPlayers)
 							local randomAbstainerPlayer = TGNS.GetFirst(randomizedAbstainerPlayers)
 							local randomAbstainerPlayerName = TGNS.GetPlayerName(randomAbstainerPlayer)
