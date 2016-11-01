@@ -711,7 +711,7 @@ function Plugin:PlayerSay(client, networkMessage)
         TGNS.PlayerAction(client, function(p)
             if p then
                 if TGNS.IsPlayerSpectator(p) and not (Shine.Plugins.chatchannels and Shine.Plugins.chatchannels.DoesChatStartWithChatChannelTriggerCharacter and Shine.Plugins.chatchannels:DoesChatStartWithChatChannelTriggerCharacter(message)) then
-                    TGNS.SendChatMessage(p, TGNS.GetSpectatorPlayers(TGNS.GetPlayerList()), true)
+                    TGNS.SendChatMessage(p, TGNS.GetSpectatorPlayers(TGNS.GetPlayerList()), true, message)
                     cancel = true
                 else
                     if TGNS.IsPlayerReadyRoom(p) and TGNS.IsGameInProgress() and not TGNS.HasClientSignedPrimerWithGames(client) then
