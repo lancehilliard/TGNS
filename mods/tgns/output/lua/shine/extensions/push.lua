@@ -22,6 +22,8 @@ function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 				TGNS.DebugPrint(string.format("push ERROR: %s", errorMessage))
 			end
 		end)
+	else
+		TGNS.DebugPrint(string.format("push ERROR: %s not recognized. Message not pushed (sender: %s): %s - %s", pushChannelId, sourcePlayerId, pushTitle, pushMessage))
 	end
 
 	pushMessage = string.format("%s - Manage Notifications: http://rr.tacticalgamer.com/Notifications", pushMessage)
