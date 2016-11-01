@@ -584,6 +584,7 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
     TGNS.ScheduleAction(2, UpdateReservedSlotAmount)
     local publicSlotsPerTeam = Shine.Plugins.communityslots.Config.PublicSlots / 2
     local fullGameDescriptor = string.format("%sv%s", publicSlotsPerTeam, publicSlotsPerTeam)
+    local playerList = TGNS.GetPlayerList()
     if TGNS.IsGameplayTeamNumber(newTeamNumber) then
         if not (force or shineForce) then
             cancel, victimTeamNumber = IsClientBumped(joiningClient)
@@ -607,11 +608,13 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
         end
     elseif newTeamNumber == kSpectatorIndex then
         if not (force or shineForce) then
-            local spectateIsFull = #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) >= self:GetMaximumEffectiveSpectatorCount()
+            local spectateIsFull = #TGNS.GetSpectatorClients(playerList) >= self:GetMaximumEffectiveSpectatorCount()
             local isCaptainsModeEnabled = Shine.Plugins.captains and Shine.Plugins.captains.Enabled and Shine.Plugins.captains.IsCaptainsModeEnabled and Shine.Plugins.captains.IsCaptainsModeEnabled()
             if TGNS.IsGameInProgress() and not ServerIsFull(GetPlayingPlayers()) and not (TGNS.IsClientAdmin(joiningClient) or TGNS.IsClientSM(joiningClient)) and not isCaptainsModeEnabled and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and not TGNS.PlayerIsRookie(player) then
-                tgnsMd:ToPlayerNotifyError(player, string.format("Mid-game spectate is available only when teams are %s.", fullGameDescriptor))
-                cancel = true
+                if Shine.GetGamemode() == "ns2" then
+                    tgnsMd:ToPlayerNotifyError(player, string.format("Mid-game spectate is available only when teams are %s.", fullGameDescriptor))
+                    cancel = true
+                end
             end
             if not cancel then
                 if spectateIsFull and not TGNS.IsClientAdmin(joiningClient) then
@@ -622,6 +625,13 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
             end
         end
     end
+    if not cancel and TGNS.IsPlayerReadyRoom(player) and Shine.GetGamemode() == "Infested" and ((#TGNS.GetMarineClients(playerList) + #TGNS.GetSpectatorClients(playerList)) >= Server.GetMaxPlayers() - 1) then
+        cancel = true
+        local teamName = TGNS.GetTeamName(newTeamNumber)
+        tgnsMd:ToPlayerNotifyError(player, string.format("Sorry. %s is full.", teamName))
+        tgnsMd:ToAdminConsole(string.format("%s was not allowed to join %s.", TGNS.GetPlayerName(player), teamName))
+    end
+
     if cancel then
         return false
     end
@@ -650,11 +660,9 @@ local function sweep()
                 if lastTeamChangeTime then
                     local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
                     if secondsRemaining > 0 then
-                        // todo?: add to temp group that appears on scoreboard (would need to remove group on successful join of team or spectate)
                         if secondsRemaining < 40 then
                             local p = TGNS.GetPlayer(c)
                             tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
-                            // AnnounceOtherServerOptionsToBumpedClient(c)
                             Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
                         end
                     else
