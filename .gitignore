@@ -105,6 +105,9 @@
 !mods/tgns/output/lua/shine/extensions/sprayhelper/client.lua
 !mods/tgns/output/lua/shine/extensions/sprayhelper/server.lua
 !mods/tgns/output/lua/shine/extensions/sprayhelper/shared.lua
+!mods/tgns/output/lua/shine/extensions/recordinghelper/client.lua
+!mods/tgns/output/lua/shine/extensions/recordinghelper/server.lua
+!mods/tgns/output/lua/shine/extensions/recordinghelper/shared.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/client.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/server.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/shared.lua
