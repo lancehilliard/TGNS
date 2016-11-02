@@ -131,6 +131,15 @@ function Plugin:Initialise()
 					end)
 				end
 				ReplaceUpValue( parent, "PickInfected", PickInfected, { LocateRecurse = true } )
+
+				local originalNs2GamerulesGetPregameLength = NS2Gamerules.GetPregameLength
+				NS2Gamerules.GetPregameLength = function(gamerulesSelf)
+					local result = originalNs2GamerulesGetPregameLength(gamerulesSelf)
+					if result < 2 then
+					end
+					return result
+				end
+
 			end)
 
 			Shine.Hook.Add("EndGame", "InfestEndGame", function(pluginSelf, gamerules, winningTeam)
