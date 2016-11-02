@@ -346,13 +346,37 @@ function TGNS.UrlEncode(str) PROFILE("TGNS.UrlEncode")
 end
 
 function TGNS.PrintTable(t, tableDescription, printAction) PROFILE("TGNS.PrintTable")
-	-- if not TGNS.IsProduction() then
-		printAction = printAction and printAction or function(x) Shared.Message(x) end
-		local keys = {}
-		for key,value in pairs(t) do table.insert(keys, key) end
-		TGNS.SortAscending(keys, function(k) return tostring(k) end)
-		TGNS.DoFor(keys, function(k)
-			printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
-		end)
-	-- end
+	printAction = printAction and printAction or function(x) Shared.Message(x) end
+	local keys = {}
+	for key,value in pairs(t) do table.insert(keys, key) end
+	TGNS.SortAscending(keys, function(k) return tostring(k) end)
+	TGNS.DoFor(keys, function(k)
+		printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
+	end)
 end
+
+function TGNS.IsGameInPreGame() PROFILE("TGNS.IsGameInPreGame")
+	local result = TGNS.GetGameState() == kGameState.PreGame
+	return result
+end
+
+function TGNS.IsGameInCountdown() PROFILE("TGNS.IsGameInCountdown")
+	local result = TGNS.GetGameState() == kGameState.Countdown
+	return result
+end
+
+function TGNS.IsGameInProgress() PROFILE("TGNS.IsGameInProgress")
+	local result = TGNS.GetGameState() == kGameState.Started
+	return result
+end
+
+function TGNS.GetGameState() PROFILE("TGNS.GetGameState")
+	local result
+	if Server then
+		result = GetGamerules():GetGameState()
+	elseif Client then
+		result = GetGameInfoEntity():GetState()
+	end
+	return result
+end
+

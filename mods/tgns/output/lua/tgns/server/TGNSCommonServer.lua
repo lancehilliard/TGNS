@@ -686,16 +686,6 @@ function TGNS.GetPlayerClassPurchaseCost(player) PROFILE("TGNS.GetPlayerClassPur
 	return result
 end
 
-function TGNS.IsGameInCountdown() PROFILE("TGNS.IsGameInCountdown")
-	local result = TGNS.GetGameState() == kGameState.Countdown
-	return result
-end
-
-function TGNS.IsGameInProgress() PROFILE("TGNS.IsGameInProgress")
-	local result = TGNS.GetGameState() == kGameState.Started
-	return result
-end
-
 function TGNS.RoundPositiveNumberDown(num, numberOfDecimalPlaces) PROFILE("TGNS.RoundPositiveNumberDown")
 	local mult = 10^(numberOfDecimalPlaces or 0)
 	local result = math.floor(num * mult + 0.5) / mult
@@ -1104,16 +1094,6 @@ function TGNS.PlayerIsOnTeam(player, team) PROFILE("TGNS.PlayerIsOnTeam")
 	return result
 end
 
-function TGNS.GetGameState() PROFILE("TGNS.GetGameState")
-	local result = GetGamerules():GetGameState()
-	return result
-end
-
-function TGNS.IsGameStartingState(gameState) PROFILE("TGNS.IsGameStartingState")
-	local result = gameState == kGameState.Started
-	return result
-end
-
 function TGNS.ForceGameStart(takePersonalResourcesFromOneRandomPlayerOnAnyTeamWithoutCommander) PROFILE("TGNS.ForceGameStart")
 	local clientsToTakeStartingPersonalResourcesFrom = {}
 	local originalTeamInfoReset = TeamInfo.Reset
@@ -1160,16 +1140,6 @@ function TGNS.ResetAllPlayerScores() PROFILE("TGNS.ResetAllPlayerScores")
             player:ResetScores()
         end
     end
-end
-
-function TGNS.IsGameInPreGame() PROFILE("TGNS.IsGameInPreGame")
-	local result = TGNS.GetGameState() == kGameState.PreGame
-	return result
-end
-
-function TGNS.IsGameWinningState(gameState) PROFILE("TGNS.IsGameWinningState")
-	local result = gameState == kGameState.Team1Won or gameState == kGameState.Team2Won
-	return result
 end
 
 function TGNS.IsGameplayTeamNumber(teamNumber) PROFILE("TGNS.IsGameplayTeamNumber")
