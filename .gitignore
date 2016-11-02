@@ -4,7 +4,7 @@
 # Now, whitelist anything that's a directory ( http://stackoverflow.com/a/9227991/116895 )
 !*/
 
-# And then whitelist .gitattributes	and .gitignore
+# And then whitelist .gitattributes and .gitignore
 !.gitattributes
 !.gitignore
 
@@ -109,6 +109,8 @@
 !mods/tgns/output/lua/shine/extensions/wraplength/server.lua
 !mods/tgns/output/lua/shine/extensions/wraplength/shared.lua
 
+!mods/tgns/output/lua/shine/extensions/everysecond/client.lua
+!mods/tgns/output/lua/shine/extensions/everysecond/server.lua
 !mods/tgns/output/lua/shine/extensions/everysecond/shared.lua
 
 !mods/tgns/output/lua/shine/extensions/afkchanged.lua

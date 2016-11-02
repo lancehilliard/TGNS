@@ -3,6 +3,10 @@ local timeOfLastEveryMinuteHookCallInSeconds = 0
 
 local Plugin = {}
 
+-- Plugin.FOO = "everysecond_FOO"
+
+-- TGNS.RegisterNetworkMessage(Plugin.FOO, {})
+
 function Plugin:Think()
 	local secondsSinceLastEverySecondHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEverySecondHookCallInSeconds
 	if secondsSinceLastEverySecondHookCall >= 1 then
@@ -27,4 +31,4 @@ function Plugin:Cleanup()
     self.BaseClass.Cleanup( self )
 end
 
-Shine:RegisterExtension("everysecond", Plugin)
+Shine:RegisterExtension("everysecond", Plugin )
