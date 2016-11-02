@@ -75,6 +75,8 @@ function Plugin:Initialise()
 		-- end)
 	end)
 
+
+	-- output existing spawn selection overrides
 	-- TGNS.ScheduleAction(5, function()
 	-- 	if Server.spawnSelectionOverrides ~= nil then
 	-- 		Shared.Message("-- Map-original " .. TGNS.GetCurrentMapName() .. " Server.spawnSelectionOverrides: ")
@@ -85,6 +87,23 @@ function Plugin:Initialise()
 	-- 		Shared.Message("-- No Server.spawnSelectionOverrides")
 	-- 	end
 	-- end)
+
+	-- output possible spawn locations
+	-- if not TGNS.IsProduction() then
+	-- 	local spawnLocationNames = {}
+	-- 	TGNS.DoTimes(50, function(index)
+	-- 		Shared.Message(string.format("TGNS.ForceGameStart() %s", index))
+	-- 		TGNS.ForceGameStart()
+	-- 		local chair = TGNS.GetFirst(TGNS.GetTeamCommandStructures(kMarineTeamType))
+	-- 		local hive = TGNS.GetFirst(TGNS.GetTeamCommandStructures(kAlienTeamType))
+	-- 		local chairLocationName = TGNS.GetEntityLocationName(chair)
+	-- 		local hiveLocationName = TGNS.GetEntityLocationName(hive)
+	-- 		local spawnLocationName = string.format("%s, %s", chairLocationName, hiveLocationName)
+	-- 		TGNS.InsertDistinctly(spawnLocationNames, spawnLocationName)
+	-- 	end)
+	-- 	TGNS.SortAscending(spawnLocationNames)
+	-- 	Shared.Message(string.format("%s spawns:\n%s", TGNS.GetCurrentMapName(), TGNS.Join(spawnLocationNames, "\n")))
+	-- end
 
     return true
 end
