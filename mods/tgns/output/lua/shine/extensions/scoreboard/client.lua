@@ -93,8 +93,6 @@ has.Mines = {}
 has.ClusterGrenade = {}
 has.GasGrenade = {}
 has.PulseGrenade = {}
-has.usableConnectionAt = 0
-has.queriedServerStatusAt = 0
 has.muteAbility = {}
 
 local kFavoriteIconSize = Vector(26, 26, 0)
@@ -219,27 +217,6 @@ TGNS.HookNetworkMessage(Plugin.HAS_JETPACK_RESET, function(message)
 end)
 TGNS.HookNetworkMessage(Plugin.SHOW_TEAM_MESSAGES, function(message)
 	showTeamMessages = message.s
-end)
-
-TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
-	local latestTrhVersionDescriptor = "v0.09"
-	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), message.s, message.d, TGNS.UrlEncode(message.t))
-	Shared.SendHTTPRequest(url, "GET", function(responseJson)
-		local response = json.decode(responseJson) or {}
-		if response.showIcon then
-			TGNS.SendNetworkMessage(Plugin.REQUEST_STREAMING_ICON, {u="http://rr.tacticalgamer.com/Replay"})
-		end
-		if response.trhVersion then
-			if response.trhVersion ~= latestTrhVersionDescriptor then
-				Shared.Message(string.format("[TRH] http://rr.tacticalgamer.com/Replay/RecordingHelper has TGNS Recording Helper update (%s).", latestTrhVersionDescriptor))
-			end
-			if response.casterMode then
-				Shared.ConsoleCommand("plus castermode true")
-			else
-				Shared.ConsoleCommand("plus castermode false")
-			end
-		end
-	end)
 end)
 
 TGNS.HookNetworkMessage(Plugin.GAME_IN_COUNTDOWN, function(message)
@@ -1253,67 +1230,6 @@ function Plugin:Initialise()
 				originalGUIAlienTeamMessageSetTeamMessage(self, message)
 			end
 		end
-	end
-
-		local originalGUIIssuesDisplayUpdate = GUIIssuesDisplay.Update
-	GUIIssuesDisplay.Update = function(guiIssuesDisplaySelf, deltaTime)
-		originalGUIIssuesDisplayUpdate(guiIssuesDisplaySelf, deltaTime)
-		if not gameIsInProgress and guiIssuesDisplaySelf.serverPerformanceProblemsIcon then
-			guiIssuesDisplaySelf.serverPerformanceProblemsIcon:SetIsVisible(false)
-		end
-
-	    if guiIssuesDisplaySelf.connectionProblemsIcon and guiIssuesDisplaySelf.connectionProblemsIcon:GetIsVisible() then
-	    	local connectionProblemsIconColor = guiIssuesDisplaySelf.connectionProblemsIcon:GetColor()
-	    	local connectionProblemsIconIsRed = connectionProblemsIconColor.r == 1 and connectionProblemsIconColor.g == 0 and connectionProblemsIconColor.b == 0
-		    if connectionProblemsIconIsRed then
-		    	local secondsSinceUsableConnection = Shared.GetTime() - has.usableConnectionAt
-		    	if secondsSinceUsableConnection >= 3 then
-		    		if hudTexts.reconnectingText == nil then
-		    			hudTexts.reconnectingText = Shine.ScreenText.Add( "Reconnecting", {
-							X = 0.05, Y = 0.55,
-							Text = "Checking to see if game server crashed.\n\n(Check your Internet connection, too.)",
-							Duration = math.huge,
-							R = 0, G = 255, B = 0,
-							Alignment = 0,
-							Size = 3,
-							FadeIn = 0.5
-						} )
-		    		end
-		    		local secondsSinceServerQuery = Shared.GetTime() - has.queriedServerStatusAt
-		    		if secondsSinceServerQuery > 1.5 then
-			    		has.queriedServerStatusAt = Shared.GetTime()
-						Shared.SendHTTPRequest("http://rr.tacticalgamer.com/ServerInfo/v1_0", "GET", function(responseJson)
-							local response = json.decode(responseJson) or {}
-							if #response > 0 then
-								local serverInfo = response[1]
-								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
-									local delayInSeconds = 7 + math.random() * 3
-									Shine.Timer.Simple(delayInSeconds, function() 
-										Shared.ConsoleCommand("connect tgns.tacticalgamer.com")
-									end)
-									if hudTexts.reconnectingText then
-										function hudTexts.reconnectingText:UpdateText()
-											self.Obj:SetText("Game server crashed. Reconnecting now. Please wait.")
-										end
-									end
-								else
-									-- Shared.Message("DEBUG mapName: " .. tostring(serverInfo.mapName))
-								end
-							end
-						end)
-		    		end
-		    	end
-		    else
-		    	has.usableConnectionAt = Shared.GetTime()
-		    	Shine.ScreenText.Remove( "Reconnecting" )
-		    	hudTexts.reconnectingText = nil
-		    end
-	    else
-	    	has.usableConnectionAt = Shared.GetTime()
-	    	Shine.ScreenText.Remove( "Reconnecting" )
-	    	hudTexts.reconnectingText = nil
-	    end
-
 	end
 
 	local originalSharedGetString = Shared.GetString

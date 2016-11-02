@@ -43,7 +43,6 @@ Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY = "scoreboard_CHATTING_OR_MENUING_ST
 Plugin.RECENT_CAPTAINS = "scoreboard_RECENT_CAPTAINS"
 Plugin.TOOLTIP_SOUND = "scoreboard_TOOLTIP_SOUND"
 Plugin.SERVER_ADDRESS = "scoreboard_SERVER_ADDRESS"
-Plugin.RECORDING_BOUNDARY = "scoreboard_RECORDING_BOUNDARY"
 Plugin.GAME_FEEDBACK = "scoreboard_GAME_FEEDBACK"
 Plugin.REQUEST_STREAMING_ICON = "scoreboard_REQUEST_STREAMING_ICON"
 Plugin.ENABLE_MUTE = "scoreboard_ENABLE_MUTE"
@@ -93,7 +92,6 @@ TGNS.RegisterNetworkMessage(Plugin.CHATTING_OR_MENUING_STARTED_RECENTLY, {})
 TGNS.RegisterNetworkMessage(Plugin.RECENT_CAPTAINS, {c="string(500)"})
 TGNS.RegisterNetworkMessage(Plugin.TOOLTIP_SOUND, {})
 TGNS.RegisterNetworkMessage(Plugin.SERVER_ADDRESS, {a="string(100)"})
-TGNS.RegisterNetworkMessage(Plugin.RECORDING_BOUNDARY, {b="string(100)",d="float", t="string(100)", p="string(30)", s="integer"})
 TGNS.RegisterNetworkMessage(Plugin.GAME_FEEDBACK, {rating="integer", reasons="string(500)"})
 TGNS.RegisterNetworkMessage(Plugin.REQUEST_STREAMING_ICON, {u="string(250)"})
 TGNS.RegisterNetworkMessage(Plugin.ENABLE_MUTE, {})

@@ -234,11 +234,6 @@ function Plugin:ClientConnect(client)
 		--end)
 		self:AlertApplicationIconForPlayer(player)
 		TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.SERVER_ADDRESS, {a=TGNS.Config.ServerAddress})
-
-		TGNS.SendNetworkMessageToPlayer(player, self.RECORDING_BOUNDARY, {b="prep",d=0,t=TGNS.GetPlayerTeamName(player),p=TGNS.GetPlayerName(player),s=secondsSinceEpoch})
-
-
-
 	end
 end
 
@@ -429,7 +424,6 @@ function Plugin:Initialise()
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			self:AnnouncePlayerPrefix(p)
 			TGNS.SendNetworkMessageToPlayer(p, self.GAME_IN_COUNTDOWN, {b=true})
-			TGNS.SendNetworkMessageToPlayer(p, self.RECORDING_BOUNDARY, {b="start",d=0,t=TGNS.GetPlayerTeamName(p),p=TGNS.GetPlayerName(p),s=secondsSinceEpoch})
 		end)
 	end)
 	TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
@@ -631,12 +625,6 @@ function Plugin:Initialise()
  		lastStartTimeSeconds = gameStartTimeInSeconds
  		local md = TGNSMessageDisplayer.Create()
  		md:ToAllConsole(string.format("Gametime: %s", string.DigitalTime(gameDurationInSeconds)))
-
-		TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM - 1, function()
-			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
-				TGNS.SendNetworkMessageToPlayer(p, self.RECORDING_BOUNDARY, {b="end", d=gameDurationInSeconds, t=TGNS.GetPlayerTeamName(p), p=TGNS.GetPlayerName(p), s=gameStartTimeInSeconds})
-			end)
-		end)
  	end)
 
 
