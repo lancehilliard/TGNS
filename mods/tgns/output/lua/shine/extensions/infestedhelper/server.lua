@@ -42,9 +42,9 @@ function Plugin:Initialise()
 
 			Shine.Hook.Add("PlayerSay", "InfestedPlayerSay", function(client, networkMessage)
 				-- local teamOnly = networkMessage.teamOnly
-				if TGNS.StartsWith(networkMessage.message, INFESTED_CHAT_CHARACTERS) or StringTrim(networkMessage.message) == StringTrim(INFESTED_CHAT_CHARACTERS) then
+				if TGNS.StartsWith(TGNS.ToLower(message), TGNS.ToLower(INFESTED_CHAT_CHARACTERS)) or StringTrim(TGNS.ToLower(networkMessage.message)) == StringTrim(TGNS.ToLower(INFESTED_CHAT_CHARACTERS)) then
 					if clientIsInfested(client) then
-						if networkMessage.message ~= INFESTED_CHAT_CHARACTERS then
+						if TGNS.ToLower(networkMessage.message) ~= TGNS.ToLower(INFESTED_CHAT_CHARACTERS) then
 							networkMessage.message = TGNS.Substring(networkMessage.message, string.len(INFESTED_CHAT_CHARACTERS) + 1)
 							TGNS.DoFor(TGNS.GetPlayers(TGNS.Where(TGNS.GetClientList(), function(c) return clientIsInfested(c) or TGNS.IsClientSpectator(c) or TGNS.IsClientReadyRoom(c) end)), function(p)
 								local player = TGNS.GetPlayer(client)
