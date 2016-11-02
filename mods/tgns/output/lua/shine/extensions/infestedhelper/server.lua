@@ -136,6 +136,7 @@ function Plugin:Initialise()
 				NS2Gamerules.GetPregameLength = function(gamerulesSelf)
 					local result = originalNs2GamerulesGetPregameLength(gamerulesSelf)
 					if result < 2 then
+						result = 2 -- give TRH time to finish recordings
 					end
 					return result
 				end
@@ -164,11 +165,11 @@ function Plugin:Initialise()
 				local command = self:BindCommand(c, nil, function(client)
 					local player = TGNS.GetPlayer(client)
 					if TGNS.IsClientSM(client) then
-						if clientIsDead(client) then
+						if clientIsDead(client) or not TGNS.IsGameInProgress() then
 							TGNS.InsertDistinctly(clientsWhoWouldLikeToBeInfested, client)
 							md:ToPlayerNotifyInfo(player, "Preference privately noted for next round only. No guarantees.")
 						else
-							md:ToPlayerNotifyError(player, "You must be dead to use this command.")
+							md:ToPlayerNotifyError(player, "You must be dead to use this command during gameplay.")
 						end
 					else
 						md:ToPlayerNotifyError(player, "Only Supporting Members may use this command.")
