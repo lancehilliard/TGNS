@@ -1,7 +1,7 @@
 local md = TGNSMessageDisplayer.Create("PUSH")
 local pushTempfilePath = "config://tgns/temp/push.json"
 local Plugin = {}
-local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-infested', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test', 'tgns-admin'}
+local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-infested', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test', 'tgns-guarded', 'tgns-admin'}
 
 function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 	local sourcePlayerId = client and TGNS.GetClientSteamId(client) or 0
