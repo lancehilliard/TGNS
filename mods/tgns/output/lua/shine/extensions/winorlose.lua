@@ -262,7 +262,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 				local playerRecords = TGNS.GetPlayers(TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return p:GetTeamNumber() == i end))
 				local totalvotes = 0
 				for j = #kWinOrLoseVoteArray[i].WinOrLoseVotes, 1, -1 do
-					local clientid = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]
+					local steamId = kWinOrLoseVoteArray[i].WinOrLoseVotes[j]
 					local stillplaying = false
 
 					for k = 1, #playerRecords do
@@ -270,7 +270,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						if player ~= nil then
 							local client = Server.GetOwner(player)
 							if client ~= nil then
-								if clientid == client:GetUserId() then
+								if steamId == TGNS.GetClientSteamId(client) then
 									stillplaying = true
 									totalvotes = totalvotes + 1
 									break
@@ -308,9 +308,9 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						kWinOrLoseVoteArray[i].WinOrLoseVotes = { }
 						if (#playerRecords >= 7 and totalvotes > #playerRecords / 2) then
 							table.insert(whenBigVotesFailedWithMajorityThisGame, Shared.GetTime())
-							local teamClientIds = TGNS.Select(TGNS.GetTeamClients(i), TGNS.GetClientId)
-							local abstainerClientIds = TGNS.Where(teamClientIds, function(clientId) return not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, clientId) end)
-							local abstainerPlayers = TGNS.Select(abstainerClientIds, function(clientId) return TGNS.GetPlayerById(clientId) end)
+							local teamSteamIds = TGNS.Select(TGNS.GetTeamClients(i), TGNS.GetClientSteamId)
+							local abstainerSteamIds = TGNS.Where(teamSteamIds, function(steamId) return not TGNS.Has(kWinOrLoseVoteArray[i].WinOrLoseVotes, steamId) end)
+							local abstainerPlayers = TGNS.Select(abstainerSteamIds, TGNS.GetPlayerMatchingSteamId)
 							local randomizedAbstainerPlayers = TGNS.GetRandomizedElements(abstainerPlayers)
 							local randomAbstainerPlayer = TGNS.GetFirst(randomizedAbstainerPlayers)
 							local randomAbstainerPlayerName = TGNS.GetPlayerName(randomAbstainerPlayer)
@@ -365,13 +365,13 @@ local function OnCommandWinOrLose(client)
 				md:ToPlayerNotifyError(player, "You may not yet WinOrLose.")
 			else
 				--if player:GetTeam():GetNumAliveCommandStructures() <= 2 then
-					local clientID = client:GetUserId()
+					local steamId = TGNS.GetClientSteamId(client)
 					local teamNumber = TGNS.GetPlayerTeamNumber(player)
 					if TGNS.IsGameplayTeamNumber(teamNumber) then
 						if kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning ~= 0 then
 							local alreadyvoted = false
 							for i = #kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, 1, -1 do
-								if kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes[i] == clientID then
+								if kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes[i] == steamId then
 									alreadyvoted = true
 									break
 								end
@@ -380,14 +380,14 @@ local function OnCommandWinOrLose(client)
 								chatMessage = string.sub(string.format("You already voted to concede."), 1, kMaxChatLength)
 								md:ToPlayerNotifyError(player, chatMessage)
 							else
-								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
 								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
 							end
 							UpdateWinOrLoseVotes(teamNumber)
 						else
 							if lastVoteStartTimes[client] == nil or lastVoteStartTimes[client] + VOTE_START_COOLDOWN <= TGNS.GetSecondsSinceMapLoaded() then
 								kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
-								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, clientID)
+								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
 								lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
 								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s Give 100%s until the game is over!", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, "%"))
 							else
