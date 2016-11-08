@@ -6,6 +6,9 @@ local deadMd = TGNSMessageDisplayer.Create("DEAD")
 local infestedMd = TGNSMessageDisplayer.Create("INFESTED")
 local INFESTED_CHAT_CHARACTERS = "inf "
 local initialInfestedSteamIds
+local PLAYER_COUNT_THRESHOLD = 14
+local GAME_COUNT_THRESHOLD = 3
+local gameCount = 0
 
 function Plugin:ClientConfirmConnect(client)
 end
@@ -116,8 +119,13 @@ function Plugin:Initialise()
 							end
 							return gamerulesResult
 						end
+						local randomResult = 0
+						local getRandomResult = function(max)
+							randomResult = randomResult + 1
+							return randomResult <= max and randomResult or max
+						end
 						math.random = function(lower, upper)
-							local mathRandomResult = lower ~= nil and (upper ~= nil and originalMathRandom(lower, upper) or 1) or originalMathRandom()
+							local mathRandomResult = lower ~= nil and (upper ~= nil and originalMathRandom(lower, upper) or getRandomResult(lower)) or originalMathRandom()
 							return mathRandomResult
 						end
 					end
@@ -180,6 +188,20 @@ function Plugin:Initialise()
 			TGNS.ScheduleActionInterval(180, function()
 				TGNS.DoFor(TGNS.Where(TGNS.GetClientList(), clientIsDead), function(c)
 					md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "SMs: sh_infestme (in console) while dead to REQUEST to start Infested next round. No guarantees.")
+				end)
+			end)
+
+			TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
+				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+					gameCount = gameCount + 1
+					if gameCount >= GAME_COUNT_THRESHOLD then
+						local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
+						if numberOfNonAfkHumans >= PLAYER_COUNT_THRESHOLD then
+							md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players w/ %s+ rounds of Infested played).", PLAYER_COUNT_THRESHOLD, GAME_COUNT_THRESHOLD))
+							Shine.Plugins.mapvote:StartVote(true)
+							TGNS.ForcePlayersToReadyRoom(TGNS.GetMarinePlayers(TGNS.GetPlayerList()))
+						end
+					end
 				end)
 			end)
 
