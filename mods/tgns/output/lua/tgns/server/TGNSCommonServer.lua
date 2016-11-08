@@ -208,7 +208,7 @@ end
 
 function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
-	message = string.format("%s %s", stamp, message)
+	message = string.format("%s (%s) %s", stamp, Shared.GetTime(), message)
 
 	-- Shine:DebugPrint(message)
 	local DebugFile = "config://tgns/DebugLog.txt"
