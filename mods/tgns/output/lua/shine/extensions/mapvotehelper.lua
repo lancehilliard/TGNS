@@ -268,6 +268,23 @@ function Plugin:Initialise()
 				TGNS.ShouldProcessHttpRequests = false
 			end
 		end
+
+		local originalIsValidMapChoice = Shine.Plugins.mapvote.IsValidMapChoice
+		Shine.Plugins.mapvote.IsValidMapChoice = function(mapVoteSelf, map, playerCount)
+			local result = originalIsValidMapChoice(mapVoteSelf, map, playerCount)
+			if result and (Shine.IsType(map, "table") or Shine.IsType(map, "string")) then
+				if TGNS.GetHumanPlayerCount() > 14 then
+					local mapName = map.map or map
+					if Shine.IsType(mapName, "string") then
+						local mapIsInfested = TGNS.StartsWith(mapName, "infest_")
+						if mapIsInfested then
+							result = false
+						end
+					end
+				end
+			end
+			return result
+		end
 	end)
 
     return true
