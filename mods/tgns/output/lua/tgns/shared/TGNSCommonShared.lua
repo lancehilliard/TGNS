@@ -121,7 +121,9 @@ end
 
 function TGNS.DoTimes(count, action)
 	for i=1,count do
-		action(i)
+		if action(i) then
+			break
+		end
 	end
 end
 
