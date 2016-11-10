@@ -252,22 +252,22 @@ function Plugin:Initialise()
 		-- 	originalApplyNextMapWinner( mapVoteSelf, Time, Choice, MentionMap )
 		-- end
 
-		local originalProcessResults = Shine.Plugins.mapvote.ProcessResults
-		Shine.Plugins.mapvote.ProcessResults = function(mapVoteSelf, choice)
-			originalProcessResults(mapVoteSelf, choice)
-			if choice == "ns2_tram" then -- and TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted()) > 24/4 then
-				local url = string.format("%s&s=%s&c=%s&t=1&a=false", TGNS.Config.ServerCommandEndpointBaseUrl, TGNS.UrlEncode(TGNS.Config.ServerSimpleName), TGNS.UrlEncode("sh_warnrestart"))
-				Shared.Message("url: " .. tostring(url))
-				TGNS.GetHttpAsync(url, function(responseJson)
-					local response = json.decode(responseJson) or {}
-					if not response.success then
-						TGNS.DebugPrint(string.format("mapvotehelper ERROR: Unable to request restart. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
-					end
-				end)
-			else
-				TGNS.ShouldProcessHttpRequests = false
-			end
-		end
+		-- local originalProcessResults = Shine.Plugins.mapvote.ProcessResults
+		-- Shine.Plugins.mapvote.ProcessResults = function(mapVoteSelf, choice)
+		-- 	originalProcessResults(mapVoteSelf, choice)
+		-- 	if choice == "ns2_tram" then -- and TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted()) > 24/4 then
+		-- 		local url = string.format("%s&s=%s&c=%s&t=1&a=false", TGNS.Config.ServerCommandEndpointBaseUrl, TGNS.UrlEncode(TGNS.Config.ServerSimpleName), TGNS.UrlEncode("sh_warnrestart"))
+		-- 		Shared.Message("url: " .. tostring(url))
+		-- 		TGNS.GetHttpAsync(url, function(responseJson)
+		-- 			local response = json.decode(responseJson) or {}
+		-- 			if not response.success then
+		-- 				TGNS.DebugPrint(string.format("mapvotehelper ERROR: Unable to request restart. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
+		-- 			end
+		-- 		end)
+		-- 	else
+		-- 		TGNS.ShouldProcessHttpRequests = false
+		-- 	end
+		-- end
 
 		local originalIsValidMapChoice = Shine.Plugins.mapvote.IsValidMapChoice
 		Shine.Plugins.mapvote.IsValidMapChoice = function(mapVoteSelf, map, playerCount)

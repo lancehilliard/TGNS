@@ -145,6 +145,9 @@
 !mods/tgns/output/lua/shine/extensions/recordinghelper/server.lua
 !mods/tgns/output/lua/shine/extensions/recordinghelper/shared.lua
 !mods/tgns/output/lua/shine/extensions/reluse.lua
+!mods/tgns/output/lua/shine/extensions/restartwhenempty/client.lua
+!mods/tgns/output/lua/shine/extensions/restartwhenempty/server.lua
+!mods/tgns/output/lua/shine/extensions/restartwhenempty/shared.lua
 !mods/tgns/output/lua/shine/extensions/rookiethrottle.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
