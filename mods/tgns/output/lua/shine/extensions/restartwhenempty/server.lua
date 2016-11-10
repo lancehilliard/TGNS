@@ -11,7 +11,7 @@ function Plugin:Initialise()
     -- self:CreateCommands()
 
     TGNS.ScheduleAction(5, function()
-	    TGNS.ScheduleAction(TGNS.ConvertMinutesToSeconds(Shine.Plugins.mapvote.MapCycle.time), function()
+	    TGNS.ScheduleAction(TGNS.ConvertMinutesToSeconds(Shine.Plugins.mapvote.MapCycle.time - 1), function()
 			if not clientConnected and TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted()) > 2 then
 				local serverName = TGNS.Config.ServerSimpleName
 				local url = string.format("%s&s=%s&c=%s&t=1&a=false", TGNS.Config.ServerCommandEndpointBaseUrl, TGNS.UrlEncode(serverName), TGNS.UrlEncode("sh_warnrestart"))
