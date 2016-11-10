@@ -12,7 +12,9 @@ function Plugin:ClientConfirmConnect(client)
 		end
 		if s.exists then
 			TGNS.ScheduleAction(0, function()
-				TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), "SH_readyroomrave_CreateSpray", { originX = s.x, originY = s.y, originZ = s.z, yaw = s.yaw, pitch = s.pitch, roll = s.roll, path = s.path })
+				if Shine:IsValidClient(client) then
+					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), "SH_readyroomrave_CreateSpray", { originX = s.x, originY = s.y, originZ = s.z, yaw = s.yaw, pitch = s.pitch, roll = s.roll, path = s.path })
+				end
 			end)
 		end
 	end)
