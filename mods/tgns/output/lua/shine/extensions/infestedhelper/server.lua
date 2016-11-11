@@ -8,6 +8,7 @@ local INFESTED_CHAT_CHARACTERS = "inf "
 local initialInfestedSteamIds
 local PLAYER_COUNT_THRESHOLD = 14
 local GAME_COUNT_THRESHOLD = 3
+local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
 
 function Plugin:ClientConfirmConnect(client)
@@ -140,6 +141,13 @@ function Plugin:Initialise()
 				end
 				ReplaceUpValue( parent, "PickInfected", PickInfected, { LocateRecurse = true } )
 
+				local originalMarineDeductInfestedEnergy = Marine.DeductInfestedEnergy
+				Marine.DeductInfestedEnergy = function(marineSelf, amount)
+					local modifier = GetIsPointOnInfestation(marineSelf:GetOrigin()) and (1-(INFESTATION_INFESTED_BENEFIT_PERCENTAGE/100)) or 1
+					amount = amount * modifier
+					originalMarineDeductInfestedEnergy(marineSelf, amount)
+				end
+
 				local originalNs2GamerulesGetPregameLength = NS2Gamerules.GetPregameLength
 				NS2Gamerules.GetPregameLength = function(gamerulesSelf)
 					local result = originalNs2GamerulesGetPregameLength(gamerulesSelf)
@@ -189,6 +197,9 @@ function Plugin:Initialise()
 				TGNS.DoFor(TGNS.Where(TGNS.GetClientList(), clientIsDead), function(c)
 					md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "SMs: sh_infestme (in console) while dead to REQUEST to start Infested next round. No guarantees.")
 				end)
+			end)
+			TGNS.ScheduleActionInterval(60, function()
+				md:ToAllNotifyInfo(string.format("Infested lose life %s%% more slowly on infestation. Discuss this mod in our TGNS forums.", INFESTATION_INFESTED_BENEFIT_PERCENTAGE))
 			end)
 
 			TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
