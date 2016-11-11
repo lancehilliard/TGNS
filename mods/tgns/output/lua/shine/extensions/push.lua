@@ -133,7 +133,7 @@ function Plugin:Initialise()
 				local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
 				local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
 				local secondsSinceInfestedNotifications = secondsSinceEpoch - (pushData.infestedLastSentInSeconds or 0)
-				if secondsSinceInfestedNotifications >= threeHoursInSeconds then
+				if secondsSinceInfestedNotifications >= threeHoursInSeconds and TGNS.IsProduction() then
 					self:Push("tgns-infested", "TGNS Infested!", string.format("%s is Infested! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetCurrentMapName()))
 					pushData.infestedLastSentInSeconds = secondsSinceEpoch
 					Shine.SaveJSONFile(pushData, pushTempfilePath)
