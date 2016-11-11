@@ -3,6 +3,11 @@ local Plugin = Plugin
 local usableConnectionAt = 0
 local queriedServerStatusAt = 0
 local reconnectingText
+local reconnectAlreadyInProgress
+
+function Plugin:SetReconnectAlreadyInProgress()
+	reconnectAlreadyInProgress = true
+end
 
 function Plugin:Initialise()
 	self.Enabled = true
@@ -11,7 +16,7 @@ function Plugin:Initialise()
 	GUIIssuesDisplay.Update = function(guiIssuesDisplaySelf, deltaTime)
 		originalGUIIssuesDisplayUpdate(guiIssuesDisplaySelf, deltaTime)
 
-	    if guiIssuesDisplaySelf.connectionProblemsIcon and guiIssuesDisplaySelf.connectionProblemsIcon:GetIsVisible() then
+	    if not reconnectAlreadyInProgress and guiIssuesDisplaySelf.connectionProblemsIcon and guiIssuesDisplaySelf.connectionProblemsIcon:GetIsVisible() then
 	    	local connectionProblemsIconColor = guiIssuesDisplaySelf.connectionProblemsIcon:GetColor()
 	    	local connectionProblemsIconIsRed = connectionProblemsIconColor.r == 1 and connectionProblemsIconColor.g == 0 and connectionProblemsIconColor.b == 0
 		    if connectionProblemsIconIsRed then
@@ -36,10 +41,7 @@ function Plugin:Initialise()
 							if #response > 0 then
 								local serverInfo = response[1]
 								if serverInfo.mapName == "ns2_tram" and #serverInfo.players < 8 then
-									local delayInSeconds = 7 + math.random() * 3
-									Shine.Timer.Simple(delayInSeconds, function() 
-										Shared.ConsoleCommand("connect tgns.tacticalgamer.com")
-									end)
+									Shine.Plugins.serverstart:Reconnect()
 									if reconnectingText then
 										function reconnectingText:UpdateText()
 											self.Obj:SetText("Game server crashed. Reconnecting now. Please wait.")
