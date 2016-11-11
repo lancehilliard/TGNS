@@ -206,12 +206,15 @@ function TGNS.Log(message)
 	Shared.Message(message)
 end
 
-function TGNS.DebugPrint(message, copyToMainLog) PROFILE("TGNS.DebugPrint")
+function TGNS.DebugPrint(message, copyToMainLog, category) PROFILE("TGNS.DebugPrint")
 	local stamp = os.date("[%m/%d/%Y %H:%M:%S]")
 	message = string.format("%s (%s) %s", stamp, Shared.GetTime(), message)
 
 	-- Shine:DebugPrint(message)
 	local DebugFile = "config://tgns/DebugLog.txt"
+	if category then
+		DebugFile = TGNS.Replace(DebugFile, ".txt", string.format("_%s.txt", category))
+	end
 	local File, Err = io.open( DebugFile, "r" )
 	local Data = ""
 
