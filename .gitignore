@@ -152,6 +152,9 @@
 !mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/shared.lua
+!mods/tgns/output/lua/shine/extensions/serverstart/client.lua
+!mods/tgns/output/lua/shine/extensions/serverstart/server.lua
+!mods/tgns/output/lua/shine/extensions/serverstart/shared.lua
 !mods/tgns/output/lua/shine/extensions/scoreboardicons.lua
 !mods/tgns/output/lua/shine/extensions/sidebar.lua
 !mods/tgns/output/lua/shine/extensions/siegehelper.lua
