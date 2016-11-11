@@ -362,7 +362,7 @@ if Server or Client then
 		function Plugin:MapChange()
 			if Shine.GetGamemode() == "ns2" then
 				if self.LaneInfosError then
-					TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s", TGNS.GetCurrentMapName()))
+					TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s", TGNS.GetCurrentMapName()), false, "laneinfos")
 				end
 			end
 		end
