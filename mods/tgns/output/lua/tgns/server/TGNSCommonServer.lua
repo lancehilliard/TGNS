@@ -15,6 +15,18 @@ TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
 TGNS.LogHttp = false
 
+function TGNS.RestartServerProcess()
+	local serverName = TGNS.Config.ServerSimpleName
+	local url = string.format("%s&s=%s&c=%s&t=1&a=false", TGNS.Config.ServerCommandEndpointBaseUrl, TGNS.UrlEncode(serverName), TGNS.UrlEncode("sh_warnrestart"))
+	-- TGNS.DebugPrint("restart url: " .. tostring(url))
+	TGNS.GetHttpAsync(url, function(responseJson)
+		local response = json.decode(responseJson) or {}
+		if not response.success then
+			TGNS.DebugPrint(string.format("restartwhenempty ERROR: Unable to request restart. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
+		end
+	end)
+end
+
 function TGNS.SendChatMessage(fromPlayer, toPlayers, teamOnly, message)
 	TGNS.DoFor(toPlayers, function(toPlayer)
         Server.SendNetworkMessage(toPlayer, "Chat", BuildChatMessage(teamOnly, TGNS.GetPlayerName(fromPlayer), TGNS.PlayerIsOnPlayingTeam(fromPlayer) and fromPlayer:GetLocationId() or TGNS.READYROOM_LOCATION_ID, fromPlayer:GetTeamNumber(), fromPlayer:GetTeamType(), message), true)
