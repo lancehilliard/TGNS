@@ -1074,7 +1074,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 					-- end
 				end)
 			else
-				TGNS.DebugPrint(string.format("Not allowed to SendHTTPRequest for: %s", r.url))
+				TGNS.DebugPrint(string.format("Not allowed to SendHTTPRequest for: %s", r.url), false, "http")
 			end
 		end)
 		waitingCountDebugLogger(#unsentRequests)
