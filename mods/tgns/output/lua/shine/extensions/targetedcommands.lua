@@ -115,7 +115,9 @@ local function approve(sourceClient, sourcePlayer, sourceSteamId, targetClient, 
 													md:ToPlayerNotifyError(sourcePlayer, "You have Approved too many players in the last 24 hours.")
 													TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
 												else
-													TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to approve NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+													if not TGNS.Contains(approveResponse.msg, "Too many recent approvals") then
+														TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to approve NS2ID %s. msg: %s | response: %s | stacktrace: %s", targetSteamId, approveResponse.msg, approveResponseJson, approveResponse.stacktrace))
+													end
 													if approvedClients[sourceSteamId][targetSteamId] == nil then
 														md:ToPlayerNotifyError(sourcePlayer, string.format("There was a problem approving %s.", targetClientName))
 														TGNS.SendNetworkMessageToPlayer(sourcePlayer, Shine.Plugins.scoreboard.APPROVE_MAY_TRY_AGAIN, {c=targetClientIndex})
