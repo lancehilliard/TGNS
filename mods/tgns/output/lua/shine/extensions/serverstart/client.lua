@@ -6,7 +6,7 @@ TGNS.HookNetworkMessage(Plugin.RECONNECT, function(message)
 end)
 
 function Plugin:Reconnect(additionalDelayInSeconds)
-	local delayInSeconds = 7 + additionalDelayInSeconds + math.random() * 3
+	local delayInSeconds = 7 + (additionalDelayInSeconds or 0) + math.random() * 3
 	Shine.Timer.Simple(delayInSeconds, function() 
 		Shared.ConsoleCommand("connect tgns.tacticalgamer.com")
 	end)
