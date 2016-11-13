@@ -40,7 +40,7 @@ end
 
 function Plugin:PlayerIsInSidebar(player)
 	local client = TGNS.GetClient(player)
-	local result = client and getSidebarHostClient() and TGNS.Has(getSidebarParticipantClients(), client)
+	local result = client and (getSidebarHostClient() ~= nil) and TGNS.Has(getSidebarParticipantClients(), client)
 	return result
 end
 
@@ -141,6 +141,16 @@ function Plugin:Initialise()
 			end)
 		end
 	end)
+
+	Shine.Hook.Add("PlayerSay", "SidebarPlayerSay", function(client, networkMessage)
+		local player = TGNS.GetPlayer(client)
+		if self:PlayerIsInSidebar(player) and client ~= getSidebarHostClient() then
+			TGNS.DoFor(TGNS.GetPlayers(getSidebarParticipantClients()), function(p)
+				md:ToPlayerNotifyInfo(p, string.format("%s: %s", TGNS.GetClientName(client), networkMessage.message))
+			end)
+			return ""
+		end
+	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
 
     return true
 end
