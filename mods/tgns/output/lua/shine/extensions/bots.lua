@@ -224,18 +224,23 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
 	if not (force or shineForce) then
 		local totalNumberOfBots = self:GetTotalNumberOfBots()
 		if totalNumberOfBots > 0 and TGNS.IsGameplayTeamNumber(newTeamNumber) and not TGNS.GetIsClientVirtual(client) then
-			local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
-			local marineHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kMarineTeamType and not TGNS.GetIsClientVirtual(c) end)
-			local numberOfAllowedAlienPlayers = 1
-			local errorMessage = string.format("Marines must have %s human players before the bot Aliens may have a second human player.", MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS)
-			if #marineHumanClients >= MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS then
-				numberOfAllowedAlienPlayers = 2
-				errorMessage = "A maximum of two human players are allowed on the bot team."
-			end
-			if #alienHumanClients >= numberOfAllowedAlienPlayers and newTeamNumber ~= kMarineTeamType then
-			--if newTeamNumber ~= kMarineTeamType then
-				md:ToPlayerNotifyError(player, errorMessage)
-				return false
+			if newTeamNumber == kAlienTeamType and not TGNS.HasPlayerSignedPrimerWithGames(player) then
+					md:ToPlayerNotifyError(player, "Only Primer signers may join the Alien team during bots play. Join Marines!")
+					return false
+			else
+				local alienHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kAlienTeamType and not TGNS.GetIsClientVirtual(c) end)
+				local marineHumanClients = TGNS.GetMatchingClients(TGNS.GetPlayerList(), function(c,p) return TGNS.GetPlayerTeamNumber(p) == kMarineTeamType and not TGNS.GetIsClientVirtual(c) end)
+				local numberOfAllowedAlienPlayers = 1
+				local errorMessage = string.format("Marines must have %s human players before the bot Aliens may have a second human player.", MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS)
+				if #marineHumanClients >= MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS then
+					numberOfAllowedAlienPlayers = 2
+					errorMessage = "A maximum of two human players are allowed on the bot team."
+				end
+				if #alienHumanClients >= numberOfAllowedAlienPlayers and newTeamNumber ~= kMarineTeamType then
+				--if newTeamNumber ~= kMarineTeamType then
+					md:ToPlayerNotifyError(player, errorMessage)
+					return false
+				end
 			end
 		end
 		if alltalk then
@@ -301,7 +306,9 @@ function Plugin:CreateCommands()
 						Shine.Plugins.forceroundstart:ForceRoundStart()
 						md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Seeding Note: NS2's Play Now button ignores servers with bots.")
 						if not pushSentForThisMap and TGNS.IsProduction() then
-							Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+							TGNS.ScheduleAction(2, function()
+								Shine.Plugins.push:Push("tgns-bots", "TGNS bots round started!", string.format("%s on %s. Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetCurrentMapName(), TGNS.GetSimpleServerName()))
+							end)
 							pushSentForThisMap = true
 
 							if startingBotsKarmaLastGiven[steamId] == nil or (Shared.GetTime() - startingBotsKarmaLastGiven[steamId] >= TGNS.ConvertMinutesToSeconds(startingBotsKarmaThrottleInMinutes)) then
