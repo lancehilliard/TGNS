@@ -19,7 +19,7 @@ function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 					md:ToClientConsole(client, string.format("ERROR: %s. See server log for details.", errorDisplayMessage))
 				end
 				local errorMessage = string.format("%s for NS2ID %s. msg: %s | response: %s | stacktrace: %s", errorDisplayMessage, sourcePlayerId, pushResponse.msg, pushResponseJson, pushResponse.stacktrace)
-				TGNS.DebugPrint(string.format("push ERROR: %s", errorMessage))
+				TGNS.DebugPrint(string.format("push ERROR: %s", errorMessage), false, "pushes")
 			end
 		end)
 	else
@@ -108,7 +108,11 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
 			local secondsSinceGuardedNotifications = secondsSinceEpoch - (pushData.guardedLastSentInSeconds or 0)
 			if secondsSinceGuardedNotifications >= threeHoursInSeconds then
-				self:Push("tgns-guarded", "TGNS guarded!", string.format("%s is guarded by %s (%s). Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetClientName(client), TGNS.GetCurrentMapName()))
+				TGNS.ScheduleAction(2, function()
+					if Shine:IsValidClient(client) then
+						self:Push("tgns-guarded", "TGNS guarded!", string.format("%s is guarded by %s (%s). Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetClientName(client), TGNS.GetCurrentMapName()))
+					end
+				end)
 				pushData.guardedLastSentInSeconds = secondsSinceEpoch
 				Shine.SaveJSONFile(pushData, pushTempfilePath)
 			end
