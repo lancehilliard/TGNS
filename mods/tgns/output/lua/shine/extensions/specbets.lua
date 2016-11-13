@@ -77,12 +77,11 @@ end
 local function refreshPlayerBank(steamId)
 	local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
 	TGNS.GetHttpAsync(url, function(betResponseJson)
-		-- TGNS.DebugPrint(string.format("betResponseJson: %s", betResponseJson))
 		local betResponse = json.decode(betResponseJson) or {}
 		if betResponse.success then
 			playerBanks[steamId] = betResponse.result
 		else
-			TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace))
+			TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace), false, "specbets")
 		end
 	end)
 end
@@ -97,7 +96,7 @@ local function persistTransaction(steamId, amount, killerId, victimId, type)
 	TGNS.GetHttpAsync(url, function(betResponseJson)
 		local betResponse = json.decode(betResponseJson) or {}
 		if not betResponse.success then
-			TGNS.DebugPrint(string.format("bets ERROR: Unable to save bets data for NS2ID %s. url: %s | msg: %s | response: %s | stacktrace: %s", transaction.steamId, url, betResponse.msg, betResponseJson, betResponse.stacktrace))
+			TGNS.DebugPrint(string.format("bets ERROR: Unable to save bets data for NS2ID %s. url: %s | msg: %s | response: %s | stacktrace: %s", transaction.steamId, url, betResponse.msg, betResponseJson, betResponse.stacktrace), false, "specbets")
 		end
 	end)
 
