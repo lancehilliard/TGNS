@@ -7,7 +7,7 @@ local infestedMd = TGNSMessageDisplayer.Create("INFESTED")
 local INFESTED_CHAT_CHARACTERS = "inf "
 local initialInfestedSteamIds
 local PLAYER_COUNT_THRESHOLD = 14
-local GAME_COUNT_THRESHOLD = 3
+local GAME_COUNT_THRESHOLD = 4
 local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
 
@@ -74,7 +74,7 @@ function Plugin:Initialise()
 
 			TGNS.ScheduleActionInterval(45, function()
 				TGNS.DoFor(TGNS.Where(TGNS.GetClientList(), clientIsInfested), function(c)
-					md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "Start any chat with 'inf ' to privately chat with other infested (ex: 'inf let's go!').")
+					md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "Start any chat with 'inf ' (with a space) to privately chat with other infested (ex: 'inf let's go!').")
 				end)
 			end)
 
