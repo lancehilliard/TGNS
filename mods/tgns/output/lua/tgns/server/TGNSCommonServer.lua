@@ -22,7 +22,7 @@ function TGNS.RestartServerProcess()
 	TGNS.GetHttpAsync(url, function(responseJson)
 		local response = json.decode(responseJson) or {}
 		if not response.success then
-			TGNS.DebugPrint(string.format("restartwhenempty ERROR: Unable to request restart. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
+			TGNS.DebugPrint(string.format("RestartServerProcess ERROR: Unable to request restart. msg: %s | response: %s | stacktrace: %s | url: %s", response.msg, responseJson, response.stacktrace, url))
 		end
 	end)
 end
