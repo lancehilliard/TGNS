@@ -199,7 +199,7 @@ function Plugin:Initialise()
 				end)
 			end)
 			TGNS.ScheduleActionInterval(60, function()
-				md:ToAllNotifyInfo(string.format("Infested lose life %s%% more slowly on infestation. Discuss this mod in our TGNS forums.", INFESTATION_INFESTED_BENEFIT_PERCENTAGE))
+				md:ToAllNotifyInfo(string.format("Standing on infestation slows hunger %s%%. Discuss this mod in our TGNS forums.", INFESTATION_INFESTED_BENEFIT_PERCENTAGE))
 			end)
 
 			TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
