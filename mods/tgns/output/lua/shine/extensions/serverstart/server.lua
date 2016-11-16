@@ -54,7 +54,7 @@ function Plugin:Initialise()
                 end
                 TGNS.RegisterEventHook("ClientConfirmConnect", function(client)
                     if TGNS.GetSecondsSinceServerProcessStarted() < 300 then
-                        Shine.ScreenText.Add(71, {X = 0.3, Y = 0.3, Text = "This server recently crashed/started.", Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
+                        Shine.ScreenText.Add(71, {X = 0.3, Y = 0.3, Text = "This server recently crashed/restarted.", Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
                     end
                 end)
                 TGNS.ScheduleAction(10, function()
