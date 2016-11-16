@@ -157,6 +157,15 @@ function Plugin:Initialise()
 					return result
 				end
 
+				local originalOnCommandKill = OnCommandKill
+				OnCommandKill = function(client)
+					if clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 then
+						md:ToAllNotifyInfo(string.format("%s is alone, scared, and begging for sweet release.", TGNS.GetClientName(client)))
+					else
+						originalOnCommandKill(client)
+					end
+				end
+
 			end)
 
 			Shine.Hook.Add("EndGame", "InfestEndGame", function(pluginSelf, gamerules, winningTeam)
