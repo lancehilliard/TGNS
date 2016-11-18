@@ -148,6 +148,9 @@
 !mods/tgns/output/lua/shine/extensions/restartwhenempty/client.lua
 !mods/tgns/output/lua/shine/extensions/restartwhenempty/server.lua
 !mods/tgns/output/lua/shine/extensions/restartwhenempty/shared.lua
+!mods/tgns/output/lua/shine/extensions/rotatingeggspawns/client.lua
+!mods/tgns/output/lua/shine/extensions/rotatingeggspawns/server.lua
+!mods/tgns/output/lua/shine/extensions/rotatingeggspawns/shared.lua
 !mods/tgns/output/lua/shine/extensions/rookiethrottle.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/client.lua
 !mods/tgns/output/lua/shine/extensions/scoreboard/server.lua
