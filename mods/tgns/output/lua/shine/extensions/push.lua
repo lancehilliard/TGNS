@@ -109,7 +109,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			local secondsSinceGuardedNotifications = secondsSinceEpoch - (pushData.guardedLastSentInSeconds or 0)
 			if secondsSinceGuardedNotifications >= threeHoursInSeconds then
 				TGNS.ScheduleAction(2, function()
-					if Shine:IsValidClient(client) then
+					if Shine:IsValidClient(client) and TGNS.IsProduction() then
 						self:Push("tgns-guarded", "TGNS guarded!", string.format("%s is guarded by %s (%s). Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetClientName(client), TGNS.GetCurrentMapName()))
 					end
 				end)
