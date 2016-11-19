@@ -41,7 +41,7 @@ local function refreshKarma(steamId)
 					persistKarma(steamId)
 				else
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
-					TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace))
+					TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s | url: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace, url))
 				end
 			end)
 		end
