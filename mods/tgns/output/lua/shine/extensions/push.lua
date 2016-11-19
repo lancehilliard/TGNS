@@ -144,7 +144,6 @@ function Plugin:Initialise()
 				end
 			end
 			TGNS.ScheduleAction(60, function()
-				Shared.Message("Infested 60 seconds passed...")
 				if TGNS.IsGameInCountdown() or TGNS.IsGameInProgress() then
 					sendInfestedNotification()
 				end
