@@ -216,6 +216,12 @@ function TGNS.Has(elements, element)
 	return result
 end
 
+function TGNS.InsertDistinctly(elements, element) PROFILE("TGNS.InsertDistinctly")
+	if not TGNS.Has(elements, element) then
+		table.insert(elements, element)
+	end
+end
+
 function TGNS.IsProduction()
 	local result
 	if Server then

@@ -495,12 +495,6 @@ function TGNS.IsNumberWithNonZeroPositiveValue(candidate) PROFILE("TGNS.IsNumber
 	return result
 end
 
-function TGNS.InsertDistinctly(elements, element) PROFILE("TGNS.InsertDistinctly")
-	if not TGNS.Has(elements, element) then
-		table.insert(elements, element)
-	end
-end
-
 function TGNS.PlayerTeamIsOverbalanced(player, playerList) PROFILE("TGNS.PlayerTeamIsOverbalanced")
 	local result
 	TGNS.DoTeamSizeComparisonAction(player, playerList, function(playerTeamCount, otherTeamCount)
