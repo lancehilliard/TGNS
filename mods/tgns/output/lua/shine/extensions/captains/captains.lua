@@ -1719,11 +1719,11 @@ if Server or Client then
 		local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 			local randomizedCaptainClients = TGNS.GetRandomizedElements({captain1Client,captain2Client})
 			captainClients = { randomizedCaptainClients[1], randomizedCaptainClients[2] }
-			if Balance and Balance.GetClientWeight then
-				if Balance.GetClientWeight(getPlayerChoiceCaptainClient(captainClients)) > Balance.GetClientWeight(getTeamChoiceCaptainClient(captainClients)) then
-					swapCaptains()
-				end
-			end
+			-- if Balance and Balance.GetClientWeight then
+			-- 	if Balance.GetClientWeight(getPlayerChoiceCaptainClient(captainClients)) > Balance.GetClientWeight(getTeamChoiceCaptainClient(captainClients)) then
+			-- 		swapCaptains()
+			-- 	end
+			-- end
 			TGNS.AddTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
 			captainTeamNumbers[getTeamChoiceCaptainClient(captainClients)] = 1
 			captainTeamNumbers[getPlayerChoiceCaptainClient(captainClients)] = 2
