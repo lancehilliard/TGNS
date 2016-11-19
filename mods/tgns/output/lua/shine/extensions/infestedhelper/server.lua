@@ -10,6 +10,7 @@ local PLAYER_COUNT_THRESHOLD = 14
 local GAME_COUNT_THRESHOLD = 4
 local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
+local infectedCounts = {}
 
 function Plugin:ClientConfirmConnect(client)
 end
@@ -141,6 +142,28 @@ function Plugin:Initialise()
 				end
 				ReplaceUpValue( parent, "PickInfected", PickInfected, { LocateRecurse = true } )
 
+				local oldAttemptInfectionParent, originalAttemptInfection = LocateUpValue( Marine.SecondaryAttack, "AttemptInfection", { LocateRecurse = true } )
+				local function AttemptInfection(marineSelf)
+					local crosshairTargetForInfection
+					local originalGetCrosshairTargetForInfection = marineSelf.GetCrosshairTargetForInfection
+					marineSelf.GetCrosshairTargetForInfection = function(crosshairMarineSelf)
+						crosshairTargetForInfection = originalGetCrosshairTargetForInfection(crosshairMarineSelf)
+						if crosshairTargetForInfection then
+							local originalInfect = crosshairTargetForInfection.Infect
+							crosshairTargetForInfection.Infect = function(targetSelf)
+								local marineClient = TGNS.GetClient(marineSelf)
+								infectedCounts[marineClient] = (infectedCounts[marineClient] or 0) + 1
+								Shared.Message("infectedCounts[marineClient]: " .. tostring(infectedCounts[marineClient]))
+								originalInfect(targetSelf)
+							end
+						end
+						return crosshairTargetForInfection
+					end
+					originalAttemptInfection(marineSelf)
+					marineSelf.GetCrosshairTargetForInfection = originalGetCrosshairTargetForInfection
+				end
+				ReplaceUpValue(oldAttemptInfectionParent, "AttemptInfection", AttemptInfection, { LocateRecurse = true } )
+
 				local originalMarineDeductInfestedEnergy = Marine.DeductInfestedEnergy
 				Marine.DeductInfestedEnergy = function(marineSelf, amount)
 					local modifier = GetIsPointOnInfestation(marineSelf:GetOrigin()) and (1-(INFESTATION_INFESTED_BENEFIT_PERCENTAGE/100)) or 1
@@ -170,11 +193,27 @@ function Plugin:Initialise()
 
 			Shine.Hook.Add("EndGame", "InfestEndGame", function(pluginSelf, gamerules, winningTeam)
 				TGNS.ScheduleAction(1.5, function()
+					local message = ""
 					local initialInfestedClients = TGNS.Where(TGNS.Select(initialInfestedSteamIds, TGNS.GetClientByNs2Id), function(c) return c ~= nil end)
 					if #initialInfestedClients > 0 then
 						local initialInfestedClientNames = TGNS.Select(initialInfestedClients, TGNS.GetClientName)
 						TGNS.SortAscending(initialInfestedClientNames)
-						md:ToAllNotifyInfo(string.format("%sInitial Infested Last Round%s: %s", #initialInfestedClientNames > 1 and string.format("%s ", #initialInfestedClientNames) or "", #initialInfestedClientNames > 1 and "" or "", TGNS.Join(initialInfestedClientNames, ", ")))
+						message = string.format("%sInitial Infested Last Round%s: %s", #initialInfestedClientNames > 1 and string.format("%s ", #initialInfestedClientNames) or "", #initialInfestedClientNames > 1 and "" or "", TGNS.Join(initialInfestedClientNames, ", "))
+					end
+					local mostInfectedPlayerName
+					local mostInfectedCount = 0
+					TGNS.DoForPairs(infectedCounts, function(client, infectedCount)
+						if Shine:IsValidClient(client) and infectedCount > mostInfectedCount then
+							mostInfectedPlayerName = TGNS.GetClientName(client)
+							mostInfectedCount = infectedCount
+						end
+					end)
+					infectedCounts = {}
+					if mostInfectedCount > 0 then
+						message = string.format("%s. Most infections last round: %s (%s)", message, mostInfectedPlayerName, mostInfectedCount)
+					end
+					if TGNS.HasNonEmptyValue(message) then
+						md:ToAllNotifyInfo(message)
 					end
 
 					-- local survivingClients = TGNS.Where(TGNS.GetMarineClients(TGNS.GetPlayerList()), TGNS.IsClientAlive)
