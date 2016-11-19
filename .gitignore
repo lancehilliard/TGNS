@@ -179,7 +179,9 @@
 !mods/tgns/output/lua/shine/extensions/teamswitch.lua
 !mods/tgns/output/lua/shine/extensions/teamticker.lua
 !mods/tgns/output/lua/shine/extensions/tempgroups.lua
-!mods/tgns/output/lua/shine/extensions/tgnsbadges.lua
+!mods/tgns/output/lua/shine/extensions/tgnsbadges/client.lua
+!mods/tgns/output/lua/shine/extensions/tgnsbadges/server.lua
+!mods/tgns/output/lua/shine/extensions/tgnsbadges/shared.lua
 !mods/tgns/output/lua/shine/extensions/timedstart.lua
 !mods/tgns/output/lua/shine/extensions/updatetoreadyroomhelper.lua
 !mods/tgns/output/lua/shine/extensions/uweranking.lua

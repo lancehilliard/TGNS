@@ -1546,42 +1546,7 @@ function Plugin:Initialise()
 
 	ReplaceLocals( PlayerUI_GetOrderPath, { GetMostRelevantPheromone = ReplacementGetMostRelevantPheromone } )
 
-	local badgeDescriptions = {}
-	badgeDescriptions["constellation"] = string.format("Constellation\n\nDonated to UWE during the production\nof the original Natural Selection mod.")
-	badgeDescriptions["dev"] = string.format("Developer\n\nUWE Developer")
-	badgeDescriptions["dev_retired"] = string.format("Retired Developer\n\nRetired UWE Developer")
-	badgeDescriptions["maptester"] = string.format("Maptester\n\nContributes to UWE's official NS2\nmap testing efforts.")
-	badgeDescriptions["playtester"] = string.format("Playtester\n\nContributes to UWE's official NS2\nplaytesting efforts.")
-	badgeDescriptions["ns1_playtester"] = string.format("NS1 Playtester\n\nPlaytested the original NS1.")
-	badgeDescriptions["squad5_blue"] = string.format("Squad Five Blue\n\nIndividually recognized by UWE for\ncontribution(s) to NS2 and its community.")
-	badgeDescriptions["squad5_silver"] = string.format("Squad Five Silver\n\nIndividually recognized by UWE for\ncontribution(s) to NS2 and its community.")
-	badgeDescriptions["squad5_gold"] = string.format("Squad Five Gold\n\nIndividually recognized by UWE for\ncontribution(s) to NS2 and its community.")
-	badgeDescriptions["commander"] = string.format("Commander\n\nCommanded games for at least 10 losing\nhours or 5 winning hours.")
-	badgeDescriptions["community_dev"] = string.format("Community Dev Team\n\nVolunteers to augment UWE's official\ndevelopment of NS2.")
-	badgeDescriptions["reinforced1"] = string.format("Reinforced - Supporter\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced2"] = string.format("Reinforced - Silver\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced3"] = string.format("Reinforced - Gold\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced4"] = string.format("Reinforced - Diamond\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced5"] = string.format("Reinforced - Shadow\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced6"] = string.format("Reinforced - Onos\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced7"] = string.format("Reinforced - Insider\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["reinforced8"] = string.format("Reinforced - Game Director\n\nDonated to the development of NS2\nvia the Reinforced program.")
-	badgeDescriptions["wc2013_supporter"] = string.format("World Championship - Supporter\n\nDonated to the 2013 World Championship.")
-	badgeDescriptions["wc2013_silver"] = string.format("World Championship - Silver\n\nDonated to the 2013 World Championship.")
-	badgeDescriptions["wc2013_gold"] = string.format("World Championship - Gold\n\nDonated to the 2013 World Championship.")
-	badgeDescriptions["wc2013_shadow"] = string.format("World Championship - Shadow\n\nDonated to the 2013 World Championship.")
-	badgeDescriptions["pax2012"] = string.format("PAX East 2012\n\nMet the UWE team at PAX.")
 
-	local originalGetBadgeFormalName = GetBadgeFormalName
-	GetBadgeFormalName = function(name)
-		local result = badgeDescriptions[name]
-		if result then
-			result = string.format("%s\n\nhttp://wiki.unknownworlds.com/ns2/Badges", result)
-		else
-			result = originalGetBadgeFormalName(name)
-		end
-		return result
-	end
 
 	-- GUIGameFeedback.kMinPlayTime = 0
 	local originalGUIFeedbackState_EndSendReport = GUIFeedbackState_End.SendReport
