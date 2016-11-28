@@ -39,6 +39,8 @@ function Plugin:Initialise()
 
 	    if Shine.GetGamemode() == "Infested" then
 
+	    	kWelderPowerRepairRate = kWelderPowerRepairRate * 2
+
 	    	if not TGNS.IsProduction() then
 	    		TGNS.ScheduleAction(5, function()
 		    		IMGameMaster.kTimeBeforeInfectedChosen = 1
