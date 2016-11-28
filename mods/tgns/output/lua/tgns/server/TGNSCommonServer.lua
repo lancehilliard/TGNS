@@ -1624,16 +1624,16 @@ function TGNS.GetPlayerMatchingName(name, team) PROFILE("TGNS.GetPlayerMatchingN
 
 	local function Matches(player) PROFILE("Matches")
 		if nameMatchCount == -1 then
-			return // exact match found, skip others to avoid further partial matches
+			return -- exact match found, skip others to avoid further partial matches
 		end
 		local playerName =  player:GetName()
-		if player:GetName() == name then // exact match
+		if player:GetName() == name then -- exact match
 			if team == nil or team == -1 or team == player:GetTeamNumber() then
 				match = player
 				nameMatchCount = -1
 			end
 		else
-			local index = string.find(string.lower(playerName), string.lower(name), nil, true) // case insensitive partial match without pattern matching
+			local index = string.find(string.lower(playerName), string.lower(name), nil, true) -- case insensitive partial match without pattern matching
 			if index ~= nil then
 				if team == nil or team == -1 or team == player:GetTeamNumber() then
 					match = player
@@ -1646,7 +1646,7 @@ function TGNS.GetPlayerMatchingName(name, team) PROFILE("TGNS.GetPlayerMatchingN
 	TGNS.AllPlayers(Matches)()
 
 	if nameMatchCount > 1 then
-		match = nil // if partial match is not unique, clear the match
+		match = nil -- if partial match is not unique, clear the match
 	end
 
 	return match
@@ -1735,9 +1735,9 @@ function TGNS.UrlEncode(str) PROFILE("TGNS.UrlEncode")
   return str
 end
 
-////////////////////////////////
-// Intercept Network Messages //
-////////////////////////////////
+--------------------------------
+-- Intercept Network Messages --
+--------------------------------
 
 kTGNSNetworkMessageHooks = {}
 
@@ -1758,7 +1758,7 @@ end
 local originalHookNetworkMessage = Server.HookNetworkMessage
 
 Server.HookNetworkMessage = function(messageName, callback)
-	//Print("TGNS Hooking: %s", messageName)
+	-- Print("TGNS Hooking: %s", messageName)
 	originalOnNetworkMessage[messageName] = callback
 	callback = function(...) onNetworkMessage(messageName, ...) end
 	kTGNSNetworkMessageHooks[messageName] = callback
