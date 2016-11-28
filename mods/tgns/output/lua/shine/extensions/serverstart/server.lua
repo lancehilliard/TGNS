@@ -4,7 +4,7 @@ Plugin.HasConfig = false
 local md = TGNSMessageDisplayer.Create()
 local serverStartTempfilePath = "config://tgns/temp/serverStart.json"
 local NUMBER_OF_ACTIVE_MODS_INDICATIVE_OF_A_SERVER_RESTART = 15
-local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 4
+local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 3
 
 function Plugin:ClientConfirmConnect(client)
 end
@@ -64,13 +64,16 @@ function Plugin:Initialise()
                 end)
             end
         end
+    end)
 
-        local mapNameNotifyNames = {"WINNER_VOTES", "CHOOSING_RANDOM_MAP"}
+    local mapNameNotifyNames = {"WINNER_VOTES", "CHOOSING_RANDOM_MAP", "WINNER_CYCLING", "WINNER_NEXT_MAP"}
+    TGNS.ScheduleAction(5, function()
         local originalSendTranslatedNotify = Shine.Plugins.mapvote.SendTranslatedNotify
         Shine.Plugins.mapvote.SendTranslatedNotify = function(mapVoteSelf, target, name, params)
-            if TGNS.Has(mapNameNotifyNames, name) and TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted()) > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
+            if TGNS.Has(mapNameNotifyNames, name) then
                 local votedInMapName = params.MapName
-                if votedInMapName then
+                local hoursSinceServerProcessStarted = TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted())
+                if votedInMapName and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
                     local serverStartData = self:GetServerStartData()
                     serverStartData.startMapName = votedInMapName
                     self:SetServerStartData(serverStartData)
