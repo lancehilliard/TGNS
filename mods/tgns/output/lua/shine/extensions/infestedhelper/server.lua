@@ -180,24 +180,13 @@ function Plugin:Initialise()
 					return result
 				end
 
-				-- local originalOnCommandKill = OnCommandKill
-				-- OnCommandKill = function(client)
-				-- 	if clientIsInfected(client) and #TGNS.Where(TGNS.GetClientList(), clientIsInfected) == 1 then
-				-- 		md:ToAllNotifyInfo(string.format("%s is alone, scared, and begging for sweet release.", TGNS.GetClientName(client)))
-				-- 	else
-				-- 		originalOnCommandKill(client)
-				-- 	end
-				-- end
-
-				local originalLiveMixinKill = LiveMixin.Kill
-				LiveMixin.Kill = function(mixinSelf, attacker, doer, point, direction)
-					local client = TGNS.GetClient(mixinSelf)
-					if client and attacker == nil and doer == nil and clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 and not TGNS.IsClientAFK(client) then
+				Event.Hook("Console_kill", function(client)
+					if clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 and not TGNS.IsClientAFK(client) then
 						md:ToAllNotifyInfo(string.format("%s tried to solve it...", TGNS.GetClientName(client)))
 					else
-						originalLiveMixinKill(mixinSelf, attacker, doer, point, direction)
+						OnCommandKill(client)
 					end
-				end
+				end)
 
 			end)
 
