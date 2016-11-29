@@ -47,6 +47,7 @@ Plugin.GAME_FEEDBACK = "scoreboard_GAME_FEEDBACK"
 Plugin.REQUEST_STREAMING_ICON = "scoreboard_REQUEST_STREAMING_ICON"
 Plugin.ENABLE_MUTE = "scoreboard_ENABLE_MUTE"
 -- Plugin.FOG_NEEDS_LIFT = "scoreboard_FOG_NEEDS_LIFT"
+Plugin.PRECISIONRESOURCES = "scoreboard_PRECISIONRESOURCES"
 
 
 TGNS.RegisterNetworkMessage(Plugin.SCOREBOARD_DATA, {i="integer", p="string(6)", c="boolean", s="boolean", b="boolean", w="boolean", m="boolean", cg="boolean", gg="boolean", pg="boolean", t="string(100)", u1="boolean", u2="boolean", u3="boolean", u4="boolean", u5="boolean", u6="boolean", u7="boolean", u8="boolean", u9="boolean", streaming="string(100)", rtk="integer"})
@@ -96,6 +97,7 @@ TGNS.RegisterNetworkMessage(Plugin.GAME_FEEDBACK, {rating="integer", reasons="st
 TGNS.RegisterNetworkMessage(Plugin.REQUEST_STREAMING_ICON, {u="string(250)"})
 TGNS.RegisterNetworkMessage(Plugin.ENABLE_MUTE, {})
 -- TGNS.RegisterNetworkMessage(Plugin.FOG_NEEDS_LIFT, {b="boolean"})
+TGNS.RegisterNetworkMessage(Plugin.PRECISIONRESOURCES, {i="integer", r="float"})
 
 function Plugin:Initialise()
 	self.Enabled = true

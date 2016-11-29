@@ -34,6 +34,7 @@ gameState.gameIsInProgressLastSetToTrue = 0
 gameState.gameIsInProgressLastSetToFalse = 0
 gameState.gameIsInProgress = false
 gameState.gameIsInCountdown = false
+gameState.precisionResources = {}
 local serverSimpleName
 local squadNumbers={}
 local hudTexts = {}
@@ -133,6 +134,10 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 
 	streamingWebAddresses[message.i] = message.streaming
 	resourceTowersKilled[message.i] = message.rtk
+end)
+
+TGNS.HookNetworkMessage(Plugin.PRECISIONRESOURCES, function(message)
+	gameState.precisionResources[message.i] = message.r
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -782,15 +787,27 @@ function Plugin:Initialise()
 		        	,{n="PlayerStreamingIcon",t="ui/badges/streaming/camera.dds",x=-220,l=function(clientIndex, teamNumber) return string.format("Streaming/Recording\n\n%s is streaming/recording!\n\nWatch: %s\n\nAre you streaming/recording? Chat '!streaming' to share.", Scoreboard_GetPlayerData(clientIndex, "Name"), streamingWebAddresses[clientIndex]) end}
 		    	}
 
-		    	if teamNumber == kMarineTeamType and ((Client.GetLocalClientTeamNumber() == kMarineTeamType) or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)) then
-		    		local statusText = player.Status:GetText()
-		    		if statusText and statusText ~= "Dead" then
-			    		player.Status:SetColor(Color(1,1,1))
-			    		TGNS.DoForPairs(statusColors, function(weapon, color)
-			    			if TGNS.Contains(statusText, weapon) then
-			    				player.Status:SetColor(color)
-			    			end
-			    		end)
+		    	if teamNumber == kMarineTeamType then
+		    		if ((Client.GetLocalClientTeamNumber() == kMarineTeamType) or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)) then
+			    		local statusText = player.Status:GetText()
+			    		if statusText and statusText ~= "Dead" then
+				    		player.Status:SetColor(Color(1,1,1))
+				    		TGNS.DoForPairs(statusColors, function(weapon, color)
+				    			if TGNS.Contains(statusText, weapon) then
+				    				player.Status:SetColor(color)
+				    			end
+				    		end)
+			    		end
+		    		end
+		    	elseif teamNumber == kAlienTeamType then
+		    		if ((Client.GetLocalClientTeamNumber() == kAlienTeamType) or (Client.GetLocalClientTeamNumber() == kSpectatorIndex)) then
+		    			-- Shared.Message(string.format("%s %s %s %s", player.Status:GetText(), gameState.gameIsInProgress, playerRecord.Resources, playerRecord.ClientIndex))
+		    			if playerRecord.Resources < 3 and gameState.gameIsInProgress and TGNS.Contains(player.Status:GetText(), "Gorge") then
+		    				local precisionResources = gameState.precisionResources[playerRecord.ClientIndex]
+		    				if precisionResources and precisionResources < 3 then
+		    					player["Resources"]:SetText(ToString(math.floor(precisionResources * 10) / 10))
+		    				end
+		    			end
 		    		end
 		    	end
 

@@ -811,6 +811,20 @@ function Plugin:Initialise()
 		-- end)
 	-- end)
 
+    local originalSetResources
+	originalSetResources = TGNS.ReplaceClassMethod("Player", "SetResources", function(playerSelf, amount)
+		-- Shared.Message(string.format("SetResources... %s %s", TGNS.GetClientIndex(TGNS.GetClient(playerSelf)), amount))
+		originalSetResources(playerSelf, amount)
+		local clientSelf = TGNS.GetClient(playerSelf)
+		if clientSelf ~= nil and amount ~= nil and amount < 5 then
+			if playerSelf then
+				TGNS.DoFor(TGNS.GetAlienPlayers(TGNS.GetPlayerList()), function(p)
+					TGNS.SendNetworkMessageToPlayer(p, self.PRECISIONRESOURCES, {i=TGNS.GetClientIndex(clientSelf), r=amount})
+				end)
+			end
+		end
+	end)
+
 	return true
 end
 
