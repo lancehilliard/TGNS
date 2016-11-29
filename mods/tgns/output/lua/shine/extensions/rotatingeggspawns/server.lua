@@ -22,7 +22,6 @@ function Plugin:Initialise()
 						local hiveEligibleForPityEgg = TGNS.FirstOrNil(entities, function(hive) return GetNumEggs(hive) == 0 and Shared.GetTime() - (pityEggGivenWhen[hive] or 0) > 30 end)
 						if hiveEligibleForPityEgg then
 							TGNS.SortAscending(entities, function(hive) return hiveEligibleForPityEgg == hive and 0 or 1 end)
-							Shared.Message(string.format("pityEggGivenWhen[hiveEligibleForPityEgg] %s: %s", hiveEligibleForPityEgg:GetLocationName(), Shared.GetTime()))
 							pityEggGivenWhen[hiveEligibleForPityEgg] = Shared.GetTime()
 						end
 					end
