@@ -813,7 +813,6 @@ function Plugin:Initialise()
 
     local originalSetResources
 	originalSetResources = TGNS.ReplaceClassMethod("Player", "SetResources", function(playerSelf, amount)
-		-- Shared.Message(string.format("SetResources... %s %s", TGNS.GetClientIndex(TGNS.GetClient(playerSelf)), amount))
 		originalSetResources(playerSelf, amount)
 		local clientSelf = TGNS.GetClient(playerSelf)
 		if clientSelf ~= nil and amount ~= nil and amount < 5 then
