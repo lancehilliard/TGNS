@@ -1619,7 +1619,7 @@ function Plugin:Initialise()
 					if #playerTunnelDescriptionParts == 2 then
 						local olderEntrance = playerTunnelDescriptionParts[1]
 						local newerEntrance = TGNS.Replace(playerTunnelDescriptionParts[2], "/ ", "")
-						result = string.format("open a tunnel to %s (crouch to toggle)", player:GetCrouching() and olderEntrance or newerEntrance)
+						result = string.format("open a tunnel to %s%s", player:GetCrouching() and olderEntrance or newerEntrance, olderEntrance == newerEntrance and "" or " (crouch to toggle)")
 					end
 				else
 					local entranceToConnectTo = playerTunnelDescriptions
