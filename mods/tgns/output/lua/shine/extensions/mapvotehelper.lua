@@ -198,6 +198,7 @@ function Plugin:Initialise()
 			local steamId = TGNS.GetClientSteamId(client)
 			mapNominations[steamId] = mapNominations[steamId] or {}
 			local player = TGNS.GetPlayer(client)
+			local infestedNominations = TGNS.Where(Shine.Plugins.mapvote.Vote.Nominated, function(mapName) return TGNS.StartsWith(mapName, "infest_") end)
 			if mapSetSelected then
 				md:ToPlayerNotifyError(player, "An admin has pre-selected map vote options and disallowed nominations.")
 			elseif #mapNominations[steamId] > 0 and not TGNS.IsClientSM(client) then
@@ -206,6 +207,8 @@ function Plugin:Initialise()
 				md:ToPlayerNotifyError(player, string.format("SMs may nominate only two maps each. You have already nominated %s and %s.", mapNominations[steamId][1], mapNominations[steamId][2]))
 			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps > 0 and TGNS.Has(Shine.Plugins.mapvote.LastMapData, mapName) then
 				md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
+			elseif #infestedNominations >= 2 then
+				md:ToPlayerNotifyError(player, string.format("%s and %s are already nominated. Only two Infested maps may be nominated.", infestedNominations[1], infestedNominations[2]))
 			else
 				local mapVoteNominationsCollectionContainedMapNameBeforeExecutingOriginalFunc = table.contains(Shine.Plugins.mapvote.Vote.Nominated, mapName)
 				originalNominateFunc(client, mapName)
