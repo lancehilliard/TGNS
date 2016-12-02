@@ -59,8 +59,8 @@ local function IsTargetProtectedPrimerOnly(targetClient, playerList)
     return result
 end
 
-local function IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList)
-    local result = TGNS.IsPrimerOnlyClient(targetClient) and clientSatisfiesBkaRequirement(targetClient) and #TGNS.GetStrangersClients(playerList) > Shine.Plugins.communityslots.Config.MinimumStrangers
+local function IsPrimerOnlyTargetProtectedDueToUnprotectedStrangers(targetClient, playerList)
+    local result = TGNS.IsPrimerOnlyClient(targetClient) and clientSatisfiesBkaRequirement(targetClient) and TGNS.Any(TGNS.GetStrangersClients(playerList), function(c) return not IsTargetProtectedStranger(c, playerList) end)
     return result
 end
 
@@ -420,11 +420,11 @@ function Plugin:IsTargetBumpable(targetClient, playerList, joiningSteamId)
         local targetIsProtectedStranger = IsTargetProtectedStranger(targetClient, playerList) and targetClientHasSlotsPrivilege
         local targetIsProtectedPrimerOnly = IsTargetProtectedPrimerOnly(targetClient, playerList) and targetClientHasSlotsPrivilege
         local targetAndJoiningArePrimerOnly = TargetAndJoiningArePrimerOnly(targetClient, joiningSteamId) and targetClientHasSlotsPrivilege
-        local targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers = IsPrimerOnlyTargetProtectedDueToExcessStrangers(targetClient, playerList) and targetClientHasSlotsPrivilege
+        local targetIsPrimerOnlyWhoIsProtectedDueToUnprotectedStrangers = IsPrimerOnlyTargetProtectedDueToUnprotectedStrangers(targetClient, playerList) and targetClientHasSlotsPrivilege
         local targetIsNotYetConnectedEnoughToBeConsideredBumpable = not TGNS.Has(clientsWhoAreConnectedEnoughToBeConsideredBumpable, targetClient)
         local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled() and targetClientHasSlotsPrivilege
 
-        if joinerIsStranger or joinerIsPrimerSignerWhoIsNotPlayingWithBka or joinerIsNonSmDuringGameAndLacksBumpKarma or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToExcessStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
+        if joinerIsStranger or joinerIsPrimerSignerWhoIsNotPlayingWithBka or joinerIsNonSmDuringGameAndLacksBumpKarma or targetIsSM or targetIsProtectedCommander or targetIsProtectedStranger or targetIsProtectedPrimerOnly or targetAndJoiningArePrimerOnly or targetIsPrimerOnlyWhoIsProtectedDueToUnprotectedStrangers or targetIsNotYetConnectedEnoughToBeConsideredBumpable or captainsModeIsEnabled
         then
             result = false
         end
