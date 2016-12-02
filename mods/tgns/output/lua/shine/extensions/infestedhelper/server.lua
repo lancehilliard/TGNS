@@ -6,7 +6,7 @@ local deadMd = TGNSMessageDisplayer.Create("DEAD")
 local infestedMd = TGNSMessageDisplayer.Create("INFESTED")
 local INFESTED_CHAT_CHARACTERS = "inf "
 local initialInfestedSteamIds
-local PLAYER_COUNT_THRESHOLD = 14
+local PLAYER_COUNT_THRESHOLD = 12
 local GAME_COUNT_THRESHOLD = 4
 local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
