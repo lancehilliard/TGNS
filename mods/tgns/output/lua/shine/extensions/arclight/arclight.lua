@@ -150,18 +150,21 @@ if Server or Client then
 		local surrenderWeakerTeamIfConditionsAreRight = function()
 			local timeIsRight = not (TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= Shine.Plugins.captains:GetCaptainsNightStartHourLocalServerTime() - 1)
 			if timeIsRight then
-				local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
-				
-				if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= Shine.Plugins.communityslots.Config.PublicSlots and TGNS.IsGameInProgress() and not winOrLoseForcedRecently and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
-					pointsRemaining[kMarineTeamType] = pointsRemaining[kMarineTeamType] or 0
-					pointsRemaining[kAlienTeamType] = pointsRemaining[kAlienTeamType] or 0
-					local surrenderingTeamNumber = pointsRemaining[kMarineTeamType] < pointsRemaining[kAlienTeamType] and kMarineTeamType or kAlienTeamType
-					local surrenderingTeamName = TGNS.GetTeamName(surrenderingTeamNumber)
-					md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players). %s have fewer points and surrender.", Shine.Plugins.communityslots.Config.PublicSlots, surrenderingTeamName))
-					Shine.Plugins.winorlose:CallWinOrLose(surrenderingTeamNumber)
-					winOrLoseForcedRecently = true
-					configExtend(false)
-					TGNS.ScheduleAction(75, function() winOrLoseForcedRecently = false end)
+				local aShortTimeHasPassed = TGNS.ConvertSecondsToMinutes(TGNS.GetSecondsSinceMapLoaded()) > 5
+				if aShortTimeHasPassed then
+					local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
+					
+					if Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and numberOfNonAfkHumans >= Shine.Plugins.communityslots.Config.PublicSlots and TGNS.IsGameInProgress() and not winOrLoseForcedRecently and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+						pointsRemaining[kMarineTeamType] = pointsRemaining[kMarineTeamType] or 0
+						pointsRemaining[kAlienTeamType] = pointsRemaining[kAlienTeamType] or 0
+						local surrenderingTeamNumber = pointsRemaining[kMarineTeamType] < pointsRemaining[kAlienTeamType] and kMarineTeamType or kAlienTeamType
+						local surrenderingTeamName = TGNS.GetTeamName(surrenderingTeamNumber)
+						md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players). %s have fewer points and surrender.", Shine.Plugins.communityslots.Config.PublicSlots, surrenderingTeamName))
+						Shine.Plugins.winorlose:CallWinOrLose(surrenderingTeamNumber)
+						winOrLoseForcedRecently = true
+						configExtend(false)
+						TGNS.ScheduleAction(75, function() winOrLoseForcedRecently = false end)
+					end
 				end
 			end
 		end
