@@ -1475,37 +1475,39 @@ if Server or Client then
 				if bothTeamsAreReady() then
 					TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
 				else
-					local message
-					local duration = 3
-					local r = 0
-					local g = 255
-					local b = 0
-					local secondsRemaining = timeAtWhichToForceRoundStart - now
-					if secondsRemaining >= 1 then
-						--message = string.format("Game will force-start in %s.\nType in team chat: !plan", string.DigitalTime(secondsRemaining))
-						message = string.format("Game will force-start in %s.\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", string.DigitalTime(secondsRemaining))
-						if secondsRemaining < 30 then
+					if not TGNS.IsGameInCountdown() and not TGNS.IsGameInProgress() then
+						local message
+						local duration = 3
+						local r = 0
+						local g = 255
+						local b = 0
+						local secondsRemaining = timeAtWhichToForceRoundStart - now
+						if secondsRemaining >= 1 then
+							--message = string.format("Game will force-start in %s.\nType in team chat: !plan", string.DigitalTime(secondsRemaining))
+							message = string.format("Game will force-start in %s.\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", string.DigitalTime(secondsRemaining))
+							if secondsRemaining < 30 then
+								r = 255
+								g = 255
+								b = 0
+							end
+
+							if Shine.Plugins.timedstart and Shine.Plugins.timedstart.WarnPlayersOfImminentGameStart then
+								Shine.Plugins.timedstart:WarnPlayersOfImminentGameStart(TGNS.GetPlayerList(), secondsRemaining)
+							end
+
+							TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
+						else
+							message = "Planning time expired.\nGame is force-starting now."
+							duration = 7
+							startGame()
 							r = 255
-							g = 255
+							g = 0
 							b = 0
 						end
-
-						if Shine.Plugins.timedstart and Shine.Plugins.timedstart.WarnPlayersOfImminentGameStart then
-							Shine.Plugins.timedstart:WarnPlayersOfImminentGameStart(TGNS.GetPlayerList(), secondsRemaining)
-						end
-
-						TGNS.ScheduleAction(1, warnOfPendingCaptainsGameStart)
-					else
-						message = "Planning time expired.\nGame is force-starting now."
-						duration = 7
-						startGame()
-						r = 255
-						g = 0
-						b = 0
+						-- Shine:SendText(c, Shine.BuildScreenMessage(51, 0.5, 0.85, message, duration, r, g, b, 1, 1, 0))
+						--Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+						Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true})
 					end
-					-- Shine:SendText(c, Shine.BuildScreenMessage(51, 0.5, 0.85, message, duration, r, g, b, 1, 1, 0))
-					--Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
-					Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true})
 				end
 			end
 		end
