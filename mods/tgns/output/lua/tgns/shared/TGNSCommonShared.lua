@@ -8,12 +8,12 @@ TGNS.LOWEST_EVENT_HANDLER_PRIORITY = 20
 
 TGNS.ENDGAME_TIME_TO_READYROOM = 8
 
-TGNS.MARINE_COLOR_R = kMarineFontColor.r * 255
-TGNS.MARINE_COLOR_G = kMarineFontColor.g * 255
-TGNS.MARINE_COLOR_B = kMarineFontColor.b * 255
-TGNS.ALIEN_COLOR_R = kAlienFontColor.r * 255
-TGNS.ALIEN_COLOR_G = kAlienFontColor.g * 255
-TGNS.ALIEN_COLOR_B = kAlienFontColor.b * 255
+TGNS.MARINE_COLOR_R = kMarineTeamColorFloat.r * 255
+TGNS.MARINE_COLOR_G = kMarineTeamColorFloat.g * 255
+TGNS.MARINE_COLOR_B = kMarineTeamColorFloat.b * 255
+TGNS.ALIEN_COLOR_R = kAlienTeamColorFloat.r * 255
+TGNS.ALIEN_COLOR_G = kAlienTeamColorFloat.g * 255
+TGNS.ALIEN_COLOR_B = kAlienTeamColorFloat.b * 255
 
 TGNS.READYROOM_LOCATION_ID = 1000
 
