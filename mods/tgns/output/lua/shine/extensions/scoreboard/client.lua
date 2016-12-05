@@ -601,6 +601,7 @@ function Plugin:Initialise()
 	GUIScoreboard.UpdateTeam = function(self, updateTeam)
 		originalGUIScoreboardUpdateTeam(self, updateTeam)
 
+		local numberOfRegularsPlaying = 0
 		if self.visible then
 	        local gameTime = PlayerUI_GetGameLengthTime()
 	        local minutes = math.floor( gameTime / 60 )
@@ -611,10 +612,16 @@ function Plugin:Initialise()
 		    for teamsIndex, team in ipairs(self.teams) do
 		    	local playerList = team["PlayerList"]
 		    	local teamScores = team["GetScores"]()
+
 				for playerListIndex, player in ipairs(playerList) do
 					local playerRecord = teamScores[playerListIndex]
-					if playerRecord and playerRecord.SteamId > 0 then
-						ingamePlayersCount = ingamePlayersCount + 1
+					if playerRecord then
+						if playerRecord.SteamId > 0 then
+							ingamePlayersCount = ingamePlayersCount + 1
+						end
+						if TGNS.IsGameplayTeamNumber(playerRecord.EntityTeamNumber) and TGNS.Contains(prefixes[playerRecord.ClientIndex], "P") or TGNS.Contains(prefixes[playerRecord.ClientIndex], "A") then
+							numberOfRegularsPlaying = numberOfRegularsPlaying + 1
+						end
 					end
 				end
 		    end
@@ -655,6 +662,9 @@ function Plugin:Initialise()
 			        local prefix = prefixes[clientIndex]
 			        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
 			        local numberColor = Color(0.5, 0.5, 0.5, 1)
+			        if numberOfRegularsPlaying >= 14 then
+			        	numberColor = Color(255/255, 255/255, 138/255, 1)
+			        end
 			        if isCaptainsCaptain[clientIndex] == true then
 			        	numberColor = CaptainsCaptainFontColor
 			        	captainsEnabled = true
