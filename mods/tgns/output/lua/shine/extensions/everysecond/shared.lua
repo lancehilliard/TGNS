@@ -8,16 +8,18 @@ local Plugin = {}
 -- TGNS.RegisterNetworkMessage(Plugin.FOO, {})
 
 function Plugin:Think()
-	local secondsSinceLastEverySecondHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEverySecondHookCallInSeconds
-	if secondsSinceLastEverySecondHookCall >= 1 then
-		TGNS.ExecuteEventHooks("OnEverySecond", secondsSinceLastEverySecondHookCall)
-		timeOfLastEverySecondHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
-	end
+	if TGNS then
+		local secondsSinceLastEverySecondHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEverySecondHookCallInSeconds
+		if secondsSinceLastEverySecondHookCall >= 1 then
+			TGNS.ExecuteEventHooks("OnEverySecond", secondsSinceLastEverySecondHookCall)
+			timeOfLastEverySecondHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
+		end
 
-	local secondsSinceLastEveryMinuteHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEveryMinuteHookCallInSeconds
-	if secondsSinceLastEveryMinuteHookCall >= TGNS.ConvertMinutesToSeconds(1) then
-		TGNS.ExecuteEventHooks("OnEveryMinute", secondsSinceLastEveryMinuteHookCall)
-		timeOfLastEveryMinuteHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
+		local secondsSinceLastEveryMinuteHookCall = TGNS.GetSecondsSinceMapLoaded() - timeOfLastEveryMinuteHookCallInSeconds
+		if secondsSinceLastEveryMinuteHookCall >= TGNS.ConvertMinutesToSeconds(1) then
+			TGNS.ExecuteEventHooks("OnEveryMinute", secondsSinceLastEveryMinuteHookCall)
+			timeOfLastEveryMinuteHookCallInSeconds = TGNS.GetSecondsSinceMapLoaded()
+		end
 	end
 end
 
