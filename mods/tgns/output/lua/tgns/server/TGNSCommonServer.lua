@@ -1252,7 +1252,7 @@ function TGNS.HasClientSignedPrimerWithGames(client) PROFILE("TGNS.HasClientSign
 end
 
 function TGNS.HasSteamIdSignedPrimer(steamId) PROFILE("TGNS.HasSteamIdSignedPrimer")
-	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "primer_group")
+	local result = Shine.Plugins.permissions and Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "primer_group")
 	return result
 end
 
@@ -1266,7 +1266,7 @@ function TGNS.HasClientSignedPrimer(client) PROFILE("TGNS.HasClientSignedPrimer"
 end
 
 function TGNS.IsSteamIdAdmin(steamId) PROFILE("TGNS.IsSteamIdAdmin")
-	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "fulladmin_group")
+	local result = Shine.Plugins.permissions and Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "fulladmin_group")
 	return result
 end
 
@@ -1280,7 +1280,7 @@ function TGNS.IsClientAdmin(client) PROFILE("TGNS.IsClientAdmin")
 end
 
 function TGNS.IsSteamIdSM(steamId) PROFILE("TGNS.IsSteamIdSM")
-	local result = Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "sm_group")
+	local result = Shine.Plugins.permissions and Shine.Plugins.permissions:IsSteamIdInGroup(steamId, "sm_group")
 	return result
 end
 
