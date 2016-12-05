@@ -41,7 +41,7 @@ local function refreshKarma(steamId)
 					persistKarma(steamId)
 				else
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
-					TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s | url: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace, url))
+					TGNS.DebugPrint(string.format("karma ERROR: Unable to access karma data for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s | url: %s", steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace, url), false, "karma")
 				end
 			end)
 		end
@@ -53,7 +53,7 @@ local function addKarma(steamId, deltaName)
 	if httpFailureCount[steamId] < HttpFailureThreshold and TGNS.IsNumberWithNonZeroPositiveValue(steamId) then
 		local delta = deltaName and Shine.Plugins.karma.Config.Deltas[deltaName] or nil
 		if delta == nil then
-			TGNS.DebugPrint(string.format("karma ERROR: Unable to resolve %s delta for NS2ID %s.", deltaName, steamId))
+			TGNS.DebugPrint(string.format("karma ERROR: Unable to resolve %s delta for NS2ID %s.", deltaName, steamId), false, "karma")
 		else
 			karmaCache[steamId] = karmaCache[steamId] or 0
 			karmaCache[steamId] = karmaCache[steamId] + delta
@@ -72,7 +72,7 @@ local function addKarma(steamId, deltaName)
 				else
 					karmaCache[steamId] = karmaCache[steamId] - delta
 					httpFailureCount[steamId] = httpFailureCount[steamId] + 1
-					TGNS.DebugPrint(string.format("karma ERROR: Unable to save %s delta (%s) for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", deltaName, delta, steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace))
+					TGNS.DebugPrint(string.format("karma ERROR: Unable to save %s delta (%s) for NS2ID %s (failures: %s). msg: %s | response: %s | stacktrace: %s", deltaName, delta, steamId, httpFailureCount[steamId], karmaResponse.msg, karmaResponseJson, karmaResponse.stacktrace), false, "karma")
 				end
 			end)
 		end
