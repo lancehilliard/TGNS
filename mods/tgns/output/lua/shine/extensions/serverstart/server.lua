@@ -17,7 +17,7 @@ function Plugin:CreateCommands()
 	sh_loghttp:Help( "Log HTTP requests for map duration. Expensive." )
 
     local warnRestartCommand = self:BindCommand("sh_warnrestart", nil, function(client)
-        Shine.ScreenText.Add(41, {X = 0.5, Y = 0.35, Text = "Server restarting.\nPlease wait.", Duration = 30, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true})
+        Shine.ScreenText.Add(41, {X = 0.5, Y = 0.35, Text = "Server restarting.\nPlease wait while\nyou reconnect\nautomatically.", Duration = 30, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true})
         TGNS.DoFor(TGNS.GetPlayerList(), function(p)
         	TGNS.SendNetworkMessageToPlayer(p, self.RECONNECT, {})
         end)
