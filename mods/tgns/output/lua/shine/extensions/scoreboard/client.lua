@@ -411,7 +411,9 @@ function hudTexts.initializeAlienLifeformsHudText()
 				table.insert(lines, gorgeCountPredicate(#gorgeNames) and string.format("%sx Gorge %s", #gorgeNames, getNamesDisplay(gorgeNames)) or "")
 				table.insert(lines, skulkCountPredicate(#skulkNames) and string.format("%sx Skulk/Wildcard %s", #skulkNames, getNamesDisplay(skulkNames)) or "")
 				table.insert(lines, noPlansCountPredicate(#noPlansNames) and string.format("%sx ??? %s", #noPlansNames, getNamesDisplay(noPlansNames)) or "")
-				table.insert(lines, footerPredicate() and "Click your scoreboard row's circle to choose." or "")
+				if math.floor(Shared.GetTime()) % 2 == 0 then
+					table.insert(lines, footerPredicate() and "Click your scoreboard row's circle to choose." or "")
+				end
 
 				text = TGNS.Join(lines, "\n")
 			end
