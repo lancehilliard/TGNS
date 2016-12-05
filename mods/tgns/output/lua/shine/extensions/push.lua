@@ -1,7 +1,7 @@
 local md = TGNSMessageDisplayer.Create("PUSH")
 local pushTempfilePath = "config://tgns/temp/push.json"
 local Plugin = {}
-local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-infested', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test', 'tgns-guarded', 'tgns-admin'}
+local PUSHBULLET_CHANNEL_IDS = {'tgns-bots', 'tgns-infested', 'tgns-priming', 'tgns-seeded', 'tgns-primed', 'tgns-captains', 'tgns-test', 'tgns-guarded', 'tgns-admin', 'tgns-arclight'}
 
 function Plugin:Push(pushChannelId, pushTitle, pushMessage, client)
 	local sourcePlayerId = client and TGNS.GetClientSteamId(client) or 0
@@ -138,7 +138,7 @@ function Plugin:Initialise()
 				local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
 				local secondsSinceInfestedNotifications = secondsSinceEpoch - (pushData.infestedLastSentInSeconds or 0)
 				if secondsSinceInfestedNotifications >= threeHoursInSeconds and TGNS.IsProduction() then
-					self:Push("tgns-infested", "TGNS Infested!", string.format("%s is Infested! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName(), TGNS.GetCurrentMapName()))
+					self:Push("tgns-infested", "TGNS Infested!", string.format("%s is Infested! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName()))
 					pushData.infestedLastSentInSeconds = secondsSinceEpoch
 					Shine.SaveJSONFile(pushData, pushTempfilePath)
 				end
@@ -150,6 +150,28 @@ function Plugin:Initialise()
 				TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 					Shared.Message("Infested GameCountdownStarted...")
 					sendInfestedNotification()
+				end)
+			end)
+		end
+		if TGNS.GetCurrentMapName() == "ns2_tgns_arclight" then
+			local function sendArclightNotification()
+				local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
+				local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
+				local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+				local secondsSinceArclightNotifications = secondsSinceEpoch - (pushData.arclightLastSentInSeconds or 0)
+				if secondsSinceArclightNotifications >= threeHoursInSeconds and TGNS.IsProduction() then
+					self:Push("tgns-arclight", "TGNS Arclight!", string.format("%s is playing Arclight! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName()))
+					pushData.arclightLastSentInSeconds = secondsSinceEpoch
+					Shine.SaveJSONFile(pushData, pushTempfilePath)
+				end
+			end
+			TGNS.ScheduleAction(60, function()
+				if TGNS.IsGameInCountdown() or TGNS.IsGameInProgress() then
+					sendArclightNotification()
+				end
+				TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
+					Shared.Message("Arclight GameCountdownStarted...")
+					sendArclightNotification()
 				end)
 			end)
 		end
