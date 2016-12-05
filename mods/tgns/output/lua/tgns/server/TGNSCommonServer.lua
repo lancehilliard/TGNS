@@ -1151,11 +1151,6 @@ function TGNS.ResetAllPlayerScores() PROFILE("TGNS.ResetAllPlayerScores")
     end
 end
 
-function TGNS.IsGameplayTeamNumber(teamNumber) PROFILE("TGNS.IsGameplayTeamNumber")
-	local result = teamNumber == kMarineTeamType or teamNumber == kAlienTeamType
-	return result
-end
-
 function TGNS.GetTeamName(teamNumber) PROFILE("TGNS.GetTeamName")
 	local result
 	if teamNumber == kTeamReadyRoom then

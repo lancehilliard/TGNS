@@ -388,3 +388,7 @@ function TGNS.GetGameState() PROFILE("TGNS.GetGameState")
 	return result
 end
 
+function TGNS.IsGameplayTeamNumber(teamNumber) PROFILE("TGNS.IsGameplayTeamNumber")
+	local result = teamNumber == kMarineTeamType or teamNumber == kAlienTeamType
+	return result
+end
