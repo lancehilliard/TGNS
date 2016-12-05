@@ -37,19 +37,34 @@ local function showVoteUpdateMessageToTeamAndSpectators(teamNumber, message)
 			md:ToTeamNotifyColors(displayTeamNumber, message, 255, 255, 255, 255, 0, 0)
 		else
 			local secondsRemaining = math.ceil((kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning + kWinOrLoseVoteArray[teamNumber].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded())
-			TGNS.DoFor(TGNS.GetTeamClients(displayTeamNumber, TGNS.GetPlayerList()), function(c)
+			local voteIsCloseToEnding = false
+			local displayTeamClients = TGNS.GetTeamClients(displayTeamNumber, TGNS.GetPlayerList())
+			TGNS.DoFor(displayTeamClients, function(c)
 				local messageRed = 255
 				local messageGreen = 255
 				local messageBlue = 255
 				local p = TGNS.GetPlayer(c)
+				local playerHasVoted = false
 				if TGNS.Has(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, c:GetUserId()) then
 					messageRed = 3
 					messageGreen = 192
 					messageBlue = 60
+					playerHasVoted = true
 				elseif secondsRemaining > 0 and secondsRemaining <= 10 then
 					messageRed = 255
 					messageGreen = 255
 					messageBlue = 0
+					voteIsCloseToEnding = true
+				end
+				local numberOfTeamVotes = #kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes
+				local teamClients = TGNS.GetTeamClients(teamNumber, TGNS.GetPlayerList())
+				local amountOfTeamThatHasVoted = numberOfTeamVotes / #teamClients
+				if TGNS.IsGameplayTeamNumber(displayTeamNumber) and voteIsCloseToEnding and amountOfTeamThatHasVoted >= 0.5 and not playerHasVoted then
+					local reminderMessage = "WinOrLose?"
+					if amountOfTeamThatHasVoted > 0.5 then
+						reminderMessage = string.format("%s!", reminderMessage)
+					end
+					Shine.ScreenText.Add(79, {X = 0.5, Y = 0.7, Text = reminderMessage, Duration = 5, R = messageRed, G = messageGreen, B = messageBlue, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 				end
 				md:ToPlayerNotifyColors(p, message, 255, 255, 255, messageRed, messageGreen, messageBlue)
 			end)
@@ -472,7 +487,7 @@ function Plugin:Initialise()
 	end
 
 	TGNS.RegisterEventHook("GameStarted", function()
-		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + 5
+		mayVoteAt = TGNS.GetSecondsSinceMapLoaded() + (TGNS.IsProduction() and 5 or 0)
 		whenBigVotesFailedWithMajorityThisGame = {}
 		
 		-- if not TGNS.IsProduction() then
