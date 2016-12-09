@@ -155,15 +155,17 @@ function Plugin:Initialise()
 		end
 		if TGNS.GetCurrentMapName() == "ns2_tgns_arclight" then
 			local function sendArclightNotification()
-				local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
-				local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
-				local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
-				local secondsSinceArclightNotifications = secondsSinceEpoch - (pushData.arclightLastSentInSeconds or 0)
-				if secondsSinceArclightNotifications >= threeHoursInSeconds and TGNS.IsProduction() then
-					self:Push("tgns-arclight", "TGNS Arclight!", string.format("%s is playing Arclight! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName()))
-					pushData.arclightLastSentInSeconds = secondsSinceEpoch
-					Shine.SaveJSONFile(pushData, pushTempfilePath)
-				end
+				TGNS.ScheduleAction(5, function()
+					local secondsSinceEpoch = TGNS.GetSecondsSinceEpoch()
+					local threeHoursInSeconds = TGNS.ConvertHoursToSeconds(3)
+					local pushData = Shine.LoadJSONFile(pushTempfilePath) or {}
+					local secondsSinceArclightNotifications = secondsSinceEpoch - (pushData.arclightLastSentInSeconds or 0)
+					if secondsSinceArclightNotifications >= threeHoursInSeconds and TGNS.IsProduction() and not GetServerContainsBots() then
+						self:Push("tgns-arclight", "TGNS Arclight!", string.format("%s is playing Arclight! Server Info: http://rr.tacticalgamer.com/ServerInfo", TGNS.GetSimpleServerName()))
+						pushData.arclightLastSentInSeconds = secondsSinceEpoch
+						Shine.SaveJSONFile(pushData, pushTempfilePath)
+					end
+				end)
 			end
 			TGNS.ScheduleAction(60, function()
 				if TGNS.IsGameInCountdown() or TGNS.IsGameInProgress() then
