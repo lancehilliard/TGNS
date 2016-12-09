@@ -601,7 +601,8 @@ function Plugin:Initialise()
 	GUIScoreboard.UpdateTeam = function(self, updateTeam)
 		originalGUIScoreboardUpdateTeam(self, updateTeam)
 
-		local numberOfRegularsPlaying = 0
+		local numberOfMarinesPlaying = 0
+		local numberOfAliensPlaying = 0
 		if self.visible then
 	        local gameTime = PlayerUI_GetGameLengthTime()
 	        local minutes = math.floor( gameTime / 60 )
@@ -619,8 +620,13 @@ function Plugin:Initialise()
 						if playerRecord.SteamId > 0 then
 							ingamePlayersCount = ingamePlayersCount + 1
 						end
-						if TGNS.IsGameplayTeamNumber(playerRecord.EntityTeamNumber) and TGNS.Contains(prefixes[playerRecord.ClientIndex], "P") or TGNS.Contains(prefixes[playerRecord.ClientIndex], "A") then
-							numberOfRegularsPlaying = numberOfRegularsPlaying + 1
+
+						if prefixes[playerRecord.ClientIndex] and TGNS.Contains(prefixes[playerRecord.ClientIndex], "P") or TGNS.Contains(prefixes[playerRecord.ClientIndex], "A") then
+							if playerRecord.EntityTeamNumber == kMarineTeamType then
+								numberOfMarinesPlaying = numberOfMarinesPlaying + 1
+							elseif playerRecord.EntityTeamNumber == kAlienTeamType then
+								numberOfAliensPlaying = numberOfAliensPlaying + 1
+							end
 						end
 					end
 				end
@@ -662,7 +668,7 @@ function Plugin:Initialise()
 			        local prefix = prefixes[clientIndex]
 			        player["Number"]:SetText(TGNS.HasNonEmptyValue(prefix) and prefix or "")
 			        local numberColor = Color(0.5, 0.5, 0.5, 1)
-			        if numberOfRegularsPlaying >= 14 then
+			        if numberOfMarinesPlaying >= 7 and numberOfAliensPlaying >= 7 then
 			        	numberColor = Color(255/255, 255/255, 138/255, 1)
 			        end
 			        if isCaptainsCaptain[clientIndex] == true then
