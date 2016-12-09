@@ -59,8 +59,19 @@ local function IsTargetProtectedPrimerOnly(targetClient, playerList)
     return result
 end
 
+local function IsTargetProtectedCommander(targetClient)
+    local result = false
+    local timeAtWhichTargetClientWasLastACommander = commandStructureLastOccupancies[targetClient]
+    if timeAtWhichTargetClientWasLastACommander ~= nil then
+        if Shared.GetTime() - timeAtWhichTargetClientWasLastACommander <= COMMANDER_PROTECTION_DURATION_IN_SECONDS then
+            result = true
+        end
+    end
+    return result
+end
+
 local function IsPrimerOnlyTargetProtectedDueToUnprotectedStrangers(targetClient, playerList)
-    local result = TGNS.IsPrimerOnlyClient(targetClient) and clientSatisfiesBkaRequirement(targetClient) and TGNS.Any(TGNS.GetStrangersClients(playerList), function(c) return not IsTargetProtectedStranger(c, playerList) end)
+    local result = TGNS.IsPrimerOnlyClient(targetClient) and clientSatisfiesBkaRequirement(targetClient) and TGNS.Any(TGNS.GetStrangersClients(playerList), function(c) return not (IsTargetProtectedStranger(c, playerList) or IsTargetProtectedCommander(c)) end)
     return result
 end
 
@@ -83,17 +94,6 @@ end
 local function Log(message)
     table.insert(actionslog, message)
     -- TGNS.Log(message)
-end
-
-local function IsTargetProtectedCommander(targetClient)
-    local result = false
-    local timeAtWhichTargetClientWasLastACommander = commandStructureLastOccupancies[targetClient]
-    if timeAtWhichTargetClientWasLastACommander ~= nil then
-        if Shared.GetTime() - timeAtWhichTargetClientWasLastACommander <= COMMANDER_PROTECTION_DURATION_IN_SECONDS then
-            result = true
-        end
-    end
-    return result
 end
 
 local function FindVictimClient(joiningSteamId, playerList, passingTheBumpKarmaDelta)
