@@ -259,7 +259,7 @@ function Plugin:Initialise()
 		    		end
 		    	end)
 			else
-				TGNS.DebugPrint(string.format("audit ERROR: Unable to audit gameData. msg: %s | stacktrace: %s", gameDataAuditResponse.msg, gameDataAuditResponse.stacktrace))
+				TGNS.DebugPrint(string.format("audit ERROR: Unable to audit gameData. msg: %s | stacktrace: %s", gameDataAuditResponse.msg, gameDataAuditResponse.stacktrace), false, "audit")
 				TGNS.PrintTable(gameData, "gameData", function(x) TGNS.DebugPrint(x) end)
 			end
 		end)
