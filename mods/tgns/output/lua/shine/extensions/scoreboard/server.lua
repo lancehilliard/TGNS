@@ -458,7 +458,7 @@ function Plugin:Initialise()
 		TGNS.GetHttpAsync(gameFeedbackUrl, function(gameFeedbackResponseJson)
 			local gameFeedbackResponse = json.decode(gameFeedbackResponseJson) or {}
 			if not gameFeedbackResponse.success then
-				TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to record game feedback. msg: %s | response: %s | stacktrace: %s | url: %s", gameFeedbackResponse.msg, gameFeedbackResponseJson, gameFeedbackResponse.stacktrace, gameFeedbackUrl))
+				TGNS.DebugPrint(string.format("scoreboard ERROR: Unable to record game feedback. msg: %s | response: %s | stacktrace: %s | url: %s", gameFeedbackResponse.msg, gameFeedbackResponseJson, gameFeedbackResponse.stacktrace, gameFeedbackUrl), false, "gamefeedback")
 			end
 		end)
 
