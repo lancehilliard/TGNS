@@ -259,8 +259,8 @@ function Plugin:Initialise()
 				md:ToAllNotifyInfo(string.format("Standing on infestation slows hunger %s%%. Discuss this mod in our TGNS forums.", INFESTATION_INFESTED_BENEFIT_PERCENTAGE))
 			end)
 
-			TGNS.RegisterEventHook("EndGame", function(gamerules, winningTeam)
-				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
+			TGNS.RegisterEventHook("GameStarted", function()
+				TGNS.ScheduleAction(5, function()
 					gameCount = gameCount + 1
 					if gameCount >= GAME_COUNT_THRESHOLD then
 						local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
