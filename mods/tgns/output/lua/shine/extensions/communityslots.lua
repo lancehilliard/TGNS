@@ -654,7 +654,7 @@ end
 
 local function sweep()
     if Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-0 then
-        TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.GetPlayerList()), function(c)
+        TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (Shine.Plugins.sidebar and Shine.Plugins.sidebar:PlayerIsInSidebar(p)) end)), function(c)
             if TGNS.IsGameInProgress() then
                 local lastTeamChangeTime = inReadyRoomSinceTimes[c]
                 if lastTeamChangeTime then
