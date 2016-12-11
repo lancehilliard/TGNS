@@ -14,18 +14,19 @@ function Plugin:Initialise()
 	    if LocateUpValue then
 	    	local _, GetNumEggs = LocateUpValue(Hive.UpdateSpawnEgg, "GetNumEggs", {LocateRecurse = true})
 	    	local originalSharedSortEntitiesByDistance = Shared.SortEntitiesByDistance
-			local parent, originalUpdateEggGeneration = LocateUpValue(AlienTeam.Update, "UpdateEggGeneration", {LocateRecurse = true})
-			local function UpdateEggGeneration(alienTeamSelf)
-				Shared.SortEntitiesByDistance = function(origin, entities)
-					originalSharedSortEntitiesByDistance(origin, entities)
-					if #entities > 0 then
-						local hiveEligibleForPityEgg = TGNS.FirstOrNil(entities, function(hive) return GetNumEggs(hive) == 0 and Shared.GetTime() - (pityEggGivenWhen[hive] or 0) > 30 end)
-						if hiveEligibleForPityEgg then
-							TGNS.SortAscending(entities, function(hive) return hiveEligibleForPityEgg == hive and 0 or 1 end)
-							pityEggGivenWhen[hiveEligibleForPityEgg] = Shared.GetTime()
-						end
+	    	local modifiedSortEntitiesByDistance = function(origin, entities)
+				originalSharedSortEntitiesByDistance(origin, entities)
+				if #entities > 0 then
+					local hiveEligibleForPityEgg = TGNS.FirstOrNil(entities, function(hive) return GetNumEggs(hive) == 0 and Shared.GetTime() - (pityEggGivenWhen[hive] or 0) > 30 end)
+					if hiveEligibleForPityEgg then
+						TGNS.SortAscending(entities, function(hive) return hiveEligibleForPityEgg == hive and 0 or 1 end)
+						pityEggGivenWhen[hiveEligibleForPityEgg] = Shared.GetTime()
 					end
 				end
+			end
+			local parent, originalUpdateEggGeneration = LocateUpValue(AlienTeam.Update, "UpdateEggGeneration", {LocateRecurse = true})
+			local function UpdateEggGeneration(alienTeamSelf)
+				Shared.SortEntitiesByDistance = modifiedSortEntitiesByDistance
 				originalUpdateEggGeneration(alienTeamSelf)
 				Shared.SortEntitiesByDistance = originalSharedSortEntitiesByDistance
 			end
