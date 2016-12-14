@@ -161,6 +161,7 @@ if Server or Client then
 						local surrenderingTeamName = TGNS.GetTeamName(surrenderingTeamNumber)
 						md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players). %s have fewer points and surrender.", Shine.Plugins.communityslots.Config.PublicSlots, surrenderingTeamName))
 						Shine.Plugins.winorlose:CallWinOrLose(surrenderingTeamNumber)
+						TGNS.Karma(TGNS.Config.ArclightSeededKarmaRecipientSteamId, "ArclightSeeded")
 						winOrLoseForcedRecently = true
 						configExtend(false)
 						TGNS.ScheduleAction(75, function() winOrLoseForcedRecently = false end)
