@@ -124,7 +124,8 @@ function Plugin:Initialise()
 			if connectedTimeInSeconds < 120 and TGNS.IsGameInProgress() then
 				local steamProfileName = Shine.Plugins.betterknownas and Shine.Plugins.betterknownas.GetSteamProfileName and Shine.Plugins.betterknownas:GetSteamProfileName(client)
 				local steamProfileNameDisplay = (TGNS.HasNonEmptyValue(steamProfileName) and TGNS.ToLower(steamProfileName) ~= TGNS.ToLower(TGNS.GetClientName(client))) and string.format("    Steam: %s", steamProfileName) or ""
-				local message = string.format("%s joined (%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), steamProfileNameDisplay)
+				local totalGames = Balance.GetTotalGamesPlayed(client)
+				local message = string.format("%s joined (%s%s)! %s", TGNS.GetClientName(client), TGNS.PlayerAction(client, TGNS.GetPlayerTeamName), (totalGames > 0 and totalGames < 50) and string.format("; %s total games so far", totalGames) or "", steamProfileNameDisplay)
 				if TGNS.ClientIsMarine(client) then
 					tgnsMd:ToAllNotifyMarineColor(message)
 				elseif TGNS.ClientIsAlien(client) then
