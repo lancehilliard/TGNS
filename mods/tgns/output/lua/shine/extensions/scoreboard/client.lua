@@ -489,7 +489,7 @@ function hudTexts.initializeSkillImbalanceHudText()
 	function hudTexts.skillImbalanceHudText:UpdateText()
 		local text = ""
 		if not captainsEnabled and not gameState.gameIsInProgress and not gameState.gameIsInCountdown and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 and (Client.GetLocalClientTeamNumber() == kAlienTeamType or Client.GetLocalClientTeamNumber() == kMarineTeamType) then
-			text = string.format("Chat 'switch' if you want to play %s.\n\nIf you see skill imbalance pre-game:\nAsk specific player(s) to switch teams.\nIf they agree, great! If not, you tried. :)", Client.GetLocalClientTeamNumber() == kAlienTeamType and "Marines" or "Aliens")
+			text = string.format("Chat 'switch' if you want to play %s.\n\nIf you see skill imbalance pre-game:\nAsk specific player(s) to switch teams.\nIf they agree, great! If not, you tried. :)\nOtherwise, don't complain.", Client.GetLocalClientTeamNumber() == kAlienTeamType and "Marines" or "Aliens")
 		end
 		self.Obj:SetText(text)
 	end
@@ -621,7 +621,8 @@ function Plugin:Initialise()
 							ingamePlayersCount = ingamePlayersCount + 1
 						end
 
-						if prefixes[playerRecord.ClientIndex] and TGNS.Contains(prefixes[playerRecord.ClientIndex], "P") or TGNS.Contains(prefixes[playerRecord.ClientIndex], "A") then
+						local prefix = prefixes[playerRecord.ClientIndex]
+						if TGNS.HasNonEmptyValue(prefix) and TGNS.Contains(prefix, "P") or TGNS.Contains(prefix, "A") then
 							if playerRecord.EntityTeamNumber == kMarineTeamType then
 								numberOfMarinesPlaying = numberOfMarinesPlaying + 1
 							elseif playerRecord.EntityTeamNumber == kAlienTeamType then
