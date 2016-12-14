@@ -6,6 +6,16 @@ local pityEggGivenWhen = {}
 function Plugin:ClientConfirmConnect(client)
 end
 
+-- function Plugin:CreateCommands()
+-- 	local killAllEggsCommand = self:BindCommand( "sh_killalleggs", nil, function(client)
+-- 		local eggs = GetEntitiesForTeam("Egg", 2)
+-- 	    for index, egg in ipairs(eggs) do
+-- 	    	egg:Kill()        
+-- 	    end
+-- 	end)
+-- 	killAllEggsCommand:Help("Kill all eggs.")
+-- end
+
 function Plugin:Initialise()
     self.Enabled = true
     -- self:CreateCommands()
@@ -17,10 +27,25 @@ function Plugin:Initialise()
 	    	local modifiedSortEntitiesByDistance = function(origin, entities)
 				originalSharedSortEntitiesByDistance(origin, entities)
 				if #entities > 0 then
-					local hiveEligibleForPityEgg = TGNS.FirstOrNil(entities, function(hive) return GetNumEggs(hive) == 0 and Shared.GetTime() - (pityEggGivenWhen[hive] or 0) > 30 end)
-					if hiveEligibleForPityEgg then
-						TGNS.SortAscending(entities, function(hive) return hiveEligibleForPityEgg == hive and 0 or 1 end)
-						pityEggGivenWhen[hiveEligibleForPityEgg] = Shared.GetTime()
+					local firstCurrentHiveOrigin = entities[1]:GetOrigin()
+					local desiredSpawnPoints = TGNS.Select(TGNS.GetAlienPlayers(TGNS.GetPlayerList()), function(p) return p.desiredSpawnPoint or firstCurrentHiveOrigin end)
+					local desiredSpawnPointsCount = #desiredSpawnPoints
+					if desiredSpawnPointsCount > 0 then
+						local desiredSpawnPointsSum = Vector(0, 0, 0)
+						TGNS.DoFor(desiredSpawnPoints, function(spawnPoint) desiredSpawnPointsSum = desiredSpawnPointsSum + spawnPoint end)
+						local desiredSpawnPointsAverage = desiredSpawnPointsSum / desiredSpawnPointsCount
+						TGNS.SortAscending(entities, function(hive)
+							local distance = (desiredSpawnPointsAverage - Vector(hive:GetOrigin())):GetLength()
+							local eggCountModifier = 100000
+							if GetNumEggs(hive) == 0 then
+								if Shared.GetTime() - (pityEggGivenWhen[hive] or 0) > 30 then
+									pityEggGivenWhen[hive] = Shared.GetTime()
+									eggCountModifier = 0
+								end
+							end
+							local result = distance + eggCountModifier
+							return result
+						end)
 					end
 				end
 			end
