@@ -183,7 +183,7 @@ function Plugin:Initialise()
 				end
 
 				Event.Hook("Console_kill", function(client)
-					if clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 and not TGNS.IsClientAFK(client) then
+					if clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 and #TGNS.Where(TGNS.GetClientList(), clientIsInfested) > 0 and TGNS.IsGameInProgress() not TGNS.IsClientAFK(client) then
 						md:ToAllNotifyInfo(string.format("%s tried to solve it...", TGNS.GetClientName(client)))
 					else
 						OnCommandKill(client)
@@ -194,7 +194,7 @@ function Plugin:Initialise()
 
 			Shine.Hook.Add("JoinTeam", "InfestJoinTeam", function(pluginSelf, player, newTeamNumber, force, shineForce)
 				local client = TGNS.GetClient(player)
-				if TGNS.ClientIsMarine(client) and clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 then
+				if TGNS.ClientIsMarine(client) and clientIsMarine(client) and #TGNS.Where(TGNS.GetClientList(), clientIsMarine) == 1 and #TGNS.Where(TGNS.GetClientList(), clientIsInfested) > 0 and TGNS.IsGameInProgress() not TGNS.IsClientAFK(client) then
 					md:ToAllNotifyInfo(string.format("%s tried to run...", TGNS.GetClientName(client)))
 					return false
 				end
