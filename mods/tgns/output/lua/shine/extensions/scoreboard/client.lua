@@ -622,7 +622,7 @@ function Plugin:Initialise()
 						end
 
 						local prefix = prefixes[playerRecord.ClientIndex]
-						if TGNS.HasNonEmptyValue(prefix) and TGNS.Contains(prefix, "P") or TGNS.Contains(prefix, "A") then
+						if TGNS.HasNonEmptyValue(prefix) and (TGNS.Contains(prefix, "P") or TGNS.Contains(prefix, "A")) then
 							if playerRecord.EntityTeamNumber == kMarineTeamType then
 								numberOfMarinesPlaying = numberOfMarinesPlaying + 1
 							elseif playerRecord.EntityTeamNumber == kAlienTeamType then
