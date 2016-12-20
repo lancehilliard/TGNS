@@ -5,6 +5,7 @@ local md = TGNSMessageDisplayer.Create()
 local serverStartTempfilePath = "config://tgns/temp/serverStart.json"
 local NUMBER_OF_ACTIVE_MODS_INDICATIVE_OF_A_SERVER_RESTART = 15
 local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 4
+local SERVER_COMMANDLINE_START_MAP_NAME = "ns2_tram"
 
 function Plugin:ClientConfirmConnect(client)
 end
@@ -73,7 +74,7 @@ function Plugin:Initialise()
             if TGNS.Has(mapNameNotifyNames, name) then
                 local votedInMapName = params.MapName
                 local hoursSinceServerProcessStarted = TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted())
-                if votedInMapName and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
+                if votedInMapName and votedInMapName ~= SERVER_COMMANDLINE_START_MAP_NAME and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
                     local serverStartData = self:GetServerStartData()
                     serverStartData.startMapName = votedInMapName
                     self:SetServerStartData(serverStartData)
