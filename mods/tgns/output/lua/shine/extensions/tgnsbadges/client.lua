@@ -73,7 +73,7 @@ function Plugin:Initialise()
 	GetBadgeFormalName = function(name)
 		local result = stockBadgeDescriptions[TGNS.ToLower(name)] or stockBadgeDescriptions[TGNS.Replace(TGNS.ToLower(string.format("badge_%s", name)), "badge_", "")]
 		if result then
-			result = string.format("%s\n\nhttp://wiki.unknownworlds.com/ns2/Badges", result)
+			result = string.format("%s\n\nhttps://wiki.naturalselection2.com/view/Badges", result)
 		else
 			result = badgeDescriptions[tostring(name)] or originalGetBadgeFormalName(name)
 		end
