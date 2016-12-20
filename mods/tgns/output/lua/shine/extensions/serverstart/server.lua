@@ -4,7 +4,7 @@ Plugin.HasConfig = false
 local md = TGNSMessageDisplayer.Create()
 local serverStartTempfilePath = "config://tgns/temp/serverStart.json"
 local NUMBER_OF_ACTIVE_MODS_INDICATIVE_OF_A_SERVER_RESTART = 15
-local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 3
+local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 4
 
 function Plugin:ClientConfirmConnect(client)
 end
