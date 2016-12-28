@@ -400,19 +400,21 @@ end
 
 function Plugin:GetDamageModification( Ent, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
 	local result
-	local victimClient = TGNS.GetClient(Ent)
-	local attackerClient = TGNS.GetClient(Attacker)
-	if (victimClient and enabled[victimClient]) or (attackerClient and enabled[attackerClient]) and not TGNS.IsGameInProgress() then
-		result = {}
-		result.Damage = 0
-		result.HealthUsed = 0
-		result.ArmourUsed = 0
-		result.NotifyAction = function()
-			-- if (lastNoAttackNoticeTimes[victimClient] == nil or lastNoAttackNoticeTimes[victimClient] < Shared.GetTime() - 1) then
-			-- 	local teamRgb = TGNS.GetTeamRgb(Attacker:GetTeamNumber())
-			-- 	Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot take damage. You are running laps.", Duration = 6, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
-			-- 	lastNoAttackNoticeTimes[victimClient] = Shared.GetTime()
-			-- end
+	if not TGNS.IsGameInProgress() then
+		local victimClient = TGNS.GetClient(Ent)
+		local attackerClient = TGNS.GetClient(Attacker)
+		if (victimClient and enabled[victimClient]) or (attackerClient and enabled[attackerClient]) then
+			result = {}
+			result.Damage = 0
+			result.HealthUsed = 0
+			result.ArmourUsed = 0
+			result.NotifyAction = function()
+				-- if (lastNoAttackNoticeTimes[victimClient] == nil or lastNoAttackNoticeTimes[victimClient] < Shared.GetTime() - 1) then
+				-- 	local teamRgb = TGNS.GetTeamRgb(Attacker:GetTeamNumber())
+				-- 	Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot take damage. You are running laps.", Duration = 6, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
+				-- 	lastNoAttackNoticeTimes[victimClient] = Shared.GetTime()
+				-- end
+			end
 		end
 	end
 	return result
