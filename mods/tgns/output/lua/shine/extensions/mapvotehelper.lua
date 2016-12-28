@@ -138,6 +138,15 @@ function Plugin:Initialise()
 					if Server.GetNumPlayersTotal() <= 10 and Shine.Plugins.arclight and Shine.Plugins.arclight.GetArclightMapname and not TGNS.Has(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname()) then
 						table.insert(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname())
 					end
+					if Server.GetNumPlayersTotal() < 20 then
+						TGNS.DoForReverse(Shine.Plugins.mapvote.Vote.Nominated, function(mapName, i)
+							if TGNS.StartsWith(mapName, "infest_") then
+								table.remove(Shine.Plugins.mapvote.Vote.Nominated, i)
+							end
+						end)
+					end
+
+
 					-- voteMoveModifier = function(player, input)
 					-- 	local client = TGNS.GetClient(player)
 					-- 	if not Shine.Plugins.mapvote.Vote.Voted[client] then
@@ -244,7 +253,7 @@ function Plugin:Initialise()
 		Shine.Plugins.mapvote.IsValidMapChoice = function(mapVoteSelf, map, playerCount)
 			local result = originalIsValidMapChoice(mapVoteSelf, map, playerCount)
 			if result and (Shine.IsType(map, "table") or Shine.IsType(map, "string")) then
-				if TGNS.GetHumanPlayerCount() > 14 then
+				if TGNS.GetHumanPlayerCount() < 20 then
 					local mapName = map.map or map
 					if Shine.IsType(mapName, "string") then
 						local mapIsInfested = TGNS.StartsWith(mapName, "infest_")
