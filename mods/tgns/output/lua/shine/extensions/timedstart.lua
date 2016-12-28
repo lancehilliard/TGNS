@@ -27,6 +27,12 @@ function Plugin:WarnPlayersOfImminentGameStart(playerList, secondsRemainingUntil
 	end
 end
 
+function Plugin:GiveSecondsRemainingReprieve()
+	if timerInProgress and (secondsRemaining or 0) < 30 then
+		secondsRemaining = 30
+	end
+end
+
 local function showTimeRemaining()
 	local playerList = TGNS.GetPlayerList()
 	local marinePlayerCount = #TGNS.GetMarineClients(playerList)
