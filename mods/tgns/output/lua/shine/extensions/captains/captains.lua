@@ -2892,7 +2892,7 @@ if Server or Client then
 						end
 					end)
 					if not captainsEventStartPushSent then
-						Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Night", "It's time for Captains Night at TGNS! Password in the forums: http://www.tacticalgamer.com/forums/33-Natural-Selection-General-Discussion")
+						Shine.Plugins.push:Push("tgns-captains", "TGNS Captains Night", "It's time for Captains Night at TGNS! Password in the forums: https://www.tacticalgamer.com/forum/action/natural-selection/natural-selection-general-discussion")
 						captainsEventStartPushSent = true
 					end
 				end
