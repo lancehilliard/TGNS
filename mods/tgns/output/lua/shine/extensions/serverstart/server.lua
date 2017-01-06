@@ -73,24 +73,28 @@ function Plugin:Initialise()
         Shine.Plugins.mapvote.SendTranslatedNotify = function(mapVoteSelf, target, name, params)
             if TGNS.Has(mapNameNotifyNames, name) then
                 local votedInMapName = params.MapName
-                local hoursSinceServerProcessStarted = TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted())
-                if votedInMapName and votedInMapName ~= SERVER_COMMANDLINE_START_MAP_NAME and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
-                    local serverStartData = self:GetServerStartData()
-                    serverStartData.startMapName = votedInMapName
-                    self:SetServerStartData(serverStartData)
-                    TGNS.ScheduleAction(0, function()
-                        md:ToAllNotifyInfo(string.format("Server will restart to %s. Please wait. Reconnect manually if you aren't reconnected automatically.", votedInMapName))
-                    end)
-                    TGNS.RestartServerProcess()
+                if votedInMapName then
+                    TGNS.ExecuteEventHooks("MapVoteFinished", votedInMapName)
+                    local hoursSinceServerProcessStarted = TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted())
+                    if votedInMapName ~= SERVER_COMMANDLINE_START_MAP_NAME and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
+                        local serverStartData = self:GetServerStartData()
+                        serverStartData.startMapName = votedInMapName
+                        self:SetServerStartData(serverStartData)
+                        TGNS.ScheduleAction(0, function()
+                            md:ToAllNotifyInfo(string.format("Server will restart to %s. Please wait. Reconnect manually if you aren't reconnected automatically.", votedInMapName))
+                        end)
+                        TGNS.RestartServerProcess()
+                    else
+                        originalSendTranslatedNotify(mapVoteSelf, target, name, params)
+                    end
                 else
-                    originalSendTranslatedNotify(mapVoteSelf, target, name, params)
+                    originalSendTranslatedNotify(mapVoteSelf, target, name, params)                    
                 end
             else
                 originalSendTranslatedNotify(mapVoteSelf, target, name, params)
             end
         end
     end)
-
 	return true
 end
 
