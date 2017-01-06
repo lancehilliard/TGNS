@@ -874,8 +874,6 @@ if Server or Client then
 			        --player["Resources"]:SetColor(baseColor)   
 			        player["Name"]:SetColor(nameColor)
 			            
-					if teamNumber == 0 and Shine.Plugins.scoreboard:GetFailsBkaPrerequisite(clientIndex) then
-						player.Name:SetColor(Color(0/255,191/255,255/255))
 					if teamNumber == 0 then
 					    if Shine.Plugins.scoreboard:GetFailsBkaPrerequisite(clientIndex) then
 							player.Name:SetColor(TGNS.Colors.BkaFail)
