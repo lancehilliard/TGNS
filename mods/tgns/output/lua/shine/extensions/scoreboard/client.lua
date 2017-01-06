@@ -883,6 +883,11 @@ function Plugin:Initialise()
 					player.Background:AddChild(playerNoteItem)
 				end
 
+				if clientIndex == Client.GetLocalClientIndex() and teamNumber == kAlienTeamType and player.Status and (squadNumbers[clientIndex] or 0) == 0 and TGNS.Has({kGameState.NotStarted,kGameState.PreGame,kGameState.WarmUp,kGameState.Countdown}, TGNS.GetGameState()) and Shared.GetTime() - (gameState.gameIsInProgressLastSetToFalse or 0) > TGNS.ENDGAME_TIME_TO_READYROOM + 1 then
+					local moment = math.floor(Shared.GetTime())
+					player.Status:SetText(moment % 2 == 0 and (moment % 4 == 0 and "<-- Role" or "<-- Plan") or "<- Click")
+				end
+
 
 	        	if player.SteamFriend then
 				    player.SteamFriend:SetAnchor(GUIItem.Right, GUIItem.Center)
