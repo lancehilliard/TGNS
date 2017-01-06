@@ -188,7 +188,7 @@ function Plugin:Initialise()
 			local gameDataAuditResponse = json.decode(gameDataAuditResponseJson) or {}
 			if gameDataAuditResponse.success then
 		    	TGNS.DoFor(clients, function(c)
-		    		if not TGNS.GetIsClientVirtual(c) then
+		    		if Shine:IsValidClient(c) and not TGNS.GetIsClientVirtual(c) then
 		    			TGNS.ScheduleAction(0, function()
 		    				if Shine:IsValidClient(c) then
 				    			local p = TGNS.GetPlayer(c)
