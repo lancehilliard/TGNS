@@ -78,6 +78,9 @@
 !mods/tgns/output/lua/shine/extensions/adminmenu/client.lua
 !mods/tgns/output/lua/shine/extensions/adminmenu/server.lua
 !mods/tgns/output/lua/shine/extensions/adminmenu/shared.lua
+!mods/tgns/output/lua/shine/extensions/autospec/client.lua
+!mods/tgns/output/lua/shine/extensions/autospec/server.lua
+!mods/tgns/output/lua/shine/extensions/autospec/shared.lua
 !mods/tgns/output/lua/shine/extensions/afkchanged.lua
 !mods/tgns/output/lua/shine/extensions/afkkickhelper.lua
 !mods/tgns/output/lua/shine/extensions/arclight/arclight.lua
