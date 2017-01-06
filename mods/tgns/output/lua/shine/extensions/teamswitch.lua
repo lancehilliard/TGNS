@@ -41,12 +41,17 @@ function Plugin:PlayerSay(client, networkMessage)
 								switchMd:ToAllNotifyInfo(string.format("%s is now %s. %s is now %s.", clientName, otherTeamName, otherClientName, clientTeamName))
 								TGNS.SendToTeam(TGNS.GetPlayer(client), otherPlayingTeamNumber, true)
 								TGNS.SendToTeam(TGNS.GetPlayer(otherClient), teamNumber, true)
+								if Shine.Plugins.timedstart then
+									if Shine.Plugins.timedstart.GiveSecondsRemainingReprieve then
+										Shine.Plugins.timedstart:GiveSecondsRemainingReprieve(30)
+									end
+								end
 							end)
 							TGNS.RemoveAllMatching(tradeQueueClients[otherPlayingTeamNumber], otherClient)
 						else
 							if clientIsAlreadyInQueue then
 								TGNS.RemoveAllMatching(tradeQueueClients[teamNumber], client)
-								infoMessage = string.format("%s will stay on %s for now.", clientName, clientTeamName)
+								infoMessage = string.format("%s will stay on %s for now ('switch' toggles).", clientName, clientTeamName)
 							else
 								table.insert(tradeQueueClients[teamNumber], client)
 								infoMessage = string.format("%s could play %s. %s, chat 'switch' if you want to switch to %s.", clientName, otherTeamName, otherTeamName, clientTeamName)
@@ -104,14 +109,15 @@ function Plugin:PlayerSay(client, networkMessage)
 					table.insert(errorMessages, "Only Primer signers may request swaps.")
 				end
 				if #errorMessages == 0 then
+					local marineClient = TGNS.GetFirst(marineClients)
+					local alienClient = TGNS.GetFirst(alienClients)
 					if Shine.Plugins.timedstart then
 						if Shine.Plugins.timedstart.GiveSecondsRemainingReprieve then
-							Shine.Plugins.timedstart:GiveSecondsRemainingReprieve()
+							local bothClientsArePrimerSigners = TGNS.HasClientSignedPrimerWithGames(marineClient) and TGNS.HasClientSignedPrimerWithGames(alienClient)
+							Shine.Plugins.timedstart:GiveSecondsRemainingReprieve(bothClientsArePrimerSigners and 30 or 45)
 						end
 					end
 					local clientName = TGNS.GetClientName(client)
-					local marineClient = TGNS.GetFirst(marineClients)
-					local alienClient = TGNS.GetFirst(alienClients)
 					local marineName = string.format("%s (to Aliens)", TGNS.GetClientName(marineClient))
 					local alienName = string.format("%s (to Marines)", TGNS.GetClientName(alienClient))
 					local notificationMessage = string.format("%s proposes swapping %s for %s (%s may optionally chat 'swap' to accept).", clientName, marineName, alienName, marineClient == client and TGNS.GetClientName(alienClient) or (alienClient == client and TGNS.GetClientName(marineClient) or "they"))
@@ -135,20 +141,31 @@ function Plugin:PlayerSay(client, networkMessage)
 				end
 			elseif message == "swap" or message == "'swap'" then
 				local swapPartnerClient
+				local clientOptedOut
 				if TGNS.ClientIsOnPlayingTeam(client) then
 					TGNS.DoFor(swapRequests, function(swapRequest)
 						if swapRequest.marineClient.c == client and TGNS.ClientIsMarine(client) then
-							swapRequest.marineClient.a = true
-							swapPartnerClient = swapRequest.alienClient.c
+							if swapRequest.marineClient.a then
+								swapRequest.marineClient.a = false
+								clientOptedOut = true
+							else
+								swapRequest.marineClient.a = true
+								swapPartnerClient = swapRequest.alienClient.c
+							end							
 						elseif swapRequest.alienClient.c == client and TGNS.ClientIsAlien(client) then
-							swapRequest.alienClient.a = true
-							swapPartnerClient = swapRequest.marineClient.c
+							if swapRequest.alienClient.a then
+								swapRequest.alienClient.a = false
+								clientOptedOut = true
+							else
+								swapRequest.alienClient.a = true
+								swapPartnerClient = swapRequest.marineClient.c
+							end
 						end
 					end)
 					if swapPartnerClient then
 						local notificationMessage = string.format("%s is willing to swap with %s (who may optionally chat 'swap' to accept).", TGNS.GetClientName(client), TGNS.GetClientName(swapPartnerClient))
 						TGNS.DoForReverse(swapRequests, function(swapRequest, i)
-							if (swapRequest.marineClient.a or TGNS.GetIsClientVirtual(swapRequest.marineClient.c)) and (swapRequest.alienClient.a or TGNS.GetIsClientVirtual(swapRequest.alienClient.c)) and TGNS.ClientIsMarine(swapRequest.marineClient.c) and TGNS.ClientIsAlien(swapRequest.alienClient.c) then
+							if (swapRequest.marineClient.a or (false and TGNS.GetIsClientVirtual(swapRequest.marineClient.c))) and (swapRequest.alienClient.a or (false and TGNS.GetIsClientVirtual(swapRequest.alienClient.c))) and TGNS.ClientIsMarine(swapRequest.marineClient.c) and TGNS.ClientIsAlien(swapRequest.alienClient.c) then
 								table.remove(swapRequests, i)
 								TGNS.RemoveAllMatching(tradeQueueClients[kMarineTeamType], swapRequest.marineClient.c)
 								TGNS.SendToTeam(TGNS.GetPlayer(swapRequest.marineClient.c), kAlienTeamType)
@@ -162,6 +179,12 @@ function Plugin:PlayerSay(client, networkMessage)
 								swapPerformed.alienSteamId = TGNS.GetClientSteamId(swapRequest.alienClient.c)
 								table.insert(swapsPerformed, swapPerformed)
 								notificationMessage = string.format("%s accepted %s. %s accepted %s.%s", TGNS.GetClientName(swapRequest.alienClient.c), TGNS.GetClientTeamName(swapRequest.alienClient.c), TGNS.GetClientName(swapRequest.marineClient.c), TGNS.GetClientTeamName(swapRequest.marineClient.c), Shine:IsValidClient(swapRequest.requestorClient) and string.format(" Requestor: %s", TGNS.GetClientName(swapRequest.requestorClient)) or "")
+								if Shine.Plugins.timedstart then
+									if Shine.Plugins.timedstart.GiveSecondsRemainingReprieve then
+										local bothClientsArePrimerSigners = TGNS.HasClientSignedPrimerWithGames(swapRequest.marineClient.c) and TGNS.HasClientSignedPrimerWithGames(swapRequest.alienClient.c)
+										Shine.Plugins.timedstart:GiveSecondsRemainingReprieve(bothClientsArePrimerSigners and 30 or 45)
+									end
+								end
 								return true
 							end
 						end)
@@ -169,9 +192,17 @@ function Plugin:PlayerSay(client, networkMessage)
 							swapMd:ToAllNotifyInfo(notificationMessage)
 						end)
 					else
-						swapMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "No pending swap requests found for you.")
-						swapMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You can request specific players to switch! Chat syntax example: swap wyz brian?")
-						cancel = true
+						if clientOptedOut then
+							local clientName = TGNS.GetClientName(client)
+							local clientTeamName = TGNS.GetClientTeamName(client)
+							TGNS.ScheduleAction(0, function()
+								swapMd:ToAllNotifyInfo(string.format("%s will stay on %s for now ('swap' toggles).", TGNS.GetClientName(client), clientTeamName))
+							end)
+						else
+							swapMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "No pending swap requests found for you.")
+							swapMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You can request specific players to switch! Chat syntax example: swap wyz brian?")
+							cancel = true
+						end
 					end
 				else
 					swapMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "You must be on a team to automate swaps.")
