@@ -368,7 +368,7 @@ function Plugin:GetPlayersForNewGame()
     local addToPrioritizedPlayers = function(p) table.insert(prioritizedPlayers, p) end
     local getPlayerPlayedTime = function(p) return TGNSConnectedTimesTracker.GetPlayedTimeInSeconds(TGNS.GetClient(p)) end
 
-    local playerList = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) and not TGNS.GetIsClientVirtual(TGNS.GetClient(p)) and not Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(p) end)
+    local playerList = TGNS.Where(TGNS.GetPlayerList(), function(p) return TGNS.IsPlayerReadyRoom(p) and not TGNS.IsPlayerAFK(p) and not TGNS.GetIsClientVirtual(TGNS.GetClient(p)) and not Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(p) and not Shine.Plugins.newcomms:ClientIsGated(TGNS.GetClient(p)) end)
     local supportingMemberPlayers = TGNS.Where(playerList, TGNS.IsPlayerSM)
 
     local primerOnlyPlayers = TGNS.Where(playerList, TGNS.IsPrimerOnlyPlayer)
