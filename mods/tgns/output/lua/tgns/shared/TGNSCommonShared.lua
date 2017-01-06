@@ -21,6 +21,10 @@ TGNS.ShineTextAlignmentMin = 0
 TGNS.ShineTextAlignmentCenter = 1
 TGNS.ShineTextAlignmentMax = 2
 
+TGNS.Colors = {}
+TGNS.Colors.NewCommsFail = Color(225/255,21/255,133/255)
+TGNS.Colors.BkaFail = Color(0/255,191/255,255/255)
+
 function TGNS.ReplaceClassMethod(className, methodName, method)
 	return Shine.ReplaceClassMethod(className, methodName, method)
 end
