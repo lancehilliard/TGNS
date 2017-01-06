@@ -876,6 +876,12 @@ if Server or Client then
 			            
 					if teamNumber == 0 and Shine.Plugins.scoreboard:GetFailsBkaPrerequisite(clientIndex) then
 						player.Name:SetColor(Color(0/255,191/255,255/255))
+					if teamNumber == 0 then
+					    if Shine.Plugins.scoreboard:GetFailsBkaPrerequisite(clientIndex) then
+							player.Name:SetColor(TGNS.Colors.BkaFail)
+						elseif Shine.Plugins.scoreboard:GetFailsNewCommsPrerequisite(clientIndex) then
+							player.Name:SetColor(TGNS.Colors.NewCommsFail)
+						end
 					end
 
 			        -- if ping < GUIScoreboard.kLowPingThreshold then
