@@ -27,9 +27,9 @@ function Plugin:WarnPlayersOfImminentGameStart(playerList, secondsRemainingUntil
 	end
 end
 
-function Plugin:GiveSecondsRemainingReprieve()
-	if timerInProgress and (secondsRemaining or 0) < 30 then
-		secondsRemaining = 30
+function Plugin:GiveSecondsRemainingReprieve(toSeconds)
+	if timerInProgress and (secondsRemaining or 0) < toSeconds then
+		secondsRemaining = toSeconds
 	end
 end
 
