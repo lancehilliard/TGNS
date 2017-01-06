@@ -130,6 +130,9 @@
 !mods/tgns/output/lua/shine/extensions/modupdatednotice.lua
 !mods/tgns/output/lua/shine/extensions/movement/movement.lua
 !mods/tgns/output/lua/shine/extensions/movement/shared.lua
+!mods/tgns/output/lua/shine/extensions/newcomms/client.lua
+!mods/tgns/output/lua/shine/extensions/newcomms/server.lua
+!mods/tgns/output/lua/shine/extensions/newcomms/shared.lua
 !mods/tgns/output/lua/shine/extensions/noattackpregame.lua
 !mods/tgns/output/lua/shine/extensions/notifyadminonmuteplayer.lua
 !mods/tgns/output/lua/shine/extensions/perficon/client.lua
