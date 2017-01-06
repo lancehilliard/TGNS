@@ -54,7 +54,9 @@ local isUsingSvi = {}
 local hasAfkRelevantActivity
 local afkRelevantActivityAnnouncedAt = 0
 local recentCaptainsClientIndexes = {}
-local failsBkaPrerequisite = {}
+local fails = {}
+fails.bka = {}
+fails.newComms = {}
 
 local CaptainsCaptainFontColor = Color(0, 1, 0, 1)
 local guiItemTooltipText
@@ -112,7 +114,8 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	prefixes[message.i] = message.p
 	isCaptainsCaptain[message.i] = message.c
 	isUsingSvi[message.i] = message.s
-	failsBkaPrerequisite[message.i] = message.b
+	fails.bka[message.i] = message.b
+	fails.newComms[message.i] = message.n
 	has.Welder[message.i] = message.w
 	has.Mines[message.i] = message.m
 	has.ClusterGrenade[message.i] = message.cg
@@ -503,7 +506,11 @@ function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
 end
 
 function Plugin:GetFailsBkaPrerequisite(clientIndex)
-	return failsBkaPrerequisite[clientIndex]
+	return fails.bka[clientIndex]
+end
+
+function Plugin:GetFailsNewCommsPrerequisite(clientIndex)
+	return fails.newComms[clientIndex]
 end
 
 function Plugin:GetPrefixes(clientIndex)
@@ -869,8 +876,12 @@ function Plugin:Initialise()
 					player.Status:SetText(shouldShowSvi and "Spec(SVI)" or "Spectator")
 				end
 
-				if teamNumber == 0 and failsBkaPrerequisite[clientIndex] then
-					player.Name:SetColor(Color(0/255,191/255,255/255))
+				if teamNumber == 0 then
+					if fails.bka[clientIndex] then
+						player.Name:SetColor(TGNS.Colors.BkaFail)
+					elseif fails.newComms[clientIndex] then
+						player.Name:SetColor(TGNS.Colors.NewCommsFail)
+					end
 				end
 
 				if not player.PlayerNoteItem then
@@ -1464,7 +1475,7 @@ function Plugin:Initialise()
 		originalGUIReadyRoomOrdersUpdate(guiReadyRoomOrdersUpdateSelf, deltaTime)
 
 		local displayBannerImageName
-		if failsBkaPrerequisite[Client.GetLocalClientIndex()] then
+		if fails.bka[Client.GetLocalClientIndex()] then
 			displayBannerImageName = "ui/welcome/bka_advisory.dds"
 		elseif welcomeBannerImageName and not welcomeIsFinished then
 			displayBannerImageName = welcomeBannerImageName
