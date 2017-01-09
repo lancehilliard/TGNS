@@ -723,7 +723,8 @@ function Plugin:Initialise()
 				playerIconShouldDisplay.Focus = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Focus[clientIndex] == true)
 				playerIconShouldDisplay.Vampirism = (((Client.GetLocalClientTeamNumber() == kSpectatorIndex) or (teamNumber == Client.GetLocalClientTeamNumber() and teamNumber == kAlienTeamType)) and has.Vampirism[clientIndex] == true)
 
-		        playerIconShouldDisplay.Streaming = TGNS.HasNonEmptyValue(streamingWebAddresses[clientIndex])
+		        playerIconShouldDisplay.Streaming = (teamNumber == 0 or Client.GetScreenWidth() >= 1280 or TGNS.Has({kGameState.Countdown,kGameState.Started,kGameState.Team1Won,kGameState.Team2Won,kGameState.Draw}, TGNS.GetGameState())) and TGNS.HasNonEmptyValue(streamingWebAddresses[clientIndex])
+
 
 
 
