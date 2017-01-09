@@ -2025,6 +2025,10 @@ if Server or Client then
 			return Shine:IsInGroup(client, "captains_group")
 		end
 
+		function Plugin:IsOptedInAsPlayer(client)
+			return TGNS.Has(readyPlayerClients, client)
+		end
+
 		function Plugin:CheckGameStart(gamerules)
 			//local result = true
 			if captainsModeEnabled and not bothTeamsAreReady() then

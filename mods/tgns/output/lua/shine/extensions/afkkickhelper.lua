@@ -72,8 +72,9 @@ function Plugin:Initialise()
 
 	local processAfkPlayers
 	processAfkPlayers = function()
+		local isReadyRoomCaptainsOptIn = function(c) return TGNS.IsClientReadyRoom(c) and Shine.Plugins.captains and Shine.Plugins.captains.IsOptedInAsPlayer and Shine.Plugins.captains:IsOptedInAsPlayer(client) end 
 		local clientIsVulnerableToAfk = function(c)
-			local result = TGNS.ClientIsOnPlayingTeam(c) or (Server.GetNumPlayersTotal() >= Server.GetMaxPlayers() - 2 and TGNS.IsClientSpectator(c) and #TGNS.Where(TGNS.GetClientList(), TGNS.IsClientSpectator) >= Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
+			local result = TGNS.ClientIsOnPlayingTeam(c) or isReadyRoomCaptainsOptIn(c) or (Server.GetNumPlayersTotal() >= Server.GetMaxPlayers() - 2 and TGNS.IsClientSpectator(c) and #TGNS.Where(TGNS.GetClientList(), TGNS.IsClientSpectator) >= Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
 			if result and Shine.GetGamemode() == "Infested" and TGNS.ClientIsMarine(c) and not TGNS.IsClientAlive(c) then
 				result = false
 			end
@@ -88,7 +89,8 @@ function Plugin:Initialise()
 				if (lastMoveTime ~= nil) and (TGNS.GetSecondsSinceMapLoaded() - lastMoveTime >= afkThresholdInSeconds) and clientIsVulnerableToAfk(c) then
 					local lastWarnTime = lastWarnTimes[c] or 0
 					if Shared.GetTime() - lastWarnTime > 10 then
-						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid being sent to Ready Room.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor))
+						local isReadyRoomCaptainsOptIn = isReadyRoomCaptainsOptIn(c)
+						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid %s.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor, isReadyRoomCaptainsOptIn and "risking Captains opt-out", "being sent to Ready Room"))
 						lastWarnTimes[c] = Shared.GetTime()
 						local playAfkPingSoundToClient = function(level)
 							if Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and clientIsVulnerableToAfk(c) then
@@ -107,9 +109,14 @@ function Plugin:Initialise()
 							if TGNS.IsPlayerAFK(p) then
 								local lastMoveTime = lastMoveTimes[c] or 0
 								if Shared.GetTime() - lastMoveTime > 10 then
-									md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Moved to Ready Room.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor))
-									TGNS.SendToTeam(p, kTeamReadyRoom, true)
-									lastMoveTimes[c] = Shared.GetTime()
+									local isReadyRoomCaptainsOptIn = isReadyRoomCaptainsOptIn(c)
+									md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. %s", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor, isReadyRoomCaptainsOptIn and "Someone else might take your Captains slot while you're AFK." or "Moved to Ready Room."))
+									if not TGNS.IsClientReadyRoom(c) then
+										TGNS.SendToTeam(p, kTeamReadyRoom, true)
+									end
+									if not isReadyRoomCaptainsOptIn then
+										lastMoveTimes[c] = Shared.GetTime()
+									end
 								end
 							end
 						end
