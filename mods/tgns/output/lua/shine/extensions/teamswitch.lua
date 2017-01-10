@@ -266,6 +266,13 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		local client = TGNS.GetClient(player)
 		removeSwitchAndSwapForClient(client)
 	end
+	if TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber) then
+		if Shine.Plugins.timedstart then
+			if Shine.Plugins.timedstart.GiveSecondsRemainingReprieve then
+				Shine.Plugins.timedstart:GiveSecondsRemainingReprieve(30)
+			end
+		end
+	end
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
