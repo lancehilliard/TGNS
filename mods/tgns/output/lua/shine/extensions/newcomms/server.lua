@@ -15,8 +15,16 @@ local function updatePlayerScoreboardStatus(player)
     end
 end
 
+local function check(client)
+    if Shine:IsValidClient(client) and Shine.Plugins.newcomms:ClientIsGated(client) and TGNS.IsClientReadyRoom(client) then
+        md:ToPlayerNotifyYellow(TGNS.GetPlayer(client), string.format("Type '%s' into chat to play. Press 'y' to chat.", PASSPHRASE))
+        TGNS.ScheduleAction(10, function() check(client) end)
+    end
+end
+
 function Plugin:ClientConfirmConnect(client)
-    updatePlayerScoreboardStatus(player)
+    updatePlayerScoreboardStatus(TGNS.GetPlayer(client))
+    TGNS.ScheduleAction(10, function() check(client) end)
 end
 
 -- function Plugin:CreateCommands()
