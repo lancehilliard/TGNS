@@ -37,10 +37,12 @@ end
 
 function Plugin:PlayerNameChange(player, newName, oldName)
     local client = TGNS.GetClient(player)
-    local steamId = TGNS.GetClientSteamId(client)
-    if oldName == kDefaultPlayerName and TGNS.Has(autoSpecSteamIds, steamId) and not confirmedConnected[client] then
-        TGNS.SendToTeam(TGNS.GetPlayer(client), kSpectatorIndex, true)
-        removeAndSave(steamId)
+    if client then
+        local steamId = TGNS.GetClientSteamId(client)
+        if oldName == kDefaultPlayerName and TGNS.Has(autoSpecSteamIds, steamId) and not confirmedConnected[client] then
+            TGNS.SendToTeam(TGNS.GetPlayer(client), kSpectatorIndex, true)
+            removeAndSave(steamId)
+        end
     end
 end
 
