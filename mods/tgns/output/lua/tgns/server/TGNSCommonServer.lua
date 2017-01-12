@@ -4,12 +4,12 @@ local scheduledActionsErrorCounts = {}
 local scheduledRequests = {}
 local CHAT_MESSAGE_SENDER = "Admin"
 local AFK_IDLE_THRESHOLD_SECONDS = 15
-TGNS.ShouldProcessHttpRequests = false
+-- TGNS.ShouldProcessHttpRequests = false
 local numberOfHttpRequestsMade = 0
 
-Event.Hook("MapPostLoad", function()
-	TGNS.ShouldProcessHttpRequests = true
-end)
+-- Event.Hook("MapPostLoad", function()
+-- 	TGNS.ShouldProcessHttpRequests = true
+-- end)
 
 TGNS.Config = {}
 TGNS.PRIMER_GAMES_THRESHOLD = 10
@@ -1050,7 +1050,7 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 	if #unsentRequests > 0 then
 		local unsentScheduledRequests = TGNS.Take(unsentRequests, TGNS.Config and TGNS.Config.HttpRequestsPerSecond or 1)
 		TGNS.DoFor(unsentScheduledRequests, function(r)
-			if TGNS.ShouldProcessHttpRequests then
+			--if TGNS.ShouldProcessHttpRequests then
 				r.sent = true
 				-- local requestStartTime = Shared.GetTime()
 				if TGNS.LogHttp then -- or not TGNS.IsProduction() then
@@ -1079,9 +1079,9 @@ local function ProcessScheduledRequests() PROFILE("ProcessScheduledRequests")
 					-- 	TGNS.DebugPrint(string.format("HTTP Request duration: %s seconds waiting for %s", requestDuration, debugUrl))
 					-- end
 				end)
-			else
-				TGNS.DebugPrint(string.format("Not allowed to SendHTTPRequest for: %s", r.url), false, "http")
-			end
+			--else
+			--	TGNS.DebugPrint(string.format("Not allowed to SendHTTPRequest for: %s", r.url), false, "http")
+			--end
 		end)
 		waitingCountDebugLogger(#unsentRequests)
 	end
