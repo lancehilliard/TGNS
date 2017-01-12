@@ -362,7 +362,7 @@ if Server or Client then
 		function Plugin:MapChange()
 			if Shine.GetGamemode() == "ns2" then
 				if self.LaneInfosError then
-					TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s", TGNS.GetCurrentMapName()), false, "laneinfos")
+					TGNS.DebugPrint(string.format("balance: LaneInfos configuration error - %s - %s", TGNS.GetCurrentMapName(), self.LaneInfosError), false, "laneinfos")
 				end
 			end
 		end
@@ -372,18 +372,20 @@ if Server or Client then
 			-- TGNS.Log("GetOpenLaneMessage...")
 			local result
 
-			self.LaneInfosError = true
+			self.LaneInfosError = "no laneinfos defined for map"
 			local laneInfos = {}
 			TGNS.DoForPairs(self.Config.LaneInfos, function(mapName, mapInfos)
 				if TGNS.GetCurrentMapName() == mapName then
-					self.LaneInfosError = false
+					self.LaneInfosError = nil
 					local mapLocationNames = TGNS.Select(GetLocations(), function(l) return l:GetName() end)
 					TGNS.DoForPairs(mapInfos, function(spawnLocationName, spawnLocationInfos)
 						TGNS.DoForPairs(spawnLocationInfos, function(laneName, laneLocationNames)
-							if TGNS.Has(mapLocationNames, spawnLocationName) and TGNS.All(laneLocationNames, function(n) return TGNS.Has(mapLocationNames, n) end) then
+							local spawnLocationNameFoundInMapLocationNames = TGNS.Has(mapLocationNames, spawnLocationName)
+							local allLaneLocationNamesFoundInMapLocationNames = TGNS.All(laneLocationNames, function(n) return TGNS.Has(mapLocationNames, n) end)
+							if spawnLocationNameFoundInMapLocationNames and allLaneLocationNamesFoundInMapLocationNames then
 								table.insert(laneInfos, {spawnLocationName=spawnLocationName, displayName=laneName, locationNames=laneLocationNames})
 							else
-								self.LaneInfosError = true
+								self.LaneInfosError = spawnLocationNameFoundInMapLocationNames and "at least one lane location not found" or string.format("%s spawn location not found", spawnLocationName)
 							end
 						end)
 					end)
