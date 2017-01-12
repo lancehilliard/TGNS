@@ -229,7 +229,16 @@ function Plugin:ClientConnect(client)
 				TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_PROGRESS, {b=TGNS.IsGameInProgress()})
 				TGNS.SendNetworkMessageToPlayer(player, self.GAME_IN_COUNTDOWN, {b=TGNS.IsGameInCountdown()})
 				TGNS.SendNetworkMessageToPlayer(player, self.SERVER_SIMPLE_NAME, {n=TGNS.GetSimpleServerName()})
-				TGNS.SendNetworkMessageToPlayer(player, self.DESIGNATION, {c=TGNS.GetClientCommunityDesignationCharacter(client)})
+				local communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(client)
+				TGNS.SendNetworkMessageToPlayer(player, self.DESIGNATION, {c=communityDesignationCharacter})
+				-- TGNS.DebugPrint(string.format("communityDesignationCharacter %s: %s", steamId, communityDesignationCharacter), false, "welcomebanner")
+				TGNS.ScheduleAction(3, function()
+					if Shine:IsValidClient(client) then
+						communityDesignationCharacter = TGNS.GetClientCommunityDesignationCharacter(client)
+						TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.DESIGNATION, {c=communityDesignationCharacter})
+						-- TGNS.DebugPrint(string.format("communityDesignationCharacter %s: %s", steamId, communityDesignationCharacter), false, "welcomebanner")
+					end
+				end)
 			end
 		--end)
 		self:AlertApplicationIconForPlayer(player)
