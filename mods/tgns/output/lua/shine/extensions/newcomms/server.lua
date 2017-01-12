@@ -6,7 +6,8 @@ local PASSPHRASE = "I will hear"
 local passedClients = {}
 
 local function isEnforcementActive()
-    return Server.GetNumPlayersTotal() >= 12 or not TGNS.IsProduction()
+    local gamerules = GetGamerules()
+    return (gamerules.team1:GetNumPlayers() >= 6 and gamerules.team2:GetNumPlayers() >= 6) or not TGNS.IsProduction()
 end
 
 local function updatePlayerScoreboardStatus(player)
