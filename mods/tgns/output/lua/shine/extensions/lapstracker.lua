@@ -201,6 +201,8 @@ local function OnLocationChanged(player, locationName)
 						else
 							md:ToPlayerNotifyInfo(player, message)
 						end
+						local steamId = TGNS.GetClientSteamId(client)
+						TGNS.Karma(steamId, "LapFinished")
 						trackLowestTimes[client] = trackLowestTimes[client] or {}
 						trackLowestTimes[client][trackId] = trackLowestTimes[client][trackId] or {}
 
@@ -211,7 +213,7 @@ local function OnLocationChanged(player, locationName)
 						local lowestPreviousTime = trackLowestTimes[client][trackId][className]
 						local bestPreviousTime = trackBestTimes[trackId][className]
 						local bestPreviousName = trackBestNames[trackId][className]
-						local url = string.format("%s&i=%s&t=%s&b=%s&s=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, TGNS.GetClientSteamId(client), TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(trackDuration), TGNS.UrlEncode(className))
+						local url = string.format("%s&i=%s&t=%s&b=%s&s=%s&c=%s", TGNS.Config.LapsEndpointBaseUrl, steamId, TGNS.UrlEncode(trackId), TGNS.UrlEncode(Shared.GetBuildNumber()), TGNS.UrlEncode(trackDuration), TGNS.UrlEncode(className))
 						TGNS.GetHttpAsync(url, function(lapsResponseJson)
 							local lapsResponse = json.decode(lapsResponseJson) or {}
 							if not lapsResponse.success then
