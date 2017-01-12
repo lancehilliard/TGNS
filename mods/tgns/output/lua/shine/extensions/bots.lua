@@ -137,6 +137,9 @@ local function setBotConfig()
 			Shine.Plugins.mapvote.CanExtend = function(mapVoteSelf) return true end
 			Shine.Plugins.mapvote.Config.ForcedMaps[TGNS.GetCurrentMapName()] = true
 			Shine.Plugins.mapvote.ForcedMapCount = 1
+			if TGNS.GetCurrentMapName() == "ns2_tgns_arclight" then
+				TGNS.Karma(TGNS.Config.ArclightSeededKarmaRecipientSteamId, "ArclightSeeded")
+			end
 		end
 	end
 
