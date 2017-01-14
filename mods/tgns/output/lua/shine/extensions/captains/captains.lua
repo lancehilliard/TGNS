@@ -2049,6 +2049,7 @@ if Server or Client then
 		end
 
 		function Plugin:EndGame(gamerules, winningTeam)
+			gameLastEndedAt = TGNS.GetSecondsSinceMapLoaded()
 			if not allPlayersWereArtificiallyForcedToReadyRoom then
 				if captainsModeEnabled then
 					if winningTeam == nil then
