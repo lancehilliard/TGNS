@@ -367,8 +367,8 @@ function TGNS.PrintTable(t, tableDescription, printAction) PROFILE("TGNS.PrintTa
 	end)
 end
 
-function TGNS.IsGameInPreGame() PROFILE("TGNS.IsGameInPreGame")
-	local result = TGNS.GetGameState() == kGameState.PreGame
+function TGNS.IsGameWaitingToStart() PROFILE("TGNS.IsGameWaitingToStart")
+	local result = TGNS.Has({kGameState.NotStarted, kGameState.PreGame, kGameState.WarmUp}, TGNS.GetGameState())
 	return result
 end
 
