@@ -1926,8 +1926,9 @@ if Server or Client then
 			else
 				removeReadyRoomAfkToMakeRoomForNewReadyPlayerClient(client)
 				local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
+				local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 				local player = TGNS.GetPlayer(client)
-				if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS then
+				if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS + (captainsModeEnabled and (2 - #playingReadyCaptainClients) or 0) then
 					table.insertunique(readyPlayerClients, client)
 					TGNS.SendNetworkMessageToPlayer(player, Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
 					md:ToAdminConsole(string.format("%s is opted in.", TGNS.GetClientName(client)))
