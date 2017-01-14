@@ -1434,6 +1434,8 @@ if Server or Client then
 		local recentCaptainsTempfilePath = "config://tgns/temp/recentcaptains.json"
 		local rolesServerData = {}
 		local captainsEventStartPushSent = false
+		local gameLastEndedAt
+		local nextGameSpawnLocationsSummary
 
 		local function disableCaptainsMode()
 			captainsModeEnabled = false
@@ -1459,10 +1461,6 @@ if Server or Client then
 				TGNS.ScheduleAction(2, function()
 					if not (TGNS.IsGameInCountdown() or TGNS.IsGameInProgress()) then
 						TGNS.ForceGameStart(true)
-						TGNS.ScheduleAction(kCountDownLength + 2, function()
-							readyTeams["Marines"] = false
-							readyTeams["Aliens"] = false
-						end)
 					end
 				end)
 			end
@@ -2030,11 +2028,9 @@ if Server or Client then
 		end
 
 		function Plugin:CheckGameStart(gamerules)
-			//local result = true
 			if captainsModeEnabled and not bothTeamsAreReady() then
 				return false
 			end
-			//return result
 		end
 
 		function Plugin:GetRecentCaptainsData()
@@ -2043,14 +2039,6 @@ if Server or Client then
 
 		function Plugin:GetCaptainsNightStartHourLocalServerTime()
 			return CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME
-		end
-
-		function Plugin:UpdatePregame(gamerules)
-			//local result = true
-			if captainsModeEnabled and TGNS.IsGameInPreGame() then
-				result = false
-			end
-			//return result
 		end
 
 		function Plugin:EndGame(gamerules, winningTeam)
@@ -2483,37 +2471,64 @@ if Server or Client then
 				local ssoData = Shine.Plugins.spawnselectionoverrides:GetCurrentMapSpawnSelectionOverridesData()
 				local errorMessage
 				local teamChoiceCaptainClient = #captainClients > 0 and getTeamChoiceCaptainClient(captainClients) or nil
-				if teamChoiceCaptainClient == client or TGNS.IsClientAdmin(client) then
-					if (captainsModeEnabled and captainsGamesFinished == 0 and not TGNS.IsGameInProgress()) or TGNS.IsClientAdmin(client) then
-						if spawnSelectionIndex then
-							if spawnSelectionIndex >= 1 and spawnSelectionIndex <= #ssoData then
-								local spawnSelectionOverride = {}
-								table.insert(spawnSelectionOverride, ssoData[spawnSelectionIndex].spawnSelectionOverride)
-								Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverride)
-								setSpawnsSummaryText = ssoData[spawnSelectionIndex].summaryTextLineDelimited
-								local clientIsCaptain = (#captainClients > 0 and getPlayerChoiceCaptainClient(captainClients) == client) or (#captainClients > 1 and getTeamChoiceCaptainClient(captainClients) == client)
-								if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
-									local clientTeamNumber = TGNS.GetClientTeamNumber(client)
-									md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", TGNS.GetClientName(client), ssoData[spawnSelectionIndex].summaryText))
-									local steamId = TGNS.GetClientSteamId(client)
-									if not hasEarnedSetSpawnsKarma[steamId] then
-										TGNS.Karma(steamId, "SetSpawns")
-										hasEarnedSetSpawnsKarma[steamId] = true
+				local captainsUsage = captainsModeEnabled and teamChoiceCaptainClient == client or TGNS.IsClientAdmin(client)
+				local smUsage = not captainsModeEnabled and TGNS.IsClientSM(client)
+				Shared.Message("smUsage: " .. tostring(smUsage))
+				if captainsUsage or smUsage then
+					if not Shine.Plugins.mapvote:VoteStarted() then
+						local validCaptainsUsage = captainsUsage and (captainsGamesFinished == 0 and not TGNS.IsGameInProgress())
+						local gameJustEnded = false
+						if gameLastEndedAt ~= nil then
+							local secondsSinceGameEnded = TGNS.GetSecondsSinceMapLoaded() - gameLastEndedAt
+							gameJustEnded = secondsSinceGameEnded > TGNS.ENDGAME_TIME_TO_READYROOM and secondsSinceGameEnded < TGNS.ENDGAME_TIME_TO_READYROOM + 10
+						end
+						local validSmUsage = smUsage and TGNS.IsGameWaitingToStart() and gameJustEnded and nextGameSpawnLocationsSummary == nil
+						if validCaptainsUsage or validSmUsage then
+							if spawnSelectionIndex then
+								if spawnSelectionIndex >= 1 and spawnSelectionIndex <= #ssoData then
+									local spawnSelectionOverride = {}
+									table.insert(spawnSelectionOverride, ssoData[spawnSelectionIndex].spawnSelectionOverride)
+									Shine.Plugins.spawnselectionoverrides:ForceOverrides(spawnSelectionOverride)
+									setSpawnsSummaryText = ssoData[spawnSelectionIndex].summaryTextLineDelimited
+									nextGameSpawnLocationsSummary = ssoData[spawnSelectionIndex].summaryText
+									local clientName = TGNS.GetClientName(client)
+									local clientIsCaptain = (#captainClients > 0 and getPlayerChoiceCaptainClient(captainClients) == client) or (#captainClients > 1 and getTeamChoiceCaptainClient(captainClients) == client)
+									if clientIsCaptain and TGNS.ClientIsOnPlayingTeam(client) then
+										local clientTeamNumber = TGNS.GetClientTeamNumber(client)
+										md:ToTeamNotifyInfo(clientTeamNumber, string.format("%s (Captain) has set first-round spawns: %s", clientName, ssoData[spawnSelectionIndex].summaryText))
+										local steamId = TGNS.GetClientSteamId(client)
+										if not hasEarnedSetSpawnsKarma[steamId] then
+											TGNS.Karma(steamId, "SetSpawns")
+											hasEarnedSetSpawnsKarma[steamId] = true
+										end
+									elseif smUsage then
+										Shared.Message("smUsage...")
+										local notifyAll
+										notifyAll = function()
+											if nextGameSpawnLocationsSummary then
+												local tgnsMd = TGNSMessageDisplayer.Create()
+												tgnsMd:ToAllNotifyInfo(string.format("Next game spawns: %s (set by: %s)", nextGameSpawnLocationsSummary, clientName))
+												TGNS.ScheduleAction(15, notifyAll)
+											end
+										end
+										notifyAll()
+									else
+										md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
 									end
 								else
-									md:ToPlayerNotifyInfo(player, string.format("Spawn set: %s", ssoData[spawnSelectionIndex].summaryText))
+									errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
 								end
 							else
-								errorMessage = string.format("'%s' is not a valid spawn selection override index number.", spawnSelectionIndex)
+								errorMessage = "You must specify a spawn selection override index number."
 							end
 						else
-							errorMessage = "You must specify a spawn selection override index number."
+							errorMessage = captainsModeEnabled and "You may set spawn locations only before the first Captains round." or "SMs may set spawn locations right after a game (only one -- first wins)."
 						end
 					else
-						errorMessage = "You may manually set map spawns only before the first Captains round."
+						errorMessage = "Mapvote started. Try again next map."
 					end
 				else
-					errorMessage = "You are not presently the Team Choice Captain. No spawns have been set."
+					errorMessage = string.format("%s may set spawn locations. No spawns have been set.", captainsModeEnabled and "Team Choice Captain" or "Supporting Members")
 				end
 				if errorMessage then
 					-- print errorMessage
@@ -2806,6 +2821,10 @@ if Server or Client then
 					result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
 				end
 				return result
+			end)
+
+			TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
+				nextGameSpawnLocationsSummary = nil
 			end)
 
 			TGNS.RegisterEventHook("GameStarted", function(secondsSinceEpoch)
