@@ -4,6 +4,8 @@ local countdownSeconds = 60
 local secondsRemaining
 local gameEndedRecently
 local fifteenSecondAfkTimerWasLastAdvertisedAt = 0
+local readyTeamCommanders = {}
+local bothTeamsHaveReadied
 
 local Plugin = {}
 
@@ -26,6 +28,86 @@ function Plugin:WarnPlayersOfImminentGameStart(playerList, secondsRemainingUntil
 		end
 	end
 end
+
+local function unReadyWithoutChat(client, teamNumber)
+	if timerInProgress and not bothTeamsHaveReadied and TGNS.IsGameWaitingToStart() and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+		if client ~= nil and teamNumber ~= nil and readyTeamCommanders[teamNumber] == client then
+			local teamName = TGNS.GetTeamName(teamNumber)
+			local notice = string.format("%s are not ready!", teamName)
+			readyTeamCommanders[teamNumber] = false
+	        md:ToAllNotifyInfo(notice)
+		end
+	end
+end
+
+function Plugin:CommLogout(chair)
+	if timerInProgress and not bothTeamsHaveReadied and TGNS.IsGameWaitingToStart() and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+		local commanderPlayer = chair:GetCommander()
+		if commanderPlayer then
+			local commanderClient = TGNS.GetClient(commanderPlayer)
+			unReadyWithoutChat(commanderClient, TGNS.GetClientTeamNumber(commanderClient))
+		end
+	end
+end
+
+function Plugin:ClientDisconnect(client)
+	unReadyWithoutChat(client, kMarineTeamType)
+	unReadyWithoutChat(client, kAlienTeamType)
+end
+
+function Plugin:PlayerSay(client, networkMessage)
+	if timerInProgress and TGNS.IsGameWaitingToStart() and not Shine.Plugins.captains:IsCaptainsModeEnabled() then
+	    local message = TGNS.ToLower(StringTrim(networkMessage.message))
+	    local clientTeamNumber = TGNS.GetClientTeamNumber(client)
+	    local errorMessage
+	    if TGNS.Has({"ready","unready"}, message) then
+	    	if TGNS.IsClientCommander(client) then
+	    		if not bothTeamsHaveReadied then
+		    		if message == "ready" then
+		    			if not readyTeamCommanders[clientTeamNumber] then
+		    				readyTeamCommanders[clientTeamNumber] = client
+		    			else
+		    				errorMessage = "Your team is already ready."
+		    			end
+		    		else
+		    			if readyTeamCommanders[clientTeamNumber] then
+		    				readyTeamCommanders[clientTeamNumber] = false
+		    			else
+		    				errorMessage = "Your team is not ready."
+		    			end
+		    		end
+	    		else
+	    			errorMessage = "Both teams were ready, and the game is beginning."
+	    		end
+	    	else
+	    		errorMessage = "Only commanders may ready/unready the team."
+	    	end
+	        if errorMessage then
+	        	md:ToPlayerNotifyError(TGNS.GetPlayer(client), errorMessage)
+	            return ""
+	        else
+	        	local relevantTeamName = TGNS.GetClientTeamName(client)
+	        	local gameOn = ""
+	        	if (readyTeamCommanders[kMarineTeamType] and readyTeamCommanders[kAlienTeamType]) then
+	        		relevantTeamName = "Marines and Aliens"
+	        		gameOn = "Game on!"
+	        		bothTeamsHaveReadied = true
+	        		TGNS.ScheduleAction(2.5, function() if TGNS.IsGameWaitingToStart() then TGNS.ForceGameStart(true) end end)
+	        	end
+	        	local readyStatus = readyTeamCommanders[clientTeamNumber] and "ready" or "not ready"
+	        	local notice = string.format("%s are %s! %s", relevantTeamName, readyStatus, gameOn)
+	        	TGNS.ScheduleAction(0, function() md:ToAllNotifyInfo(notice) end)
+	        end
+	    end
+	end
+end
+
+function Plugin:CheckGameStart(gamerules)
+	if Shine.GetGamemode() == "ns2" and timerInProgress and TGNS.IsGameWaitingToStart() and not Shine.Plugins.captains:IsCaptainsModeEnabled() and not (readyTeamCommanders[kMarineTeamType] and readyTeamCommanders[kAlienTeamType]) then
+		return false
+	end
+end
+
 
 function Plugin:GiveSecondsRemainingReprieve(toSeconds)
 	if timerInProgress and (secondsRemaining or 0) < toSeconds then
@@ -51,7 +133,7 @@ local function showTimeRemaining()
 				local secondsRemainingDescription = secondsRemaining <= 3 and "a few" or secondsRemaining
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
 					local p = TGNS.GetPlayer(c)
-					local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.", secondsRemainingDescription) -- , Shine.Plugins.afkkickhelper:GetAfkThresholdInSeconds(p)
+					local message = string.format("Game will force-start in %s seconds.\nPre/early-game AFK timer: 15 seconds!\n\n\n\nStarting without a commander\ncauses a random team member\nto begin with 0 personal resources.\n\n\nCommanders: chat 'ready' to start now.", secondsRemainingDescription) -- , Shine.Plugins.afkkickhelper:GetAfkThresholdInSeconds(p)
 					Shine.ScreenText.Add(51, {X = 0.5, Y = 0.40, Text = message, Duration = duration, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 				end)
 				fifteenSecondAfkTimerWasLastAdvertisedAt = Shared.GetTime()
@@ -100,9 +182,12 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 			end
 		end
 	end
+	unReadyWithoutChat(TGNS.GetClient(player), oldTeamNumber)
 end
 
 function Plugin:EndGame(gamerules, winningTeam)
+	bothTeamsHaveReadied = false
+	readyTeamCommanders = {}
 	secondsRemaining = countdownSeconds
 	timerInProgress = false
 	gameEndedRecently = true
