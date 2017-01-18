@@ -257,7 +257,7 @@ function Plugin:Initialise()
 		Shine.Plugins.mapvote.IsValidMapChoice = function(mapVoteSelf, map, playerCount)
 			local result = originalIsValidMapChoice(mapVoteSelf, map, playerCount)
 			if result and (Shine.IsType(map, "table") or Shine.IsType(map, "string")) then
-				if TGNS.GetHumanPlayerCount() < 20 then
+				if TGNS.GetHumanPlayerCount() < 22 then
 					local mapName = map.map or map
 					if Shine.IsType(mapName, "string") then
 						local mapIsInfested = TGNS.StartsWith(mapName, "infest_")
