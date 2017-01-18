@@ -30,7 +30,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
     local steamId = TGNS.GetClientSteamId(TGNS.GetClient(player))
     if newTeamNumber == kSpectatorIndex then
         addAndSave(steamId)
-    elseif TGNS.Has(autoSpecSteamIds, steamId) then
+    elseif TGNS.PlayerIsOnPlayingTeam(player) and TGNS.Has(autoSpecSteamIds, steamId) then
         removeAndSave(steamId)
     end
 end
@@ -41,7 +41,6 @@ function Plugin:PlayerNameChange(player, newName, oldName)
         local steamId = TGNS.GetClientSteamId(client)
         if oldName == kDefaultPlayerName and TGNS.Has(autoSpecSteamIds, steamId) and not confirmedConnected[client] then
             TGNS.SendToTeam(TGNS.GetPlayer(client), kSpectatorIndex, true)
-            removeAndSave(steamId)
         end
     end
 end
