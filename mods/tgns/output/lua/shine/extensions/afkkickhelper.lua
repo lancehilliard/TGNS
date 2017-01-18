@@ -45,6 +45,7 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 	    	end
 	    else
 	    	TGNS.MarkPlayerAFK(player)
+	    	Shine.Plugins.scoreboard:AnnouncePlayerPrefix(player)
     	end
     elseif not (force or shineForce) then
     	TGNS.ClearPlayerAFK(player)
