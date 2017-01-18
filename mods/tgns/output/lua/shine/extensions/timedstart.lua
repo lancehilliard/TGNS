@@ -158,7 +158,7 @@ function Plugin:GetWhenFifteenSecondAfkTimerWasLastAdvertised()
 end
 
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
-	if not (TGNS.IsGameInProgress() or gameEndedRecently or Shine.Plugins.bots:GetTotalNumberOfBots() > 0) then
+	if (TGNS.IsGameplayTeamNumber(newTeamNumber) or TGNS.IsGameplayTeamNumber(oldTeamNumber)) and not (TGNS.IsGameInProgress() or gameEndedRecently or Shine.Plugins.bots:GetTotalNumberOfBots() > 0) then
 		local playerList = TGNS.GetPlayerList()
 		local playingClients = TGNS.GetPlayingClients(playerList)
 		local numberOfPlayingClients = #playingClients
