@@ -403,6 +403,10 @@ function Plugin:CreateCommands()
 							if Shine:IsValidClient(client) then
 								OnBkaChanged(client, client, bkaData, newBkaName, "Better Known As", "Aliases", "BKA", false)
 								md:ToAdminConsole(string.format("%s set BKA successfully.", TGNS.GetClientName(client)))
+								if TGNS.IsClientReadyRoom(client) then
+									local player = TGNS.GetPlayer(client)
+									player:GetTeam():ReplaceRespawnPlayer(player, nil, nil)
+								end
 								showSummary(client)
 								TGNS.ScheduleAction(0, function()
 									if Balance.GetTotalGamesPlayed(client) == PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and newBkaName == TGNS.GetClientName(client) then
@@ -520,6 +524,7 @@ function Plugin:Initialise()
 			end
 		end)
 	end)
+
     return true
 end
 
