@@ -491,7 +491,7 @@ function hudTexts.initializeSkillImbalanceHudText()
 
 	function hudTexts.skillImbalanceHudText:UpdateText()
 		local text = ""
-		if not captainsEnabled and not gameState.gameIsInProgress and not gameState.gameIsInCountdown and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 and (Client.GetLocalClientTeamNumber() == kAlienTeamType or Client.GetLocalClientTeamNumber() == kMarineTeamType) then
+		if Shine.GetGamemode() == "ns2" and not captainsEnabled and not gameState.gameIsInProgress and not gameState.gameIsInCountdown and Shared.GetTime() - gameState.gameIsInProgressLastSetToFalse > TGNS.ENDGAME_TIME_TO_READYROOM + 1 and (Client.GetLocalClientTeamNumber() == kAlienTeamType or Client.GetLocalClientTeamNumber() == kMarineTeamType) then
 			text = string.format("Chat 'switch' if you want to play %s.\n\nIf you see skill imbalance pre-game:\nChat 'swap' to learn how to help.\n\nOtherwise, don't complain about teams.", Client.GetLocalClientTeamNumber() == kAlienTeamType and "Marines" or "Aliens")
 		end
 		self.Obj:SetText(text)
