@@ -13,8 +13,10 @@ local confirmedConnected = {}
 -- end
 
 local function addAndSave(steamId)
-    TGNS.InsertDistinctly(autoSpecSteamIds, steamId)
-    Shine.SaveJSONFile(autoSpecSteamIds, autoSpecTempfilePath)
+    if not TGNS.Has(autoSpecSteamIds, steamId) then
+        TGNS.InsertDistinctly(autoSpecSteamIds, steamId)
+        Shine.SaveJSONFile(autoSpecSteamIds, autoSpecTempfilePath)
+    end
 end
 
 local function removeAndSave(steamId)
