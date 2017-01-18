@@ -419,7 +419,11 @@ if Server or Client then
 					laneInfos = TGNS.Where(laneInfos, function(i) return i.spawnLocationName == spawnLocationName and not TGNS.Has(occupiedLocations, spawnLocationName) and TGNS.All(i.locationNames, function(n) return not TGNS.Has(occupiedLocations, n) end) end)
 					-- TGNS.Log("#laneInfos: " .. tostring(#laneInfos))
 					if #laneInfos == 1 then
-						result = string.format("Is %s lane open?", TGNS.GetFirst(laneInfos).displayName)
+						if math.random() < .2 then
+							result = "Which lane is open?"
+						else
+							result = string.format("Is %s lane open?", TGNS.GetFirst(laneInfos).displayName)
+						end
 					end
 				end
 			end
