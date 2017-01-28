@@ -2518,6 +2518,7 @@ if Server or Client then
 											if nextGameSpawnLocationsSummary then
 												local tgnsMd = TGNSMessageDisplayer.Create()
 												tgnsMd:ToAllNotifyInfo(string.format("Next game spawns: %s (set by: %s)", nextGameSpawnLocationsSummary, clientName))
+												tgnsMd:ToAllNotifyInfo(string.format("Upcoming game spawns: %s (set by: %s)", nextGameSpawnLocationsSummary, clientName))
 												TGNS.ScheduleAction(15, notifyAll)
 											end
 										end
