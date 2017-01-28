@@ -2049,6 +2049,8 @@ if Server or Client then
 		end
 
 		function Plugin:EndGame(gamerules, winningTeam)
+			readyTeams["Marines"] = false
+			readyTeams["Aliens"] = false
 			gameLastEndedAt = TGNS.GetSecondsSinceMapLoaded()
 			if not allPlayersWereArtificiallyForcedToReadyRoom then
 				if captainsModeEnabled then
