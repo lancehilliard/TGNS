@@ -1,8 +1,9 @@
 local Plugin = Plugin
 
 TGNS.HookNetworkMessage(Plugin.RECORDING_BOUNDARY, function(message)
-	local latestTrhVersionDescriptor = "v0.09"
+	local latestTrhVersionDescriptor = "v0.10"
 	local url = string.format("http://localhost:8467/tgns/record_%s?m=%s&b=%s&i=%s&n=%s&t=%s&d=%s&team=%s", message.b, TGNS.GetCurrentMapName(), Shared.GetBuildNumber(), Client.GetSteamId(), TGNS.UrlEncode(message.p), message.s, message.d, TGNS.UrlEncode(message.t))
+	Shared.Message("url: " .. tostring(url))
 	Shared.SendHTTPRequest(url, "GET", function(responseJson)
 		local response = json.decode(responseJson) or {}
 		if response.showIcon then
