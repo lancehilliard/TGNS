@@ -91,7 +91,7 @@ function Plugin:Initialise()
 					local lastWarnTime = lastWarnTimes[c] or 0
 					if Shared.GetTime() - lastWarnTime > 10 then
 						local isReadyRoomCaptainsOptIn = isReadyRoomCaptainsOptIn(c)
-						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid %s.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor, isReadyRoomCaptainsOptIn and "risking Captains opt-out", "being sent to Ready Room"))
+						md:ToPlayerNotifyInfo(p, string.format("AFK %s%s. Move to avoid %s.", Pluralize(afkThresholdInSeconds, "second"), afkScenarioDescriptor, isReadyRoomCaptainsOptIn and "risking Captains opt-out" or "being sent to Ready Room"))
 						lastWarnTimes[c] = Shared.GetTime()
 						local playAfkPingSoundToClient = function(level)
 							if Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and clientIsVulnerableToAfk(c) then
