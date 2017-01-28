@@ -1943,7 +1943,6 @@ if Server or Client then
 					updateCaptainsReadyProgress(client)
 				else
 					md:ToPlayerNotifyError(player, "Too many people have already opted in to play.")
-					local playingReadyCaptainClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyCaptainClients, c) end)
 					if #playingReadyCaptainClients < 2 then
 						md:ToPlayerNotifyError(player, "There's still room for another Captain!")
 					end
