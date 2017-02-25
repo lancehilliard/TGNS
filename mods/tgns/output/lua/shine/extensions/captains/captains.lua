@@ -44,22 +44,10 @@ if Server or Client then
 		local notOptedInScores = {}
 
 		TGNS.HookNetworkMessage(Plugin.CAPTAINS_DATA, function(message)
-			--Shared.Message("")
-			--Shared.Message("")
-			--Shared.Message("")
-			--Shared.Message("------------------------")
-			--Shared.Message("------------------------ " .. Shared.GetTime())
-			--Shared.Message("------------------------")
 			local data = json.decode(message.d)
 			debug("message.d: " .. tostring(message.d))
 			if data then
 				rolesClientData = data.p
-				--TGNS.DoForPairs(rolesClientData, function(clientIndex, rolesData)
-					--Shared.Message(string.format("Should show as opted in: %s", Scoreboard_GetPlayerName(clientIndex)))
-					-- Shared.Message("Captains Debug (until game start): clientIndex: " .. tostring(clientIndex) .. "; rolesData: " .. tostring(rolesData))
-				--end)
-
-
 				optedInCount = data.o
 				captainsClientIndexes = data.c or {}
 				localClientIsCaptain = TGNS.Has(captainsClientIndexes, Client.GetLocalClientIndex())
@@ -67,9 +55,6 @@ if Server or Client then
 				if userHasToggledCaptainsBoardDisplayOn == nil then
 					userHasToggledCaptainsBoardDisplayOn = true
 				end
-				--Shared.Message("------------------------")
-				--Shared.Message("------------------------")
-				--Shared.Message("")
 
 				local scoresData = GetScoreData({ kTeamReadyRoom, kMarineTeamType, kAlienTeamType })
 
@@ -79,27 +64,15 @@ if Server or Client then
 					local getKey = function(s) return string.format("c%s", s.ClientIndex) end
 					local scoresDataPredicate = isForOptedInBoard and function(s) return rolesClientData[getKey(s)] ~= nil and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end or function(s) return rolesClientData[getKey(s)] == nil and s.EntityTeamNumber == kTeamReadyRoom and not TGNS.Has(captainsClientIndexes, s.ClientIndex) end
 			   		local result = TGNS.Where(scoresData, scoresDataPredicate)
-			   		-- if localClientIsCaptain and isForOptedInBoard then
-			   			TGNS.SortDescending(result, function(s)
-			   				local teamAdditive = 0
-			   				if s.EntityTeamNumber == kMarineTeamType then
-			   					teamAdditive = 50000
-		   					elseif s.EntityTeamNumber == kAlienTeamType then
-		   						teamAdditive = 25000
-		   					end
-			   				return s.Skill + teamAdditive
-			   			end)
-			   		-- else
-			   		-- 	TGNS.SortAscending(result, function(s)
-			   		-- 		local teamAdditive = ""
-			   		-- 		if s.EntityTeamNumber == kMarineTeamType then
-			   		-- 			teamAdditive = "            "
-		   			-- 		elseif s.EntityTeamNumber == kAlienTeamType then
-		   			-- 			teamAdditive = "      "
-		   			-- 		end
-			   		-- 		return string.format("%s%s", teamAdditive, TGNS.ToLower(s.Name))
-			   		-- 	end)
-			   		-- end
+		   			TGNS.SortDescending(result, function(s)
+		   				local teamAdditive = 0
+		   				if s.EntityTeamNumber == kMarineTeamType then
+		   					teamAdditive = 50000
+	   					elseif s.EntityTeamNumber == kAlienTeamType then
+	   						teamAdditive = 25000
+	   					end
+		   				return s.Skill + teamAdditive
+		   			end)
 			   		local datas = {scoresData=scoresData, rolesClientData=rolesClientData}
 			   		datas[dataName] = result
 			   		debug(string.format("total: %s; optedIn: %s; %s: %s; datas: %s", #scoresData, optedInCount, dataName, #result, json.encode(datas)))
@@ -172,7 +145,6 @@ if Server or Client then
 			    teamItem:SetSize(Vector(teamItemWidth, GUIScoreboard.kTeamItemHeight, 0) * GUIScoreboard.kScalingFactor)
 		        teamItem:SetAnchor(GUIItem.Middle, GUIItem.Top)
 			    
-			    -- teamItem:SetColor(Color(0, 0, 0, 0.75))
 			    teamItem:SetColor(Color(0/255,16/255,0/255, 0.75))
 			    teamItem:SetIsVisible(false)
 			    teamItem:SetLayer(guiLayer)
@@ -188,7 +160,6 @@ if Server or Client then
 			    teamItem:AddChild(logoItem)
 
 
-			    -- Team name text item.
 			    local teamNameItem = GUIManager:CreateTextItem()
 			    teamNameItem:SetFontName(GUIScoreboard.kTeamNameFontName)
 			    teamNameItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
@@ -201,7 +172,6 @@ if Server or Client then
 			    teamNameItem:SetStencilFunc(GUIItem.NotEqual)
 			    teamItem:AddChild(teamNameItem)
 			    
-			    -- Add team info (team resources and number of players).
 			    local teamInfoItem = GUIManager:CreateTextItem()
 			    teamInfoItem:SetFontName(GUIScoreboard.kTeamInfoFontName)
 			    teamInfoItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
@@ -217,7 +187,6 @@ if Server or Client then
 			    local currentColumnX = ConditionalValue(GUIScoreboard.screenWidth < 1280, GUIScoreboard.kPlayerItemWidth, teamItemWidth - GUIScoreboard.kTeamColumnSpacingX * 10)
 			    local playerDataRowY = 10
 			    
-			    -- TGNS text item
 			    local tgnsItemText = ""
 			    local tgnsItem = GUIManager:CreateTextItem()
 			    tgnsItem:SetFontName(GUIScoreboard.kTeamNameFontName)
@@ -234,95 +203,6 @@ if Server or Client then
 			    
 			    currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX * 2 + teamItem:GetTextWidth(tgnsItemText) * GUIScoreboard.kScalingFactor
 			    
-			    -- -- Score text item.
-			    -- local scoreItem = GUIManager:CreateTextItem()
-			    -- scoreItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- scoreItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(scoreItem)
-			    -- scoreItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			    -- scoreItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- scoreItem:SetTextAlignmentY(GUIItem.Align_Min)
-			    -- scoreItem:SetPosition(Vector(currentColumnX + 42.5, playerDataRowY, 0) * GUIScoreboard.kScalingFactor)
-			    -- scoreItem:SetColor(color)
-			    -- scoreItem:SetText(Locale.ResolveString("SB_SCORE"))
-			    -- scoreItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- teamItem:AddChild(scoreItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX + 40
-			    
-			    -- -- Kill text item.
-			    -- local killsItem = GUIManager:CreateTextItem()
-			    -- killsItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- killsItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(killsItem)
-			    -- killsItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			    -- killsItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- killsItem:SetTextAlignmentY(GUIItem.Align_Min)
-			    -- killsItem:SetPosition(Vector(currentColumnX, playerDataRowY, 0) * GUIScoreboard.kScalingFactor)
-			    -- killsItem:SetColor(color)
-			    -- killsItem:SetText(Locale.ResolveString("SB_KILLS"))
-			    -- killsItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- teamItem:AddChild(killsItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			    
-			    -- -- Assist text item.
-			    -- local assistsItem = GUIManager:CreateTextItem()
-			    -- assistsItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- assistsItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(assistsItem)
-			    -- assistsItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			    -- assistsItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- assistsItem:SetTextAlignmentY(GUIItem.Align_Min)
-			    -- assistsItem:SetPosition(Vector(currentColumnX, playerDataRowY, 0) * GUIScoreboard.kScalingFactor)
-			    -- assistsItem:SetColor(color)
-			    -- assistsItem:SetText(Locale.ResolveString("SB_ASSISTS"))
-			    -- assistsItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- teamItem:AddChild(assistsItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			    
-			    -- -- Deaths text item.
-			    -- local deathsItem = GUIManager:CreateTextItem()
-			    -- deathsItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- deathsItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(deathsItem)
-			    -- deathsItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			    -- deathsItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- deathsItem:SetTextAlignmentY(GUIItem.Align_Min)
-			    -- deathsItem:SetPosition(Vector(currentColumnX, playerDataRowY, 0) * GUIScoreboard.kScalingFactor)
-			    -- deathsItem:SetColor(color)
-			    -- deathsItem:SetText(Locale.ResolveString("SB_DEATHS"))
-			    -- deathsItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- teamItem:AddChild(deathsItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			    
-			    -- -- Resources text item.
-			    -- local resItem = GUIManager:CreateGraphicItem()
-			    -- resItem:SetPosition((Vector(currentColumnX, playerDataRowY, 0) + kIconOffset) * GUIScoreboard.kScalingFactor)
-			    -- resItem:SetTexture("ui/buildmenu.dds")
-			    -- resItem:SetTexturePixelCoordinates(unpack(GetTextureCoordinatesForIcon(kTechId.CollectResources)))
-			    -- resItem:SetSize(kIconSize * GUIScoreboard.kScalingFactor)
-			    -- resItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- teamItem:AddChild(resItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			    
-			    -- -- Ping text item.
-			    -- local pingItem = GUIManager:CreateTextItem()
-			    -- pingItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- pingItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(pingItem)
-			    -- pingItem:SetAnchor(GUIItem.Left, GUIItem.Top)
-			    -- pingItem:SetTextAlignmentX(GUIItem.Align_Min)
-			    -- pingItem:SetTextAlignmentY(GUIItem.Align_Min)
-			    -- pingItem:SetPosition(Vector(currentColumnX, playerDataRowY, 0) * GUIScoreboard.kScalingFactor)
-			    -- pingItem:SetColor(color)
-			    -- pingItem:SetText(Locale.ResolveString("SB_PING"))
-			    -- pingItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- teamItem:AddChild(pingItem)
-			    
 			    return { Background = teamItem, TeamName = teamNameItem, TeamInfo = teamInfoItem, Logo = logoItem }
 			    
 			end
@@ -335,7 +215,6 @@ if Server or Client then
 			        clickForMouseIndicator:SetText((mouseVisible and "Right-Click to Hide" or "Left-Click for") .. " Mouse")
 			    end
 			    if not mouseVisible then
-			    	-- Shared.Message("mouseVisible badgeNameTooltip:Hide(0)")
 			    	badgeNameTooltip:Hide(0)
 			    end
 			    
@@ -404,15 +283,7 @@ if Server or Client then
 			    playerItem:AddChild(playerVoiceIcon)
 			    
 			    local playerSkillBar
-			    -- /*
-			    -- if GetGameInfoEntity():GetIsGatherReady() then
-			    --     playerSkillBar = GUIManager:CreateGraphicItem()
-			    --     playerSkillBar:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    --     playerItem:AddChild(playerSkillBar)
-			    --     playerItemChildX = playerItemChildX + kSkillBarSize.x + kSkillBarPadding
-			    -- end
-			    -- */
-			    
+
 			    -- //----------------------------------------
 			    -- //  Badge icons
 			    -- //----------------------------------------
@@ -463,205 +334,102 @@ if Server or Client then
 			    playerItem:AddChild(statusItem)
 			    
 			    -- currentColumnX = currentColumnX + (30 * GUIScoreboard.kScalingFactor) + GUIScoreboard.kTeamColumnSpacingX * 2
-                   currentColumnX = currentColumnX + (60 * GUIScoreboard.kScalingFactor)
-			    
-			    -- // Score text item.
-			    -- local scoreItem = GUIManager:CreateTextItem()
-			    -- scoreItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- scoreItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(scoreItem)
-			    -- scoreItem:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- scoreItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- scoreItem:SetTextAlignmentY(GUIItem.Align_Center)
-			    -- scoreItem:SetPosition(Vector(currentColumnX + 30, 0, 0) * GUIScoreboard.kScalingFactor)
-			    -- scoreItem:SetColor(Color(1, 1, 1, 1))
-			    -- scoreItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerItem:AddChild(scoreItem)
-			        local kdPercentIcon = GUIManager:CreateGraphicItem()
-			        kdPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        kdPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        kdPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    kdPercentIcon:SetTexture("ui/captains/KillRatioSkill.dds")
-			        kdPercentIcon:SetIsVisible(true)
-			        kdPercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        kdPercentIcon.tooltipText = "Kill/Death Ratio"
-			        kdPercentIcon.allowHighlight = true
-			        playerItem:AddChild(kdPercentIcon)
+				currentColumnX = currentColumnX + (60 * GUIScoreboard.kScalingFactor)
+		    
+		        local kdPercentIcon = GUIManager:CreateGraphicItem()
+		        kdPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        kdPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        kdPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    kdPercentIcon:SetTexture("ui/captains/KillRatioSkill.dds")
+		        kdPercentIcon:SetIsVisible(true)
+		        kdPercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        kdPercentIcon.tooltipText = "Kill/Death Ratio"
+		        kdPercentIcon.allowHighlight = true
+		        playerItem:AddChild(kdPercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (20 * GUIScoreboard.kScalingFactor)
 
-			        local gorgePercentIcon = GUIManager:CreateGraphicItem()
-			        gorgePercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        gorgePercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        gorgePercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    gorgePercentIcon:SetTexture("ui/captains/GorgeSkill.dds")
-			        gorgePercentIcon:SetIsVisible(true)
-			        gorgePercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        gorgePercentIcon.tooltipText = "Gorge"
-			        gorgePercentIcon.allowHighlight = true
-			        playerItem:AddChild(gorgePercentIcon)
+		        local gorgePercentIcon = GUIManager:CreateGraphicItem()
+		        gorgePercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        gorgePercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        gorgePercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    gorgePercentIcon:SetTexture("ui/captains/GorgeSkill.dds")
+		        gorgePercentIcon:SetIsVisible(true)
+		        gorgePercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        gorgePercentIcon.tooltipText = "Gorge"
+		        gorgePercentIcon.allowHighlight = true
+		        playerItem:AddChild(gorgePercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (5 * GUIScoreboard.kScalingFactor)
 			    
-			    -- // Kill text item.
-			    -- local killsItem = GUIManager:CreateTextItem()
-			    -- killsItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- killsItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(killsItem)
-			    -- killsItem:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- killsItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- killsItem:SetTextAlignmentY(GUIItem.Align_Center)
-			    -- killsItem:SetPosition(Vector(currentColumnX, 0, 0) * GUIScoreboard.kScalingFactor)
-			    -- killsItem:SetColor(Color(1, 1, 1, 1))
-			    -- killsItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerItem:AddChild(killsItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			        local lerkPercentIcon = GUIManager:CreateGraphicItem()
-			        lerkPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        lerkPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        lerkPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    lerkPercentIcon:SetTexture("ui/captains/LerkSkill.dds")
-			        lerkPercentIcon:SetIsVisible(true)
-			        lerkPercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        lerkPercentIcon.tooltipText = "Lerk"
-			        lerkPercentIcon.allowHighlight = true
-			        playerItem:AddChild(lerkPercentIcon)
+		        local lerkPercentIcon = GUIManager:CreateGraphicItem()
+		        lerkPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        lerkPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        lerkPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    lerkPercentIcon:SetTexture("ui/captains/LerkSkill.dds")
+		        lerkPercentIcon:SetIsVisible(true)
+		        lerkPercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        lerkPercentIcon.tooltipText = "Lerk"
+		        lerkPercentIcon.allowHighlight = true
+		        playerItem:AddChild(lerkPercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (5 * GUIScoreboard.kScalingFactor)
 
-
-
-			    
-			    -- // assists text item.
-			    -- local assistsItem = GUIManager:CreateTextItem()
-			    -- assistsItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- assistsItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(assistsItem)
-			    -- assistsItem:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- assistsItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- assistsItem:SetTextAlignmentY(GUIItem.Align_Center)
-			    -- assistsItem:SetPosition(Vector(currentColumnX, 0, 0) * GUIScoreboard.kScalingFactor)
-			    -- assistsItem:SetColor(Color(1, 1, 1, 1))
-			    -- assistsItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerItem:AddChild(assistsItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			        local fadePercentIcon = GUIManager:CreateGraphicItem()
-			        fadePercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        fadePercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        fadePercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    fadePercentIcon:SetTexture("ui/captains/FadeSkill.dds")
-			        fadePercentIcon:SetIsVisible(true)
-			        fadePercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        fadePercentIcon.tooltipText = "Fade"
-			        fadePercentIcon.allowHighlight = true
-			        playerItem:AddChild(fadePercentIcon)
+		        local fadePercentIcon = GUIManager:CreateGraphicItem()
+		        fadePercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        fadePercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        fadePercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    fadePercentIcon:SetTexture("ui/captains/FadeSkill.dds")
+		        fadePercentIcon:SetIsVisible(true)
+		        fadePercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        fadePercentIcon.tooltipText = "Fade"
+		        fadePercentIcon.allowHighlight = true
+		        playerItem:AddChild(fadePercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (5 * GUIScoreboard.kScalingFactor)
 
-
-			    
-			    -- -- // Deaths text item.
-			    -- local deathsItem = GUIManager:CreateTextItem()
-			    -- deathsItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- deathsItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(deathsItem)
-			    -- deathsItem:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- deathsItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- deathsItem:SetTextAlignmentY(GUIItem.Align_Center)
-			    -- deathsItem:SetPosition(Vector(currentColumnX, 0, 0) * GUIScoreboard.kScalingFactor)
-			    -- deathsItem:SetColor(Color(1, 1, 1, 1))
-			    -- deathsItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerItem:AddChild(deathsItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			        local onosPercentIcon = GUIManager:CreateGraphicItem()
-			        onosPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        onosPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        onosPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    onosPercentIcon:SetTexture("ui/captains/OnosSkill.dds")
-			        onosPercentIcon:SetIsVisible(true)
-			        onosPercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        onosPercentIcon.tooltipText = "Onos"
-			        onosPercentIcon.allowHighlight = true
-			        playerItem:AddChild(onosPercentIcon)
+		        local onosPercentIcon = GUIManager:CreateGraphicItem()
+		        onosPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        onosPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        onosPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    onosPercentIcon:SetTexture("ui/captains/OnosSkill.dds")
+		        onosPercentIcon:SetIsVisible(true)
+		        onosPercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        onosPercentIcon.tooltipText = "Onos"
+		        onosPercentIcon.allowHighlight = true
+		        playerItem:AddChild(onosPercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (20 * GUIScoreboard.kScalingFactor)
 
-
-
-			    
-			    -- // Resources text item.
-			    -- local resItem = GUIManager:CreateTextItem()
-			    -- resItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- resItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(resItem)
-			    -- resItem:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- resItem:SetTextAlignmentX(GUIItem.Align_Center)
-			    -- resItem:SetTextAlignmentY(GUIItem.Align_Center)
-			    -- resItem:SetPosition(Vector(currentColumnX, 0, 0) * GUIScoreboard.kScalingFactor)
-			    -- resItem:SetColor(Color(1, 1, 1, 1))
-			    -- resItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerItem:AddChild(resItem)
-			    
-			    -- currentColumnX = currentColumnX + GUIScoreboard.kTeamColumnSpacingX
-			        local marineCommPercentIcon = GUIManager:CreateGraphicItem()
-			        marineCommPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        marineCommPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        marineCommPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    marineCommPercentIcon:SetTexture("ui/captains/CommSkill.dds")
-			        marineCommPercentIcon:SetIsVisible(true)
-			        marineCommPercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        marineCommPercentIcon.tooltipText = "Marine Commander"
-			        marineCommPercentIcon.allowHighlight = true
-			        playerItem:AddChild(marineCommPercentIcon)
+		        local marineCommPercentIcon = GUIManager:CreateGraphicItem()
+		        marineCommPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        marineCommPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        marineCommPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    marineCommPercentIcon:SetTexture("ui/captains/CommSkill.dds")
+		        marineCommPercentIcon:SetIsVisible(true)
+		        marineCommPercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        marineCommPercentIcon.tooltipText = "Marine Commander"
+		        marineCommPercentIcon.allowHighlight = true
+		        playerItem:AddChild(marineCommPercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (5 * GUIScoreboard.kScalingFactor)
 
-
-
-			        local alienCommPercentIcon = GUIManager:CreateGraphicItem()
-			        alienCommPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
-			        alienCommPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			        alienCommPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
-				    alienCommPercentIcon:SetTexture("ui/captains/KhammSkill.dds")
-			        alienCommPercentIcon:SetIsVisible(true)
-			        alienCommPercentIcon:SetStencilFunc(GUIItem.NotEqual)
-			        alienCommPercentIcon.tooltipText = "Alien Khammander"
-			        alienCommPercentIcon.allowHighlight = true
-			        playerItem:AddChild(alienCommPercentIcon)
+		        local alienCommPercentIcon = GUIManager:CreateGraphicItem()
+		        alienCommPercentIcon:SetSize(Vector(kPlayerBadgeIconSize, kPlayerBadgeIconSize, 0) * GUIScoreboard.kScalingFactor)
+		        alienCommPercentIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
+		        alienCommPercentIcon:SetPosition(Vector(currentColumnX, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
+			    alienCommPercentIcon:SetTexture("ui/captains/KhammSkill.dds")
+		        alienCommPercentIcon:SetIsVisible(true)
+		        alienCommPercentIcon:SetStencilFunc(GUIItem.NotEqual)
+		        alienCommPercentIcon.tooltipText = "Alien Khammander"
+		        alienCommPercentIcon.allowHighlight = true
+		        playerItem:AddChild(alienCommPercentIcon)
 			    
 			    currentColumnX = currentColumnX + kPlayerBadgeIconSize + (5 * GUIScoreboard.kScalingFactor)
 
-			    
-			    -- -- // Ping text item.
-			    -- local pingItem = GUIManager:CreateTextItem()
-			    -- pingItem:SetFontName(GUIScoreboard.kPlayerStatsFontName)
-			    -- pingItem:SetScale(Vector(1, 1, 1) * GUIScoreboard.kScalingFactor)
-			    -- GUIMakeFontScale(pingItem)
-			    -- pingItem:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- pingItem:SetTextAlignmentX(GUIItem.Align_Min)
-			    -- pingItem:SetTextAlignmentY(GUIItem.Align_Center)
-			    -- pingItem:SetPosition(Vector(currentColumnX, 0, 0) * GUIScoreboard.kScalingFactor)
-			    -- pingItem:SetColor(Color(1, 1, 1, 1))
-			    -- pingItem:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerItem:AddChild(pingItem)
-			    
-			    -- local playerTextIcon = GUIManager:CreateGraphicItem()
-			    -- playerTextIcon:SetSize(Vector(kPlayerVoiceChatIconSize, kPlayerVoiceChatIconSize, 0) * GUIScoreboard.kScalingFactor)
-			    -- playerTextIcon:SetAnchor(GUIItem.Left, GUIItem.Center)
-			    -- playerTextIcon:SetTexture(kMutedTextTexture)
-			    -- playerTextIcon:SetStencilFunc(GUIItem.NotEqual)
-			    -- playerTextIcon:SetIsVisible(false)
-			    -- playerTextIcon:SetColor(GUIScoreboard.kVoiceMuteColor)
-			    -- playerItem:AddChild(playerTextIcon)
-
-			    --currentColumnX = currentColumnX + kPlayerBadgeIconSize
 			    local steamFriendIcon = GUIManager:CreateGraphicItem()
 			    steamFriendIcon:SetSize(Vector(kPlayerVoiceChatIconSize, kPlayerVoiceChatIconSize, 0) * GUIScoreboard.kScalingFactor)
 			    steamFriendIcon:SetAnchor(GUIItem.Right, GUIItem.Center)
-			    --steamFriendIcon:SetPosition(Vector(currentColumnX, 0, 0) * GUIScoreboard.kScalingFactor)
 		        steamFriendIcon:SetPosition(Vector(-kPlayerBadgeIconSize/2, -kPlayerBadgeIconSize/2, 0) * GUIScoreboard.kScalingFactor)
 			    steamFriendIcon:SetTexture("ui/steamfriend.dds")
 			    steamFriendIcon:SetStencilFunc(GUIItem.NotEqual)
@@ -673,15 +441,7 @@ if Server or Client then
 			    -- It also makes it easy for other mods to add icons afterwards
 			    local iconTable = {}
 			    table.insert(iconTable, steamFriendIcon)
-			    -- table.insert(iconTable, playerVoiceIcon)
-			    -- table.insert(iconTable, playerTextIcon)
 			    
-			    -- return { Background = playerItem, Number = playerNumber, Name = playerNameItem,
-			    --     Voice = playerVoiceIcon, Status = statusItem, Score = scoreItem, Kills = killsItem,
-			    --     Assists = assistsItem, Deaths = deathsItem, Resources = resItem, Ping = pingItem,
-			    --     BadgeItems = badgeItems, SkillBar = playerSkillBar, Text = playerTextIcon,
-			    --     SteamFriend = steamFriendIcon, IconTable = iconTable
-			    -- }
 			    return { Background = playerItem, Number = playerNumber, Name = playerNameItem,
 			        Voice = playerVoiceIcon, Status = statusItem, 
 			        BadgeItems = badgeItems, SkillBar = playerSkillBar, 
@@ -773,12 +533,6 @@ if Server or Client then
 				    sortDescription = ", sorted by Name"
 				    if teamNameText == "Pickable Players" then
 				    	sortDescription = ", sorted by Team, then Skill"
-				    -- 	sortDescription = ", sorted by Team, then "
-				    -- 	local secondarySortDescription = "Name"
-				    -- 	if localClientIsCaptain then
-				    -- 		secondarySortDescription = "Skill"
-				    -- 	end
-				    -- 	sortDescription = string.format("%s%s", sortDescription, secondarySortDescription)
 				    end
 			    end
 			    local teamHeaderText = string.format("%s (%s%s)", teamNameText, playersOnTeamText, sortDescription)
@@ -842,22 +596,7 @@ if Server or Client then
 			        
 			        player["ClientIndex"] = clientIndex
 			        
-			        -- -- Voice icon.
-			        -- local playerVoiceColor = GUIScoreboard.kVoiceDefaultColor
-			        -- local voiceChannel = clientIndex and ChatUI_GetVoiceChannelForClient(clientIndex) or VoiceChannel.Invalid
-			        -- if ChatUI_GetClientMuted(clientIndex) then
-			        --     playerVoiceColor = GUIScoreboard.kVoiceMuteColor
-			        -- elseif voiceChannel ~= VoiceChannel.Invalid then
-			        --     playerVoiceColor = teamColor
-			        -- end
-
-			        -- player["Score"]:SetText(tostring(score))
-			        -- player["Kills"]:SetText(tostring(kills))
-			        -- player["Assists"]:SetText(tostring(assists))
-			        -- player["Deaths"]:SetText(tostring(deaths))
 			        player["Status"]:SetText(playerStatus)
-			        --player["Resources"]:SetText(resourcesStr)
-			        --player["Ping"]:SetText(tostring(ping))
 			        
 			        local white = GUIScoreboard.kWhiteColor
 			        local baseColor, nameColor, statusColor = white, white, white
@@ -866,12 +605,7 @@ if Server or Client then
 			            nameColor = kNewPlayerColorFloat    
 			        end
 			        
-			        --player["Score"]:SetColor(baseColor)
-			        --player["Kills"]:SetColor(baseColor)
-			        --player["Assists"]:SetColor(baseColor)
-			        --player["Deaths"]:SetColor(baseColor)
 			        player["Status"]:SetColor(statusColor)
-			        --player["Resources"]:SetColor(baseColor)   
 			        player["Name"]:SetColor(nameColor)
 			            
 					if teamNumber == 0 then
@@ -882,15 +616,6 @@ if Server or Client then
 						end
 					end
 
-			        -- if ping < GUIScoreboard.kLowPingThreshold then
-			        --     player["Ping"]:SetColor(GUIScoreboard.kLowPingColor)
-			        -- elseif ping < GUIScoreboard.kMedPingThreshold then
-			        --     player["Ping"]:SetColor(GUIScoreboard.kMedPingColor)
-			        -- elseif ping < GUIScoreboard.kHighPingThreshold then
-			        --     player["Ping"]:SetColor(GUIScoreboard.kHighPingColor)
-			        -- else
-			        --     player["Ping"]:SetColor(GUIScoreboard.kInsanePingColor)
-			        -- end
 			        currentY = currentY + (GUIScoreboard.kPlayerItemHeight + GUIScoreboard.kPlayerSpacing) * GUIScoreboard.kScalingFactor
 			        currentPlayerIndex = currentPlayerIndex + 1
 			        
@@ -938,20 +663,10 @@ if Server or Client then
 			        
 			        -- Icons on the right side of the player name
 			        player["SteamFriend"]:SetIsVisible(playerRecord.IsSteamFriend or clientIndex == Client.GetLocalClientIndex())
-			        -- player["Voice"]:SetIsVisible(ChatUI_GetClientMuted(clientIndex))
-			        -- player["Text"]:SetIsVisible(ChatUI_GetSteamIdTextMuted(steamId))
 			        
 			        local nameRightPos = pos + (kPlayerBadgeRightPadding * GUIScoreboard.kScalingFactor)
 			        
 			        pos = (statusPos - kPlayerBadgeRightPadding) * GUIScoreboard.kScalingFactor
-			        
-			        -- for _, icon in ipairs(player["IconTable"]) do
-			        --     if icon:GetIsVisible() then
-			        --         local iconSize = icon:GetSize()
-			        --         pos = pos - iconSize.x
-			        --         icon:SetPosition(Vector(pos, (-iconSize.y/2), 0))
-			        --     end
-			        -- end
 			        
 			        local finalName = player["Name"]:GetText()
 			        local finalNameWidth = player["Name"]:GetTextWidth(finalName) * GUIScoreboard.kScalingFactor
@@ -1007,7 +722,6 @@ if Server or Client then
 					                    if GUIItemContainsPoint(i, mouseX, mouseY) and i:GetIsVisible() then
 					                        badgeNameTooltip:SetText(string.format("%s\n_____________________________________\nOnly TGNS gameplay contributes to this data.", tooltipText))
 					                        hoverBadge = true
-					                        -- Shared.Message("hoverBadge = true " .. teamNameText)
 					                        return true
 					                    end
 				               		end
@@ -1042,7 +756,6 @@ if Server or Client then
 				        local kdPercentIconTransparency = 0
 				        local rolesData = rolesClientData[string.format("c%s", clientIndex)]
 				        if rolesData then
-				        	-- {gorgePercent,lerkPercent,fadePercent,onosPercent,marineCommPercent,alienCommPercent,kdPercent}
 				        	gorgePercentIconTransparency = rolesData[1]
 				        	lerkPercentIconTransparency = rolesData[2]
 				        	fadePercentIconTransparency = rolesData[3]
@@ -1066,8 +779,6 @@ if Server or Client then
 			        	player["MarineCommPercentIcon"]:SetIsVisible(marineCommPercentIconTransparency > 0)
 			        	player["AlienCommPercentIcon"]:SetIsVisible(alienCommPercentIconTransparency > 0)
 			        	player["KdPercentIcon"]:SetIsVisible(kdPercentIconTransparency > 0)
-
-			        	-- Shared.Message("gorgePercentIconTransparency: " .. tostring(gorgePercentIconTransparency))
 			        else
 					    player["GorgePercentIcon"]:SetIsVisible(false)
 					    player["LerkPercentIcon"]:SetIsVisible(false)
@@ -1193,19 +904,8 @@ if Server or Client then
 				                               		return notOptedInScores
 				                               end, TeamNumber = kMarineTeamType })
 				                               
-				    -- -- Blue team.
-				    -- table.insert(teams, { GUIs = CreateTeamBackground(kTeam1Index, guiLayer), TeamName = ScoreboardUI_GetBlueTeamName() .. " - Opted In",
-				    --                            Color = GUIScoreboard.kBlueColor, PlayerList = { }, HighlightColor = GUIScoreboard.kBlueHighlightColor,
-				    --                            GetScores = ScoreboardUI_GetBlueScores, TeamNumber = kTeam1Index})                              
-				                       
-				    -- -- Red team.
-				    -- table.insert(teams, { GUIs = CreateTeamBackground(kTeam2Index, guiLayer), TeamName = ScoreboardUI_GetRedTeamName() .. " - Not Opted In",
-				    --                            Color = GUIScoreboard.kRedColor, PlayerList = { }, HighlightColor = GUIScoreboard.kRedHighlightColor,
-				    --                            GetScores = ScoreboardUI_GetRedScores, TeamNumber = kTeam2Index })
-
 				    background:AddChild(teams[1].GUIs.Background)
 				    background:AddChild(teams[2].GUIs.Background)
-				    --background:AddChild(teams[3].GUIs.Background)
 
 				    playerHighlightItem = GUIManager:CreateGraphicItem()
 				    playerHighlightItem:SetSize(Vector(teamItemWidth - (GUIScoreboard.kPlayerItemWidthBuffer * 2), GUIScoreboard.kPlayerItemHeight, 0) * GUIScoreboard.kScalingFactor)
@@ -1274,12 +974,10 @@ if Server or Client then
 				        
 				        if captainsBoardShouldBeShown() then
 				            UpdateTeam(team)
-				            -- if numPlayers > 0 then
-				                if teamGUISize[team.TeamNumber] == nil then
-				                    teamGUISize[team.TeamNumber] = {}
-				                end
-				                teamGUISize[team.TeamNumber] = teams[index].GUIs.Background:GetSize().y
-				            -- end
+			                if teamGUISize[team.TeamNumber] == nil then
+			                    teamGUISize[team.TeamNumber] = {}
+			                end
+			                teamGUISize[team.TeamNumber] = teams[index].GUIs.Background:GetSize().y
 				        end
 				        
 				    end
@@ -1287,7 +985,6 @@ if Server or Client then
 			        if hoverBadge then
 			            badgeNameTooltip:Show()
 			        else
-			        	-- Shared.Message("hoverBadge badgeNameTooltip:Hide(0) " .. teamNameText)
 			            badgeNameTooltip:Hide(0)
 			        end
 
@@ -1300,30 +997,9 @@ if Server or Client then
 			        local contentYSpacing = 20 * GUIScoreboard.kScalingFactor
 
 			        if teamGUISize[1] then
-			            -- -- If it doesn't fit horizontally or there is only one team put it below
-			            -- if teamItemVerticalFormat or not teamGUISize[2] then
-			            --     teams[2].GUIs.Background:SetPosition(Vector(-teamItemWidth / 2, contentYSize, 0))
-			            --     contentYSize = contentYSize + teamGUISize[1] + contentYSpacing
-			            -- else
-			            --     teams[2].GUIs.Background:SetPosition(Vector(-teamItemWidth - contentXOffset / 2 + contentXExtraOffset, contentYSize, 0))
-			            -- end
 		                teams[2].GUIs.Background:SetPosition(Vector(-teamItemWidth / 2, contentYSize, 0))
 		                contentYSize = contentYSize + teamGUISize[1] + contentYSpacing
 			        end
-			        -- if teamGUISize[2] then
-			        --     -- If it doesn't fit horizontally or there is only one team put it below
-			        --     if teamItemVerticalFormat or not teamGUISize[1] then
-			        --         --teams[3].GUIs.Background:SetPosition(Vector(-teamItemWidth / 2, contentYSize, 0))
-			        --         contentYSize = contentYSize + teamGUISize[2] + contentYSpacing
-			        --     else
-			        --         --teams[3].GUIs.Background:SetPosition(Vector(contentXOffset / 2 - contentXExtraOffset, contentYSize, 0))
-			        --     end
-			        -- end
-			        -- -- If both teams fit horizontally then take only the biggest size
-			        -- if teamGUISize[1] and teamGUISize[2] and not teamItemVerticalFormat then
-			        --     contentYSize = math.max(teamGUISize[1], teamGUISize[2]) + contentYSpacing*2
-			        --     contentXSize = teamItemWidth*2 + contentXOffset
-			        -- end
 			        if teamGUISize[0] then
 			            teams[1].GUIs.Background:SetPosition(Vector(-teamItemWidth / 2, contentYSize, 0))
 			            contentYSize = contentYSize + teamGUISize[0] + contentYSpacing
@@ -1368,7 +1044,6 @@ if Server or Client then
 				    scoreboardBackground:SetIsVisible(false)
 					clickForMouseBackground:SetIsVisible(false)
 					SetMouseVisible(false)
-					-- Shared.Message("captainsBoardShouldBeShown badgeNameTooltip:Hide(0)")
 					badgeNameTooltip:Hide(0)
 				end
 
@@ -1439,12 +1114,6 @@ if Server or Client then
 
 		local function disableCaptainsMode()
 			captainsModeEnabled = false
-			-- TGNS.DoFor(captainClients, function(c)
-			-- 	if Shine:IsValidClient(c) then
-			-- 		TGNS.RemoveTempGroup(c, "captains_group")
-			-- 		TGNS.RemoveTempGroup(c, "teamchoicecaptain_group")
-			-- 	end
-			-- end)
 		end
 
 		local function getTeamChoiceCaptainClient(clients)
@@ -1506,8 +1175,6 @@ if Server or Client then
 							g = 0
 							b = 0
 						end
-						-- Shine:SendText(c, Shine.BuildScreenMessage(51, 0.5, 0.85, message, duration, r, g, b, 1, 1, 0))
-						--Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
 						Shine.ScreenText.Add(51, {X = 0.5, Y = 0.85, Text = message, Duration = duration, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 1, FadeIn = 0, IgnoreFormat = true})
 
 						if captainsGamesFinished == 1 then
@@ -1591,11 +1258,9 @@ if Server or Client then
 					end
 				end
 				local result = {gorgePercent,lerkPercent,fadePercent,onosPercent,marineCommPercent,alienCommPercent,kdPercent}
-				-- Shared.Message(string.format("ToTable result: %s", json.encode(result)))
 				return result
 			end)}
 			local dataJson = json.encode(data)
-			-- Shared.Message("captains debug: " .. tostring(dataJson))
 			TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 				TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.captains.CAPTAINS_DATA, {d=dataJson})
 			end)
@@ -1606,7 +1271,6 @@ if Server or Client then
 				local playerIdsInput = TGNS.Join(steamIds, ",")
 				local url = string.format("%s&d=%s&i=%s", TGNS.Config.RolesEndpointBaseUrl, 30, playerIdsInput)
 				TGNS.GetHttpAsync(url, function(rolesResponseJson)
-					-- Shared.Message("rolesResponseJson: " .. rolesResponseJson)
 					local rolesResponse = json.decode(rolesResponseJson) or {}
 					if rolesResponse.success then
 						TGNS.DoFor(rolesResponse.result, function(r)
@@ -1633,18 +1297,12 @@ if Server or Client then
 						local teamChoiceCaptainName = TGNS.GetClientName(teamChoiceCaptainClient)
 						local playerChoiceCaptainName = TGNS.GetClientName(playerChoiceCaptainClient)
 
-						-- todo mlh comment this out
-						-- TGNS.DoFor(readyRoomClients, function(c)
-						-- 	Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = string.format("%s: Team/Spawns Choice\n%s: Player Choice", teamChoiceCaptainName, playerChoiceCaptainName), Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
-						-- end)
-
 						if teamChoiceCaptainClient and TGNS.ClientIsOnPlayingTeam(teamChoiceCaptainClient) then
 							local teamChoiceCaptainTeamNumber = TGNS.GetClientTeamNumber(teamChoiceCaptainClient)
 							local teamChoiceCaptainTeammateClients = TGNS.GetTeamClients(teamChoiceCaptainTeamNumber, TGNS.GetPlayerList())
 							TGNS.DoFor(teamChoiceCaptainTeammateClients, function(c)
 								local truncatedTeamChoiceCaptainName = TGNS.Truncate(teamChoiceCaptainName, 16)
 								local message = setSpawnsSummaryText and string.format("%s has selected\nthe game's spawn locations!", truncatedTeamChoiceCaptainName) or string.format("%s: Select Spawns!\nM > Captains > sh_setspawns", truncatedTeamChoiceCaptainName)
-								-- Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
 								Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 							end)
 						end
@@ -1653,7 +1311,6 @@ if Server or Client then
 							local playerChoiceCaptainTeammateClients = TGNS.GetTeamClients(playerChoiceCaptainTeamNumber, TGNS.GetPlayerList())
 							TGNS.DoFor(playerChoiceCaptainTeammateClients, function(c)
 								local message = "Other team will\npick spawn locations."
-								-- Shine:SendText(c, Shine.BuildScreenMessage(58, 0.75, 0.1, message, 3, 0, 255, 0, 0, 2, 0))
 								Shine.ScreenText.Add(58, {X = 0.75, Y = 0.1, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 							end)
 						end
@@ -1661,61 +1318,14 @@ if Server or Client then
 
 					local optedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.ClientIsInGroup(c, "captainsgame_group") end)
 
-					-- todo mlh restore this
 					local playingReadyCaptainClients = TGNS.Where(readyCaptainClients, function(c) return Shine:IsValidClient(c) end)
 					local playingReadyPlayerClients = TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end)
 					local rolesClients = TGNS.Where(TGNS.GetClientList(), function(c) return (TGNS.Has(playingReadyCaptainClients, c) or TGNS.Has(playingReadyPlayerClients, c)) end)
 					local rolesClientsNeedingRoleData = TGNS.Where(rolesClients, function(c) return not TGNS.Any(rolesServerData, function(d) return d.PlayerId == TGNS.GetClientSteamId(c) end) end)
 					local steamIdsOfOptedInClientsNeedingRoleData = TGNS.Select(rolesClientsNeedingRoleData, TGNS.GetClientSteamId)
 					getRolesData(steamIdsOfOptedInClientsNeedingRoleData)
-					--md:ToAdminNotifyInfo(string.format("showPickables: steamIdsOfOptedInClientsNeedingRoleData count: %s", #steamIdsOfOptedInClientsNeedingRoleData))
-
-					-- todo mlh restore this
 					sendRolesDataToAllPlayers(rolesClients)
-
-
-
-					-- todo mlh comment this out
-					-- local notOptedInClients = TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.ClientIsInGroup(c, "captainsgame_group") and not TGNS.ClientIsInGroup(c, "captains_group") and not TGNS.ClientIsOnPlayingTeam(c) end)
-
-					-- todo mlh comment this out
-					-- local renderCaptainClients = TGNS.Where(allClients, function(c) return TGNS.Has(captainClients, c) end)
-					-- todo mlh comment this out
-					-- local renderOtherClients = TGNS.Where(allClients, function(c) return not TGNS.Has(renderCaptainClients, c) end)
-
-					-- todo mlh comment this out
-					-- TGNS.SortDescending(optedInClients, TGNS.GetClientHiveSkillRank)
-					-- todo mlh comment this out
-					-- showRoster(optedInClients, renderCaptainClients, 52, 53, 54, 0.20, "Opted In")
-
-					-- todo mlh comment this out
-					-- TGNS.SortAscending(optedInClients, TGNS.GetClientId)
-					-- todo mlh comment this out
-					-- showRoster(optedInClients, renderOtherClients, 52, 53, 54, 0.20, "Opted In")
-
-					
-
-					-- todo mlh comment this out
-					-- showRoster(notOptedInClients, allClients, 55, 56, 57, 0.50, "Not Opted In")
-
-					-- todo mlh comment this out
-					-- TGNS.DoFor(readyRoomClients, function(c)
-					-- 	local message
-					-- 	if TGNS.Has(captainClients, c) then
-					-- 		message = "Captains: Your 'Opted In' list is sorted by Hive Skill rank.\nTop row is highest (left, right), then next row, etc, etc.\nDon't put too much stock in this ranking."
-					-- 		message = "Captains:\n\nThe game has sorted your 'Opted In' player list\nby skill level. The top row is highest (left, right),\nand then the next row (left, right), and so on...\n\nThis sort isn't perfect. Choose as you like."
-					-- 	else
-					-- 		message = #notOptedInClients > 0 and "To opt-in:\nPress M (to show menu)\nChoose 'Captains'\nChoose 'sh_iwantcaptains'" or " "
-					-- 	end
-					-- 	-- Shine:SendText(c, Shine.BuildScreenMessage(59, 0.75, 0.70, message, 3, 0, 255, 0, 0, 1, 0 ) )
-					-- 	Shine.ScreenText.Add(59, {X = 0.75, Y = 0.70, Text = message, Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
-					-- end)
-
-				else
-					--destroyCaptainsBoard()	
 				end
-			else
-				--destroyCaptainsBoard()
 			end
 		end
 
@@ -1729,11 +1339,6 @@ if Server or Client then
 		local function enableCaptainsMode(nameOfEnabler, captain1Client, captain2Client)
 			local randomizedCaptainClients = TGNS.GetRandomizedElements({captain1Client,captain2Client})
 			captainClients = { randomizedCaptainClients[1], randomizedCaptainClients[2] }
-			-- if Balance and Balance.GetClientWeight then
-			-- 	if Balance.GetClientWeight(getPlayerChoiceCaptainClient(captainClients)) > Balance.GetClientWeight(getTeamChoiceCaptainClient(captainClients)) then
-			-- 		swapCaptains()
-			-- 	end
-			-- end
 			TGNS.AddTempGroup(getTeamChoiceCaptainClient(captainClients), "teamchoicecaptain_group")
 			captainTeamNumbers[getTeamChoiceCaptainClient(captainClients)] = 1
 			captainTeamNumbers[getPlayerChoiceCaptainClient(captainClients)] = 2
@@ -1743,7 +1348,6 @@ if Server or Client then
 			captainsGamesFinished = 0
 			TGNS.DoFor(captainClients, function(c)
 				TGNS.AddTempGroup(c, "captains_group")
-				-- TGNS.ScheduleAction(30, function() TGNS.PlayerAction(c, function(p) md:ToPlayerNotifyInfo(p, "Captains: Use sh_setteam if you need to force anyone to a team.") end) end)
 			end)
 			TGNS.ScheduleAction(0, function()
 				md:ToAllNotifyInfo(string.format("%s enabled Captains Game! Pick teams and play two rounds!", nameOfEnabler))
@@ -1756,9 +1360,7 @@ if Server or Client then
 			TGNS.ScheduleAction(1, showPickables)
 			//Shine.Plugins.afkkick.Config.KickTime = 20
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
-				-- Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
 				Shine.ScreenText.End(93, c)
-				-- Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
 				Shine.ScreenText.End(94, c)
 				Shine.ScreenText.End(92, c)
 			end)
@@ -1771,7 +1373,6 @@ if Server or Client then
 
 		local function showBanner(headline)
 			TGNS.DoFor(TGNS.GetClientList(), function(c)
-				-- Shine:SendText(c, Shine.BuildScreenMessage(41, 0.5, 0.2, string.format("Captains?%s", headline), 5, 0, 255, 0, 1, 3, 0 ) )
 				Shine.ScreenText.Add(41, {X = 0.5, Y = 0.2, Text = string.format("Captains?%s", headline), Duration = 5, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 			end)
 			bannerDisplayed = true
@@ -1826,21 +1427,10 @@ if Server or Client then
 			local twoCaptainsReady = #playingReadyCaptainClients > 1
 			local firstCaptainName = #playingReadyCaptainClients > 0 and TGNS.GetClientName(playingReadyCaptainClients[1]) or "???"
 			local secondCaptainName = twoCaptainsReady and TGNS.GetClientName(playingReadyCaptainClients[2]) or "???"
-			-- local playingReadyPlayerClients = TGNS.Where(playingClients, function(c) return TGNS.Has(readyPlayerClients, c) end)
 			local playingReadyPlayerClients = TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) end)
 			local descriptionOfWhatElseIsNeededToPlayCaptains = getDescriptionOfWhatElseIsNeededToPlayCaptains(readyClient, playingClients, playingReadyPlayerClients, #playingReadyCaptainClients, firstCaptainName, secondCaptainName)
 			if TGNS.HasNonEmptyValue(descriptionOfWhatElseIsNeededToPlayCaptains) then
-				// local readyClientIsCaptain = TGNS.Has(playingReadyCaptainClients, readyClient)
-				// if TGNS.Has(readyPlayerClients, readyClient) or readyClientIsCaptain then
-				// 	local message = string.format("You're marked as ready to play%s a Captains Game.", readyClientIsCaptain and " (and pick your team for)" or "")
-				// 	md:ToPlayerNotifyInfo(TGNS.GetPlayer(readyClient), message)
-				// 	-- if highVolumeMessagesLastShownTime == nil or highVolumeMessagesLastShownTime < Shared.GetTime() - 5 or readyClientIsCaptain then
-				// 		-- md:ToAllNotifyInfo(descriptionOfWhatElseIsNeededToPlayCaptains)
-				// 		-- highVolumeMessagesLastShownTime = Shared.GetTime()
-				// 	-- end
-				// end
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
-					-- Shine:SendText(TGNS.GetClient(player), Shine.BuildScreenMessage(93, 0.5, 0.75, descriptionOfWhatElseIsNeededToPlayCaptains, votesAllowedUntil and 120 or 10, 0, 255, 0, TGNS.ShineTextAlignmentCenter, 2, 0))
 					if (Shared.GetTime() - (lastUpdateCaptainsReadyProgress[c] or 0) > 1) or c == readyClient then
 						Shine.ScreenText.Add(93, {X = 0.5, Y = 0.75, Text = descriptionOfWhatElseIsNeededToPlayCaptains, Duration = votesAllowedUntil and 120 or 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
 						lastUpdateCaptainsReadyProgress[c] = Shared.GetTime()
@@ -1872,9 +1462,7 @@ if Server or Client then
 						if TGNS.Has(readyPlayerClients, c) or readyClientIsCaptain then
 							optinStatusAdvisory = string.format("You're opted-in as ready to play%s (reserved slots disabled during Captains games)", readyClientIsCaptain and " as a Captain" or "")
 						end
-						-- local secondLineMessage = string.format("%s (%s vs %s)! %s", optinStatusAdvisory, firstCaptainName, secondCaptainName, timeLeftAdvisory)
 						local secondLineMessage = string.format("%s! %s", optinStatusAdvisory, timeLeftAdvisory)
-						-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, secondLineMessage, 10, 0, 255, 0, 1, 1, 0))
 						Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = secondLineMessage, Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					end)
 					TGNS.ScheduleAction(1, announceTimeRemaining)
@@ -1882,11 +1470,8 @@ if Server or Client then
 					TGNS.ScheduleAction(1, function()
 						if not captainsModeEnabled then
 							TGNS.DoFor(TGNS.GetClientList(), function(c)
-								-- Shine:SendText(c, Shine.BuildScreenMessage(92, 0.5, 0.85, "Captains vote expired.", 5, 255, 0, 0, 1, 1, 0))
 								Shine.ScreenText.Add(92, {X = 0.5, Y = 0.85, Text = "Captains vote expired.", Duration = 5, R = 255, G = 0, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
-								-- Shine:SendText(c, Shine.BuildScreenMessage(93, 0.5, 0.90, " ", 5, 0, 255, 0, 1, 1, 0))
 								Shine.ScreenText.End(93, c)
-								-- Shine:SendText(c, Shine.BuildScreenMessage(94, 0.5, 0.80, " ", 5, 0, 255, 0, 1, 1, 0))
 								Shine.ScreenText.End(94, c)
 							end)
 						end
@@ -1981,11 +1566,6 @@ if Server or Client then
 				TGNS.RemoveAllMatching(readyPlayerClients, client)
 				if #readyCaptainClients == 2 then
 					showVoteTimingHelperMessages("Both captains are opted-in! Opt in to play! Press M > Captains > sh_iwantcaptains")
-					-- showVoteTimingHelperMessages(string.format("Both captains are opted-in! %s seconds for opt-ins by:", RESTRICTED_OPTIN_DURATION_IN_SECONDS))
-					-- showVoteTimingHelperMessages("- SMs, recent Captains, and anyone who did not play in the most recent Captains round")
-					-- TGNS.ScheduleAction(RESTRICTED_OPTIN_DURATION_IN_SECONDS, function()
-					-- 	showVoteTimingHelperMessages(string.format("%s seconds have passed. Anyone else may opt-in!", RESTRICTED_OPTIN_DURATION_IN_SECONDS))
-					-- end)
 					momentWhenSecondCaptainOptedIn = momentWhenSecondCaptainOptedIn or TGNS.GetSecondsSinceMapLoaded()
 				end
 			end
@@ -2129,7 +1709,6 @@ if Server or Client then
 			TGNS.DoFor(TGNS.GetPlayerList(), function(targetPlayer)
 				local targetPlayerIsReadyRoom = TGNS.IsPlayerReadyRoom(targetPlayer)
 				local targetPlayerIsSpectator = TGNS.IsPlayerSpectator(targetPlayer)
-				--Shared.Message(string.format("%s: %s %s", TGNS.GetPlayerName(targetPlayer), targetPlayerIsReadyRoom, targetPlayerIsSpectator))
 				TGNS.DoFor(TGNS.GetPlayerList(), function(sourcePlayer)
 					local planToSend = ""
 					local sourceClient = TGNS.GetClient(sourcePlayer)
@@ -2137,7 +1716,6 @@ if Server or Client then
 					if sourceClient and (playersAreTeammates or targetPlayerIsSpectator) and not targetPlayerIsReadyRoom then
 						planToSend = plans[sourceClient] or ""
 					end
-					-- Shared.Message(string.format("-- %s: '%s'", TGNS.GetPlayerName(sourcePlayer), planToSend))
 					TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.PLAYER_NOTE, {c=sourcePlayer:GetClientIndex(), n=TGNS.Truncate(planToSend, PLAN_DISPLAY_LENGTH)})
 				end)
 			end)
@@ -2216,25 +1794,21 @@ if Server or Client then
 
 			local planCommand = self:BindCommand("sh_plan", {"plan", "PLAN", "Plan"}, function(client, plan)
 				local player = TGNS.GetPlayer(client)
-				-- if captainsModeEnabled and captainsGamesFinished < 2 then
-					if TGNS.PlayerIsOnPlayingTeam(player) then
-						if not TGNS.IsGameInProgress() then
-							if TGNS.HasNonEmptyValue(plan) then
-								plans[client] = plan
-								displayPlansToAll()
-							else
-								md:ToPlayerNotifyInfo(player, "When !plan-ing, describe your plan (gorge, comm, lerk, etc).")
-								md:ToPlayerNotifyInfo(player, "For example, put 'gorge' on your scoreboard row: !plan gorge")
-							end
+				if TGNS.PlayerIsOnPlayingTeam(player) then
+					if not TGNS.IsGameInProgress() then
+						if TGNS.HasNonEmptyValue(plan) then
+							plans[client] = plan
+							displayPlansToAll()
 						else
-							md:ToPlayerNotifyError(player, "Planning notes are not displayed during gameplay.")
+							md:ToPlayerNotifyInfo(player, "When !plan-ing, describe your plan (gorge, comm, lerk, etc).")
+							md:ToPlayerNotifyInfo(player, "For example, put 'gorge' on your scoreboard row: !plan gorge")
 						end
 					else
-						md:ToPlayerNotifyError(player, "You must be on a team to plan.")
+						md:ToPlayerNotifyError(player, "Planning notes are not displayed during gameplay.")
 					end
-				-- else
-				--	md:ToPlayerNotifyError(player, "No Captains Game is being planned or played now.")
-				-- end
+				else
+					md:ToPlayerNotifyError(player, "You must be on a team to plan.")
+				end
 			end, true)
 			planCommand:AddParam{ Type = "string", Optional = true, TakeRestOfLine = true }
 			planCommand:Help("<plan> Announce your Captains Game plan.")
@@ -2336,8 +1910,6 @@ if Server or Client then
 				if Shine.GetGamemode() == "ns2" then
 					if captainsModeEnabled then
 						md:ToPlayerNotifyError(player, "Captains Game is already active.")
-					-- elseif TGNS.IsGameInProgress() and not TGNS.ClientIsOnPlayingTeam(client) then
-					-- 	md:ToPlayerNotifyError(player, "You must be on a team to opt-in during gameplay.")
 					elseif #getPlayingClients() < MIN_CAPTAINS_PLAYERS and not rolandHasBeenUsed then
 						md:ToPlayerNotifyError(player, string.format("The combined player count of both teams must be %s+ before you can offer to Captain.", MIN_CAPTAINS_PLAYERS))
 					elseif mayVoteYet ~= true and not TGNS.IsGameInProgress() then
@@ -2541,7 +2113,6 @@ if Server or Client then
 					errorMessage = string.format("%s may set spawn locations. No spawns have been set.", captainsModeEnabled and "Team Choice Captain" or "Supporting Members")
 				end
 				if errorMessage then
-					-- print errorMessage
 					md:ToPlayerNotifyError(player, errorMessage)
 					md:ToClientConsole(client, string.format("ERROR: %s", errorMessage))
 					md:ToClientConsole(client, "usage: sh_setspawns <spawn selection override index number>")
@@ -2821,8 +2392,6 @@ if Server or Client then
 					result = TGNS.IsClientAdmin(speakerClient) or TGNS.IsClientGuardian(speakerClient) or TGNS.ClientIsInGroup(speakerClient, "captains_group")
 					if result ~= true then
 						if lastVoiceWarningTimes[speakerClient] == nil or lastVoiceWarningTimes[speakerClient] < Shared.GetTime() - 2 then
-							-- Shine:SendText(speakerClient, Shine.BuildScreenMessage(50, 0.2, 0.25, "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", 3, 0, 255, 0, 0, 4, 0 ) )
-							-- Shine.ScreenText.Add(50, {X = 0.2, Y = 0.25, Text = "You are muted.\nOnly Captains and Admins\nmay use voicecomms while\nteams are being selected.", Duration = 3, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, speakerClient)
 							md:ToPlayerNotifyError(speakerPlayer, "Others cannot hear you. Only Captains and Admins may use voicecomm while teams are being selected.")
 							lastVoiceWarningTimes[speakerClient] = Shared.GetTime()
 						end
@@ -2871,11 +2440,6 @@ if Server or Client then
 				if captainsModeEnabled and teamChoiceCaptainClient and captainsGamesFinished == 0 then
 					TGNS.RemoveTempGroup(teamChoiceCaptainClient, "teamchoicecaptain_group")
 				end
-				-- TGNS.ScheduleAction(2, function()
-				-- 	local chairLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kMarineTeamType)):GetLocationName()
-				-- 	local hiveLocationName = TGNS.GetFirst(TGNS.GetEntitiesForTeam("CommandStructure", kAlienTeamType)):GetLocationName()
-				-- 	md:ToAllNotifyInfo(string.format("Marines: %s - Aliens: %s", chairLocationName, hiveLocationName))
-				-- end)
 			end)
 
 			TGNS.DoWithConfig(function()
@@ -2883,11 +2447,6 @@ if Server or Client then
 				TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
 					local recentCaptainPlayerIdsResponse = json.decode(recentCaptainPlayerIdsResponseJson) or {}
 					if recentCaptainPlayerIdsResponse.success then
-						-- if #recentCaptainPlayerIdsResponse.recentcaptains > 0 then
-						-- 	TGNS.DoFor(recentCaptainPlayerIdsResponse.recentcaptains, function(i)
-						-- 		table.insert(recentCaptainPlayerIds, i)
-						-- 	end)
-						-- end
 						if #recentCaptainPlayerIdsResponse.recentplayers > 0 then
 							TGNS.DoFor(recentCaptainPlayerIdsResponse.recentplayers, function(i)
 								table.insert(recentPlayerPlayerIds, i)
