@@ -49,13 +49,20 @@ function Plugin:Initialise()
 					end
 				end
 			end
-			local parent, originalUpdateEggGeneration = LocateUpValue(AlienTeam.Update, "UpdateEggGeneration", {LocateRecurse = true})
-			local function UpdateEggGeneration(alienTeamSelf)
+			-- local parent, originalUpdateEggGeneration = LocateUpValue(AlienTeam.Update, "UpdateEggGeneration", {LocateRecurse = true})
+			-- local function UpdateEggGeneration(alienTeamSelf)
+			-- 	Shared.SortEntitiesByDistance = modifiedSortEntitiesByDistance
+			-- 	originalUpdateEggGeneration(alienTeamSelf)
+			-- 	Shared.SortEntitiesByDistance = originalSharedSortEntitiesByDistance
+			-- end
+			-- ReplaceUpValue(parent, "UpdateEggGeneration", UpdateEggGeneration, {LocateRecurse = true})
+			local originalAlienTeamUpdateEggGeneration = AlienTeam.UpdateEggGeneration
+			AlienTeam.UpdateEggGeneration = function(alienTeamSelf)
 				Shared.SortEntitiesByDistance = modifiedSortEntitiesByDistance
-				originalUpdateEggGeneration(alienTeamSelf)
+				originalAlienTeamUpdateEggGeneration(alienTeamSelf)
 				Shared.SortEntitiesByDistance = originalSharedSortEntitiesByDistance
 			end
-			ReplaceUpValue(parent, "UpdateEggGeneration", UpdateEggGeneration, {LocateRecurse = true})
+
 	    end
     end)
 
