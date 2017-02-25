@@ -120,7 +120,7 @@ function Plugin:PlayerSay(client, networkMessage)
 					local clientName = TGNS.GetClientName(client)
 					local marineName = string.format("%s (to Aliens)", TGNS.GetClientName(marineClient))
 					local alienName = string.format("%s (to Marines)", TGNS.GetClientName(alienClient))
-					local notificationMessage = string.format("%s proposes swapping %s for %s (%s may optionally chat 'swap' to accept).", clientName, marineName, alienName, marineClient == client and TGNS.GetClientName(alienClient) or (alienClient == client and TGNS.GetClientName(marineClient) or "they"))
+					local notificationMessage = string.format("%s proposes swapping %s for %s (%s: chat 'swap' or 'stay').", clientName, marineName, alienName, marineClient == client and TGNS.GetClientName(alienClient) or (alienClient == client and TGNS.GetClientName(marineClient) or "other"))
 		            TGNS.DoForReverse(swapRequests, function(swapRequest, i)
 		            	local swapRequestClients = {swapRequest.marineClient.c, swapRequest.alienClient.c}
 					    if TGNS.Has(swapRequestClients, marineClient) or TGNS.Has(swapRequestClients, alienClient) then
@@ -163,7 +163,7 @@ function Plugin:PlayerSay(client, networkMessage)
 						end
 					end)
 					if swapPartnerClient then
-						local notificationMessage = string.format("%s is willing to swap with %s (who may optionally chat 'swap' to accept).", TGNS.GetClientName(client), TGNS.GetClientName(swapPartnerClient))
+						local notificationMessage = string.format("%s is willing to swap with %s (chat 'swap' or 'stay').", TGNS.GetClientName(client), TGNS.GetClientName(swapPartnerClient))
 						TGNS.DoForReverse(swapRequests, function(swapRequest, i)
 							if (swapRequest.marineClient.a or (false and TGNS.GetIsClientVirtual(swapRequest.marineClient.c))) and (swapRequest.alienClient.a or (false and TGNS.GetIsClientVirtual(swapRequest.alienClient.c))) and TGNS.ClientIsMarine(swapRequest.marineClient.c) and TGNS.ClientIsAlien(swapRequest.alienClient.c) then
 								table.remove(swapRequests, i)
@@ -214,10 +214,38 @@ function Plugin:PlayerSay(client, networkMessage)
 			swapMd:ToPlayerNotifyError(TGNS.GetPlayer(client), string.format("Swaps are not automated during %sgameplay.", captainsModeEnabled and "Captains " or ""))
 			cancel = true
 		end
-	    if cancel then
-	        return ""
-	    end
 	end
+	if TGNS.IsGameWaitingToStart() and TGNS.ClientIsOnPlayingTeam(client) and (message == "stay" or message == "'stay'") then
+		local swapPartnerClient
+		TGNS.DoForReverse(swapRequests, function(swapRequest, index)
+			if swapRequest.marineClient.c == client and TGNS.ClientIsMarine(client) then
+				swapPartnerClient = swapRequest.alienClient.c
+			elseif swapRequest.alienClient.c == client and TGNS.ClientIsAlien(client) then
+				swapPartnerClient = swapRequest.marineClient.c
+			end
+			if swapPartnerClient then
+				table.remove(swapRequests, index)
+			end
+		end)
+		if swapPartnerClient then
+			local notificationMessage = string.format("%s stays. Swap request cleared.", TGNS.GetClientName(client))
+			TGNS.ScheduleAction(0, function()
+				swapMd:ToAllNotifyInfo(notificationMessage)
+				if Shine.Plugins.timedstart then
+					if Shine.Plugins.timedstart.GiveSecondsRemainingReprieve then
+						Shine.Plugins.timedstart:GiveSecondsRemainingReprieve(30)
+					end
+				end
+			end)
+		else
+			swapMd:ToPlayerNotifyError(TGNS.GetPlayer(client), "No pending swap requests found for you.")
+			swapMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "You can request specific players to switch! Chat syntax example: swap wyz brian?")
+			cancel = true
+		end
+	end
+    if cancel then
+        return ""
+    end
 end
 
 local function removeSwitchAndSwapForClient(client)
