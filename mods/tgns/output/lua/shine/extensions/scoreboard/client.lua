@@ -873,7 +873,7 @@ function Plugin:Initialise()
 				end)
 
 				if teamNumber == 0 and player.Status:GetText():find("Spec") then
-					local shouldShowSvi = isUsingSvi[Client.GetLocalClientIndex()] and isUsingSvi[clientIndex] and Client.GetLocalClientTeamNumber() == kSpectatorIndex
+					local shouldShowSvi = isUsingSvi[clientIndex] and Client.GetLocalClientTeamNumber() == kSpectatorIndex -- and isUsingSvi[Client.GetLocalClientIndex()]
 					player.Status:SetText(shouldShowSvi and "Spec(SVI)" or "Spectator")
 				end
 
