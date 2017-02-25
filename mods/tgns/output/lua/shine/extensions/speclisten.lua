@@ -11,7 +11,9 @@ local modeDescriptions = {["0"] = "Chat Advisory OFF; Voicecomm: All"
 	, ["2"] = "Chat Advisory OFF; Voicecomm: Aliens only"
 	, ["3"] = "Chat Advisory OFF; Voicecomm: Marines and Aliens only"
 	, ["4"] = "Chat Advisory OFF; Voicecomm: Spectators only"
-	, ["5"] = "Chat Advisory OFF; Voicecomm: None"}
+	, ["5"] = "Chat Advisory OFF; Voicecomm: Commanders Only"
+	, ["6"] = "Chat Advisory OFF; Voicecomm: None"
+}
 
 local pdr = TGNSPlayerDataRepository.Create("specmode", function(data)
 	data.specmode = data.specmode ~= nil and data.specmode or nil
@@ -21,11 +23,13 @@ end)
 
 local function listenerSpectatorShouldHearSpeaker(listenerPlayer, speakerPlayer)
 	local listenerClient = TGNS.GetClient(listenerPlayer)
+	local speakerClient = TGNS.GetClient(speakerPlayer)
 	local specmode = specmodes[listenerClient] or 0
 	local playerCanHearAllVoices = specmode == 0
 	local playerIsOnGameplayTeamThatPlayerCanHear = (TGNS.PlayerIsOnPlayingTeam(speakerPlayer) and (specmode == 3 or specmode == TGNS.GetPlayerTeamNumber(speakerPlayer)))
 	local bothPlayersAreSpectatorsAndPlayerCanHearSpectators = TGNS.IsPlayerSpectator(listenerPlayer) and TGNS.IsPlayerSpectator(speakerPlayer) and specmode == 4
-	local result = playerCanHearAllVoices or playerIsOnGameplayTeamThatPlayerCanHear or bothPlayersAreSpectatorsAndPlayerCanHearSpectators
+	local playerIsCommanderThatPlayerCanHear = TGNS.IsClientCommander(speakerClient) and specmode == 5
+	local result = playerCanHearAllVoices or playerIsOnGameplayTeamThatPlayerCanHear or bothPlayersAreSpectatorsAndPlayerCanHearSpectators or playerIsCommanderThatPlayerCanHear
 	
 	local adjustForSpecPriority = function()
 		if result then
