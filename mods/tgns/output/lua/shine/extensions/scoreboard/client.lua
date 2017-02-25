@@ -1671,7 +1671,7 @@ function Plugin:Initialise()
 end
 
 function Plugin:Think(deltaTime)
-	local isInUntrackableAfkActivity = not (Client.GetIsWindowFocused() or (Client.GetSteamOverlayActive and Client.GetSteamOverlayActive()))
+	local isInUntrackableAfkActivity = not (Client.GetIsWindowFocused() or (Client.GetIsSteamOverlayActive and Client.GetIsSteamOverlayActive()))
 	if isInUntrackableAfkActivity then
 		if not wasInUntrackableAfkActivity then
 			startedUntrackableAfkActivityAt = Shared.GetTime()
