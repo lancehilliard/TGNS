@@ -1,0 +1,2 @@
+shader = "shaders/Emissive.surface_shader"
+emissiveMap = "ui/sprays/37187440.dds"
