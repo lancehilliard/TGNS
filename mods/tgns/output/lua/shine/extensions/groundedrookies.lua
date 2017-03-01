@@ -53,7 +53,18 @@ function Plugin:Initialise()
 		if result and not Shine.Plugins.communityslots:IsClientRecentCommander(TGNS.GetClient(player)) then
 			local playerShouldBePreventedFromCommanding
 			local numberOfAliveTeammates = #TGNS.Where(TGNS.GetPlayersOnSameTeam(player), TGNS.IsPlayerAlive)
-			if ((not TGNS.IsGameInProgress()) or (numberOfAliveTeammates > 2)) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 then
+			local infantryPortalCountProvidesExemption
+			if TGNS.PlayerIsMarine(player) then
+				local chairs = TGNS.GetTeamCommandStructures(kMarineTeamType)
+				local workingInfantryPortals = 0
+				TGNS.DoFor(chairs, function(c)
+					workingInfantryPortals = workingInfantryPortals + TGNS.GetNumberOfWorkingInfantryPortals(c)
+				end)
+				if workingInfantryPortals == 0 then
+					infantryPortalCountProvidesExemption = true
+				end
+			end
+			if ((not TGNS.IsGameInProgress()) or (numberOfAliveTeammates > 2)) and Shine.Plugins.bots:GetTotalNumberOfBots() == 0 and not infantryPortalCountProvidesExemption then
 				TGNS.DoFor(restrictions, function(restriction)
 					playerShouldBePreventedFromCommanding = restriction.test(player, playerName, numberOfAliveTeammates)
 					if playerShouldBePreventedFromCommanding then
