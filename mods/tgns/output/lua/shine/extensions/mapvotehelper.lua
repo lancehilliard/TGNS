@@ -89,7 +89,7 @@ function Plugin:CreateCommands()
 						TGNS.DoFor(mapSetNames, function(n) Shine.Plugins.mapvote.Config.ForcedMaps[n] = true end)
 						Shine.Plugins.mapvote.ForcedMapCount = #mapSetNames
 						Shine.Plugins.mapvote.Config.MaxOptions = Shine.Plugins.mapvote.ForcedMapCount
-						Shine.Plugins.mapvote.Config.ExcludeLastMaps = 0
+						Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min = 0
 						Shine.Plugins.mapvote.Config.AllowExtend = true
 						Shine.Plugins.mapvote.GetLastMaps = function(mapvotePlugin) return nil end
 						Shine.Plugins.mapvote.CanExtend = function(mapvotePlugin) return TGNS.Has(mapSetNames, TGNS.GetCurrentMapName()) end
@@ -218,7 +218,7 @@ function Plugin:Initialise()
 				md:ToPlayerNotifyError(player, string.format("You may nominate only one map (SMs may nominate two). You have already nominated %s.", mapNominations[steamId][1]))
 			elseif #mapNominations[steamId] > 1 and TGNS.IsClientSM(client) then
 				md:ToPlayerNotifyError(player, string.format("SMs may nominate only two maps each. You have already nominated %s and %s.", mapNominations[steamId][1], mapNominations[steamId][2]))
-			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps > 0 and TGNS.Has(Shine.Plugins.mapvote.LastMapData, mapName) then
+			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min > 0 and TGNS.Has(TGNS.Skip(Shine.Plugins.mapvote.LastMapData, math.max(0, #Shine.Plugins.mapvote.LastMapData-Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min)), mapName) then
 				md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
 			elseif #infestedNominations >= 2 and TGNS.StartsWith(mapName, "infest_") then
 				md:ToPlayerNotifyError(player, string.format("%s and %s are already nominated. Only two Infested maps may be nominated.", infestedNominations[1], infestedNominations[2]))
