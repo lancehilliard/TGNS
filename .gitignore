@@ -398,13 +398,16 @@
 !mods/tgns/output/ui/sprays/9329083.material
 !mods/tgns/source/ui/sprays/15924490.psd
 !mods/tgns/output/ui/sprays/15924490.material
-!mods/tgns/source/ui/sprays/41757063.psd
-!mods/tgns/output/ui/sprays/41757063.material
+!mods/tgns/source/ui/sprays/17917222.psd
+!mods/tgns/output/ui/sprays/17917222.material
 !mods/tgns/source/ui/sprays/37187440.psd
 !mods/tgns/output/ui/sprays/37187440.material
+!mods/tgns/source/ui/sprays/41757063.psd
+!mods/tgns/output/ui/sprays/41757063.material
+!mods/tgns/source/ui/sprays/50338144.psd
+!mods/tgns/output/ui/sprays/50338144.material
 !mods/tgns/source/ui/sprays/104330739.psd
 !mods/tgns/output/ui/sprays/104330739.material
-
 
 # And then whitelist spec files
 
