@@ -120,10 +120,10 @@ function Plugin:CreateCommands()
     local modCommand = self:BindCommand( "sh_specmode", "specmode", function(client, modeCandidate)
     	local player = TGNS.GetPlayer(client)
     	local mode = tonumber(modeCandidate)
-    	if mode == nil or mode < 0 or mode > 6 then
+    	if mode == nil or mode < 0 or mode > 7 then
     		showUsage(player)
     	else
-    		if mode == 6 then
+    		if mode == 7 then
     			local currentSpecMode = specmodes[client] or 0
     			if not TGNS.Has({0,4}, currentSpecMode) and not specpriority[client] then
     				md:ToPlayerNotifyError(player, "Before enabling SVI, you must first configure Spec Voicecomms to include Spectators in the voicecomms you hear.")
