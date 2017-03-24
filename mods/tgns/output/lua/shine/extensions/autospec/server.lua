@@ -42,7 +42,11 @@ function Plugin:PlayerNameChange(player, newName, oldName)
     if client then
         local steamId = TGNS.GetClientSteamId(client)
         if oldName == kDefaultPlayerName and TGNS.Has(autoSpecSteamIds, steamId) and not confirmedConnected[client] then
-            TGNS.SendToTeam(TGNS.GetPlayer(client), kSpectatorIndex, true)
+            TGNS.ScheduleAction(5, function()
+                if Shine:IsValidClient(client) and not confirmedConnected[client] and TGNS.IsClientReadyRoom(client) then
+                    TGNS.SendToTeam(TGNS.GetPlayer(client), kSpectatorIndex, true)
+                end
+            end)
         end
     end
 end
