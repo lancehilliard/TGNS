@@ -102,6 +102,25 @@ function Plugin:PlayerSay(client, networkMessage)
 	end
 end
 
+function Plugin:GetNumPlayersFromGamerules( Gamerules ) -- https://github.com/Person8880/Shine/issues/597#issuecomment-287606018
+	local Team1Players, _, Team1Bots = Gamerules.team1:GetNumPlayers()
+	local Team2Players, _, Team2Bots = Gamerules.team2:GetNumPlayers()
+
+	return Team1Players + Team2Players - Team1Bots - Team2Bots
+end
+
+function Plugin:UpdateWarmUp( Gamerules ) -- https://github.com/Person8880/Shine/issues/597#issuecomment-287606018
+	local State = Gamerules:GetGameState()
+	if State ~= kGameState.WarmUp then return end
+
+	local NumPlayers = self:GetNumPlayersFromGamerules( Gamerules )
+	if NumPlayers >= Gamerules:GetWarmUpPlayerLimit() then
+		-- Restore pre-314 behaviour, go to NotStarted when players exceed warm up total.
+		Gamerules:SetGameState( kGameState.NotStarted )
+		return false
+	end
+end
+
 function Plugin:CheckGameStart(gamerules)
 	if Shine.GetGamemode() == "ns2" and timerInProgress and TGNS.IsGameWaitingToStart() and not Shine.Plugins.captains:IsCaptainsModeEnabled() and not (readyTeamCommanders[kMarineTeamType] and readyTeamCommanders[kAlienTeamType]) then
 		return false
