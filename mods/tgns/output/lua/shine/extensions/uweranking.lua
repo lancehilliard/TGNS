@@ -2,10 +2,10 @@ local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
-    local originalPlayerRankingGetTrackServer
-	originalPlayerRankingGetTrackServer = TGNS.ReplaceClassMethod("PlayerRanking", "GetTrackServer", function(playerRankingSelf)
-		return originalPlayerRankingGetTrackServer(playerRankingSelf) and not GetServerContainsBots()
-	end)
+ --    local originalPlayerRankingGetTrackServer
+	-- originalPlayerRankingGetTrackServer = TGNS.ReplaceClassMethod("PlayerRanking", "GetTrackServer", function(playerRankingSelf)
+	-- 	return originalPlayerRankingGetTrackServer(playerRankingSelf) and not GetServerContainsBots()
+	-- end)
     return true
 end
 
