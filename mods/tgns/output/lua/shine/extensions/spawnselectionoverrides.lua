@@ -2,6 +2,7 @@ local md
 local forcedSpawnSelectionOverrides
 local currentMapSpawnSelectionOverridesData
 local BRIEF_SUMMARY_TRUNCATE_LENGTH = 5
+local missingConfigLogged
 
 local Plugin = {}
 Plugin.HasConfig = true
@@ -29,11 +30,16 @@ function Plugin:GetCurrentMapSpawnSelectionOverridesData()
 					data.spawnSelectionIndex = index
 					table.insert(result, data)
 				else
-					TGNS.DebugPrint(string.format("spawnselectionoverrides ERROR: %s spawnSelectionOverride %s/%s was discarded.", TGNS.GetCurrentMapName(), s[1], s[2]))
+					TGNS.DebugPrint(string.format("spawnselectionoverrides ERROR: %s spawnSelectionOverride %s/%s was discarded.", TGNS.GetCurrentMapName(), s[1], s[2]), false, "spawnselectionoverrides")
 				end
 			end)
 			if #result == 0 then
-				TGNS.DebugPrint(string.format("%s has spawnSelectionOverrides, but none is usable.", TGNS.GetCurrentMapName()))
+				TGNS.DebugPrint(string.format("%s has spawnSelectionOverrides, but none is usable.", TGNS.GetCurrentMapName()), false, "spawnselectionoverrides")
+			end
+		else
+			if not missingConfigLogged then
+				TGNS.DebugPrint(string.format("%s needs spawnSelectionOverrides.", TGNS.GetCurrentMapName()), false, "spawnselectionoverrides")
+				missingConfigLogged = true
 			end
 		end
 		currentMapSpawnSelectionOverridesData = result
@@ -65,7 +71,7 @@ function Plugin:Initialise()
 			end
 		end, debug.traceback)
 		if not success then
-			TGNS.DebugPrint(string.format("spawnselectionoverrides ERROR (%s): %s", Shared.GetTime(), result))
+			TGNS.DebugPrint(string.format("spawnselectionoverrides ERROR (%s): %s", Shared.GetTime(), result), false, "spawnselectionoverrides")
 		end
 		originalResetGame(gamerules)
 		-- TGNS.ScheduleAction(2, function()
@@ -88,8 +94,10 @@ function Plugin:Initialise()
 	-- 	end
 	-- end)
 
-	-- output possible spawn locations
+	-- -- output possible spawn locations
 	-- if not TGNS.IsProduction() then
+	-- 	Shared.Message("Outputting possible spawn locations:")
+	-- 	Shared.Message("")
 	-- 	local spawnLocationNames = {}
 	-- 	TGNS.DoTimes(50, function(index)
 	-- 		Shared.Message(string.format("TGNS.ForceGameStart() %s", index))
