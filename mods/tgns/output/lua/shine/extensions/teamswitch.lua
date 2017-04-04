@@ -21,6 +21,7 @@ function Plugin:PlayerSay(client, networkMessage)
 					if teamOnly then
 						errorMessage = "Request automated team switching in all chat (not team chat)."
 					else
+						local player = TGNS.GetPlayer(client)
 						local clientName = TGNS.GetClientName(client)
 						local otherPlayingTeamNumber = TGNS.GetOtherPlayingTeamNumber(teamNumber)
 
@@ -53,8 +54,17 @@ function Plugin:PlayerSay(client, networkMessage)
 								TGNS.RemoveAllMatching(tradeQueueClients[teamNumber], client)
 								infoMessage = string.format("%s will stay on %s for now ('switch' toggles).", clientName, clientTeamName)
 							else
-								table.insert(tradeQueueClients[teamNumber], client)
-								infoMessage = string.format("%s could play %s. %s, chat 'switch' if you want to switch to %s.", clientName, otherTeamName, otherTeamName, clientTeamName)
+								TGNS.DoTeamSizeComparisonAction(player, TGNS.GetPlayerList(), function(playerTeamCount, otherTeamCount)
+									playerCanSwitchWithoutPartner = playerTeamCount > otherTeamCount
+								end)
+								if playerCanSwitchWithoutPartner then
+									local otherPlayingTeamNumber = TGNS.GetOtherPlayingTeamNumber(teamNumber)
+									TGNS.SendToTeam(player, otherPlayingTeamNumber)
+									infoMessage = string.format("%s is now %s.", clientName, TGNS.GetClientTeamName(client))
+								else
+									table.insert(tradeQueueClients[teamNumber], client)
+									infoMessage = string.format("%s could play %s. %s, chat 'switch' if you want to switch to %s.", clientName, otherTeamName, otherTeamName, clientTeamName)
+								end
 							end
 						end
 					end
