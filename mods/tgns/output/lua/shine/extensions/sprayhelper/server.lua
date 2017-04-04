@@ -67,7 +67,7 @@ function Plugin:PlayerSay(client, networkMessage)
 								if TGNS.IsGameInProgress() then
 									md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "Spray kept. It will appear at all times for all players.")
 								else
-									md:ToAllNotifyInfo(string.format("Spray kept for %s. It will appear at all times for all players.", clientName))
+									md:ToAllNotifyInfo(string.format("Spray kept for %s (and removed from other Ready Rooms). It will appear here at all times for all players.", clientName))
 								end
 								lastSprays[client] = nil
 								updateFetchedSprays()
