@@ -35,6 +35,8 @@ gameState.gameIsInProgressLastSetToFalse = 0
 gameState.gameIsInProgress = false
 gameState.gameIsInCountdown = false
 gameState.precisionResources = {}
+gameState.nearbyAliveTeammateClientIndexes = {}
+gameState.nearbyAliveTeammateClientIndexesLastQueried = {}
 local serverSimpleName
 local squadNumbers={}
 local hudTexts = {}
@@ -610,6 +612,10 @@ function Plugin:Initialise()
 
 		local numberOfMarinesPlaying = 0
 		local numberOfAliensPlaying = 0
+
+		local teamNumber = updateTeam["TeamNumber"]
+		gameState.nearbyAliveTeammateClientIndexes[Client.GetLocalClientTeamNumber()] = gameState.nearbyAliveTeammateClientIndexes[Client.GetLocalClientTeamNumber()] or {}
+
 		if self.visible then
 	        local gameTime = PlayerUI_GetGameLengthTime()
 	        local minutes = math.floor( gameTime / 60 )
@@ -646,7 +652,18 @@ function Plugin:Initialise()
 	        end
 	        local gameTimeText = string.format("%s | %s - (%d %s%s) - %d:%02d", serverName, mapName, ingamePlayersCount, ingamePlayersCount == 1 and Locale.ResolveString("SB_PLAYER") or Locale.ResolveString("SB_PLAYERS"), numPlayersConnecting > 0 and string.format(", %d %s", numPlayersConnecting, Locale.ResolveString("SB_CONNECTING")) or "", minutes, seconds)
 	        self.gameTime:SetText(gameTimeText)
+
 		end
+
+        gameState.nearbyAliveTeammateClientIndexesLastQueried[Client.GetLocalClientTeamNumber()] = gameState.nearbyAliveTeammateClientIndexesLastQueried[Client.GetLocalClientTeamNumber()] or 0
+        if Shared.GetTime() - gameState.nearbyAliveTeammateClientIndexesLastQueried[Client.GetLocalClientTeamNumber()] > 0.5 and TGNS.Has({kMarineTeamType, kAlienTeamType}, Client.GetLocalClientTeamNumber()) then
+        	local player = Client.GetLocalPlayer()
+        	gameState.nearbyAliveTeammateClientIndexes[Client.GetLocalClientTeamNumber()] = TGNS.Select(Shared.GetEntitiesWithTagInRange("class:Player", player:GetOrigin(), kMaxRelevancyDistance / 1.5, function(e) return e:GetTeamNumber() == Client.GetLocalClientTeamNumber() and not e:isa("Commander") end), function(p) return p:GetClientIndex() end)
+        	gameState.nearbyAliveTeammateClientIndexesLastQueried[Client.GetLocalClientTeamNumber()] = Shared.GetTime()
+		end
+
+
+
 
 		if (has.ChangedResolutionSinceAddingGameTimeFavorite or not self.gameTimeFavorite) and serverAddress then
 		    self.gameTimeFavorite = GUIManager:CreateGraphicItem()
@@ -660,7 +677,7 @@ function Plugin:Initialise()
 
 		local playerList = updateTeam["PlayerList"]
 		local teamScores = updateTeam["GetScores"]()
-		local teamNumber = updateTeam["TeamNumber"]
+
 		local currentPlayerIndex = 1
 		local totalAfkCount = 0
 		for index, player in pairs(playerList) do
@@ -1098,6 +1115,12 @@ function Plugin:Initialise()
 				if TGNS.Has(recentCaptainsClientIndexes, tostring(clientIndex)) and teamNumber == 0 and not player.Status:GetText():find("Spec") then
 					color = Color(17/255,115/255,17/255)
 					player["Background"]:SetColor(color)
+				elseif #gameState.nearbyAliveTeammateClientIndexes[Client.GetLocalClientTeamNumber()] > 1 and TGNS.Has(gameState.nearbyAliveTeammateClientIndexes[Client.GetLocalClientTeamNumber()], clientIndex) and not playerRecord.IsCommander then
+					-- if math.floor(Shared.GetTime()) % 2 == 0 then
+						-- color = Color((color.r*.5*255)/255,(color.g*.5*255)/255,(color.b*.5*255)/255) -- darker
+						color = Color(1-(0.5*(1-color.r)),1-(0.5*(1-color.g)),1-(0.5*(1-color.b))) -- lighter
+						player["Background"]:SetColor(color)
+					-- end
 				end
 
 				if lastTeamNumber[clientIndex] ~= nil then
@@ -1176,6 +1199,7 @@ function Plugin:Initialise()
 				local targetPrefix = prefixes[self.hoverPlayerClientIndex] or ""
 				local targetIsSelf = GetSteamIdForClientIndex(self.hoverPlayerClientIndex) == Client.GetSteamId()
 				local targetIsEligibleForAfkRr = teamNumber == Client.GetLocalClientTeamNumber() and (not gameState.gameIsInProgress or PlayerUI_GetGameLengthTime() < 60) and TGNS.Contains(targetPrefix, "!") and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType)
+				local playerName = Scoreboard_GetPlayerData(self.hoverPlayerClientIndex, "Name")
 				local buttons = {
 					{text="TGNS"}
 				  , {text="  Portal: My Badges", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Badges/Manage") end, condition=targetIsSelf}
@@ -1184,10 +1208,11 @@ function Plugin:Initialise()
 				  , {text="  Portal: My Tagline", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/Tagline/Manage") end, condition=targetIsSelf}
 				  , {text="  Portal: My Settings / NS2ID", callback=function(data) Client.ShowWebpage("http://rr.tacticalgamer.com/My/Settings") end, condition=targetIsSelf}
 				  , {text="  Send to RR (pre/early-game AFK)", callback=function(data) TGNS.SendNetworkMessage(Plugin.REQUEST_AFKRR, {c=self.hoverPlayerClientIndex}) end, condition=targetIsEligibleForAfkRr}
-				  , {text="  Admin Feedback", callback=function(data) Client.ShowWebpage(string.format("http://rr.tacticalgamer.com/Feedback/Index?i=%s&n=%s&s=%s", data.ns2id, url_encode(data.playerName), url_encode(data.serverSimpleName))) end, condition=not targetIsSelf}
+				  , {text="Admin Feedback", callback=function(data) Client.ShowWebpage(string.format("http://rr.tacticalgamer.com/Feedback/Index?i=%s&n=%s&s=%s", data.ns2id, url_encode(data.playerName), url_encode(data.serverSimpleName))) end, condition=not targetIsSelf}
+				  , {text=string.format("  Praise %s", playerName), callback=function(data) Client.ShowWebpage(string.format("http://rr.tacticalgamer.com/Feedback/Index?i=%s&n=%s&s=%s", data.ns2id, url_encode(data.playerName), url_encode(data.serverSimpleName))) end, condition=not targetIsSelf}
+				  , {text=string.format("  Report %s", playerName), callback=function(data) Client.ShowWebpage(string.format("http://rr.tacticalgamer.com/Feedback/Index?i=%s&n=%s&s=%s", data.ns2id, url_encode(data.playerName), url_encode(data.serverSimpleName))) end, condition=not targetIsSelf}
 				}
 				local ns2id = GetSteamIdForClientIndex(self.hoverPlayerClientIndex)
-				local playerName = Scoreboard_GetPlayerData(self.hoverPlayerClientIndex, "Name")
 				for i = 1, #buttons do
 					local button = buttons[i]
 					self.hoverMenu:RemoveButtonByText(button.text)
