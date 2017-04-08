@@ -16,9 +16,9 @@ local textLocationHeightAdditive = TEXT_LOCATION_HEIGHT_ADDITIVE
 local VOTE_START_COOLDOWN = 180
 local attackOrderLastGivenWhen = {}
 local attackEnhancementLastGivenWhen = {}
-local lowestTimeRemainingFromWhichToDeduct = 20
-local maximumAllowableNumberOfSecondsToDeduct = 12
-local initialNumberOfSecondsToDeduct = 7
+local lowestTimeRemainingFromWhichToDeduct = 22
+local maximumAllowableNumberOfSecondsToDeduct = 14
+local initialNumberOfSecondsToDeduct = 9
 local whenBigVotesFailedWithMajorityThisGame = {}
 
 local originalGetCanAttack
