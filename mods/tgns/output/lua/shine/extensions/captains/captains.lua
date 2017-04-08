@@ -2186,13 +2186,13 @@ if Server or Client then
 		end
 
 		function Plugin:PlayerSay(client, networkMessage)
+			local message = StringTrim(networkMessage.message)
 			local shouldSuppressChatMessageDisplay = false
 			if captainsModeEnabled and not (TGNS.IsGameInProgress() or TGNS.IsGameInCountdown()) then
 				local player = TGNS.GetPlayer(client)
 				local playerTeamName = TGNS.GetPlayerTeamName(player)
 				if TGNS.PlayerIsOnPlayingTeam(player) then
 					local teamsAreSufficientlyBalanced = math.abs(#TGNS.GetMarineClients() - #TGNS.GetAlienClients()) <= 1
-					local message = StringTrim(networkMessage.message)
 					if TGNS.Has({"ready", "unready"}, message) then
 						if TGNS.IsGameInProgress() then
 							TGNS.ScheduleAction(0, function() md:ToAllNotifyInfo("Captains may ready/unready only during the pregame.") end)
@@ -2259,6 +2259,15 @@ if Server or Client then
 						end
 					end
 				end
+			end
+			if Shared.GetTime() < 300 and TGNS.EndsWith(message, " break") and TGNS.IsClientAdmin(client) then
+				TGNS.DoFor({0, 15, 30, 45, 60, 75, 90, 105, 120}, function(t)
+					TGNS.ScheduleAction(t, function()
+						if Shine:IsValidClient(client) then
+							md:ToAdminNotifyInfo(string.format("Time since \"%s\": %s", message, TGNS.SecondsToClock(t)))
+						end
+					end)
+				end)
 			end
 			if shouldSuppressChatMessageDisplay then
 				return ""
