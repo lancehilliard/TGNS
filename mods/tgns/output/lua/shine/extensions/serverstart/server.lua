@@ -54,8 +54,8 @@ function Plugin:Initialise()
                     TGNS.SwitchToMap(TGNS.GetCurrentMapName())
                 end
                 TGNS.RegisterEventHook("ClientConfirmConnect", function(client)
-                    if TGNS.GetSecondsSinceServerProcessStarted() < 300 then
-                        Shine.ScreenText.Add(71, {X = 0.3, Y = 0.3, Text = "This server recently crashed/restarted.", Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
+                    if TGNS.GetSecondsSinceServerProcessStarted() < 300 and not SERVER_COMMANDLINE_START_MAP_NAME ~= TGNS.GetCurrentMapName() then
+                        Shine.ScreenText.Add(71, {X = 0.3, Y = 0.3, Text = "Scheduled server restart complete.", Duration = 10, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMin, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
                     end
                 end)
                 TGNS.ScheduleAction(10, function()
