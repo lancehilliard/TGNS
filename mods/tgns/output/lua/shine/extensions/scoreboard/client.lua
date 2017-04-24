@@ -1,7 +1,9 @@
 local Plugin = Plugin
 local kPlayerBadgeIconSize = 20
 local prefixes = {}
-local isCaptainsCaptain = {}
+local captains = {}
+captains.isCaptainsCaptain = {}
+captains.isOptedInForCaptains = {}
 local isApproved = {}
 local isQuerying = {}
 local isVring = false
@@ -114,7 +116,7 @@ has.ChangedResolutionSinceAddingGameTimeFavorite = false
 
 TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(message)
 	prefixes[message.i] = message.p
-	isCaptainsCaptain[message.i] = message.c
+	captains.isCaptainsCaptain[message.i] = message.c
 	isUsingSvi[message.i] = message.s
 	fails.bka[message.i] = message.b
 	fails.newComms[message.i] = message.n
@@ -139,6 +141,7 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 
 	streamingWebAddresses[message.i] = message.streaming
 	resourceTowersKilled[message.i] = message.rtk
+	captains.isOptedInForCaptains[message.i] = message.o
 end)
 
 TGNS.HookNetworkMessage(Plugin.PRECISIONRESOURCES, function(message)
@@ -696,9 +699,11 @@ function Plugin:Initialise()
 			        if numberOfMarinesPlaying >= 7 and numberOfAliensPlaying >= 7 then
 			        	numberColor = Color(255/255, 255/255, 138/255, 1)
 			        end
-			        if isCaptainsCaptain[clientIndex] == true then
+			        if captains.isCaptainsCaptain[clientIndex] == true then
 			        	numberColor = CaptainsCaptainFontColor
 			        	captainsEnabled = true
+		        	elseif captains.isOptedInForCaptains[clientIndex] == true and clientIndex == Client.GetLocalClientIndex() and not captainsEnabled then
+			        	numberColor = CaptainsCaptainFontColor
 			        end
 			        player["Number"]:SetColor(numberColor)
 		        end
