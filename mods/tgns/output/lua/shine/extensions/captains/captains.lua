@@ -1474,6 +1474,9 @@ if Server or Client then
 								Shine.ScreenText.End(93, c)
 								Shine.ScreenText.End(94, c)
 							end)
+							readyCaptainClients = {}
+							readyPlayerClients = {}
+							TGNS.DoFor(TGNS.GetPlayerList(), function(p) Shine.Plugins.scoreboard:AnnouncePlayerPrefix(p) end)
 						end
 					end)
 				end
@@ -1487,7 +1490,9 @@ if Server or Client then
 					local afkReadyRoomReadyPlayerClient = TGNS.FirstOrNil(TGNS.Where(readyPlayerClients, function(c) return Shine:IsValidClient(c) and TGNS.IsClientAFK(c) and TGNS.IsClientReadyRoom(c) and TGNS.GetPlayerAfkDurationInSeconds(TGNS.GetPlayer(c)) >= 60 end))
 					if afkReadyRoomReadyPlayerClient then
 	    				TGNS.RemoveAllMatching(readyPlayerClients, afkReadyRoomReadyPlayerClient)
-						md:ToPlayerNotifyInfo(TGNS.GetPlayer(afkReadyRoomReadyPlayerClient), "You were removed from Captains opt-in due to AFK.")
+	    				local afkReadyRoomReadyPlayer = TGNS.GetPlayer(afkReadyRoomReadyPlayerClient)
+	    				Shine.Plugins.scoreboard:AnnouncePlayerPrefix(afkReadyRoomReadyPlayer)
+						md:ToPlayerNotifyInfo(afkReadyRoomReadyPlayer, "You were removed from Captains opt-in due to AFK.")
 	    				if captainsModeEnabled then
 		    				md:ToAllNotifyInfo(string.format("%s is no longer opted in to Captains (AFK).", TGNS.GetClientName(afkReadyRoomReadyPlayerClient)))
 	    				end
@@ -1525,6 +1530,7 @@ if Server or Client then
 					md:ToAdminConsole(string.format("%s is opted in.", TGNS.GetClientName(client)))
 					getRolesData({TGNS.GetClientSteamId(client)})
 					TGNS.RemoveAllMatching(readyCaptainClients, client)
+					Shine.Plugins.scoreboard:AnnouncePlayerPrefix(player)
 					updateCaptainsReadyProgress(client)
 				else
 					md:ToPlayerNotifyError(player, "Too many people have already opted in to play.")
@@ -1564,6 +1570,7 @@ if Server or Client then
 			if not TGNS.Has(readyCaptainClients, client) then
 				table.insertunique(readyCaptainClients, client)
 				TGNS.RemoveAllMatching(readyPlayerClients, client)
+				Shine.Plugins.scoreboard:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 				if #readyCaptainClients == 2 then
 					showVoteTimingHelperMessages("Both captains are opted-in! Opt in to play! Press M > Captains > sh_iwantcaptains")
 					momentWhenSecondCaptainOptedIn = momentWhenSecondCaptainOptedIn or TGNS.GetSecondsSinceMapLoaded()
@@ -1611,6 +1618,10 @@ if Server or Client then
 
 		function Plugin:IsOptedInAsPlayer(client)
 			return TGNS.Has(readyPlayerClients, client)
+		end
+
+		function Plugin:IsOptedInAsCaptain(client)
+			return TGNS.Has(readyCaptainClients, client)
 		end
 
 		function Plugin:GetNumPlayersFromGamerules( Gamerules ) -- https://github.com/Person8880/Shine/issues/597#issuecomment-287606018
@@ -1722,6 +1733,7 @@ if Server or Client then
 					end)
 					readyCaptainClients = {}
 					readyPlayerClients = {}
+					TGNS.DoFor(TGNS.GetPlayerList(), function(p) Shine.Plugins.scoreboard:AnnouncePlayerPrefix(p) end)
 				end
 			end
 		end
@@ -1977,23 +1989,25 @@ if Server or Client then
 					local isSm = TGNS.IsClientSM(optingInClient)
 					local isRecentCaptain = TGNS.Has(recentCaptainPlayerIds, optingInSteamId)
 					local optingInClientDidNotPlayInRecentCaptainsGame = not (TGNS.Has(recentPlayerPlayerIds, optingInSteamId) or isRecentCaptain)
+					local optingInPlayer = TGNS.GetPlayer(optingInClient)
 					if isSm or isRecentCaptain or optingInClientDidNotPlayInRecentCaptainsGame then
 						readyPlayerClients = readyPlayerClients or {}
 						removeReadyRoomAfkToMakeRoomForNewReadyPlayerClient(optingInClient)
 						local playingReadyPlayerClients = TGNS.Where(TGNS.GetClientList(), function(c) return TGNS.Has(readyPlayerClients, c) end)
 						if #playingReadyPlayerClients < MAX_NON_CAPTAIN_PLAYERS and not TGNS.Has(readyPlayerClients, optingInClient) then
 							table.insertunique(readyPlayerClients, optingInClient)
-							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(optingInClient), Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
+							Shine.Plugins.scoreboard:AnnouncePlayerPrefix(optingInPlayer)
+							TGNS.SendNetworkMessageToPlayer(optingInPlayer, Shine.Plugins.scoreboard.TOOLTIP_SOUND, {})
 							md:ToAdminConsole(string.format("%s opted in early successfully.", TGNS.GetClientName(optingInClient)))
 							getRolesData({TGNS.GetClientSteamId(optingInClient)})
 						end
 						if TGNS.Has(readyPlayerClients, optingInClient) then
-							md:ToPlayerNotifyInfo(TGNS.GetPlayer(optingInClient), "You will be automatically opted-in when votes are allowed.")
+							md:ToPlayerNotifyInfo(optingInPlayer, "You will be automatically opted-in when votes are allowed.")
 						else
-							md:ToPlayerNotifyError(TGNS.GetPlayer(optingInClient), "Early opt-ins are already FULL! :( -- Ask if anyone is willing to sit out?")
+							md:ToPlayerNotifyError(optingInPlayer, "Early opt-ins are already FULL! :( -- Ask if anyone is willing to sit out?")
 						end
 					else
-						md:ToPlayerNotifyError(TGNS.GetPlayer(optingInClient), failureMessage)
+						md:ToPlayerNotifyError(optingInPlayer, failureMessage)
 					end
 				end
 
@@ -2319,6 +2333,7 @@ if Server or Client then
 		    			TGNS.AddTempGroup(client, "captainsgame_group")
 		    		elseif not rolandHasBeenUsed then
 		    			TGNS.RemoveAllMatching(readyPlayerClients, client)
+		    			Shine.Plugins.scoreboard:AnnouncePlayerPrefix(player)
 		    			md:ToPlayerNotifyInfo(player, "Leaving the team has removed your Captains opt-in.")
 		    			md:ToAdminConsole(string.format("%s was opted out upon leaving %s.", TGNS.GetClientName(client), TGNS.GetTeamName(oldTeamNumber)))
 		    		end
@@ -2326,6 +2341,7 @@ if Server or Client then
 			elseif newTeamNumber == kSpectatorIndex then
 				if TGNS.Has(readyPlayerClients, client) then
 					TGNS.RemoveAllMatching(readyPlayerClients, client)
+					Shine.Plugins.scoreboard:AnnouncePlayerPrefix(player)
 					md:ToPlayerNotifyInfo(player, "Joining Spectator has removed your Captains opt-in.")
 					md:ToAdminConsole(string.format("%s was opted out upon joining Spectate.", TGNS.GetClientName(client)))
 				end
