@@ -643,7 +643,12 @@ if Server or Client then
 		function Plugin:CreateCommands()
 
 			if Shine.GetGamemode() == "ns2" then
-				local balanceCommand = self:BindCommand("sh_balance", "balance", svBalance)
+				local balanceCommand = self:BindCommand("sh_balance", "balance", function(client)
+					local playerList = TGNS.GetPlayerList()
+					local primerSignersPlayingCount = #TGNS.Where(TGNS.GetClientList(function(c) return not TGNS.IsClientSpectator(c) and not TGNS.IsClientAFK(c) end), TGNS.HasClientSignedPrimerWithGames)
+					local serverIsPrimed = primerSignersPlayingCount >= 12
+					svBalance(client, serverIsPrimed)
+				end)
 				balanceCommand:Help("Balance players across teams.")
 
 				local balanceCommand = self:BindCommand("sh_forcebalance", "forcebalance", function(client) svBalance(client, true) end)
