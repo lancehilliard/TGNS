@@ -26,7 +26,7 @@ local function refundBets(client)
 	playerGameBets[steamId] = playerGameBets[steamId] or {}
 	if #playerGameBets[steamId] > 0 then
 		local refund = TGNS.GetSumFor(TGNS.Select(playerGameBets[steamId], function(b) return b.amount end))
-		playerBanks[steamId] = playerBanks[steamId] + refund
+		playerBanks[steamId] = (playerBanks[steamId] or 0) + refund
 		md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("%s cleared. %s refunded. You have %s.", Pluralize(#playerGameBets[steamId], "Spectator Bet"), TGNS.SeparateThousands(refund), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
 	end
 	playerGameBets[steamId] = {}
@@ -74,16 +74,19 @@ local function showReport(transactions)
 	end
 end
 
-local function refreshPlayerBank(steamId)
-	local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
-	TGNS.GetHttpAsync(url, function(betResponseJson)
-		local betResponse = json.decode(betResponseJson) or {}
-		if betResponse.success then
-			playerBanks[steamId] = betResponse.result
-		else
-			TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace), false, "specbets")
-		end
-	end)
+local function initializePlayerBank(steamId)
+	Shared.Message("playerBanks[steamId]: " .. tostring(playerBanks[steamId]))
+	if playerBanks[steamId] == nil then
+		local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
+		TGNS.GetHttpAsync(url, function(betResponseJson)
+			local betResponse = json.decode(betResponseJson) or {}
+			if betResponse.success then
+				playerBanks[steamId] = betResponse.result
+			else
+				TGNS.DebugPrint(string.format("bets ERROR: Unable to access bets data for NS2ID %s. msg: %s | response: %s | stacktrace: %s", steamId, betResponse.msg, betResponseJson, betResponse.stacktrace), false, "specbets")
+			end
+		end)
+	end
 end
 
 local function persistTransaction(steamId, amount, killerId, victimId, type)
@@ -229,11 +232,11 @@ local function onBetKill(steamId, killerClient, victimClient, amount, shouldPayo
 		local roundedMultipliedAmount = TGNS.RoundPositiveNumberDown(multipliedAmount)
 		local net = roundedMultipliedAmount - amount
 		persistTransaction(steamId, multipliedAmount, TGNS.GetClientSteamId(killerClient), TGNS.GetClientSteamId(victimClient), 'payout')
-		playerBanks[steamId] = playerBanks[steamId] + multipliedAmount
+		playerBanks[steamId] = (playerBanks[steamId] or 0) + multipliedAmount
 		message = string.format("%s killed %s! You won %s on a %s bet (+%s)! You have %s.", killerName, victimName, TGNS.SeparateThousands(roundedMultipliedAmount), TGNS.SeparateThousands(amount), TGNS.SeparateThousands(net), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
 		messageDisplayer = md.ToPlayerNotifyGreen
 	else
-		message = string.format("%s killed %s. %s for %s to kill %s did not pay out. You have %s.", killerName, victimName, TGNS.SeparateThousands(amount), victimName, killerName, TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
+		message = string.format("%s killed %s. %s for %s to kill %s did not pay out. You have %s.", killerName, victimName, TGNS.SeparateThousands(amount), victimName, killerName, TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId] or 0)))
 		messageDisplayer = md.ToPlayerNotifyRed
 	end
 	local client = TGNS.GetClientByNs2Id(steamId)
@@ -312,8 +315,8 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 			if TGNS.Any(playerGameBets[steamId], function(b) return betPlayersAndTeamsMatch(b, betOpposite) end) then
 				errorMessage = string.format("Opposite bet already placed: %s (%s) against %s (%s)", victimName, victimTeamName, killerName, killerTeamName)
 			else
-				if playerBanks[steamId] - amount >= 0 then
-					playerBanks[steamId] = playerBanks[steamId] - amount
+				if (playerBanks[steamId] or 0) - amount >= 0 then
+					playerBanks[steamId] = (playerBanks[steamId] or 0) - amount
 					local message
 					bet.amount = amount
 					local existingBet = TGNS.FirstOrNil(playerGameBets[steamId], function(b) return betPlayersAndTeamsMatch(b, bet) end)
@@ -326,7 +329,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 						table.insert(playerGameBets[steamId], bet)
 						message = string.format("Bet! %s that %s (%s) will kill %s (%s).", TGNS.SeparateThousands(amount), killerName, killerTeamName, victimName, victimTeamName)
 					end
-					message = string.format("%s You have %s.", message, TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
+					message = string.format("%s You have %s.", message, TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId] or 0)))
 					md:ToPlayerNotifyInfo(player, message)
 					if not TGNS.IsProduction() then
 						if math.random() < 0.5 then
@@ -343,7 +346,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 						end
 					end
 				else
-					errorMessage = string.format("Bet (%s) halted. Insufficient bank (%s). Earn more by playing full games!", TGNS.SeparateThousands(amount), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId])))
+					errorMessage = string.format("Bet (%s) halted. Insufficient bank (%s). Earn more by playing full games!", TGNS.SeparateThousands(amount), TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId] or 0)))
 				end
 			end
 		else
@@ -351,7 +354,7 @@ local function placeBet(client, killerPredicate, victimPredicate, amount)
 		end
 	end
 	if errorMessage then
-		md:ToPlayerNotifyInfo(player, string.format("You have %s.", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
+		md:ToPlayerNotifyInfo(player, string.format("You have %s.", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId] or 0))))
 		md:ToPlayerNotifyError(player, errorMessage)
 		-- todo show some kind of 'get help' message
 	end
@@ -387,40 +390,6 @@ function Plugin:OnEntityKilled(gamerules, victimEntity, attackerEntity, inflicto
 	end
 end
 
-function Plugin:PlayerSay(client, networkMessage)
-	local cancel = false
-	local player = TGNS.GetPlayer(client)
-	local teamOnly = networkMessage.teamOnly
-	local message = StringTrim(networkMessage.message)
-	local isBetChat = TGNS.StartsWith(networkMessage.message, 'bet ')
-	if isBetChat then
-		local errorMessage
-		if TGNS.IsPlayerSpectator(player) then
-			if TGNS.IsGameInProgress() then
-				message = TGNS.Substring(message, 4)
-				message = StringTrim(message)
-				local parts = TGNS.Split(' ', message)
-				local firstPlayerPredicate = #parts > 0 and parts[1] or ""
-				local secondPlayerPredicate = #parts > 1 and parts[2] or ""
-				local amount = #parts > 2 and parts[3] or ""
-				-- Shared.Message("PlayerSay> ====== placeBet =========================================================================================")
-				placeBet(client, firstPlayerPredicate, secondPlayerPredicate, amount)
-			else
-				errorMessage = "Spectator Bets are allowed only during gameplay."
-			end
-		else
-			errorMessage = "Spectate Bets are allowed only while you're spectating."
-		end
-		if errorMessage then
-			md:ToPlayerNotifyError(player, errorMessage)
-		end
-		cancel = true
-	end
-	if cancel then
-		return ""
-	end
-end
-
 function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 	local client = TGNS.GetClient(player)
 	if client then
@@ -428,19 +397,14 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
 		if TGNS.ClientIsOnPlayingTeam(client) then
 			refundBets(client)
 		elseif TGNS.IsClientSpectator(client) then
-			refreshPlayerBank(steamId)
-			TGNS.ScheduleAction(10, function()
-				if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and playerBanks[steamId] > 0 then
-					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId]))))
+			initializePlayerBank(steamId)
+			TGNS.ScheduleAction(15, function()
+				if Shine:IsValidClient(client) and TGNS.IsClientSpectator(client) and (playerBanks[steamId] or 0) > 0 then
+					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("You have %s. You may bet during gameplay (team chat example: bet wyz brian 5).", TGNS.SeparateThousands(TGNS.RoundPositiveNumberDown(playerBanks[steamId] or 0))))
 				end
 			end)
 		end
 	end
-end
-
-function Plugin:ClientConnect(client)
-	local steamId = TGNS.GetClientSteamId(client)
-	playerBanks[steamId] = playerBanks[steamId] or 0
 end
 
 function Plugin:Initialise()
@@ -457,10 +421,44 @@ function Plugin:Initialise()
 					amount = amount * 1.2
 				end
 				persistTransaction(steamId, amount, nil, nil, 'playcredit')
-				playerBanks[steamId] = playerBanks[steamId] + amount
+				playerBanks[steamId] = (playerBanks[steamId] or 0) + amount
 			end)
 		end
 	end)
+
+	TGNS.RegisterEventHook("PlayerSay", function(client, networkMessage)
+		local cancel = false
+		local player = TGNS.GetPlayer(client)
+		local teamOnly = networkMessage.teamOnly
+		local message = StringTrim(networkMessage.message)
+		local isBetChat = TGNS.StartsWith(networkMessage.message, 'bet ')
+		if isBetChat then
+			local errorMessage
+			if TGNS.IsPlayerSpectator(player) then
+				if TGNS.IsGameInProgress() then
+					message = TGNS.Substring(message, 4)
+					message = StringTrim(message)
+					local parts = TGNS.Split(' ', message)
+					local firstPlayerPredicate = #parts > 0 and parts[1] or ""
+					local secondPlayerPredicate = #parts > 1 and parts[2] or ""
+					local amount = #parts > 2 and parts[3] or ""
+					-- Shared.Message("PlayerSay> ====== placeBet =========================================================================================")
+					placeBet(client, firstPlayerPredicate, secondPlayerPredicate, amount)
+				else
+					errorMessage = "Spectator Bets are allowed only during gameplay."
+				end
+			else
+				errorMessage = "Spectate Bets are allowed only while you're spectating."
+			end
+			if errorMessage then
+				md:ToPlayerNotifyError(player, errorMessage)
+			end
+			cancel = true
+		end
+		if cancel then
+			return ""
+		end
+	end, TGNS.HIGHEST_EVENT_HANDLER_PRIORITY)
 
     return true
 end
