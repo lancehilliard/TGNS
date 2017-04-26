@@ -13,7 +13,8 @@ local function show(mapVoteSummaries, totalVotes)
 	local channelId = 67
 	local y = 0.30
 	local spaces = string.rep("   ", 16)
-	Shine.ScreenText.Add(channelId, {X = 1.0, Y = y, Text = string.format("%s%s", string.format("Voters: %s/%s", totalVotes, #TGNS.GetPlayerList()), spaces), Duration = 60, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMax, Size = 3, FadeIn = 0, IgnoreFormat = true})
+	local playerCount = #TGNS.GetPlayerList()
+	Shine.ScreenText.Add(channelId, {X = 1.0, Y = y, Text = string.format("%s%s", string.format("Voters: %s/%s (%s%%)", totalVotes, playerCount, math.floor(totalVotes/playerCount*100)), spaces), Duration = 60, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMax, Size = 3, FadeIn = 0, IgnoreFormat = true})
 	channelId = channelId + 1
 	y = y + 0.05
 	TGNS.DoFor(mapVoteSummaries, function(s)
