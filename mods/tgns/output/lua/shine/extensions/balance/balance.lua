@@ -273,10 +273,10 @@ if Server or Client then
 			TGNS.ScheduleAction(1, PrintBalanceLog)
 		end
 
-		local function BeginBalance(originatingPlayer)
+		local function BeginBalance()
 			balanceLog = {}
 			if Shine.Plugins.mapvote:VoteStarted() then
-				md:ToPlayerNotifyError(originatingPlayer, "Halted. Map vote in progress.")
+				md:ToAllNotifyError("Halted. Map vote in progress.")
 				balanceInProgress = false
 			else
 				SendNextPlayer()
@@ -284,7 +284,7 @@ if Server or Client then
 		end
 
 		local function svBalance(client, forcePlayersToReadyRoom)
-			local player = TGNS.GetPlayer(client)
+			local player = client and TGNS.GetPlayer(client) or nil
 			if balanceInProgress then
 				md:ToPlayerNotifyError(player, "Balance is already in progress.")
 			elseif BalanceStartedRecently() then
@@ -298,39 +298,42 @@ if Server or Client then
 			else
 				local gameState = GetGamerules():GetGameState()
 				if gameState == kGameState.NotStarted or gameState == kGameState.PreGame or gameState == kGameState.WarmUp then
-					md:ToAllNotifyInfo(string.format("%s is sending players to teams. Chat 'switch' if you want the other team.", TGNS.GetClientName(client)))
 					local playingClients = TGNS.GetPlayingClients(TGNS.GetPlayerList())
-					if forcePlayersToReadyRoom then
-						TGNS.DoFor(playingClients, function(c) TGNS.ExecuteClientCommand(c, "readyroom") end)
-					end
-					balanceInProgress = true
-					lastBalanceStartTimeInSeconds = Shared.GetTime()
-					TGNS.ScheduleAction(5, function() BeginBalance(player) end)
-					local playAfkPingSoundToAllReadyRoomPlayers = function(level)
-						TGNS.DoFor(TGNS.GetClientList(TGNS.IsClientReadyRoom), function(c)
-							TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.arclight.HILL_SOUND, {i=level})
+					if #playingClients < Shine.Plugins.communityslots.Config.PublicSlots then
+						md:ToAllNotifyInfo(string.format("%s is sending players to teams. Chat 'switch' if you want the other team.", client and TGNS.GetClientName(client) or "Server"))
+						if forcePlayersToReadyRoom then
+							TGNS.DoFor(playingClients, function(c) TGNS.ExecuteClientCommand(c, "readyroom") end)
+						end
+						balanceInProgress = true
+						lastBalanceStartTimeInSeconds = Shared.GetTime()
+						TGNS.ScheduleAction(5, BeginBalance)
+						local playAfkPingSoundToAllReadyRoomPlayers = function(level)
+							TGNS.DoFor(TGNS.GetClientList(TGNS.IsClientReadyRoom), function(c)
+								TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(c), Shine.Plugins.arclight.HILL_SOUND, {i=level})
+							end)
+						end
+						TGNS.DoTimes(3, function(i)
+							TGNS.ScheduleAction(i-1, function() playAfkPingSoundToAllReadyRoomPlayers(4-i) end)
 						end)
+
+						-- TGNS.ScheduleAction(5, function()
+						-- 	local originalGetAllPlayers = Shine.GetAllPlayers
+						-- 	Shine.GetAllPlayers = function(shineSelf)
+						-- 		local playersForNewGame = Shine.Plugins.communityslots:GetPlayersForNewGame()
+						-- 		local players = {}
+						-- 		local count = 0
+						-- 		TGNS.DoFor(playersForNewGame, function(p)
+						-- 			count = count + 1
+						-- 			players[count] = p
+						-- 		end)
+						-- 		return players, count
+						-- 	end
+						-- 	Shine.Plugins.voterandom:ShuffleTeams()
+						-- 	Shine.GetAllPlayers = originalGetAllPlayers
+						-- end)
+					else
+						md:ToPlayerNotifyError(player, string.format("There are already %s players.", Shine.Plugins.communityslots.Config.PublicSlots))
 					end
-					TGNS.DoTimes(3, function(i)
-						TGNS.ScheduleAction(i-1, function() playAfkPingSoundToAllReadyRoomPlayers(4-i) end)
-					end)
-
-					-- TGNS.ScheduleAction(5, function()
-					-- 	local originalGetAllPlayers = Shine.GetAllPlayers
-					-- 	Shine.GetAllPlayers = function(shineSelf)
-					-- 		local playersForNewGame = Shine.Plugins.communityslots:GetPlayersForNewGame()
-					-- 		local players = {}
-					-- 		local count = 0
-					-- 		TGNS.DoFor(playersForNewGame, function(p)
-					-- 			count = count + 1
-					-- 			players[count] = p
-					-- 		end)
-					-- 		return players, count
-					-- 	end
-					-- 	Shine.Plugins.voterandom:ShuffleTeams()
-					-- 	Shine.GetAllPlayers = originalGetAllPlayers
-					-- end)
-
 				else
 					md:ToPlayerNotifyError(player, "Balance cannot be used during a game.")
 				end
@@ -351,6 +354,7 @@ if Server or Client then
 		function Plugin:EndGame(gamerules, winningTeam)
 			if Shine.GetGamemode() == "ns2" then
 				mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
+				TGNS.ScheduleAction(GAMEEND_TIME_BEFORE_BALANCE + 10, svBalance)
 				preventTeamJoinMessagesDueToRecentEndGame = true
 				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 					preventTeamJoinMessagesDueToRecentEndGame = false
@@ -576,6 +580,7 @@ if Server or Client then
 			if Shine.GetGamemode() == "ns2" then
 				if not firstClientProcessed then
 					mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
+					TGNS.ScheduleAction(FIRSTCLIENT_TIME_BEFORE_BALANCE, svBalance)
 					firstClientProcessed = true
 				end
 				local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #(GetPlayerBalance(p).scoresPerMinute or {}) < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
