@@ -1612,6 +1612,10 @@ if Server or Client then
 			return captainsModeEnabled
 		end
 
+		function Plugin:IsCaptainsNight()
+			local result = TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= Shine.Plugins.captains:GetCaptainsNightStartHourLocalServerTime() - 1
+		end
+
 		function Plugin:IsClientCaptain(client)
 			return Shine:IsInGroup(client, "captains_group")
 		end
