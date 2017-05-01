@@ -148,7 +148,7 @@ if Server or Client then
 		end
 
 		local surrenderWeakerTeamIfConditionsAreRight = function()
-			local timeIsRight = not (TGNS.GetAbbreviatedDayOfWeek() == "Fri" and TGNS.GetCurrentHour() >= Shine.Plugins.captains:GetCaptainsNightStartHourLocalServerTime() - 1)
+			local timeIsRight = not Shine.Plugins.captains:IsCaptainsNight()
 			if timeIsRight then
 				local aShortTimeHasPassed = TGNS.ConvertSecondsToMinutes(TGNS.GetSecondsSinceMapLoaded()) > 5
 				if aShortTimeHasPassed then
