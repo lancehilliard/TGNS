@@ -354,7 +354,9 @@ if Server or Client then
 		function Plugin:EndGame(gamerules, winningTeam)
 			if Shine.GetGamemode() == "ns2" then
 				mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
-				TGNS.ScheduleAction(GAMEEND_TIME_BEFORE_BALANCE + 10, svBalance)
+				if not Shine.Plugins.captains:IsCaptainsNight() and #TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()) > 10 then
+					TGNS.ScheduleAction(GAMEEND_TIME_BEFORE_BALANCE + 10, svBalance)
+				end
 				preventTeamJoinMessagesDueToRecentEndGame = true
 				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
 					preventTeamJoinMessagesDueToRecentEndGame = false
@@ -580,7 +582,9 @@ if Server or Client then
 			if Shine.GetGamemode() == "ns2" then
 				if not firstClientProcessed then
 					mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
-					TGNS.ScheduleAction(FIRSTCLIENT_TIME_BEFORE_BALANCE, svBalance)
+					if not Shine.Plugins.captains:IsCaptainsNight() and #TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()) > 10 then
+						TGNS.ScheduleAction(FIRSTCLIENT_TIME_BEFORE_BALANCE, svBalance)
+					end
 					firstClientProcessed = true
 				end
 				local playerHasTooFewLocalScoresPerMinute = TGNS.PlayerAction(client, function(p) return #(GetPlayerBalance(p).scoresPerMinute or {}) < LOCAL_DATAPOINTS_COUNT_THRESHOLD end)
