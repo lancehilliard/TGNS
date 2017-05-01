@@ -4,14 +4,26 @@ local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
-	local originalGetCanAttack
-	originalGetCanAttack = TGNS.ReplaceClassMethod("Player", "GetCanAttack", function(self)
-		local result = originalGetCanAttack(self)
-		if result and not TGNS.IsPlayerReadyRoom(self) then
+
+	local originalHandleAttacks
+	originalHandleAttacks = TGNS.ReplaceClassMethod("Player", "HandleAttacks", function(self, input)
+		local allow
+		if TGNS.IsPlayerReadyRoom(self) then
+			allow = true
+		else
 			local isPreGame = GetGamerules():GetGameState() == kGameState.PreGame or GetGamerules():GetGameState() == kGameState.NotStarted
-			result = not isPreGame
+			if isPreGame then
+				local skulkIsLeaping = (bit.band(input.commands, Move.SecondaryAttack) ~= 0 or self.secondaryAttackLastFrame) and self:isa("Skulk")
+				if skulkIsLeaping then
+					allow = true
+				end
+			else
+				allow = true
+			end
 		end
-		return result
+		if allow then
+			originalHandleAttacks(self, input)
+		end
 	end)
 
 	local originalCanEntityDoDamageTo = CanEntityDoDamageTo
