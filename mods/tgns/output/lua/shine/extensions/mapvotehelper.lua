@@ -185,8 +185,30 @@ function Plugin:Initialise()
 
 				originalStartVote( plugin, NextMap, Force )
 				if Shine.Plugins.mapvote:VoteStarted() then
-					TGNS.DoFor(TGNS.GetPlayerList(), TGNS.AlertApplicationIconForPlayer)
+					local playerList = TGNS.GetPlayerList()
+					TGNS.DoFor(playerList, TGNS.AlertApplicationIconForPlayer)
 					showAll()
+					TGNS.DoForPairs(mapNominations, function(steamId, mapNames)
+						local player = TGNS.GetPlayerMatchingSteamId(steamId)
+						if player and TGNS.IsPlayerSM(player) then
+							TGNS.DoFor(mapNames, function(m)
+								local votePerformed
+								TGNS.DoForPairs(Shine.Plugins.mapvote.Vote.VoteList, function(mapName, voteCount)
+									if m == mapName then
+										TGNS.ScheduleAction(0, function()
+											local client = TGNS.GetClient(player)
+											if client and Shine:IsValidClient(client) then
+												TGNS.ExecuteClientCommand(client, string.format("sh_vote %s", mapName))
+											end
+										end)
+										votePerformed = true
+										return votePerformed
+									end
+								end)
+								return votePerformed
+							end)
+						end
+					end)
 				end
 			end
 		end
