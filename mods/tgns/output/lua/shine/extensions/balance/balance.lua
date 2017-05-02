@@ -48,6 +48,7 @@ if Server or Client then
 		local mayBalanceAt = 0
 		local FIRSTCLIENT_TIME_BEFORE_BALANCE = 30
 		local GAMEEND_TIME_BEFORE_BALANCE = TGNS.ENDGAME_TIME_TO_READYROOM + 3
+		local BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS = 3
 		local firstClientProcessed = false
 		local lanesMd = TGNSMessageDisplayer.Create("LANES")
 		local lanesAdvisoryLastShownAt = {}
@@ -351,11 +352,37 @@ if Server or Client then
 		-- 	return result
 		-- end
 
+		local readyRoomPlayerLastSpokeAt = 0
+		local executeBalanceAfterFinishedTalking
+		executeBalanceAfterFinishedTalking = function()
+			if not TGNS.IsGameInProgress() then
+				if Shared.GetTime() - readyRoomPlayerLastSpokeAt > BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS then
+					svBalance()	
+				else
+					TGNS.ScheduleAction(1, executeBalanceAfterFinishedTalking)
+				end
+			end
+		end
+
+		local originalGetCanPlayerHearPlayer
+		originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
+			local result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
+			if TGNS.IsPlayerReadyRoom(speakerPlayer) then
+				readyRoomPlayerLastSpokeAt = Shared.GetTime()
+			end
+			return result
+		end)
+
+
 		function Plugin:EndGame(gamerules, winningTeam)
 			if Shine.GetGamemode() == "ns2" then
 				mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
-				if not Shine.Plugins.captains:IsCaptainsNight() and #TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()) > 10 then
-					TGNS.ScheduleAction(GAMEEND_TIME_BEFORE_BALANCE + 10, svBalance)
+				if not Shine.Plugins.captains:IsCaptainsNight() then
+					TGNS.ScheduleAction(GAMEEND_TIME_BEFORE_BALANCE + BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS, function()
+						if #TGNS.Where(TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()), function(p) return not TGNS.IsPlayerAFK(p) end) > 0 then
+							executeBalanceAfterFinishedTalking()
+						end
+					end)
 				end
 				preventTeamJoinMessagesDueToRecentEndGame = true
 				TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
@@ -582,8 +609,12 @@ if Server or Client then
 			if Shine.GetGamemode() == "ns2" then
 				if not firstClientProcessed then
 					mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
-					if not Shine.Plugins.captains:IsCaptainsNight() and #TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()) > 10 then
-						TGNS.ScheduleAction(FIRSTCLIENT_TIME_BEFORE_BALANCE, svBalance)
+					if not Shine.Plugins.captains:IsCaptainsNight() then
+						TGNS.ScheduleAction(FIRSTCLIENT_TIME_BEFORE_BALANCE, function()
+							if #TGNS.Where(TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()), function(p) return not TGNS.IsPlayerAFK(p) end) > 0 then
+								executeBalanceAfterFinishedTalking()
+							end
+						end)
 					end
 					firstClientProcessed = true
 				end
