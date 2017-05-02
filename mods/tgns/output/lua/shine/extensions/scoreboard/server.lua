@@ -445,11 +445,17 @@ function Plugin:Initialise()
 		end)
 		TGNS.ScheduleAction(NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS, function()
 			if TGNS.IsGameInProgress() and TGNS.GetCurrentGameDurationInSeconds() > NUMBER_OF_GAMEPLAY_SECONDS_TO_SHOW_LIFEFORM_ICONS - 2 then
-				TGNS.DoFor(TGNS.GetAlienClients(TGNS.GetPlayerList()), function(c)
+				local playerList = TGNS.GetPlayerList()
+				TGNS.DoFor(TGNS.GetAlienClients(playerList), function(c)
 					squadNumbers[c] = 0
 					TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 						TGNS.SendNetworkMessageToPlayer(p, self.SQUAD_CONFIRMED, {c=TGNS.GetClientIndex(c),s=squadNumbers[c]})	
 					end)
+				end)
+				TGNS.DoFor(TGNS.GetReadyRoomPlayers(playerList), function(p)
+					if TGNS.IsPlayerAFK(p) then
+						TGNS.SendToTeam(p, kSpectatorIndex)
+					end
 				end)
 			end
 		end)
