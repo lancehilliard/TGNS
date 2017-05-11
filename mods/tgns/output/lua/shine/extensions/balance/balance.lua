@@ -873,8 +873,79 @@ if Server or Client then
 		    	return tower, commandStation
 			end
 
+			local GetPointBetween = function(startPoint, endPoint) -- lua\CommanderTutorialUtility.lua
+				local startPos = startPoint
+				if type(startPoint) == "function" then
+					startPos = startPoint()
+				end
+
+				local endPos = endPoint
+				if type(endPoint) == "function" then
+					endPos = endPoint()
+				end
+
+				if not startPos or not endPos then
+					return nil
+				end
+
+				local path = PointArray()
+				local reachAble = Pathing.GetPathPoints(startPos, endPos, path)
+				local centerPoint = nil
+
+				if reachAble then
+					local pathLength = GetPointDistance(path)
+					local currentDistance = 0
+					local prevPoint = path[1]
+					centerPoint = path[#path]
+					if #path > 2 then
+						for i = 2, #path do
+							currentDistance = currentDistance + (prevPoint - path[i]):GetLength()
+							prevPoint = path[i]
+							if currentDistance >= pathLength * 0.5 then
+								centerPoint = path[i]
+								break
+							end
+						end
+					end
+				end
+
+				return centerPoint
+			end
+
+			local spawnWelderNear = function(entity)
+				local locationName = TGNS.GetEntityLocationName(entity)
+				local armories = GetEntitiesForTeam("Armory", kMarineTeamType)
+				local nearbyOperationalArmory = TGNS.FirstOrNil(armories, function(a) return TGNS.GetEntityLocationName(a) == locationName and TGNS.StructureIsOperational(a) end)
+				if nearbyOperationalArmory then
+					local pointBetween = GetPointBetween(nearbyOperationalArmory:GetOrigin(), entity:GetOrigin())
+					local pos = pointBetween and GetRandomBuildPosition( kTechId.Welder, pointBetween, 3 ) or GetRandomBuildPosition( kTechId.Welder, nearbyOperationalArmory:GetOrigin(), 1 )
+					if pos then
+						local weldersNearby = GetEntitiesForTeamWithinRange("Welder", kMarineTeamType, pos, 40)
+						local unclaimedWeldersNearby = TGNS.Where(weldersNearby, function(w) return w:GetParent() == nil end)
+						if #unclaimedWeldersNearby < 3 then
+							CreateEntity("welder", pos, kMarineTeamType)
+						end
+					end
+				end
+			end
+			
+			local originalPlayingTeamReplaceRespawnPlayer
+			originalPlayingTeamReplaceRespawnPlayer = TGNS.ReplaceClassMethod("PlayingTeam", "ReplaceRespawnPlayer", function(playingTeamSelf, player, origin, angles, mapName)
+				local success, player = originalPlayingTeamReplaceRespawnPlayer(playingTeamSelf, player, origin, angles, mapName)
+				if success and player:isa("Marine") then
+					spawnWelderNear(player)
+				end
+				return success, player
+			end)
+
+			local originalInfantryPortalStartSpinning
+			originalInfantryPortalStartSpinning = TGNS.ReplaceClassMethod("InfantryPortal", "StartSpinning", function(infantryPortalSelf)
+				originalInfantryPortalStartSpinning(infantryPortalSelf)
+				spawnWelderNear(infantryPortalSelf)
+			end)
+
 			TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
-				md:ToAllNotifyInfo(string.format("Marines get extra IP and lose %s resources.", extraIpCost))
+				md:ToAllNotifyInfo(string.format("Marines start with 2 IPs (-%s team res). Armories near IPs drop free welders.", extraIpCost))
 				-- md:ToAllNotifyInfo(onosBalanceAdvisory)
 				-- md:ToAllNotifyInfo("These messages are printed in your console (` key).")
 			end)
