@@ -48,7 +48,7 @@ if Server or Client then
 		local mayBalanceAt = 0
 		local FIRSTCLIENT_TIME_BEFORE_BALANCE = 30
 		local GAMEEND_TIME_BEFORE_BALANCE = TGNS.ENDGAME_TIME_TO_READYROOM + 3
-		local BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS = 3
+		local BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS = 2
 		local firstClientProcessed = false
 		local lanesMd = TGNSMessageDisplayer.Create("LANES")
 		local lanesAdvisoryLastShownAt = {}
