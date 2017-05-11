@@ -445,6 +445,15 @@ function TGNS.ExecuteServerCommand(command) PROFILE("TGNS.ExecuteServerCommand")
 	Shared.ConsoleCommand(command)
 end
 
+function TGNS.StructureIsOperational(structure) PROFILE("TGNS.StructureIsOperational")
+	local isBuilt = structure:GetIsBuilt()
+	local isAlive = structure:GetIsAlive()
+	local isPowered = (not structure.GetIsPowered or structure:GetIsPowered())
+	local isNotRecycling = (not structure.GetIsRecycling or not structure:GetIsRecycling())
+	local result = isBuilt and isAlive and isPowered and isNotRecycling
+	return result
+end
+
 function TGNS.StructureIsBuilt(structure) PROFILE("TGNS.StructureIsBuilt")
 	local result = structure:GetIsBuilt()
 	return result
@@ -452,6 +461,11 @@ end
 
 function TGNS.StructureIsAlive(structure) PROFILE("TGNS.StructureIsAlive")
 	local result = structure:GetIsAlive()
+	return result
+end
+
+function TGNS.StructureIsPowered(structure) PROFILE("TGNS.StructureIsPowered")
+	local result = structure:GetIsPowered()
 	return result
 end
 
