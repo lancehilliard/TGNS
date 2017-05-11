@@ -609,7 +609,7 @@ if Server or Client then
 			if Shine.GetGamemode() == "ns2" then
 				if not firstClientProcessed then
 					mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
-					if not Shine.Plugins.captains:IsCaptainsNight() then
+					if not Shine.Plugins.captains:IsCaptainsNight() and not Shine.Plugins.captains:IsCaptainsMorning() then
 						TGNS.ScheduleAction(FIRSTCLIENT_TIME_BEFORE_BALANCE, function()
 							if #TGNS.Where(TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()), function(p) return not TGNS.IsPlayerAFK(p) end) > 0 then
 								executeBalanceAfterFinishedTalking()
