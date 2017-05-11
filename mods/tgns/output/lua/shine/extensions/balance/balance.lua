@@ -377,7 +377,7 @@ if Server or Client then
 		function Plugin:EndGame(gamerules, winningTeam)
 			if Shine.GetGamemode() == "ns2" then
 				mayBalanceAt = Shared.GetTime() + GAMEEND_TIME_BEFORE_BALANCE
-				if not Shine.Plugins.captains:IsCaptainsNight() then
+				if not Shine.Plugins.captains:IsCaptainsNight() and not Shine.Plugins.captains:IsCaptainsMorning() then
 					TGNS.ScheduleAction(GAMEEND_TIME_BEFORE_BALANCE + BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS, function()
 						if #TGNS.Where(TGNS.GetReadyRoomPlayers(TGNS.GetPlayerList()), function(p) return not TGNS.IsPlayerAFK(p) end) > 0 then
 							executeBalanceAfterFinishedTalking()
