@@ -4,7 +4,7 @@ Plugin.ConfigName = "scoreboard.json"
 local changers = {}
 local approvalCounts = {}
 local vrConfirmed = {}
-local vrConfirmedBy = {}
+-- local vrConfirmedBy = {}
 local teamScoresDatas = {}
 local vouches = {}
 local squadNumbers = {}
@@ -213,7 +213,7 @@ function Plugin:ClientConnect(client)
 				end
 			end)
 		end
-		if TGNS.Has(vouches, steamId) then
+		if TGNS.Any(vouches, function(v) return v.TargetPlayerId == steamId end) then
 			vrConfirmed[client] = true
 		end
 		local player = TGNS.GetPlayer(client)
@@ -493,10 +493,13 @@ function Plugin:Initialise()
 					local targetPlayer = TGNS.GetPlayer(targetClient)
 					if (TGNS.PlayersAreTeammates(player, targetPlayer) or TGNS.IsPlayerSpectator(player)) and not TGNS.HasClientSignedPrimerWithGames(targetClient) and not vrConfirmed[targetClient] then
 						vrConfirmed[targetClient] = true
-						vrConfirmedBy[targetClient] = TGNS.GetClientName(client)
+						-- vrConfirmedBy[targetClient] = TGNS.GetClientName(client)
 						local sourceSteamId = TGNS.GetClientSteamId(client)
 						local targetSteamId = TGNS.GetClientSteamId(targetClient)
-						table.insertunique(vouches, targetSteamId)
+						local vouch = {}
+						vouch.SourcePlayerId = sourceSteamId
+						vouch.TargetPlayerId = targetSteamId
+						table.insertunique(vouches, vouch)
 
 						local vouchUrl = string.format("%s&i=%s&v=%s", TGNS.Config.VouchesEndpointBaseUrl, sourceSteamId, targetSteamId)
 						TGNS.GetHttpAsync(vouchUrl, function(vouchResponseJson)
@@ -576,7 +579,9 @@ function Plugin:Initialise()
 				end
 			end)
 			if vrConfirmed[targetClient] then
-				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vrConfirmedBy[targetClient] or "Someone", TGNS.GetClientName(targetClient)))
+				local vouch = TGNS.FirstOrNil(vouches, function(v) return v.TargetPlayerId == TGNS.GetClientSteamId(targetClient) end)
+				local vouchSourceClient = vouch and TGNS.GetClientByNs2Id(vouch.SourcePlayerId) or nil
+				md:ToPlayerNotifyInfo(player, string.format("%s already confirmed that %s responded to voicecomm. Learn more: M > Info > TGNS FAQ", vouchSourceClient and TGNS.GetClientName(vouchSourceClient) or "Someone", TGNS.GetClientName(targetClient)))
 			elseif TGNS.PlayerAction(targetClient, TGNS.IsPlayerAFK) then
 				md:ToPlayerNotifyError(player, string.format("This icon is disabled because %s is AFK.", TGNS.GetClientName(targetClient)))
 			else
