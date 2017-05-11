@@ -1617,6 +1617,9 @@ if Server or Client then
 			return result
 		end
 
+		function Plugin:IsCaptainsMorning()
+			local result = TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6
+			return result
 		end
 
 		function Plugin:IsClientCaptain(client)
@@ -2513,7 +2516,7 @@ if Server or Client then
 
 			local originalServerSetPassword = Server.SetPassword
 			local function disallowPasswordAfterMidnightOnSaturdays()
-				if TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6 then
+				if Shine.Plugins.captains:IsCaptainsMorning() then
 						Server.SetPassword("")
 						Server.SetPassword = function()
 							TGNS.ScheduleAction(0, function()
