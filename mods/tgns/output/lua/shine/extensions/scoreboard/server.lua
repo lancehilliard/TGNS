@@ -410,6 +410,7 @@ end
 function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
+
 	TGNS.RegisterEventHook("AFKChanged", function(client, playerIsAfk)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
@@ -545,15 +546,15 @@ function Plugin:Initialise()
 		local targetClientIndex = message.c
 		local targetClient = TGNS.GetClientById(targetClientIndex)
 		local md = TGNSMessageDisplayer.Create("QUERY")
+		local sourceSteamId = TGNS.GetClientSteamId(client)
+		local targetSteamId = TGNS.GetClientSteamId(targetClient)
+		local targetClientName = TGNS.GetClientName(targetClient)
 		if targetClient and Shine:IsValidClient(targetClient) then
 			TGNS.ScheduleAction(5, function()
 				if Shine:IsValidClient(client) then
 					TGNS.SendNetworkMessageToPlayer(TGNS.GetPlayer(client), self.QUERY_ALLOWED, {c=targetClientIndex})
 				end
 			end)
-			local sourceSteamId = TGNS.GetClientSteamId(client)
-			local targetSteamId = TGNS.GetClientSteamId(targetClient)
-			local targetClientName = TGNS.GetClientName(targetClient)
 			Shine.Plugins.betterknownas:ShowCurrentBka(client, targetSteamId, "BKA", "AKAs", "BKA")
 			if Balance then
 				local totalGamesCount = Balance.GetTotalGamesPlayedBySteamId(targetSteamId)
@@ -565,6 +566,24 @@ function Plugin:Initialise()
 		else
 			md:ToPlayerNotifyError(player, "There was a problem querying.")
 		end
+
+		local queryUrl = string.format("%s&sourcePlayerId=%s&targetPlayerId=%s&targetPlayerName=%s", TGNS.Config.QueryContactEndpointBaseUrl, sourceSteamId, targetSteamId, TGNS.UrlEncode(targetClientName))
+		TGNS.GetHttpAsync(queryUrl, function(queryResponseJson)
+			local queryResponse = json.decode(queryResponseJson) or {}
+			if not queryResponse.success then
+				TGNS.DebugPrint(string.format("query ERROR: Unable to report contact query. url: %s | msg: %s | response: %s | stacktrace: %s", queryUrl, queryResponse.msg, queryResponseJson, queryResponse.stacktrace))
+			end
+		end)
+		if math.random() < .1 then
+			TGNS.ScheduleAction(6, function()
+				if Shine:IsValidClient(client) then
+					md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), "View recently clicked Contact Cards: M > TGNS Portal")
+				end
+			end)
+		end
+
+
+
 	end)
 
 	TGNS.HookNetworkMessage(self.VR_REQUESTED, function(client, message)
