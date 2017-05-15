@@ -1703,7 +1703,7 @@ if Server or Client then
 							end)
 							TGNS.ScheduleAction(10, function()
 								local nominationsMd = TGNSMessageDisplayer.Create("MAPCYCLE")
-								nominationsMd:ToAllNotifyInfo("Put in nominations now for the next map!")
+								nominationsMd:ToAllNotifyInfo(math.random() < .5 and "Put in nominations now for the next map!" or "Keep in touch. Add [TGNS] Bot to your Steam friends list ( http://steamcommunity.com/id/tgns ).")
 							end)
 						end
 					else
