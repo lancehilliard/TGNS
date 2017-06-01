@@ -20,6 +20,8 @@ local lowestTimeRemainingFromWhichToDeduct = 22
 local maximumAllowableNumberOfSecondsToDeduct = 14
 local initialNumberOfSecondsToDeduct = 9
 local whenBigVotesFailedWithMajorityThisGame = {}
+local huhBangPoints = {}
+local gameDurationWhenWinOrLoseVoteLastSucceeded
 
 local originalGetCanAttack
 
@@ -129,6 +131,7 @@ local function onVoteSuccessful(teamNumber)
 	end
 
 	kTimeAtWhichWinOrLoseVoteSucceeded = TGNS.GetSecondsSinceMapLoaded()
+	gameDurationWhenWinOrLoseVoteLastSucceeded = TGNS.GetCurrentGameDurationInSeconds()
 	kTeamWhichWillWinIfWinLoseCountdownExpires = TGNS.GetTeamFromTeamNumber(teamNumber)
 	numberOfSecondsToDeductFromCountdownTimeRemaining = initialNumberOfSecondsToDeduct
 	kCountdownTimeRemaining = Shine.Plugins.winorlose.Config.NoAttackDurationInSeconds
@@ -141,6 +144,48 @@ local function onVoteSuccessful(teamNumber)
 	TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SHOW_TEAM_MESSAGES, {s=false})
 	end)
+end
+
+local function showHuhBangPoints(teamNumber)
+	if not TGNS.IsProduction() then
+		local testClient = TGNS.GetClientList()[1]
+		teamNumber = TGNS.GetClientTeamNumber(testClient)
+		gameDurationWhenWinOrLoseVoteLastSucceeded = 300
+		huhBangPoints[testClient] = huhBangPoints[testClient] or 100
+	end
+
+
+	local huhBangPointsDisplayData = {}
+	TGNS.DoForPairs(huhBangPoints, function(pointsClient, points)
+		if Shine:IsValidClient(pointsClient) and TGNS.GetClientTeamNumber(pointsClient) == teamNumber then
+			huhBangPointsDisplayDatum = {}
+			huhBangPointsDisplayDatum.ClientName = TGNS.GetClientName(pointsClient)
+			huhBangPointsDisplayDatum.Points = points
+			table.insert(huhBangPointsDisplayData, huhBangPointsDisplayDatum)
+		end
+	end)
+	local gameDurationInMinutes = TGNS.ConvertSecondsToMinutes(gameDurationWhenWinOrLoseVoteLastSucceeded)
+	local getPointsDisplay = function(points)
+		return math.ceil(points * gameDurationInMinutes * 20)
+	end
+	if TGNS.Any(huhBangPointsDisplayData) then
+		TGNS.SortDescending(huhBangPointsDisplayData, function(d) return d.Points end)
+		local padLength = ((#tostring(getPointsDisplay(TGNS.GetFirst(huhBangPointsDisplayData).Points))) * 2) + 7
+		local huhBangPointIndexDisplay = "?!:"
+		local huhBangPointPointsDisplay = ""
+		local huhBangPointNamesDisplay = ""
+		TGNS.DoFor(huhBangPointsDisplayData, function(d, index)
+			huhBangPointIndexDisplay = string.format("%s\n%s", huhBangPointIndexDisplay, index)
+			huhBangPointPointsDisplay = string.format("%s\n   - %s", huhBangPointPointsDisplay, getPointsDisplay(d.Points))
+			huhBangPointNamesDisplay = string.format("%s\n%s", huhBangPointNamesDisplay, string.rep(" ", padLength)  .. d.ClientName)
+		end)
+		local teamRgb = TGNS.GetTeamRgb(teamNumber)
+		TGNS.DoFor(TGNS.GetTeamClients(teamNumber), function(c)
+			Shine.ScreenText.Add(76, {X = 0.7, Y = .3, Text = huhBangPointIndexDisplay, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+			Shine.ScreenText.Add(77, {X = 0.7, Y = .3, Text = huhBangPointPointsDisplay, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+			Shine.ScreenText.Add(78, {X = 0.7, Y = .3, Text = huhBangPointNamesDisplay, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentMin, Size = 1, FadeIn = 0, IgnoreFormat = true}, c)
+		end)
+	end
 end
 
 local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
@@ -224,11 +269,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 				TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
 					local p = TGNS.GetPlayer(c)
 					local teamNumber = TGNS.GetPlayerTeamNumber(p)
-					local playerIsMarine = teamNumber == kMarineTeamType
-					-- todo mlh convert to use TGNS.GetTeamRgb
-					local b = playerIsMarine and TGNS.MARINE_COLOR_B or TGNS.ALIEN_COLOR_B
-					local r = playerIsMarine and TGNS.MARINE_COLOR_R or TGNS.ALIEN_COLOR_R
-					local g = playerIsMarine and TGNS.MARINE_COLOR_G or TGNS.ALIEN_COLOR_G
+					local teamRgb = TGNS.GetTeamRgb(teamNumber)
 					local explanationText = TGNS.IsClientStranger(c) and "They surrendered!" or "WinOrLose!"
 					local winningTeamText = string.format("%s %s%s!", explanationText, howToWinDescription, bannerLocationName)
 					local losingTeamText = string.format("Your team has surrendered. %s must WinOrLose!", teamNameWhichMustWinOrLose)
@@ -243,12 +284,11 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 					end
 
 
-					-- Shine:SendText(c, Shine.BuildScreenMessage(71, 0.5, textLocationHeight, bannerText, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 3, 0 ) )
-					Shine.ScreenText.Add(71, {X = 0.5, Y = textLocationHeight, Text = bannerText, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
-					-- Shine:SendText(c, Shine.BuildScreenMessage(72, 0.5, textLocationHeight + 0.04, chatMessage, Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, r, g, b, 1, 1, 0 ) )
-					Shine.ScreenText.Add(72, {X = 0.5, Y = textLocationHeight + 0.04, Text = chatMessage, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = r, G = g, B = b, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
+					Shine.ScreenText.Add(71, {X = 0.5, Y = textLocationHeight, Text = bannerText, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
+					Shine.ScreenText.Add(72, {X = 0.5, Y = textLocationHeight + 0.04, Text = chatMessage, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					textLocationHeightAdditive = textLocationHeightAdditive > 0 and textLocationHeightAdditive - 0.05 or textLocationHeightAdditive
 					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.WINORLOSE_WARNING, {})
+					showHuhBangPoints(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				end)
 				local spectatorsText = string.format("WinOrLose! %s have %s seconds to %s%s!", teamNameWhichMustWinOrLose, kCountdownTimeRemaining, TGNS.ToLower(howToWinDescription), bannerLocationName)
 				TGNS.DoFor(TGNS.GetSpectatorClients(TGNS.GetPlayerList()), function(c)
@@ -269,6 +309,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 			-- Shine:SendText(nil, Shine.BuildScreenMessage(74, 0.5, 0.85, "", 1, 255, 255, 255, 1, 1, 0))
 			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
 			kTimeAtWhichWinOrLoseVoteSucceeded = 0
+			showHuhBangPoints(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 		end
 		TGNS.ExecuteEventHooks("WinOrLoseCountdownChanged", kCountdownTimeRemaining)
 	else
@@ -434,9 +475,25 @@ function Plugin:GetWinOrLoseCountdownData()
 	return kCountdownTimeRemaining, kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 end
 
+function Plugin:PostJoinTeam()
+	if not TGNS.IsProduction() then
+		showHuhBangPoints()
+	end
+end
+
 function Plugin:CreateCommands()
 	local command = self:BindCommand("sh_winorlose", nil, OnCommandWinOrLose, true)
 	command:Help("Cast a WinOrLose vote.")
+
+	if not TGNS.IsProduction() then
+		local testCommand = self:BindCommand("sh_setnumber", "n", function(client, n)
+			huhBangPoints[client] = tonumber(n)
+			md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), tostring(n))
+		end)
+		testCommand:AddParam{ Type = "string" }
+		testCommand:Help("Set the number.")
+	end
+
 end
 
 function Plugin:CallWinOrLose(teamNumber)
@@ -456,6 +513,8 @@ function Plugin:GetDamageModification( Ent, Damage, Attacker, Inflictor, Point, 
 				local teamRgb = TGNS.GetTeamRgb(Attacker:GetTeamNumber())
 				Shine.ScreenText.Add(70, {X = 0.5, Y = 0.6, Text = "You cannot do damage. Your team has surrendered.", Duration = 6, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, client)
 				lastNoAttackNoticeTimes[client] = Shared.GetTime()
+				huhBangPoints[client] = huhBangPoints[client] or 0
+				huhBangPoints[client] = huhBangPoints[client] + Damage
 			end
 		end
 	end
@@ -512,6 +571,7 @@ function Plugin:EndGame(gamerules, winningTeam)
 		TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.SHOW_TEAM_MESSAGES, {s=true})
 	end)
 	removeBanners()
+	huhBangPoints = {}
 end
 
 function Plugin:CastVoteByPlayer(gamerules, voteTechId, player)
