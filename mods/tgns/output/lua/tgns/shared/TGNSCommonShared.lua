@@ -396,3 +396,9 @@ function TGNS.IsGameplayTeamNumber(teamNumber) PROFILE("TGNS.IsGameplayTeamNumbe
 	local result = teamNumber == kMarineTeamType or teamNumber == kAlienTeamType
 	return result
 end
+
+function TGNS.PadLeft(str, length, character)
+	str = tostring(str)
+    local result = string.rep(character or " ", length - #str) .. str
+    return result
+end
