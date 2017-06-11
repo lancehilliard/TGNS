@@ -1,21 +1,29 @@
-local md
+-- local md
 
 local Plugin = {}
 
 function Plugin:Initialise()
     self.Enabled = true
-    md = TGNSMessageDisplayer.Create()
-    TGNS.ScheduleAction(5, function()
-        Server.HookNetworkMessage("VoteChangeMap", function(client)
-            local player = TGNS.GetPlayer(client)
-            md:ToPlayerNotifyError(player, "Built-in mapvoting is available when server mods fail to load.")
-            md:ToPlayerNotifyError(player, "Server mods loaded successfully, so vote starts are automated.")
-        end)
-        Server.HookNetworkMessage("VoteAddCommanderBots", function(client)
-            local player = TGNS.GetPlayer(client)
-            md:ToPlayerNotifyError(player, "This operation is not supported on this game server.")
-        end)
-    end)
+    -- md = TGNSMessageDisplayer.Create()
+    -- TGNS.ScheduleAction(5, function()
+    --     Server.HookNetworkMessage("VoteChangeMap", function(client)
+    --         local player = TGNS.GetPlayer(client)
+    --         md:ToPlayerNotifyError(player, "Built-in mapvoting is available when server mods fail to load.")
+    --         md:ToPlayerNotifyError(player, "Server mods loaded successfully, so vote starts are automated.")
+    --     end)
+    --     Server.HookNetworkMessage("VoteAddCommanderBots", function(client)
+    --         local player = TGNS.GetPlayer(client)
+    --         md:ToPlayerNotifyError(player, "This operation is not supported on this game server.")
+    --     end)
+    -- end)
+
+    local originalGetStartVoteAllowed = GetStartVoteAllowed
+    GetStartVoteAllowed = function(voteName, client)
+        -- local result = voteName == "VoteAddCommanderBots" and kVoteCannotStartReason.DisabledByAdmin or originalGetStartVoteAllowed(voteName, client)
+        -- return result
+        return kVoteCannotStartReason.DisabledByAdmin
+    end
+
     return true
 end
 
