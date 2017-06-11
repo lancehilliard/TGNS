@@ -1,5 +1,6 @@
 local PLAYER_COUNT_THRESHOLD = 14
 local BOT_COUNT_THRESHOLD = 25
+local BOT_LIFEFORM
 local MINIMUM_MARINE_COUNT_FOR_TWO_ALIEN_HUMANS = 6
 local originalEndRoundOnTeamUnbalanceSetting = 0.4
 local originalForceEvenTeamsOnJoinSetting = true
@@ -72,7 +73,7 @@ local function setBotConfig()
 	Egg.GetGestateTechId = function(eggGetGestateTechIdSelf)
 		local result = originalGetGestateTechId(eggGetGestateTechIdSelf)
 		if result == kTechId.Skulk then
-			if math.random() < .005 then
+			if BOT_LIFEFORM == "random" or math.random() < .005 then
 				local random = math.random()
 				if random < .25 then
 					result = kTechId.Gorge
@@ -80,10 +81,19 @@ local function setBotConfig()
 					result = kTechId.Lerk
 				elseif random < .75 then
 					result = kTechId.Fade
-				else
+				elseif random < .90 then
 					result = kTechId.Onos
 				end
 			end
+		end
+		if BOT_LIFEFORM == "onos" then
+			result = kTechId.Onos
+		elseif BOT_LIFEFORM == "fade" then
+			result = kTechId.Fade
+		elseif BOT_LIFEFORM == "lerk" then
+			result = kTechId.Lerk
+		elseif BOT_LIFEFORM == "gorge" then
+			result = kTechId.Gorge
 		end
 		return result
 	end
@@ -349,6 +359,14 @@ function Plugin:CreateCommands()
 			end
 			md:ToPlayerNotifyInfo(player, string.format("Maximum possible bots set to %s.", max))
 		end
+	end)
+	botsMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
+	botsMaxCommand:Help( "<max> Set the maximum possible count of bots." )
+
+	local botsMaxCommand = self:BindCommand( "sh_botslifeform", nil, function(client, lifeform)
+		local player = TGNS.GetPlayer(client)
+		BOT_LIFEFORM = TGNS.ToLower(lifeform)
+		md:ToPlayerNotifyInfo(player, string.format("Bots lifeform set to %s.", BOT_LIFEFORM))
 	end)
 	botsMaxCommand:AddParam{ Type = "string", TakeRestOfLine = true, Optional = true }
 	botsMaxCommand:Help( "<max> Set the maximum possible count of bots." )
