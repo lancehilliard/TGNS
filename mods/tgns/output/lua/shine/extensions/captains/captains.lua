@@ -1061,6 +1061,8 @@ if Server or Client then
 	end
 
 	if Server then
+		Plugin.HasConfig = true
+		Plugin.ConfigName = "captains.json"
 		local md
 		local captainClients = {}
 		local captainsModeEnabled
@@ -1107,6 +1109,7 @@ if Server or Client then
 		local CAPTAINS_NIGHT_START_HOUR_LOCAL_SERVER_TIME = 20
 		local recentCaptainsData = {}
 		local recentCaptainsTempfilePath = "config://tgns/temp/recentcaptains.json"
+		local captainsPasswordTempfilePath = "config://tgns/temp/captainspassword.json"
 		local rolesServerData = {}
 		local captainsEventStartPushSent = false
 		local gameLastEndedAt
@@ -1355,7 +1358,7 @@ if Server or Client then
 			allPlayersWereArtificiallyForcedToReadyRoom = true
 			Shine.Plugins.mapvote.EndGame = function(mapVotePlugin) end
 			TGNS.ForcePlayersToReadyRoom(TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) end))
-			whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 20
+			whenToAllowTeamJoins = TGNS.GetSecondsSinceMapLoaded() + 10
 			votesAllowedUntil = nil
 			TGNS.ScheduleAction(1, showPickables)
 			//Shine.Plugins.afkkick.Config.KickTime = 20
@@ -1617,6 +1620,12 @@ if Server or Client then
 			return result
 		end
 
+		function Plugin:IsCaptainsProxy(client)
+			local result = self.Config.Proxy == TGNS.GetClientSteamId(client)
+			-- Shared.Message(string.format("IsCaptainsProxy (%s): %s", self.Config.Proxy, result))
+			return result
+		end
+
 		function Plugin:IsCaptainsMorning()
 			local result = TGNS.GetAbbreviatedDayOfWeek() == "Sat" and TGNS.GetCurrentHour() < 6
 			return result
@@ -1699,7 +1708,7 @@ if Server or Client then
 						setTimeAtWhichToForceRoundStart()
 						messageDisplayer = function()
 							TGNS.DoFor(TGNS.GetPlayingClients(TGNS.GetPlayerList()), function(c)
-								md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Time for Round 2! Switch to %s!", TGNS.GetOtherPlayingTeamName(TGNS.GetClientTeamName(c))))
+								md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), string.format("Time for Round 2! Switching to %s!", TGNS.GetOtherPlayingTeamName(TGNS.GetClientTeamName(c))))
 							end)
 							TGNS.ScheduleAction(10, function()
 								local nominationsMd = TGNSMessageDisplayer.Create("MAPCYCLE")
@@ -2099,7 +2108,6 @@ if Server or Client then
 				local teamChoiceCaptainClient = #captainClients > 0 and getTeamChoiceCaptainClient(captainClients) or nil
 				local captainsUsage = captainsModeEnabled and teamChoiceCaptainClient == client or TGNS.IsClientAdmin(client)
 				local smUsage = not captainsModeEnabled and TGNS.IsClientSM(client)
-				Shared.Message("smUsage: " .. tostring(smUsage))
 				if captainsUsage or smUsage then
 					if not Shine.Plugins.mapvote:VoteStarted() then
 						local validCaptainsUsage = captainsUsage and (captainsGamesFinished == 0 and not TGNS.IsGameInProgress())
@@ -2128,7 +2136,6 @@ if Server or Client then
 											hasEarnedSetSpawnsKarma[steamId] = true
 										end
 									elseif smUsage then
-										Shared.Message("smUsage...")
 										local notifyAll
 										notifyAll = function()
 											if nextGameSpawnLocationsSummary then
@@ -2284,11 +2291,11 @@ if Server or Client then
 					end
 				end
 			end
-			if Shared.GetTime() < 300 and TGNS.EndsWith(message, " break") and TGNS.IsClientAdmin(client) then
+			if Shared.GetTime() < 300 and TGNS.EndsWith(message, " break") and (TGNS.IsClientAdmin(client) or self:IsCaptainsProxy(client)) then
 				TGNS.DoFor({0, 15, 30, 45, 60, 75, 90, 105, 120}, function(t)
 					TGNS.ScheduleAction(t, function()
 						if Shine:IsValidClient(client) then
-							md:ToAdminNotifyInfo(string.format("Time since \"%s\": %s", message, TGNS.SecondsToClock(t)))
+							md:ToPlayerNotifyInfo(TGNS.GetPlayer(client), string.format("Time since \"%s\": %s", message, TGNS.SecondsToClock(t)))
 						end
 					end)
 				end)
@@ -2303,29 +2310,32 @@ if Server or Client then
 			if not (force or shineForce) then
 				if captainsModeEnabled then
 				    local client = TGNS.GetClient(player)
-				    if TGNS.IsGameplayTeamNumber(newTeamNumber) then
+				    if newTeamNumber ~= kTeamReadyRoom then
+						if whenToAllowTeamJoins > TGNS.GetSecondsSinceMapLoaded() then
+							md:ToPlayerNotifyError(player, "Captains Game! Stay in the Ready Room and listen for instruction.")
+							cancel = true
+						end
+					end
+				    if not cancel and TGNS.IsGameplayTeamNumber(newTeamNumber) then
 				    	if TGNS.IsGameInProgress() then
 							addReadyPlayerClient(client)
 				    	end
-				    	if TGNS.Has(readyPlayerClients, client) or TGNS.Has(readyCaptainClients, client) then
-							if whenToAllowTeamJoins > TGNS.GetSecondsSinceMapLoaded() then
-								md:ToPlayerNotifyError(player, "Captains Game! Stay in the Ready Room and listen for instruction.")
-								cancel = true
-							end
-				    	else
+				    	if not (TGNS.Has(readyPlayerClients, client) or TGNS.Has(readyCaptainClients, client)) then
 				    		md:ToPlayerNotifyError(player, "Only opted-in players may join teams during Captains Games.")
 				    		TGNS.RespawnPlayer(player)
 				    		cancel = true
 				    	end
 				    end
-				    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
-				    if serverIsUpdatingToReadyRoom and captainsGamesFinished == 1 then
-				    	if TGNS.IsPlayerSpectator(player) then
-				    		cancel = true
-				    	elseif TGNS.PlayerIsOnPlayingTeam(player) then
-				    		local otherTeamNumber = TGNS.GetOtherPlayingTeamNumber(TGNS.GetPlayerTeamNumber(player))
-				    		return true, otherTeamNumber
-				    	end
+				    if not cancel then
+					    local serverIsUpdatingToReadyRoom = Shine.Plugins.updatetoreadyroomhelper and Shine.Plugins.updatetoreadyroomhelper:IsServerUpdatingToReadyRoom()
+					    if serverIsUpdatingToReadyRoom and captainsGamesFinished == 1 then
+					    	if TGNS.IsPlayerSpectator(player) then
+					    		cancel = true
+					    	elseif TGNS.PlayerIsOnPlayingTeam(player) then
+					    		local otherTeamNumber = TGNS.GetOtherPlayingTeamNumber(TGNS.GetPlayerTeamNumber(player))
+					    		return true, otherTeamNumber
+					    	end
+					    end
 				    end
 				end
 				if cancel then
@@ -2381,12 +2391,17 @@ if Server or Client then
 		end
 
 		function Plugin:ClientConfirmConnect(client)
+			local steamId = TGNS.GetClientSteamId(client)
+			if self:IsCaptainsProxy(client) then
+				TGNS.AddTempGroup(client, "captains_proxy")
+			end
+
 			TGNS.ScheduleAction(6, function()
 				if Shine:IsValidClient(client) then
 					local message
 					if captainsModeEnabled then
 						message = getCaptainsGameStateDescription()
-					elseif TGNS.Has(recentCaptainPlayerIds, TGNS.GetClientSteamId(client)) and votesAllowedUntil == nil then
+					elseif TGNS.Has(recentCaptainPlayerIds, steamId) and votesAllowedUntil == nil then
 						message = "Thanks for being a Captain recently! Recent Captains opt-in before other players."
 					end
 					if TGNS.HasNonEmptyValue(message) then
@@ -2445,7 +2460,7 @@ if Server or Client then
 				local shouldOverrideVoicecomm = captainsModeEnabled and captainsGamesFinished == 0 and TGNS.IsPlayerReadyRoom(speakerPlayer) and TGNS.IsPlayerReadyRoom(listenerPlayer) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.IsEitherPlayerInSidebar and Shine.Plugins.sidebar:IsEitherPlayerInSidebar(listenerPlayer, speakerPlayer))
 				if shouldOverrideVoicecomm then
 					local speakerClient = TGNS.GetClient(speakerPlayer)
-					result = TGNS.IsClientAdmin(speakerClient) or TGNS.IsClientGuardian(speakerClient) or TGNS.ClientIsInGroup(speakerClient, "captains_group")
+					result = TGNS.IsClientAdmin(speakerClient) or TGNS.IsClientGuardian(speakerClient) or TGNS.ClientIsInGroup(speakerClient, "captains_group") or Shine.Plugins.captains:IsCaptainsProxy(speakerClient)
 					if result ~= true then
 						if lastVoiceWarningTimes[speakerClient] == nil or lastVoiceWarningTimes[speakerClient] < Shared.GetTime() - 2 then
 							md:ToPlayerNotifyError(speakerPlayer, "Others cannot hear you. Only Captains and Admins may use voicecomm while teams are being selected.")
@@ -2498,6 +2513,53 @@ if Server or Client then
 				end
 			end)
 
+			local originalPasswordFunc
+			local function updatePasswordCommandFunc(func)
+				if Shine.Commands.sh_password then
+					if originalPasswordFunc == nil then
+						originalPasswordFunc = Shine.Commands.sh_password.Func
+					end
+					Shine.Commands.sh_password.Func = func
+				end
+			end
+
+			local captainsPasswordCommandFunc = function(client, password)
+				originalPasswordFunc(client, password)
+				Shine.SaveJSONFile({password=password}, captainsPasswordTempfilePath)
+			end
+			local getProhibitedPasswordCommandFunc = function(message)
+				local result = function(client, password)
+					TGNS.ScheduleAction(0, function()
+						md:ToClientConsole(client, message)
+					end)
+				end
+				return result
+			end
+			local function overridePasswordFunction()
+				if Shine.Plugins.captains:IsCaptainsMorning() then
+					if TGNS.IsProduction() then
+						Server.SetPassword("")
+					end
+					updatePasswordCommandFunc(getProhibitedPasswordCommandFunc("ERROR: Password disabled between midnight and 6AM Saturday."))
+					Shine.SaveJSONFile({}, captainsPasswordTempfilePath)
+				else
+					updatePasswordCommandFunc(captainsPasswordCommandFunc)
+					TGNS.ScheduleAction(60, overridePasswordFunction)
+				end
+			end
+
+			TGNS.ScheduleAction(1, function()
+				updatePasswordCommandFunc(getProhibitedPasswordCommandFunc("ERROR: Password cannot be set yet. Wait a moment and try again."))
+			end)
+
+			TGNS.ScheduleAction(10, function()
+				overridePasswordFunction()
+				local captainsPasswordData = Shine.LoadJSONFile(captainsPasswordTempfilePath) or {}
+				if TGNS.HasNonEmptyValue(captainsPasswordData.password) and originalPasswordFunc then
+					Shine.Commands.sh_password.Func(nil, captainsPasswordData.password)
+				end
+			end)
+
 			TGNS.DoWithConfig(function()
 				local url = string.format("%s&n=%s", TGNS.Config.RecentCaptainPlayerIdsEndpointBaseUrl, TGNS.GetSimpleServerName())
 				TGNS.GetHttpAsync(url, function(recentCaptainPlayerIdsResponseJson)
@@ -2512,27 +2574,6 @@ if Server or Client then
 						TGNS.DebugPrint(string.format("captains ERROR: Unable to access recentcaptainplayerids data for server %s. msg: %s | response: %s | stacktrace: %s", TGNS.GetSimpleServerName(), recentCaptainPlayerIdsResponse.msg, recentCaptainPlayerIdsResponseJson, recentCaptainPlayerIdsResponse.stacktrace))
 					end
 				end)
-			end)
-
-			local originalServerSetPassword = Server.SetPassword
-			local function disallowPasswordAfterMidnightOnSaturdays()
-				if Shine.Plugins.captains:IsCaptainsMorning() then
-						Server.SetPassword("")
-						Server.SetPassword = function()
-							TGNS.ScheduleAction(0, function()
-								md:ToAdminConsole("ERROR: Password disabled between midnight and 6AM Saturday.")
-							end)
-						end
-				else
-					Server.SetPassword = originalServerSetPassword
-					TGNS.ScheduleAction(60, disallowPasswordAfterMidnightOnSaturdays)
-				end
-			end
-
-			TGNS.ScheduleAction(15, function()
-				if TGNS.IsProduction() then
-					disallowPasswordAfterMidnightOnSaturdays()
-				end
 			end)
 
 			TGNS.RegisterEventHook("OnEveryMinute", function()
