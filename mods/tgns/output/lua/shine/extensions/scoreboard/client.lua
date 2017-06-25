@@ -609,6 +609,7 @@ function Plugin:Initialise()
 
 	end
 
+	local totalResourceNodesCount
 	local originalGUIScoreboardUpdateTeam = GUIScoreboard.UpdateTeam
 	GUIScoreboard.UpdateTeam = function(self, updateTeam)
 		originalGUIScoreboardUpdateTeam(self, updateTeam)
@@ -1166,12 +1167,14 @@ function Plugin:Initialise()
 
 		    local teamInfo = GetEntitiesForTeam("TeamInfo", Client.GetLocalClientTeamNumber())
 		    if teamInfo and #teamInfo > 0 then
-			    local numResourceNodes = teamInfo[1]:GetNumResourceTowers()
-				local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractor" or "Harvester"
+			    local ownedResourceNodesCount = teamInfo[1]:GetNumResourceTowers()
+			    totalResourceNodesCount = totalResourceNodesCount or Shared.GetEntitiesWithClassname("ResourcePoint"):GetSize()
+			    local percentResourceNodesOwned = math.floor(ownedResourceNodesCount / totalResourceNodesCount * 100)
+				local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractors" or "Harvesters"
 		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
 		    	if teamInfoGUIItem then
 			    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
-				    teamInfoGUIItem:SetText(string.format("%s (%s)", originalTeamInfoGuiItemText, Pluralize(numResourceNodes, resourceNodesName)))
+				    teamInfoGUIItem:SetText(string.format("%s (%s: %s/%s - %s%%)", originalTeamInfoGuiItemText, resourceNodesName, ownedResourceNodesCount, totalResourceNodesCount, percentResourceNodesOwned))
 		    	end
 		    end
 		end
