@@ -143,6 +143,18 @@ function Plugin:PlayerSay(client, networkMessage)
 					swapRequest.requestorClient = client
 					table.insert(swapRequests, swapRequest)
 					TGNS.ScheduleAction(0, function() swapMd:ToAllNotifyInfo(notificationMessage) end)
+					TGNS.ScheduleAction(12, function()
+						TGNS.DoFor(swapRequests, function(swapRequest)
+							if swapRequest.requestorClient == client then
+								if swapRequest.marineClient.c == marineClient and Shine:IsValidClient(marineClient) and not swapRequest.marineClient.a then
+									swapMd:ToTeamNotifyInfo(TGNS.GetClientTeamNumber(marineClient), string.format("%s: Please chat 'swap' or 'stay'.", TGNS.GetClientName(marineClient)))
+								end
+								if swapRequest.alienClient.c == alienClient and Shine:IsValidClient(alienClient) and not swapRequest.alienClient.a then
+									swapMd:ToTeamNotifyInfo(TGNS.GetClientTeamNumber(alienClient), string.format("%s: Please chat 'swap' or 'stay'.", TGNS.GetClientName(alienClient)))
+								end
+							end
+						end)
+					end)
 				else
 					TGNS.DoFor(errorMessages, function(errorMessage)
 						swapMd:ToPlayerNotifyError(TGNS.GetPlayer(client), errorMessage)
