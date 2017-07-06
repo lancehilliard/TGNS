@@ -355,7 +355,7 @@ if Server or Client then
 		local readyRoomPlayerLastSpokeAt = 0
 		local executeBalanceAfterFinishedTalking
 		executeBalanceAfterFinishedTalking = function()
-			if not TGNS.IsGameInProgress() then
+			if not TGNS.IsGameInProgress() and Server.GetNumPlayersTotal() >= 6 then
 				if Shared.GetTime() - readyRoomPlayerLastSpokeAt > BALANCE_VOICECOMM_TOLERANCE_IN_SECONDS then
 					svBalance()	
 				else
