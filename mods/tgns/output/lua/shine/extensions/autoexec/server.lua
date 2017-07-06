@@ -3,6 +3,7 @@ local pdr = TGNSPlayerDataRepository.Create("autoexec", function(data)
 	return data
 end)
 local autoExecsCache = {}
+local AutoMaxFpsCache = {}
 local autoExecsCacheWasPreloaded = false
 
 local md = TGNSMessageDisplayer.Create("AUTOFPS")
@@ -52,6 +53,9 @@ function Plugin:ClientConnect(client)
 			end
 		end)
 	end
+	if AutoMaxFpsCache[steamId] and TGNS.IsClientSM(client) then
+		sendCommands({string.format("maxfps %s", AutoMaxFpsCache[steamId])})
+	end	
 end
 
 local function createCommand(commandName, commandValue, commandDescription)
@@ -101,6 +105,18 @@ function Plugin:Initialise()
 				autoExecsCacheWasPreloaded = true
 			else
 				TGNS.DebugPrint(string.format("autoExecs ERROR: Unable to access autoExecs data. url: %s | msg: %s | response: %s | stacktrace: %s", url, autoExecsResponse.msg, autoExecsResponseJson, autoExecsResponse.stacktrace))
+			end
+		end)
+
+		local url = TGNS.Config.AutoMaxFpsEndpointBaseUrl
+		TGNS.GetHttpAsync(url, function(AutoMaxFpsResponseJson)
+			local AutoMaxFpsResponse = json.decode(AutoMaxFpsResponseJson) or {}
+			if AutoMaxFpsResponse.success then
+				TGNS.DoForPairs(AutoMaxFpsResponse.result, function(steamId, maxFps)
+					AutoMaxFpsCache[tonumber(steamId)] = maxFps
+				end)
+			else
+				TGNS.DebugPrint(string.format("AutoMaxFps ERROR: Unable to access AutoMaxFps data. url: %s | msg: %s | response: %s | stacktrace: %s", url, AutoMaxFpsResponse.msg, AutoMaxFpsResponseJson, AutoMaxFpsResponse.stacktrace))
 			end
 		end)
     end)
