@@ -39,6 +39,7 @@ function Plugin:Initialise()
     self:CreateCommands()
 
     TGNS.ScheduleAction(0, function()
+        Shared.Message("serverstart - TGNS.GetSecondsSinceServerProcessStarted(): " .. tostring(TGNS.GetSecondsSinceServerProcessStarted()))
         if TGNS.GetSecondsSinceServerProcessStarted() < 60 then
             local serverStartData = self:GetServerStartData()
             if serverStartData.startMapName then
