@@ -1,5 +1,9 @@
 if Server or Client then
 
+	kContaminationCooldown = kContaminationCooldown * 2
+	kContaminationLifeSpan = kContaminationLifeSpan * 2
+	kContaminationBileInterval = kContaminationBileInterval * 2
+
 	kTechData = nil
 	ClearCachedTechData()
 	-- local originalkHeavyMachineGunTechResearchTime = kHeavyMachineGunTechResearchTime
