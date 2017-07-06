@@ -1001,6 +1001,39 @@ if Server or Client then
 			
 		end
 
+		-- local extraMarineTeamRes = {}
+		-- local extraMarinePersonalRes = {}
+
+		-- local originalPlayingTeamAddTeamResources
+		-- originalPlayingTeamAddTeamResources = TGNS.ReplaceClassMethod("PlayingTeam", "AddTeamResources", function(playingTeamSelf, amount, isIncome)
+		-- 	if isIncome and playingTeamSelf:GetTeamType() == kMarineTeamType and amount > 0 then
+		-- 		local gameStartTime = NS2Gamerules:GetGameStartTime()
+		-- 		extraMarineTeamRes[gameStartTime] = (extraMarineTeamRes[gameStartTime] or 0) + ((amount * Shine.Plugins.balance.Config.MarineResourcesMultiplier) - amount)
+		-- 		while extraMarineTeamRes[gameStartTime] >= 1 do
+		-- 			amount = amount + 1
+		-- 			extraMarineTeamRes[gameStartTime] = extraMarineTeamRes[gameStartTime] - 1
+		-- 		end
+		-- 	end
+		-- 	originalPlayingTeamAddTeamResources(playingTeamSelf, amount, isIncome)
+		-- end)
+
+		-- local originalPlayerAddResources
+		-- originalPlayerAddResources = TGNS.ReplaceClassMethod("Player", "AddResources", function(playerSelf, amount)
+		-- 	if playerSelf:GetTeamNumber() == kMarineTeamType and amount > 0 then
+		-- 		local gameStartTime = NS2Gamerules:GetGameStartTime()
+		-- 		local playerId = playerSelf:GetId()
+		-- 		extraMarinePersonalRes[gameStartTime] = extraMarinePersonalRes[gameStartTime] or {}
+		-- 		extraMarinePersonalRes[gameStartTime][playerSelf] = (extraMarinePersonalRes[gameStartTime][playerSelf] or 0) + ((amount * Shine.Plugins.balance.Config.MarineResourcesMultiplier) - amount)
+		-- 		while extraMarinePersonalRes[gameStartTime][playerSelf] >= 1 do
+		-- 			amount = amount + 1
+		-- 			extraMarinePersonalRes[gameStartTime][playerSelf] = extraMarinePersonalRes[gameStartTime][playerSelf] - 1
+		-- 		end
+		-- 	end
+		-- 	local result = originalPlayerAddResources(playerSelf, amount)
+		-- 	return result
+		-- end)
+
+
 		return true
 	end
 
