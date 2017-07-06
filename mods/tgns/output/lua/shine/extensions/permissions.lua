@@ -12,8 +12,27 @@ end
 local Plugin = {}
 
 function Plugin:Initialise()
-    self.Enabled = true
-	dakData = TGNSJsonFileTranscoder.DecodeFromFile("config://ServerAdmin.json")
+  self.Enabled = true
+  
+  dakData = TGNSJsonFileTranscoder.DecodeFromFile("config://ServerAdmin.json")
+  
+  -- Fix start - Convert array to a map, indexed by steam id
+  local dakDataUsersOld = dakData.users
+  
+  dakData.users = {}
+  dakData.usersCache = {}
+  
+  for _, userData in pairs(dakDataUsersOld) do
+    local userDataOld = dakData.users[userData.id]
+    
+    if userDataOld then
+      table.adduniquetable(userData.groups, userDataOld.groups) -- Append to existing group entries
+    else
+      dakData.users[userData.id] = userData
+    end
+  end
+  -- Fix end
+  
 	originalGetPermission = TGNS.ReplaceClassMethod("Shine", "GetPermission", function(self, client, conCommand)
 		local result = originalGetPermission(self, client, conCommand)
 		if not result then
@@ -62,7 +81,7 @@ function Plugin:Initialise()
     return true
 end
 
-function Plugin:IsSteamIdInGroup(steamId, groupName)
+/*function Plugin:IsSteamIdInGroup(steamId, groupName)
 	local result = false
 	TGNS.DoForPairs(dakData.users, function(userKey, userData)
 		if userData.id == steamId and TGNS.Any(userData.groups, function(x) return x == groupName end) then
@@ -71,7 +90,31 @@ function Plugin:IsSteamIdInGroup(steamId, groupName)
 		return result
 	end)
 	return result
+end*/
+
+-- Fix start - Fix with cache
+function Plugin:IsSteamIdInGroup(steamId, groupName)
+  local userData = dakData.usersCache[steamId] -- Try cache first
+  
+  if userData == nil then
+    userData = dakData.users[steamId] -- Try source second
+    
+    if userData == nil then
+      return false
+    end
+
+    dakData.usersCache[steamId] = userData -- Add to cache
+  end
+
+  for _, group in ipairs(userData.groups) do
+    if group == groupName then
+      return true
+    end
+  end
+  
+  return false
 end
+-- Fix end
 
 function Plugin:Cleanup()
     --Cleanup your extra stuff like timers, data etc.
