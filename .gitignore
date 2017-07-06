@@ -149,6 +149,7 @@
 !mods/tgns/output/lua/shine/extensions/primeablechat/primeablechat.lua
 !mods/tgns/output/lua/shine/extensions/primeablechat/shared.lua
 !mods/tgns/output/lua/shine/extensions/printablenames.lua
+!mods/tgns/output/lua/shine/extensions/prohibitednames.lua
 !mods/tgns/output/lua/shine/extensions/push.lua
 !mods/tgns/output/lua/shine/extensions/recordinghelper/client.lua
 !mods/tgns/output/lua/shine/extensions/recordinghelper/server.lua
