@@ -945,9 +945,13 @@ if Server or Client then
 			end)
 
 			TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
-				md:ToAllNotifyInfo(string.format("Marines start with 2 IPs (-%s team res). Armories near IPs drop free welders.", extraIpCost))
+				md:ToAllNotifyInfo("Balance mods in play. Details in console (` key).")
+				md:ToAllConsole(string.format("Marines start with 2 IPs (-%s team res). Armories near IPs drop free welders.", extraIpCost))
+				-- md:ToAllConsole(string.format("Marines get res faster (%sx normal rate). Contamination has a longer lifespan,", Shine.Plugins.balance.Config.MarineResourcesMultiplier))
+				              md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
+				              md:ToAllConsole("bile bomb half as often. Balance changes address the reality that")
+				              md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
 				-- md:ToAllNotifyInfo(onosBalanceAdvisory)
-				-- md:ToAllNotifyInfo("These messages are printed in your console (` key).")
 			end)
 		end
 
