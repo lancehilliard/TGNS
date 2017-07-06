@@ -475,10 +475,29 @@ function Plugin:GetWinOrLoseCountdownData()
 	return kCountdownTimeRemaining, kTeamWhichWillWinIfWinLoseCountdownExpires:GetTeamNumber()
 end
 
+local lastSpecInNoticeShownAt = {}
 function Plugin:PostJoinTeam()
 	if not TGNS.IsProduction() then
 		showHuhBangPoints()
 	end
+	TGNS.ScheduleAction(10, function()
+		if TGNS.IsGameInProgress() and kTimeAtWhichWinOrLoseVoteSucceeded == 0 then
+			local playerList = TGNS.GetPlayerList()
+			local marinesCount = #TGNS.GetMarineClients(playerList)
+			local aliensCount = #TGNS.GetAlienClients(playerList)
+			if marinesCount ~= aliensCount then
+				TGNS.DoFor(TGNS.GetSpectatorClients(playerList), function(c)
+					if Shared.GetTime() - (lastSpecInNoticeShownAt[c] or 0) > 60 then
+						local specInMd = TGNSMessageDisplayer.Create()
+						local message = string.format("%s: Gameplay slot open?", TGNS.GetClientName(c))
+						specInMd:ToPlayerNotifyInfo(TGNS.GetPlayer(c), message)
+						specInMd:ToAdminConsole(string.format("Shown to spectator: %s", message))
+						lastSpecInNoticeShownAt[c] = Shared.GetTime()
+					end
+				end)
+			end
+		end
+	end)
 end
 
 function Plugin:CreateCommands()
