@@ -3,6 +3,8 @@ if Server or Client then
 	kContaminationCooldown = kContaminationCooldown * 2
 	kContaminationLifeSpan = kContaminationLifeSpan * 2
 	kContaminationBileInterval = kContaminationBileInterval * 2
+	kWhipSupply = kWhipSupply * 2
+	-- kWhipCost = kWhipCost * 2
 
 	kTechData = nil
 	ClearCachedTechData()
@@ -947,11 +949,20 @@ if Server or Client then
 			TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 				md:ToAllNotifyInfo("Balance mods in play. Details in console (` key).")
 				md:ToAllConsole(string.format("Marines start with 2 IPs (-%s team res). Armories near IPs drop free welders.", extraIpCost))
-				-- md:ToAllConsole(string.format("Marines get res faster (%sx normal rate). Contamination has a longer lifespan,", Shine.Plugins.balance.Config.MarineResourcesMultiplier))
+				              -- md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
+				              -- md:ToAllConsole("bile bomb half as often. Whip build and supply costs are doubled,")
+				              -- md:ToAllConsole("but they target much more reliably. Balance changes consider that")
+				              -- md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
+
+				              -- md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
+				              -- md:ToAllConsole("bile bomb half as often. Whips spread when they root into infestation,")
+				              -- md:ToAllConsole("so they target much more reliably. Balance changes consider that")
+				              -- md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
+
 				              md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
-				              md:ToAllConsole("bile bomb half as often. Balance changes address the reality that")
+				              md:ToAllConsole("bile bomb half as often. Whip supply is doubled, as whips spread")
+				              md:ToAllConsole("out and target much more reliably. Balance changes consider that")
 				              md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
-				-- md:ToAllNotifyInfo(onosBalanceAdvisory)
 			end)
 		end
 
@@ -980,6 +991,89 @@ if Server or Client then
 		-- 	return getRandomBuildPositionResult
 		-- end
 
+		local recentWanderingPositions = {}
+		local optimizeWhip = function(w)
+			if w:GetIsTeleporting() then
+				w:GiveOrder(kTechId.HoldPosition, nil, w.destinationPos, nil, true, true)
+			else
+				-- local targetIdOrInvalidEntityId = w.targetId or Entity.invalidId
+				-- local whipHasOperationalTarget = targetIdOrInvalidEntityId ~= Entity.invalidId and TGNS.StructureIsOperational(Shared.GetEntity(targetIdOrInvalidEntityId))
+				-- if not w:GetIsMoving() and not whipHasOperationalTarget then
+				if not w:GetIsMoving() then
+					local sameLocationWhips = GetEntitiesForTeamWithinRange("Whip", kAlienTeamType, w:GetOrigin(), 1)
+					local sameLocationStationaryWhips = TGNS.Where(sameLocationWhips, function(lw) return not lw:GetIsMoving() end)
+					if #sameLocationStationaryWhips > 1 then
+						TGNS.DoTimes(10, function(iterationNumber)
+							local pos = GetRandomBuildPosition( kTechId.Whip, w:GetOrigin(), kInfestationRadius / 2 )
+							if pos then
+								if GetIsPointOnInfestation(pos) then
+									if not TGNS.Has(recentWanderingPositions[w], pos) then
+										local posLocation = GetLocationForPoint(pos)
+										local posLocationName = posLocation and posLocation:GetName()
+										local nearbyWhipLocationName = w:GetLocationName()
+										if posLocationName and posLocationName == nearbyWhipLocationName then
+											w:GiveOrder(kTechId.Move, nil, pos, nil, true, true)
+											recentWanderingPositions[w] = recentWanderingPositions[w] or {}
+											recentWanderingPositions[w] = TGNS.Take(TGNS.TableReverse(recentWanderingPositions[w]), 9)
+											table.insert(recentWanderingPositions[w], pos)
+											return true
+										end
+									end
+								else
+									-- Shared.Message("pos not on infestation...")
+								end
+							else
+								-- Shared.Message("pos not found...")
+							end
+							if iterationNumber == 10 then
+								-- Shared.Message("Whip: could not find pos...")
+							end
+						end)
+					end
+				end
+			end
+		end
+
+		local lastOptimizationTimes = {}
+		local originalWhipUpdateAttack
+		originalWhipUpdateAttack = TGNS.ReplaceClassMethod("Whip", "UpdateAttack", function(whipSelf, deltaTime)
+			originalWhipUpdateAttack(whipSelf, deltaTime)
+			if Shared.GetTime() - (lastOptimizationTimes[whipSelf] or 0) > .5 then
+				optimizeWhip(whipSelf)
+				lastOptimizationTimes[whipSelf] = Shared.GetTime()
+			end
+		end)
+
+		-- local originalWhipSlapTarget
+		-- originalWhipSlapTarget = TGNS.ReplaceClassMethod("Whip", "SlapTarget", function(whipSelf, target)
+		-- 	originalWhipSlapTarget(whipSelf, target)
+		-- 	optimizeWhip(whipSelf)
+		-- end)
+
+		-- local originalWhipBombardTarget
+		-- originalWhipBombardTarget = TGNS.ReplaceClassMethod("Whip", "BombardTarget", function(whipSelf, target)
+		-- 	originalWhipBombardTarget(whipSelf, target)
+		-- 	optimizeWhip(whipSelf)
+		-- end)
+
+		-- local originalWhipRoot
+		-- originalWhipRoot = TGNS.ReplaceClassMethod("Whip", "Root", function(whipSelf)
+		-- 	originalWhipRoot(whipSelf)
+		-- 	optimizeWhip(whipSelf)
+		-- end)
+
+		-- local originalWhipEndAttack
+		-- originalWhipEndAttack = TGNS.ReplaceClassMethod("Whip", "EndAttack", function(whipSelf)
+		-- 	originalWhipEndAttack(whipSelf)
+		-- 	optimizeWhip(whipSelf)
+		-- end)
+
+		-- local originalWhipOnInitialized
+		-- originalWhipOnInitialized = TGNS.ReplaceClassMethod("Whip", "OnInitialized", function(whipSelf)
+		-- 	originalWhipOnInitialized(whipSelf)
+		-- 	optimizeWhip(whipSelf)
+		-- end)
+
 	    return true
 
 	end
@@ -1002,7 +1096,7 @@ if Server or Client then
 			-- 		end
 			-- 	end)
 			-- end
-			
+
 		end
 
 		-- local extraMarineTeamRes = {}
@@ -1036,7 +1130,6 @@ if Server or Client then
 		-- 	local result = originalPlayerAddResources(playerSelf, amount)
 		-- 	return result
 		-- end)
-
 
 		return true
 	end
