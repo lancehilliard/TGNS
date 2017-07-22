@@ -446,8 +446,8 @@ function TGNS.ExecuteServerCommand(command) PROFILE("TGNS.ExecuteServerCommand")
 end
 
 function TGNS.StructureIsOperational(structure) PROFILE("TGNS.StructureIsOperational")
-	local isBuilt = structure:GetIsBuilt()
-	local isAlive = structure:GetIsAlive()
+	local isBuilt = structure.GetIsBuilt and structure:GetIsBuilt()
+	local isAlive = structure.GetIsAlive and structure:GetIsAlive()
 	local isPowered = (not structure.GetIsPowered or structure:GetIsPowered())
 	local isNotRecycling = (not structure.GetIsRecycling or not structure:GetIsRecycling())
 	local result = isBuilt and isAlive and isPowered and isNotRecycling
