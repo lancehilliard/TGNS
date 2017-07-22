@@ -402,7 +402,7 @@ end
 
 function Plugin:GetDamageModification( Ent, Damage, Attacker, Inflictor, Point, Direction, ArmourUsed, HealthUsed, DamageType, PreventAlert )
 	local result
-	if not TGNS.IsGameInProgress() then
+	if not (TGNS.IsGameInProgress and TGNS.IsGameInProgress()) then
 		local victimClient = TGNS.GetClient(Ent)
 		local attackerClient = TGNS.GetClient(Attacker)
 		if (victimClient and enabled[victimClient]) or (attackerClient and enabled[attackerClient]) then
