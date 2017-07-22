@@ -73,6 +73,14 @@ function Plugin:CreateCommands()
 							md:ToClientConsole(c, string.format("%s executed sh_vrkick against %s after they didn't respond to voicecomm.", TGNS.GetClientName(client), targetClientName))
 							md:ToClientConsole(c, string.format("If this was sh_vrkick abuse, click %s on the scoreboard and choose 'Admin Feedback'.", TGNS.GetClientName(client)))
 						end)
+						local targetSteamId = TGNS.GetClientSteamId(targetClient)
+						TGNS.ScheduleAction(300, function()
+							if Shine:IsValidClient(client) then
+								if TGNS.GetPlayerMatchingSteamId(targetSteamId) == nil then
+									TGNS.Karma(client, "DeafRemoval")
+								end
+							end
+						end)
 					else
 						md:ToPlayerNotifyError(player, string.format("You have not shown %s the voicecomm reminder in the last 30 seconds.", TGNS.GetClientName(targetClient)))
 					end
