@@ -1082,6 +1082,9 @@ if Server or Client then
 	function Plugin:Initialise()
 		self.Enabled = true
 
+		Onos.kMaxSpeed = 7.5
+		Onos.kChargeSpeed = 11.5
+
 		if Client then OnClientInitialise() end
 		if Server then
 			self:CreateCommands()
