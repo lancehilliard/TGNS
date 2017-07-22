@@ -1174,7 +1174,7 @@ function Plugin:Initialise()
 		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
 		    	if teamInfoGUIItem then
 			    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
-				    teamInfoGUIItem:SetText(string.format("%s (%s: %s/%s - %s%%)", originalTeamInfoGuiItemText, resourceNodesName, ownedResourceNodesCount, totalResourceNodesCount, percentResourceNodesOwned))
+				    teamInfoGUIItem:SetText(string.format("%s (%s: %s/%s - %s%%; Supply: %s/%s)", originalTeamInfoGuiItemText, resourceNodesName, ownedResourceNodesCount, totalResourceNodesCount, percentResourceNodesOwned, GetSupplyUsedByTeam(teamNumber), GetMaxSupplyForTeam(teamNumber)))
 		    	end
 		    end
 		end
