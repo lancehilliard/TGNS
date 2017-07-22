@@ -29,8 +29,8 @@ function Plugin:Initialise()
 	local originalCanEntityDoDamageTo = CanEntityDoDamageTo
 	CanEntityDoDamageTo = function(attacker, target, cheats, devMode, friendlyFire, damageType)
 		local result = originalCanEntityDoDamageTo(attacker, target, cheats, devMode, friendlyFire, damageType)
-		if not result and not GetGameInfoEntity():GetGameStarted() and not GetGameInfoEntity():GetWarmUpActive() and allowPostGameAttacksUntil > Shared.GetTime() then
-			result = true
+		if not result then
+			result = (not GetGameInfoEntity():GetGameStarted() and not GetGameInfoEntity():GetWarmUpActive() and allowPostGameAttacksUntil > Shared.GetTime()) or TGNS.IsPlayerReadyRoom(attacker)
 		end
 		return result
 	end
