@@ -5,6 +5,7 @@ local kTeamWhichWillWinIfWinLoseCountdownExpires = nil
 local kCountdownTimeRemaining = 0
 local ENTITY_CLASSNAMES_TO_DESTROY_ON_LOSING_TEAM = { "Sentry", "Mine", "Armory", "Whip", "Clog", "Hydra", "Crag", "ARC", "Observatory" }
 local VOTE_HOWTO_TEXT = "Press 'M > Surrender' to vote."
+local GIVE_TEXT = "Give 100% until the game is over!"
 local md
 local lastVoteStartTimes = {}
 local numberOfSecondsToDeductFromCountdownTimeRemaining
@@ -437,7 +438,8 @@ local function OnCommandWinOrLose(client)
 								md:ToPlayerNotifyError(player, chatMessage)
 							else
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
-								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+								-- showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
+								md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
 							end
 							UpdateWinOrLoseVotes(teamNumber)
 						else
@@ -445,7 +447,8 @@ local function OnCommandWinOrLose(client)
 								kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
 								lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
-								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s Give 100%s until the game is over!", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, "%"))
+								-- showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, GIVE_TEXT))
+								md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
 							else
 								md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
 								md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
