@@ -262,7 +262,7 @@ function Plugin:Initialise()
 			TGNS.RegisterEventHook("GameStarted", function()
 				TGNS.ScheduleAction(5, function()
 					gameCount = gameCount + 1
-					if gameCount >= GAME_COUNT_THRESHOLD then
+					if gameCount >= GAME_COUNT_THRESHOLD and not self:IsSaturdayNightFever() then
 						local numberOfNonAfkHumans = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) and not TGNS.IsPlayerAFK(TGNS.GetPlayer(c)) end)
 						if numberOfNonAfkHumans >= PLAYER_COUNT_THRESHOLD then
 							md:ToAllNotifyInfo(string.format("Server has seeded for NS (%s+ non-AFK players w/ %s+ rounds of Infested played).", PLAYER_COUNT_THRESHOLD, GAME_COUNT_THRESHOLD))
