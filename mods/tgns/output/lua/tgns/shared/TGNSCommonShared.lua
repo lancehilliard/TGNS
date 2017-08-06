@@ -361,7 +361,7 @@ function TGNS.PrintTable(t, tableDescription, printAction) PROFILE("TGNS.PrintTa
 	printAction = printAction and printAction or function(x) Shared.Message(x) end
 	local keys = {}
 	for key,value in pairs(t) do table.insert(keys, key) end
-	TGNS.SortAscending(keys, function(k) return tostring(k) end)
+	TGNS.SortAscending(keys, function(k) return Shine.IsType(k, "number") and k or tostring(k) end)
 	TGNS.DoFor(keys, function(k)
 		printAction(string.format("%s.%s: %s", tableDescription, k, t[k]))
 	end)
