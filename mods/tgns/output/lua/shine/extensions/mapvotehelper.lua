@@ -3,23 +3,22 @@ local mapNominations = {}
 local mapSetSelected = false
 local gamesPlayedOnCurrentMap = 0
 local earnedVoteKarma = {}
--- local voteMoveModifier = function() end
--- local voteMovementAdvisoryLastShownAt = {}
+local mapVoteSummaryChannelIds = {}
 
 local function show(mapVoteSummaries, totalVotes)
-	-- local titleSumText = string.format("%s/%s", totalVotes, #TGNS.GetClientList())
-	-- TGNS.ShowPanel(mapVoteSummaries, TGNS.GetClientList(), 66, 67, 68, 0.30, "Votes", titleSumText, 30, "(None)")
-
+	mapVoteSummaryChannelIds = {}
 	local channelId = 67
 	local y = 0.30
 	local spaces = string.rep("   ", 16)
 	local playerCount = #TGNS.GetPlayerList()
 	Shine.ScreenText.Add(channelId, {X = 1.0, Y = y, Text = string.format("%s%s", string.format("Voters: %s/%s (%s%% got Karma)", totalVotes, playerCount, math.floor(totalVotes/playerCount*100)), spaces), Duration = 60, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMax, Size = 3, FadeIn = 0, IgnoreFormat = true})
+	table.insert(mapVoteSummaryChannelIds, channelId)
 	channelId = channelId + 1
 	y = y + 0.05
 	TGNS.DoFor(mapVoteSummaries, function(s)
 		spaces = string.rep("   ", 16 - s.c)
 		Shine.ScreenText.Add(channelId, {X = 1.0, Y = y, Text = string.format("%s%s", string.format("%s (%s/%s)", s.d, s.c, totalVotes), spaces), Duration = 60, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentMax, Size = 3, FadeIn = 0, IgnoreFormat = true})
+		table.insert(mapVoteSummaryChannelIds, channelId)
 		channelId = channelId + 1
 		y = y + 0.05
 	end)
@@ -139,7 +138,7 @@ function Plugin:Initialise()
 
 			local originalStartVote = Shine.Plugins.mapvote.StartVote
 			Shine.Plugins.mapvote.StartVote = function( plugin, NextMap, Force )
-				local addArclightToNominations = function()
+				local prepareMapVoteForNs2 = function()
 					if Server.GetNumPlayersTotal() <= 10 and Shine.Plugins.arclight and Shine.Plugins.arclight.GetArclightMapname and not TGNS.Has(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname()) then
 						table.insert(Shine.Plugins.mapvote.Vote.Nominated, Shine.Plugins.arclight:GetArclightMapname())
 					end
@@ -150,20 +149,40 @@ function Plugin:Initialise()
 							end
 						end)
 					end
-
-
-					-- voteMoveModifier = function(player, input)
-					-- 	local client = TGNS.GetClient(player)
-					-- 	if not Shine.Plugins.mapvote.Vote.Voted[client] then
-					-- 		input.move:Scale(0)
-					-- 		if Shared.GetTime() - (voteMovementAdvisoryLastShownAt[client] or 0) > .5 then
-					-- 			Shine.ScreenText.Add(41, {X = 0.5, Y = 0.35, Text = "Vote for a map to move.\n( instructions are at the top right of your screen )", Duration = 1, R = 0, G = 255, B = 0, Alignment = TGNS.ShineTextAlignmentCenter, Size = 3, FadeIn = 0, IgnoreFormat = true}, c)
-					-- 			voteMovementAdvisoryLastShownAt[client] = Shared.GetTime()
-					-- 		end
-					-- 	end
-					-- end
 				end
-				addArclightToNominations()
+				local prepareMapVoteForSaturdayNightFever = function()
+					local originalBuildMapChoices = Shine.Plugins.mapvote.BuildMapChoices
+					Shine.Plugins.mapvote.BuildMapChoices = function(mapVotePluginSelf)
+						local forcedMaps = {}
+						TGNS.DoForPairs(Shine.Plugins.mapvote.Config.ForcedMaps, function(mapName, isForced)
+							if isForced then
+								table.insert(forcedMaps, mapName)
+							end
+						end)
+						local result = TGNS.Where(forcedMaps, function(m) return TGNS.StartsWith(m, "infest_") end)
+						local mapCountStillNeeded = Shine.Plugins.mapvote.Config.MaxOptions - #result
+						if mapCountStillNeeded > 0 then
+							local mapNames = TGNS.Select(Shine.Plugins.mapvote.MapChoices, function(map) return map.map or map end)
+							local validMapNames = TGNS.Where(mapNames, function(m) return TGNS.StartsWith(m, "infest_") and not TGNS.Has(result, m) and TGNS.Replace(TGNS.GetCurrentMapName(), "ns2_", "infest_") ~= m end)
+							local randomMapNames = TGNS.Take(TGNS.GetRandomizedElements(validMapNames), mapCountStillNeeded)
+							TGNS.DoFor(randomMapNames, function(mapName)
+								table.insert(result, mapName)
+							end)
+						end
+						if #result == 0 then
+							table.insertunique(result, "infest_tram")
+							table.insertunique(result, "infest_summit")
+							table.insertunique(result, "infest_veil")
+						end
+						return result
+					end
+				end
+				if Shine.Plugins.infestedhelper:IsSaturdayNightFever() then
+					prepareMapVoteForSaturdayNightFever()
+					TGNS.ScheduleAction(1, function() md:ToAllNotifyInfo("Saturday Night Fever! Choose an Infested map!") end)
+				else
+					prepareMapVoteForNs2()
+				end
 
 				local convertNominationsToForcedMaps = function()
 					local forcedMaps = {}
@@ -176,7 +195,6 @@ function Plugin:Initialise()
 						if not TGNS.Has(forcedMaps, mapName) then
 							Shine.Plugins.mapvote.Config.ForcedMaps[mapName] = true
 							Shine.Plugins.mapvote.ForcedMapCount = (Shine.Plugins.mapvote.ForcedMapCount or 0) + 1
-							-- table.insert(forcedMaps, mapName)
 						end
 					end)
 					Shine.Plugins.mapvote.Vote.Nominated = {}
@@ -241,10 +259,14 @@ function Plugin:Initialise()
 				md:ToPlayerNotifyError(player, string.format("You may nominate only one map (SMs may nominate two). You have already nominated %s.", mapNominations[steamId][1]))
 			elseif #mapNominations[steamId] > 1 and TGNS.IsClientSM(client) then
 				md:ToPlayerNotifyError(player, string.format("SMs may nominate only two maps each. You have already nominated %s and %s.", mapNominations[steamId][1], mapNominations[steamId][2]))
-			elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min > 0 and TGNS.Has(TGNS.Skip(Shine.Plugins.mapvote.LastMapData, math.max(0, #Shine.Plugins.mapvote.LastMapData-Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min)), mapName) then
-				md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
+			-- elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min > 0 and TGNS.Has(TGNS.Take(TGNS.TableReverse(Shine.Plugins.mapvote.LastMapData), Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min), mapName) then
+			-- 	md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
 			elseif #infestedNominations >= 2 and TGNS.StartsWith(mapName, "infest_") then
 				md:ToPlayerNotifyError(player, string.format("%s and %s are already nominated. Only two Infested maps may be nominated.", infestedNominations[1], infestedNominations[2]))
+			elseif TGNS.StartsWith(TGNS.GetCurrentMapName(), "infest_") and TGNS.StartsWith(mapName, "infest_") and not Shine.Plugins.infestedhelper:IsSaturdayNightFever() then
+				md:ToPlayerNotifyError(player, "Infested nominations are not allowed on Infested maps.")
+			elseif Shine.Plugins.infestedhelper:IsSaturdayNightFever() and not TGNS.StartsWith(mapName, "infest_") then
+				md:ToPlayerNotifyError(player, "Saturday Night Fever! Nominate an Infested map!")
 			else
 				local mapVoteNominationsCollectionContainedMapNameBeforeExecutingOriginalFunc = table.contains(Shine.Plugins.mapvote.Vote.Nominated, mapName)
 				originalNominateFunc(client, mapName)
@@ -271,15 +293,15 @@ function Plugin:Initialise()
 		local originalExtendMap = Shine.Plugins.mapvote.ExtendMap
 		Shine.Plugins.mapvote.ExtendMap = function(mapVoteSelf, time, nextMap)
 			originalExtendMap(mapVoteSelf, time, nextMap)
-			Shine.ScreenText.End(66)
-			Shine.ScreenText.End(67)
-			Shine.ScreenText.End(68)
+			TGNS.DoFor(mapVoteSummaryChannelIds, function(i)
+				Shine.ScreenText.End(i)
+			end)
 		end
 
 		local originalIsValidMapChoice = Shine.Plugins.mapvote.IsValidMapChoice
 		Shine.Plugins.mapvote.IsValidMapChoice = function(mapVoteSelf, map, playerCount)
 			local result = originalIsValidMapChoice(mapVoteSelf, map, playerCount)
-			if result and (Shine.IsType(map, "table") or Shine.IsType(map, "string")) then
+			if result and (Shine.IsType(map, "table") or Shine.IsType(map, "string")) and not Shine.Plugins.infestedhelper:IsSaturdayNightFever() then
 				if TGNS.GetHumanPlayerCount() < 22 then
 					local mapName = map.map or map
 					if Shine.IsType(mapName, "string") then
@@ -293,6 +315,56 @@ function Plugin:Initialise()
 			return result
 		end
 	end)
+
+	local blacklistedLastMaps
+	local originalGetBlacklistedLastMaps = Shine.Plugins.mapvote.GetBlacklistedLastMaps
+	Shine.Plugins.mapvote.GetBlacklistedLastMaps = function(mapVotePluginSelf, numAvailable, numSelected)
+		if blacklistedLastMaps == nil then
+			local lastMaps = mapVotePluginSelf:GetLastMaps()
+			TGNS.TableReverse(lastMaps)
+			blacklistedLastMaps = TGNS.Take(lastMaps, mapVotePluginSelf.Config.ExcludeLastMaps.Min)
+		end
+		return blacklistedLastMaps
+	end
+
+	-- local lastMapsFileName = "config://shine/temp/lastmaps.json"
+	-- local originalLoadJSONFile = Shine.LoadJSONFile
+	-- Shine.LoadJSONFile = function(path)
+	-- 	local result, err = originalLoadJSONFile(path)
+	-- 	if path == lastMapsFileName then
+	-- 		TGNS.PrintTable(result, "loadstock loadstock loadstock loadstock loadstock loadstock loadstock loadstock loadstock loadstock loadstock")
+	-- 		if #result > 0 then
+	-- 			if Shine.IsType(result[1], "table") then
+	-- 				TGNS.SortAscending(result, function(x) return x.ChronologicalOrder end)
+	-- 				result = TGNS.Select(result, function(x) return x.MapName end)
+	-- 			end
+	-- 		end
+	-- 		TGNS.PrintTable(result, "loadmodded loadmodded loadmodded loadmodded loadmodded loadmodded loadmodded loadmodded loadmodded loadmodded")
+	-- 	end
+	-- 	return result, err
+	-- end
+	-- Shine.Plugins.mapvote:LoadLastMaps()
+
+	-- local originalSaveJSONFile = Shine.SaveJSONFile
+	-- Shine.SaveJSONFile = function(table, path, settings)
+	-- 	if path == lastMapsFileName then
+	-- 		TGNS.PrintTable(table, "savestock savestock savestock savestock savestock savestock savestock savestock savestock savestock savestock")
+	-- 		if #table > 0 then
+	-- 			if Shine.IsType(table[1], "string") then
+	-- 				local chronologicalOrder = 1
+	-- 				table = TGNS.Select(table, function(x)
+	-- 					local result = {}
+	-- 					result.ChronologicalOrder = chronologicalOrder
+	-- 					result.MapName = x
+	-- 					chronologicalOrder = chronologicalOrder + 1
+	-- 					return result
+	-- 				end)
+	-- 			end
+	-- 		end
+	-- 		TGNS.PrintTable(table, "savemodded savemodded savemodded savemodded savemodded savemodded savemodded savemodded savemodded savemodded")
+	-- 	end
+	-- 	return originalSaveJSONFile(table, path, settings)
+	-- end
 
     return true
 end
