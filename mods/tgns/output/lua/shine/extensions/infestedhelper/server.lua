@@ -11,6 +11,7 @@ local GAME_COUNT_THRESHOLD = 4
 local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
 local infectedCounts = {}
+local cystKills
 
 function Plugin:ClientConfirmConnect(client)
 end
@@ -30,6 +31,17 @@ end
 
 local function clientIsInfested(client)
 	return TGNS.ClientIsMarine(client) and TGNS.IsClientAlive(client) and clientIsInfected(client)
+end
+
+function Plugin:OnEntityKilled(gamerules, victim, attacker, inflictor, point, dir)
+	if cystKills then
+		if attacker and victim then
+			local attackerClient = TGNS.GetClient(attacker)
+			if attackerClient and victim:isa("Cyst") then
+				cystKills[attackerClient] = (cystKills[attackerClient] or 0) + 1
+			end
+		end
+	end
 end
 
 function Plugin:Initialise()
@@ -221,6 +233,19 @@ function Plugin:Initialise()
 					if mostInfectedCount > 0 then
 						message = string.format("%s. Most infections last round: %s (%s)", message, mostInfectedPlayerName, mostInfectedCount)
 					end
+
+					local mostCystsKilledPlayerName
+					local mostCystsKilledCount = 0
+					TGNS.DoForPairs(cystKills, function(client, cystKillCount)
+						if Shine:IsValidClient(client) and cystKillCount > mostCystsKilledCount then
+							mostCystsKilledPlayerName = TGNS.GetClientName(client)
+							mostCystsKilledCount = cystKillCount
+						end
+					end)
+					if mostCystsKilledCount > 0 then
+						message = string.format("%s. Most cysts killed last round: %s (%s)", message, mostCystsKilledPlayerName, mostCystsKilledCount)
+					end
+
 					if TGNS.HasNonEmptyValue(message) then
 						md:ToAllNotifyInfo(message)
 					end
@@ -260,6 +285,7 @@ function Plugin:Initialise()
 			end)
 
 			TGNS.RegisterEventHook("GameStarted", function()
+				cystKills = {}
 				TGNS.ScheduleAction(5, function()
 					gameCount = gameCount + 1
 					if gameCount >= GAME_COUNT_THRESHOLD and not self:IsSaturdayNightFever() then
