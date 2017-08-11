@@ -331,7 +331,8 @@ function Plugin:EndGame(gamerules, winningTeam)
 				TGNS.DoFor(TGNS.GetClientList(), function(c)
 					if c and not TGNS.IsClientStranger(c) then
 						local p = TGNS.GetPlayer(c)
-						local message = math.random() < 0.5 and "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!" or string.format("Do you like to watch? %s", math.random() < .5 and "Opt into FullSpec to join the server when it's full! http://rr.tacticalgamer.com/FullSpec/Manage" or "Use TGNS Replay to re-watch games you've played here! http://rr.tacticalgamer.com/Replay")
+						-- local message = math.random() < 0.5 and "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!" or string.format("Do you like to watch? %s", math.random() < .5 and "Opt into FullSpec to join the server when it's full! http://rr.tacticalgamer.com/FullSpec/Manage" or "Use TGNS Replay to re-watch games you've played here! http://rr.tacticalgamer.com/Replay")
+						local message = math.random() < 0.5 and "Someone impress you lately? Click a chevron (^) on the scoreboard to show your Approval!" or "Do you like to watch? Use TGNS Replay to re-watch games you've played here! http://rr.tacticalgamer.com/Replay"
 						md:ToPlayerNotifyInfo(p, message)
 					end
 				end)
