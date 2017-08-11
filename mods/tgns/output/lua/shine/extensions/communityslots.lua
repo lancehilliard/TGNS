@@ -8,8 +8,8 @@ local rejectBumpCounts = {}
 local commandStructureLastOccupancies = {}
 local lastSetReservedSlotAmount
 local inReadyRoomSinceTimes = {}
-local fullSpecDataRepository
-local fullSpecSteamIds
+--local fullSpecDataRepository
+--local fullSpecSteamIds
 local canNotifyAboutOtherServerSlots = true
 local blacklistedClients = {}
 local lastAnnouncedRemainingPublicSlotsCount
@@ -465,13 +465,13 @@ function Plugin:ClientConfirmConnect(client)
         end)
     end
     local steamId = TGNS.GetClientSteamId(client)
-    if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
-        TGNS.ScheduleAction(1, function()
-            if Shine:IsValidClient(client) then
-                tgnsMd:ToClientConsole(client, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
-            end
-        end)
-    end
+    -- if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
+    --     TGNS.ScheduleAction(1, function()
+    --         if Shine:IsValidClient(client) then
+    --             tgnsMd:ToClientConsole(client, "Your sh_fullspec is enabled. Help: M > Info > sh_fullspec")
+    --         end
+    --     end)
+    -- end
 end
 
 TGNS.RegisterEventHook("OnSlotTaken", function(client)
@@ -488,18 +488,18 @@ function Plugin:EndGame(gamerules, winningTeam)
     end)
 end
 
-local function refreshFullSpecData()
-    if fullSpecDataRepository then
-        fullSpecDataRepository.Load(nil, function(loadResponse)
-            if loadResponse.success then
-                local fullSpecData = loadResponse.value
-                fullSpecSteamIds = fullSpecData.enrolled
-            else
-                TGNS.DebugPrint("communityslots ERROR: unable to load fullSpecSteamIds", true)
-            end
-        end)
-    end
-end
+-- local function refreshFullSpecData()
+--     if fullSpecDataRepository then
+--         fullSpecDataRepository.Load(nil, function(loadResponse)
+--             if loadResponse.success then
+--                 local fullSpecData = loadResponse.value
+--                 fullSpecSteamIds = fullSpecData.enrolled
+--             else
+--                 TGNS.DebugPrint("communityslots ERROR: unable to load fullSpecSteamIds", true)
+--             end
+--         end)
+--     end
+-- end
 
 function Plugin:CreateCommands()
     local logCommand = self:BindCommand( "sh_cslog", "cslog", function(client)
@@ -690,7 +690,8 @@ TGNS.RegisterEventHook("CheckConnectionAllowed", function(joiningSteamId)
         local nonSpectatorPlayers = TGNS.Where(TGNS.GetPlayerList(), function(p) return not TGNS.IsPlayerSpectator(p) and not TGNS.GetIsClientVirtual(TGNS.GetClient(p)) end)
         if ServerIsFull(nonSpectatorPlayers) then
             local bumpableClient = FindVictimClient(joiningSteamId, playingPlayers)
-            local joinerWillingToSpectate = TGNS.Has(fullSpecSteamIds, joiningSteamId) or TGNS.HasSteamIdSignedPrimer(joiningSteamId)
+            -- local joinerWillingToSpectate = TGNS.Has(fullSpecSteamIds, joiningSteamId) or TGNS.HasSteamIdSignedPrimer(joiningSteamId)
+            local joinerWillingToSpectate = TGNS.HasSteamIdSignedPrimer(joiningSteamId)
             result = bumpableClient ~= nil or (joinerWillingToSpectate and #TGNS.GetSpectatorClients(TGNS.GetPlayerList()) < Shine.Plugins.communityslots:GetMaximumEffectiveSpectatorCount())
         end
     end
@@ -736,11 +737,11 @@ function Plugin:Initialise()
     self:CreateCommands()
     TGNS.ScheduleActionInterval(10, sweep)
     TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
-    fullSpecDataRepository = TGNSDataRepository.Create("fullspec", function(data)
-        data.enrolled = data.enrolled or {}
-        return data
-    end)
-    TGNS.ScheduleAction(2, refreshFullSpecData)
+    -- fullSpecDataRepository = TGNSDataRepository.Create("fullspec", function(data)
+    --     data.enrolled = data.enrolled or {}
+    --     return data
+    -- end)
+    -- TGNS.ScheduleAction(2, refreshFullSpecData)
     -- TGNS.ScheduleActionInterval(15, function()
     --     if canNotifyAboutOtherServerSlots then
     --         local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
