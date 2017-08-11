@@ -1398,8 +1398,18 @@ end
 
 function TGNS.DisconnectClient(client, reason) PROFILE("TGNS.DisconnectClient")
 	pcall(function()
-		client.DisconnectReason = reason
-		Server.DisconnectClient(client, reason)
+		if TGNS.GetIsClientVirtual(client) then
+			local player = TGNS.GetPlayer(client)
+			if player then
+				local bot = TGNS.FirstOrNil(gServerBots, function(x) return x:GetPlayer() == player end)
+				if bot then
+					bot:Disconnect()
+				end
+			end
+		else
+			client.DisconnectReason = reason
+			Server.DisconnectClient(client, reason)
+		end
 	end)
 end
 
