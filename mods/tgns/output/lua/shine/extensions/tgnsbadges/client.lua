@@ -59,6 +59,9 @@ function Plugin:Initialise()
 	local originalBadges_GetBadgeTextures = Badges_GetBadgeTextures
 	Badges_GetBadgeTextures = function(clientId, useCase)
 		local clientTextures, clientBadgeNames = originalBadges_GetBadgeTextures(clientId, useCase)
+		TGNS.RemoveAllMatching(clientTextures, "ui/badges/commander.dds")
+		TGNS.RemoveAllMatching(clientTextures, "ui/badges/commander_20.dds")
+		TGNS.RemoveAllMatching(clientBadgeNames, "BADGE_COMMANDER")
 		if useCase == "scoreboard" then
 			local badgeName = badgeNames[clientId]
 			if badgeName then
@@ -73,7 +76,7 @@ function Plugin:Initialise()
 	GetBadgeFormalName = function(name)
 		local result = stockBadgeDescriptions[TGNS.ToLower(name)] or stockBadgeDescriptions[TGNS.Replace(TGNS.ToLower(string.format("badge_%s", name)), "badge_", "")]
 		if result then
-			result = string.format("%s\n\nhttps://wiki.naturalselection2.com/view/Badges", result)
+			result = string.format("%s\n\nhttps://wiki.naturalselection2.com/view/Badges\n\n%s", result, self.COMMBADGEHIDEADVISORY)
 		else
 			result = badgeDescriptions[tostring(name)] or originalGetBadgeFormalName(name)
 		end

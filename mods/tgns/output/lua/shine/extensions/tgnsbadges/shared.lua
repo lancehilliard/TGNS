@@ -2,6 +2,7 @@ local Plugin = {}
 
 Plugin.CLIENTBADGE = "tgnsbadges_CLIENTBADGE"
 Plugin.BADGEDESCRIPTION = "tgnsbadges_BADGEDESCRIPTION"
+Plugin.COMMBADGEHIDEADVISORY = "TGNS hides Commander badges, as\nthey generally fail as role predictor."
 
 TGNS.RegisterNetworkMessage(Plugin.CLIENTBADGE, {i="integer", n="string(10)"})
 TGNS.RegisterNetworkMessage(Plugin.BADGEDESCRIPTION, {n="string(10)", d="string(250)"})
