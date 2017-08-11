@@ -742,14 +742,6 @@ function TGNS.AddPlayerResources(player, value) PROFILE("TGNS.AddPlayerResources
 	player:SetResources(TGNS.GetPlayerResources(player) + value)
 end
 
-function TGNS.RemoveAllMatching(elements, element) PROFILE("TGNS.RemoveAllMatching")
-	TGNS.DoForReverse(elements, function(e, index)
-		if element == e then
-			table.remove(elements, index)
-		end
-	end)
-end
-
 function TGNS.DestroyEntity(entity) PROFILE("TGNS.DestroyEntity")
 	DestroyEntity(entity)
 end

@@ -152,6 +152,14 @@ local function DoFor(elements, elementAction, start, stop, step)
 	end
 end
 
+function TGNS.RemoveAllMatching(elements, element) PROFILE("TGNS.RemoveAllMatching")
+	TGNS.DoForReverse(elements, function(e, index)
+		if element == e then
+			table.remove(elements, index)
+		end
+	end)
+end
+
 function TGNS.DoFor(elements, elementAction)
 	if elements ~= nil then
 		DoFor(elements, elementAction, 1, #elements, 1)
