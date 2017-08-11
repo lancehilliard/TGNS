@@ -512,6 +512,16 @@ function Plugin:Initialise()
 						TGNS.Karma(sourceSteamId, "VouchingVoicecomm")
 						if TGNS.IsClientStranger(targetClient) and Balance.GetTotalGamesPlayed(targetClient) <= 20 then
 							TGNS.Karma(targetSteamId, "ConfirmingYouCanHearVoicecomm")
+							TGNS.ScheduleAction(5, function()
+								if Shine:IsValidClient(targetClient) then
+									md:ToPlayerNotifyInfo(TGNS.GetPlayer(targetClient), "Welcome! We verified your hearing since you haven't read our Required Reading (are you new here?).")
+								end
+							end)
+							TGNS.ScheduleAction(8, function()
+								if Shine:IsValidClient(targetClient) then
+									md:ToPlayerNotifyInfo(TGNS.GetPlayer(targetClient), "Press M > Info (later) to read our Required Reading. Get a reserved slot, too!")
+								end
+							end)
 						end
 						TGNS.ExecuteEventHooks("VrConfirmed", targetClient)
 						TGNS.DoFor(TGNS.GetPlayerList(), function(p)
