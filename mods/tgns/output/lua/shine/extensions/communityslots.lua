@@ -162,25 +162,25 @@ local function AnnounceClientBumpToStrangers(playerName)
     TGNS.DoFor(strangerPlayers, function(p) tgnsMd:ToPlayerNotifyInfo(p, Shine.Plugins.communityslots:GetBumpMessage(playerName)) end)
 end
 
-// local function AnnounceOtherServerOptionsToBumpedClient(client)
-//     local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
-//     if otherServerStaticInfo then
-//         TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(getResponse)
-//             if getResponse.success then
-//                 local otherServerDynamicInfo = getResponse.value
-//                 if otherServerDynamicInfo.HasRecentData then
-//                     local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
-//                     if otherServerRemainingPublicSlots >= 4 then
-//                         local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
-//                         tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
-//                         tgnsMd:ToClientConsole(client, message)
-//                         tgnsMd:ToAdminConsole(message)
-//                     end
-//                 end
-//             end
-//         end)
-//     end
-// end
+-- local function AnnounceOtherServerOptionsToBumpedClient(client)
+--     local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+--     if otherServerStaticInfo then
+--         TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(getResponse)
+--             if getResponse.success then
+--                 local otherServerDynamicInfo = getResponse.value
+--                 if otherServerDynamicInfo.HasRecentData then
+--                     local otherServerRemainingPublicSlots = otherServerDynamicInfo.GetPublicSlotsRemaining()
+--                     if otherServerRemainingPublicSlots >= 4 then
+--                         local message = string.format("~%s slots open on %s! Console: connect %s", otherServerRemainingPublicSlots, otherServerStaticInfo.simpleName, otherServerStaticInfo.address)
+--                         tgnsMd:ToPlayerNotifyInfo(TGNS.GetPlayer(client), message)
+--                         tgnsMd:ToClientConsole(client, message)
+--                         tgnsMd:ToAdminConsole(message)
+--                     end
+--                 end
+--             end
+--         end)
+--     end
+-- end
 
 local function onPreVictimKick(targetClient, targetPlayer, joiningClient, playerList)
     Log(string.format("%s: Victim: %s Joining: %s", GetKickDetails(targetClient, joiningClient, playerList).shortReport, TGNS.GetClientNameSteamIdCombo(targetClient), TGNS.GetClientNameSteamIdCombo(joiningClient)))
@@ -526,50 +526,50 @@ function Plugin:CreateCommands()
 
     local showTimesCommand = self:BindCommand( "sh_showtimes", "showtimes", TGNSConnectedTimesTracker.PrintConnectedDurations)
     showTimesCommand:Help("View connected time of each client.")
-    local fullSpecCommand = self:BindCommand( "sh_fullspec", "fs", function(client)
-        fullSpecDataRepository.Load(nil, function(loadResponse)
-            if loadResponse.success then
-                fullSpecData = loadResponse.value
-                local steamId = TGNS.GetClientSteamId(client)
-                if TGNS.Has(fullSpecData.enrolled, steamId) then
-                    TGNS.RemoveAllMatching(fullSpecData.enrolled, steamId)
-                else
-                    table.insert(fullSpecData.enrolled, steamId)
-                end
-                fullSpecSteamIds = fullSpecData.enrolled
-                fullSpecDataRepository.Save(fullSpecData, nil, function(saveResponse)
-                    if saveResponse.success then
-                        tgnsMd:ToClientConsole(client, string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
-                        tgnsMd:ToClientConsole(client, "Execute the command again to toggle. Help: M > Info > sh_fullspec")
-                    else
-                        tgnsMd:ToPlayerNotifyError("Unable to save sh_fullspec data.")
-                    end
-                end)
-            else
-                tgnsMd:ToPlayerNotifyError("Unable to access sh_fullspec data.")
-            end
-        end)
-    end, true)
-    fullSpecCommand:Help("Toggle your sh_fullspec. Help: http://rr.tacticalgamer.com/FullSpec/Manage")
+    -- local fullSpecCommand = self:BindCommand( "sh_fullspec", "fs", function(client)
+    --     fullSpecDataRepository.Load(nil, function(loadResponse)
+    --         if loadResponse.success then
+    --             fullSpecData = loadResponse.value
+    --             local steamId = TGNS.GetClientSteamId(client)
+    --             if TGNS.Has(fullSpecData.enrolled, steamId) then
+    --                 TGNS.RemoveAllMatching(fullSpecData.enrolled, steamId)
+    --             else
+    --                 table.insert(fullSpecData.enrolled, steamId)
+    --             end
+    --             fullSpecSteamIds = fullSpecData.enrolled
+    --             fullSpecDataRepository.Save(fullSpecData, nil, function(saveResponse)
+    --                 if saveResponse.success then
+    --                     tgnsMd:ToClientConsole(client, string.format("Your sh_fullspec is %s.", TGNS.Has(fullSpecSteamIds, steamId) and "Enabled" or "Disabled"))
+    --                     tgnsMd:ToClientConsole(client, "Execute the command again to toggle. Help: M > Info > sh_fullspec")
+    --                 else
+    --                     tgnsMd:ToPlayerNotifyError("Unable to save sh_fullspec data.")
+    --                 end
+    --             end)
+    --         else
+    --             tgnsMd:ToPlayerNotifyError("Unable to access sh_fullspec data.")
+    --         end
+    --     end)
+    -- end, true)
+    -- fullSpecCommand:Help("Toggle your sh_fullspec. Help: http://rr.tacticalgamer.com/FullSpec/Manage")
 
-    local fullSpecRefreshCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
-        refreshFullSpecData()
-    end)
-    fullSpecRefreshCommand:Help("Used by the TGNS Portal to sync fullspec opt-in changes.")
+    -- local fullSpecRefreshCommand = self:BindCommand( "sh_fullspec_datarefresh", nil, function(client)
+    --     refreshFullSpecData()
+    -- end)
+    -- fullSpecRefreshCommand:Help("Used by the TGNS Portal to sync fullspec opt-in changes.")
 end
 
-//local function PrintPlayerSlotsStatuses(client)
-//    local playerList = TGNS.GetPlayerList()
-//    local smClients = TGNS.GetSmClients(playerList)
-//    local primerOnlyClients = TGNS.GetPrimerOnlyClients(playerList)
-//    local strangerClients = TGNS.GetStrangersClients(playerList)
-//    TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimerWithGames(c) and "(signed TGNS Primer)" or ""), MESSAGE_PREFIX) end)
-//    TGNS.DoFor(primerOnlyClients, function(c) TGNS.ConsolePrint(client, string.format("Primer Only: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
-//    TGNS.DoFor(strangerClients, function(c) TGNS.ConsolePrint(client, string.format("Say Hello To: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
-//    TGNS.ConsolePrint(client, string.format("S: %s | P: %s | ?: %s", #smClients, #primerOnlyClients, #strangerClients), MESSAGE_PREFIX)
-//    PrintBumpCountsReport(client)
-//end
-//TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
+--local function PrintPlayerSlotsStatuses(client)
+--    local playerList = TGNS.GetPlayerList()
+--    local smClients = TGNS.GetSmClients(playerList)
+--    local primerOnlyClients = TGNS.GetPrimerOnlyClients(playerList)
+--    local strangerClients = TGNS.GetStrangersClients(playerList)
+--    TGNS.DoFor(smClients, function(c) TGNS.ConsolePrint(client, string.format("Supporting Member: %s %s", TGNS.GetClientName(c), TGNS.HasClientSignedPrimerWithGames(c) and "(signed TGNS Primer)" or ""), MESSAGE_PREFIX) end)
+--    TGNS.DoFor(primerOnlyClients, function(c) TGNS.ConsolePrint(client, string.format("Primer Only: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
+--    TGNS.DoFor(strangerClients, function(c) TGNS.ConsolePrint(client, string.format("Say Hello To: %s", TGNS.GetClientName(c)), MESSAGE_PREFIX) end)
+--    TGNS.ConsolePrint(client, string.format("S: %s | P: %s | ?: %s", #smClients, #primerOnlyClients, #strangerClients), MESSAGE_PREFIX)
+--    PrintBumpCountsReport(client)
+--end
+--TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
 function Plugin:GetMaximumEffectiveSpectatorCount()
     local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
@@ -741,28 +741,28 @@ function Plugin:Initialise()
         return data
     end)
     TGNS.ScheduleAction(2, refreshFullSpecData)
-    // TGNS.ScheduleActionInterval(15, function()
-    //     if canNotifyAboutOtherServerSlots then
-    //         local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
-    //         if humansCount > 0 and humansCount < 10 then
-    //             local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
-    //             if otherServerStaticInfo then
-    //                 TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(otherServerDynamicInfo)
-    //                     if otherServerDynamicInfo.HasRecentData then
-    //                         local otherServerPlayingPlayersCount = otherServerDynamicInfo.GetPlayingPlayersCount()
-    //                         local otherServerPublicSlotsRemaining = otherServerDynamicInfo.GetPublicSlotsRemaining()
-    //                         if otherServerPlayingPlayersCount > humansCount and otherServerPublicSlotsRemaining >= humansCount then
-    //                             tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
-    //                             tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
-    //                             canNotifyAboutOtherServerSlots = false
-    //                             TGNS.ScheduleAction(180, function() canNotifyAboutOtherServerSlots = true end)
-    //                         end
-    //                     end
-    //                 end)
-    //             end
-    //         end
-    //     end
-    // end)
+    -- TGNS.ScheduleActionInterval(15, function()
+    --     if canNotifyAboutOtherServerSlots then
+    --         local humansCount = #TGNS.Where(TGNS.GetClientList(), function(c) return not TGNS.GetIsClientVirtual(c) end)
+    --         if humansCount > 0 and humansCount < 10 then
+    --             local otherServerStaticInfo = otherServerStaticInfo[TGNS.GetSimpleServerName()]
+    --             if otherServerStaticInfo then
+    --                 TGNSServerInfoGetter.GetInfoBySimpleServerName(otherServerStaticInfo.simpleName, function(otherServerDynamicInfo)
+    --                     if otherServerDynamicInfo.HasRecentData then
+    --                         local otherServerPlayingPlayersCount = otherServerDynamicInfo.GetPlayingPlayersCount()
+    --                         local otherServerPublicSlotsRemaining = otherServerDynamicInfo.GetPublicSlotsRemaining()
+    --                         if otherServerPlayingPlayersCount > humansCount and otherServerPublicSlotsRemaining >= humansCount then
+    --                             tgnsMd:ToAllNotifyInfo(string.format("%s players and %s open slots on %s (%s ago).", otherServerPlayingPlayersCount, otherServerPublicSlotsRemaining, otherServerStaticInfo.simpleName, otherServerDynamicInfo.GetTimeElapsedSinceLastUpdate()))
+    --                             tgnsMd:ToAllNotifyInfo(string.format("To join %s from your console: connect %s", otherServerStaticInfo.simpleName, otherServerStaticInfo.address))
+    --                             canNotifyAboutOtherServerSlots = false
+    --                             TGNS.ScheduleAction(180, function() canNotifyAboutOtherServerSlots = true end)
+    --                         end
+    --                     end
+    --                 end)
+    --             end
+    --         end
+    --     end
+    -- end)
 
     return true
 end
