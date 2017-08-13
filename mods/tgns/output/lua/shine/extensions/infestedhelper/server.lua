@@ -51,6 +51,7 @@ function Plugin:Initialise()
 
 	    if Shine.GetGamemode() == "Infested" then
 
+	    	IMGameMaster.kAirQualityChangePerSecondMax = IMGameMaster.kAirQualityChangePerSecondMax * 0.8
 	    	kWelderPowerRepairRate = kWelderPowerRepairRate * 2
 
 	    	if not TGNS.IsProduction() then
