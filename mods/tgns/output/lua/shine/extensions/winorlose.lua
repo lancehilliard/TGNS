@@ -289,7 +289,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 					Shine.ScreenText.Add(72, {X = 0.5, Y = textLocationHeight + 0.04, Text = chatMessage, Duration = Shine.Plugins.winorlose.Config.WarningIntervalInSeconds + 1, R = teamRgb.R, G = teamRgb.G, B = teamRgb.B, Alignment = TGNS.ShineTextAlignmentCenter, Size = 2, FadeIn = 0, IgnoreFormat = true}, c)
 					textLocationHeightAdditive = textLocationHeightAdditive > 0 and textLocationHeightAdditive - 0.05 or textLocationHeightAdditive
 					TGNS.SendNetworkMessageToPlayer(p, Shine.Plugins.scoreboard.WINORLOSE_WARNING, {})
-					showHuhBangPoints(teamNumberWhichWillWinIfWinLoseCountdownExpires)
+					--showHuhBangPoints(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 				end)
 				local spectatorsText = string.format("WinOrLose! %s have %s seconds to %s%s!", teamNameWhichMustWinOrLose, kCountdownTimeRemaining, TGNS.ToLower(howToWinDescription), bannerLocationName)
 				TGNS.DoFor(TGNS.GetSpectatorClients(TGNS.GetPlayerList()), function(c)
@@ -310,7 +310,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 			-- Shine:SendText(nil, Shine.BuildScreenMessage(74, 0.5, 0.85, "", 1, 255, 255, 255, 1, 1, 0))
 			TGNS.DestroyAllEntities("CommandStructure", teamNumberWhichWillWinIfWinLoseCountdownExpires == kMarineTeamType and kAlienTeamType or kMarineTeamType)
 			kTimeAtWhichWinOrLoseVoteSucceeded = 0
-			showHuhBangPoints(teamNumberWhichWillWinIfWinLoseCountdownExpires)
+			--showHuhBangPoints(teamNumberWhichWillWinIfWinLoseCountdownExpires)
 		end
 		TGNS.ExecuteEventHooks("WinOrLoseCountdownChanged", kCountdownTimeRemaining)
 	else
@@ -480,9 +480,9 @@ end
 
 local lastSpecInNoticeShownAt = {}
 function Plugin:PostJoinTeam()
-	if not TGNS.IsProduction() then
-		showHuhBangPoints()
-	end
+	-- if not TGNS.IsProduction() then
+	-- 	showHuhBangPoints()
+	-- end
 	TGNS.ScheduleAction(10, function()
 		if TGNS.IsGameInProgress() and kTimeAtWhichWinOrLoseVoteSucceeded == 0 then
 			local playerList = TGNS.GetPlayerList()
