@@ -8,7 +8,7 @@ local INFESTED_CHAT_CHARACTERS = "inf "
 local initialInfestedSteamIds
 local PLAYER_COUNT_THRESHOLD = 12
 local GAME_COUNT_THRESHOLD = 4
-local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
+--local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
 local infectedCounts = {}
 local cystKills
@@ -178,12 +178,12 @@ function Plugin:Initialise()
 				end
 				ReplaceUpValue(oldAttemptInfectionParent, "AttemptInfection", AttemptInfection, { LocateRecurse = true } )
 
-				local originalMarineDeductInfestedEnergy = Marine.DeductInfestedEnergy
-				Marine.DeductInfestedEnergy = function(marineSelf, amount)
-					local modifier = GetIsPointOnInfestation(marineSelf:GetOrigin()) and (1-(INFESTATION_INFESTED_BENEFIT_PERCENTAGE/100)) or 1
-					amount = amount * modifier
-					originalMarineDeductInfestedEnergy(marineSelf, amount)
-				end
+				-- local originalMarineDeductInfestedEnergy = Marine.DeductInfestedEnergy
+				-- Marine.DeductInfestedEnergy = function(marineSelf, amount)
+				-- 	local modifier = GetIsPointOnInfestation(marineSelf:GetOrigin()) and (1-(INFESTATION_INFESTED_BENEFIT_PERCENTAGE/100)) or 1
+				-- 	amount = amount * modifier
+				-- 	originalMarineDeductInfestedEnergy(marineSelf, amount)
+				-- end
 
 				local originalNs2GamerulesGetPregameLength = NS2Gamerules.GetPregameLength
 				NS2Gamerules.GetPregameLength = function(gamerulesSelf)
@@ -280,9 +280,9 @@ function Plugin:Initialise()
 					md:ToPlayerNotifyInfo(TGNS.GetPlayer(c), "SMs: sh_infestme (in console) while dead to REQUEST to start Infested next round. No guarantees.")
 				end)
 			end)
-			TGNS.ScheduleActionInterval(60, function()
-				md:ToAllNotifyInfo(string.format("Standing on infestation slows hunger %s%%. Discuss this mod in our TGNS forums.", INFESTATION_INFESTED_BENEFIT_PERCENTAGE))
-			end)
+			-- TGNS.ScheduleActionInterval(60, function()
+			-- 	md:ToAllNotifyInfo(string.format("Standing on infestation slows hunger %s%%. Discuss this mod in our TGNS forums.", INFESTATION_INFESTED_BENEFIT_PERCENTAGE))
+			-- end)
 
 			TGNS.RegisterEventHook("GameStarted", function()
 				cystKills = {}
