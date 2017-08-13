@@ -51,6 +51,9 @@ function Plugin:Initialise()
 
 	    if Shine.GetGamemode() == "Infested" then
 
+	    	if self:IsSaturdayNightFever() then
+	    		Shine.Plugins.mapvote.Config.RoundLimit = 5
+	    	end
 	    	IMGameMaster.kAirQualityChangePerSecondMax = IMGameMaster.kAirQualityChangePerSecondMax * 0.8
 	    	kWelderPowerRepairRate = kWelderPowerRepairRate * 2
 
