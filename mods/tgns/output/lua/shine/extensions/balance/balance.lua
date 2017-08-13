@@ -946,26 +946,69 @@ if Server or Client then
 				spawnWelderNear(infantryPortalSelf)
 			end)
 
+			local getPowerPointForLocation = function(locationName)
+		 		local powerPoints = EntityListToTable(Shared.GetEntitiesWithClassname("PowerPoint"))
+			 	local result = TGNS.FirstOrNil(powerPoints, function(powerPoint) return (powerPoint.GetLocationName and powerPoint:GetLocationName()) == locationName end)
+			 	return result
+			end
+
+			local _, kDamagedPercentage = LocateUpValue( PowerPoint.OnTakeDamage, "kDamagedPercentage", { LocateRecurse = true } )
+			local _, kDamagedSound = LocateUpValue( PowerPoint.OnTakeDamage, "kDamagedSound", { LocateRecurse = true } )
+			local upgradeCommandStationPowerPoint = function(commandStation)
+			 	local locationName = commandStation.GetLocationName and commandStation:GetLocationName()
+			 	if locationName then
+			 		local powerPoints = EntityListToTable(Shared.GetEntitiesWithClassname("PowerPoint"))
+				 	local commandStationPowerPoint = TGNS.FirstOrNil(powerPoints, function(powerPoint) return (powerPoint.GetLocationName and powerPoint:GetLocationName()) == locationName end)
+				 	if commandStationPowerPoint then
+						commandStationPowerPoint:SetMaxArmor(kPowerPointArmor * 1.5)
+						local healthScalar = commandStationPowerPoint:GetHealthScalar()
+			            if healthScalar < kDamagedPercentage then
+			                if not commandStationPowerPoint.playingLoopedDamaged then
+			                    commandStationPowerPoint:PlaySound(kDamagedSound)
+			                    commandStationPowerPoint.playingLoopedDamaged = true
+			                    commandStationPowerPoint:SetLightMode(kLightMode.LowPower)
+			                end
+			            end
+				 	end
+			 	end
+			end
+
 			TGNS.RegisterEventHook("GameCountdownStarted", function(secondsSinceEpoch)
 				md:ToAllNotifyInfo("Balance mods in play. Details in console (` key).")
 				md:ToAllConsole(string.format("Marines start with 2 IPs (-%s team res). Armories near IPs drop free welders.", extraIpCost))
-				              -- md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
-				              -- md:ToAllConsole("bile bomb half as often. Whip build and supply costs are doubled,")
-				              -- md:ToAllConsole("but they target much more reliably. Balance changes consider that")
-				              -- md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
-
-				              -- md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
-				              -- md:ToAllConsole("bile bomb half as often. Whips spread when they root into infestation,")
-				              -- md:ToAllConsole("so they target much more reliably. Balance changes consider that")
-				              -- md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
-
-				              md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
-				              md:ToAllConsole("bile bomb half as often. Whip supply is doubled, as whips spread")
-				              md:ToAllConsole("out and target much more reliably. Also, Oni move at 315 speeds,")
-				              md:ToAllConsole("but 316 Bone Shield is unchanged. Balance changes consider that")
-				              md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
+				md:ToAllConsole("Contamination has a longer lifespan, a longer cooldown, and spews")
+				md:ToAllConsole("bile bomb half as often. Whip supply is doubled, as whips spread")
+				md:ToAllConsole("out and target much more reliably. Also, Oni move at 315 speeds,")
+				md:ToAllConsole("but 316 Bone Shield is unchanged. Power nodes near command chairs")
+				md:ToAllConsole("have twice the normal max armor. Balance changes consider that")
+				md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
+				local commandStations = GetEntitiesForTeam("CommandStation", kMarineTeamType)
+				TGNS.DoFor(commandStations, function(commandStation) upgradeCommandStationPowerPoint(commandStation) end)
 			end)
+
+			local originalCommandStructureOnInitialized = CommandStructure.OnInitialized
+			CommandStructure.OnInitialized = function(commandStructure)
+				originalCommandStructureOnInitialized(commandStructure)
+				if commandStructure:isa("CommandStation") then
+					local locationName = commandStructure.GetLocationName and commandStructure:GetLocationName()
+					if locationName then
+						local powerPoint = getPowerPointForLocation(locationName)
+						if powerPoint then
+							if powerPoint:GetPowerState() == PowerPoint.kPowerState.unsocketed then
+								powerPoint:SocketPowerNode()
+							end
+						end
+					end
+					local originalOnConstructionComplete = commandStructure.OnConstructionComplete
+					commandStructure.OnConstructionComplete = function(commandStructureSelf)
+						originalOnConstructionComplete(commandStructureSelf)
+					 	upgradeCommandStationPowerPoint(commandStructureSelf)
+					end
+				end
+			end
 		end
+
+
 
 		-- spawn IPs farther from one another (WIP; build 309)
 		-- local originalGetRandomBuildPosition = GetRandomBuildPosition
