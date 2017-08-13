@@ -6,6 +6,7 @@ local approveReceivedTotal = {}
 local approveSentTotal = {}
 local vrConfirmedWhen = {}
 local hasEarnedApprovingWithReasonKarma = {}
+local portalKickedPlayerNames = {}
 
 local function CreateCommand(consoleCommandName, chatCommandName, messageChannel, isValidTargetClient, isNotValidTargetTemplate, onInputValidated, isReasonRequired, helpText)
 	local result = {}
@@ -257,6 +258,15 @@ local commands = { CreateCommand(
 		, nil
 		, nil
 		, function(self, client, targetClient, reason, md)
+			local targetClientName = TGNS.GetClientName(targetClient)
+			local targetClientTeamName = TGNS.GetClientTeamName(targetClient)
+			if targetClientName and targetClientTeamName then
+				md:ToAllNotifyRed(string.format("%s (%s) crashed and then self-kicked using TGNS Portal.", targetClientName, targetClientTeamName))
+			end
+			local targetSteamId = TGNS.GetClientSteamId(targetClient)
+			if targetSteamId then
+				portalKickedPlayerNames[targetSteamId] = targetClientName
+			end
 			TGNS.DisconnectClient(targetClient, reason)
 			log(client, targetClient, self.consoleCommandName, reason)
 		end
@@ -338,6 +348,15 @@ function Plugin:Approve(client, targetClient, reason, md)
 	local targetSteamId = TGNS.GetClientSteamId(targetClient)
 	local targetClientName = TGNS.GetClientName(targetClient)
 	approve(client, player, steamId, targetClient, targetClientIndex, targetSteamId, targetClientName, md, reason)
+end
+
+function Plugin:CheckConnectionAllowed(steamId)
+	local portalKickedPlayerName = portalKickedPlayerNames[steamId]
+	if portalKickedPlayerName then
+		local md = TGNSMessageDisplayer.Create("PORTAL")
+		md:ToAllNotifyGreen(string.format("%s is reconnecting after client crash.", portalKickedPlayerName))
+		portalKickedPlayerNames[steamId] = nil
+	end
 end
 
 function Plugin:Initialise()
