@@ -192,6 +192,24 @@ function TGNSMessageDisplayer.Create(messagesChannel, infoPrefixColors)
 		end)
 	end
 
+	function result:ToAllNotifyRed(message)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			NotifyRed(p, message, self.messagesChannel)
+		end)
+	end
+
+	function result:ToAllNotifyYellow(message)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			NotifyYellow(p, message, self.messagesChannel)
+		end)
+	end
+
+	function result:ToAllNotifyGreen(message)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			NotifyGreen(p, message, self.messagesChannel)
+		end)
+	end
+
 	function result:ToAllNotifyError(message)
 		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
 			NotifyError(p, message, self.messagesChannel)
