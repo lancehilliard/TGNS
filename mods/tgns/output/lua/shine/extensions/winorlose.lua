@@ -494,7 +494,6 @@ function Plugin:PostJoinTeam()
 						local specInMd = TGNSMessageDisplayer.Create()
 						local message = string.format("%s: Gameplay slot open?", TGNS.GetClientName(c))
 						specInMd:ToPlayerNotifyInfo(TGNS.GetPlayer(c), message)
-						specInMd:ToAdminConsole(string.format("Shown to spectator: %s", message))
 						lastSpecInNoticeShownAt[c] = Shared.GetTime()
 					end
 				end)
