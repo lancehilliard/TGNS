@@ -524,14 +524,14 @@ if Server or Client then
 		function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, force, shineForce)
 			local client = TGNS.GetClient(player)
 			if not balanceInProgress and not preventTeamJoinMessagesDueToRecentEndGame and (TGNS.IsGameplayTeamNumber(oldTeamNumber) or TGNS.IsGameplayTeamNumber(newTeamNumber)) and not TGNS.GetIsClientVirtual(client) then
-				md:ToAllConsole(string.format("----- %s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
+				md:ToAllConsole(string.format("----------------------------------- %s: %s -> %s", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(oldTeamNumber), TGNS.GetPlayerTeamName(player)))
 			end
 			lastTeamNumbers[client] = newTeamNumber
 		end
 
 		function Plugin:ClientDisconnect(client)
 			if client then
-			    md:ToAllConsole(string.format("%s: %s -> Disconnect", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(lastTeamNumbers[client])))
+			    md:ToAllConsole(string.format("----------------------------------- %s: %s -> Disconnect", TGNS.GetClientNameSteamIdCombo(client), TGNS.GetTeamName(lastTeamNumbers[client])))
 			end
 		end
 
@@ -607,7 +607,9 @@ if Server or Client then
 		end
 
 		function Plugin:ClientConfirmConnect(client)
-
+			if client then
+			    md:ToAllConsole(string.format("----------------------------------- %s: Connect", TGNS.GetClientNameSteamIdCombo(client)))
+			end
 			if Shine.GetGamemode() == "ns2" then
 				if not firstClientProcessed then
 					mayBalanceAt = Shared.GetTime() + FIRSTCLIENT_TIME_BEFORE_BALANCE
