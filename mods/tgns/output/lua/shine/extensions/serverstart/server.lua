@@ -4,7 +4,8 @@ Plugin.HasConfig = false
 local md = TGNSMessageDisplayer.Create()
 local serverStartTempfilePath = "config://tgns/temp/serverStart.json"
 local NUMBER_OF_ACTIVE_MODS_INDICATIVE_OF_A_SERVER_RESTART = 15
-local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 2.5
+local NUMBER_OF_PLAYERS_BEFORE_SCHEDULED_RESTART = 22
+local NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING = 16 -- 2.5
 local SERVER_COMMANDLINE_START_MAP_NAME = "dev_test"
 
 function Plugin:ClientConfirmConnect(client)
@@ -77,7 +78,7 @@ function Plugin:Initialise()
                 if votedInMapName then
                     TGNS.ExecuteEventHooks("MapVoteFinished", votedInMapName)
                     local hoursSinceServerProcessStarted = TGNS.ConvertSecondsToHours(TGNS.GetSecondsSinceServerProcessStarted())
-                    if votedInMapName ~= SERVER_COMMANDLINE_START_MAP_NAME and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING then
+                    if votedInMapName ~= SERVER_COMMANDLINE_START_MAP_NAME and hoursSinceServerProcessStarted > NUMBER_OF_HOURS_SERVER_SEEMS_TO_SURVIVE_WITHOUT_CRASHING and Server.GetNumPlayersTotal() >= NUMBER_OF_PLAYERS_BEFORE_SCHEDULED_RESTART then
                         local serverStartData = self:GetServerStartData()
                         serverStartData.startMapName = votedInMapName
                         self:SetServerStartData(serverStartData)
