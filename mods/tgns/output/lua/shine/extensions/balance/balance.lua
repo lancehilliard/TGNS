@@ -736,6 +736,11 @@ if Server or Client then
 
 		local balanceTempfilePath = "config://tgns/temp/balance.json"
 
+		-- local originalBabblerGetIsDetectedOverride = Babbler.GetIsDetectedOverride
+		-- Babbler.GetIsDetectedOverride = function(babblerSelf)
+		-- 	return false
+		-- end
+
 		TGNS.RegisterEventHook("FullGamePlayed", function(clients, winningTeam)
 
 			if Shine.GetGamemode() == "ns2" then
