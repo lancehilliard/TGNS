@@ -56,6 +56,7 @@ function Plugin:Initialise()
 	    		Shine.Plugins.mapvote.Config.RoundLimit = GAME_COUNT_THRESHOLD_SNF
 	    	end
 	    	IMGameMaster.kAirQualityChangePerSecondMax = IMGameMaster.kAirQualityChangePerSecondMax * 0.8
+	    	IMGameMaster.kRatioPositiveBoost = IMGameMaster.kRatioPositiveBoost * 1.5
 	    	kWelderPowerRepairRate = kWelderPowerRepairRate * 2
 
 	    	if not TGNS.IsProduction() then
