@@ -25,6 +25,10 @@ stockBadgeDescriptions["wc2013_silver"] = string.format("World Championship - Si
 stockBadgeDescriptions["wc2013_gold"] = string.format("World Championship - Gold\n\nDonated to the 2013 World Championship.")
 stockBadgeDescriptions["wc2013_shadow"] = string.format("World Championship - Shadow\n\nDonated to the 2013 World Championship.")
 stockBadgeDescriptions["pax2012"] = string.format("PAX East 2012\n\nMet the UWE team at PAX.")
+stockBadgeDescriptions["skulk_challenge_1_bronze"] = string.format("Skulk Challenge (Tram) Bronze\n\nSkulk Challenge (Tram) time: 1:53:00 or faster.")
+stockBadgeDescriptions["skulk_challenge_1_silver"] = string.format("Skulk Challenge (Tram) Silver\n\nSkulk Challenge (Tram) time: 1:38:00 or faster.")
+stockBadgeDescriptions["skulk_challenge_1_gold"] = string.format("Skulk Challenge (Tram) Gold\n\nSkulk Challenge (Tram) time: 1:28:00 or faster.")
+stockBadgeDescriptions["skulk_challenge_1_shadow"] = string.format("Skulk Challenge (Tram) Shadow\n\nSkulk Challenge (Tram) time: 1:23:00 or faster.")
 
 local badgeNames = {}
 local badgeDescriptions = {}
