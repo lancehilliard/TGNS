@@ -4,6 +4,7 @@ local mapSetSelected = false
 local gamesPlayedOnCurrentMap = 0
 local earnedVoteKarma = {}
 local mapVoteSummaryChannelIds = {}
+local INFESTED_PLAYER_THRESHOLD = 24
 
 local function show(mapVoteSummaries, totalVotes)
 	mapVoteSummaryChannelIds = {}
@@ -261,7 +262,7 @@ function Plugin:Initialise()
 				md:ToPlayerNotifyError(player, string.format("SMs may nominate only two maps each. You have already nominated %s and %s.", mapNominations[steamId][1], mapNominations[steamId][2]))
 			-- elseif Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min > 0 and TGNS.Has(TGNS.Take(TGNS.TableReverse(Shine.Plugins.mapvote.LastMapData), Shine.Plugins.mapvote.Config.ExcludeLastMaps.Min), mapName) then
 			-- 	md:ToPlayerNotifyError(player, string.format("%s was played too recently to be nominated now.", mapName))
-			elseif #infestedNominations >= 2 and TGNS.StartsWith(mapName, "infest_") then
+			elseif #infestedNominations >= 2 and TGNS.StartsWith(mapName, "infest_") and not Shine.Plugins.infestedhelper:IsSaturdayNightFever() then
 				md:ToPlayerNotifyError(player, string.format("%s and %s are already nominated. Only two Infested maps may be nominated.", infestedNominations[1], infestedNominations[2]))
 			elseif TGNS.StartsWith(TGNS.GetCurrentMapName(), "infest_") and TGNS.StartsWith(mapName, "infest_") and not Shine.Plugins.infestedhelper:IsSaturdayNightFever() then
 				md:ToPlayerNotifyError(player, "Infested nominations are not allowed on Infested maps.")
@@ -302,7 +303,7 @@ function Plugin:Initialise()
 		Shine.Plugins.mapvote.IsValidMapChoice = function(mapVoteSelf, map, playerCount)
 			local result = originalIsValidMapChoice(mapVoteSelf, map, playerCount)
 			if result and (Shine.IsType(map, "table") or Shine.IsType(map, "string")) and not Shine.Plugins.infestedhelper:IsSaturdayNightFever() then
-				if TGNS.GetHumanPlayerCount() < 22 then
+				if TGNS.GetHumanPlayerCount() < INFESTED_PLAYER_THRESHOLD then
 					local mapName = map.map or map
 					if Shine.IsType(mapName, "string") then
 						local mapIsInfested = TGNS.StartsWith(mapName, "infest_")
