@@ -7,7 +7,8 @@ local infestedMd = TGNSMessageDisplayer.Create("INFESTED")
 local INFESTED_CHAT_CHARACTERS = "inf "
 local initialInfestedSteamIds
 local PLAYER_COUNT_THRESHOLD = 12
-local GAME_COUNT_THRESHOLD = 4
+local GAME_COUNT_THRESHOLD = 3
+local GAME_COUNT_THRESHOLD_SNF = 5
 --local INFESTATION_INFESTED_BENEFIT_PERCENTAGE = 33
 local gameCount = 0
 local infectedCounts = {}
@@ -52,7 +53,7 @@ function Plugin:Initialise()
 	    if Shine.GetGamemode() == "Infested" then
 
 	    	if self:IsSaturdayNightFever() then
-	    		Shine.Plugins.mapvote.Config.RoundLimit = 5
+	    		Shine.Plugins.mapvote.Config.RoundLimit = GAME_COUNT_THRESHOLD_SNF
 	    	end
 	    	IMGameMaster.kAirQualityChangePerSecondMax = IMGameMaster.kAirQualityChangePerSecondMax * 0.8
 	    	kWelderPowerRepairRate = kWelderPowerRepairRate * 2
