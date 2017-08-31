@@ -969,7 +969,7 @@ if Server or Client then
 				 	if commandStationPowerPoint then
 						commandStationPowerPoint:SetMaxArmor(kPowerPointArmor * 1.5)
 						local healthScalar = commandStationPowerPoint:GetHealthScalar()
-			            if healthScalar < kDamagedPercentage then
+			            if (commandStationPowerPoint.GetIsBuilt and commandStationPowerPoint:GetIsBuilt()) and healthScalar < kDamagedPercentage then
 			                if not commandStationPowerPoint.playingLoopedDamaged then
 			                    commandStationPowerPoint:PlaySound(kDamagedSound)
 			                    commandStationPowerPoint.playingLoopedDamaged = true
