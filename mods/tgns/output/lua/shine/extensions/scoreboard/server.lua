@@ -15,6 +15,7 @@ local approveCache = {}
 local approveCacheWasPreloaded = false
 local resourceTowersKilled = {}
 local lastStartTimeSeconds = 0
+local lastKnownPrefixes = {}
 
 local function PlayerCanSeeAfkStatus(sourcePlayer, targetPlayer)
 	local result = false
@@ -53,7 +54,10 @@ local function GetPlayerPrefix(sourcePlayer, targetPlayer)
 		if Shine.Plugins.betterknownas and Shine.Plugins.betterknownas.Enabled and Shine.Plugins.betterknownas.IsPlayingWithoutBkaName and Shine.Plugins.betterknownas:IsPlayingWithoutBkaName(sourcePlayer) then
 			result = result .. "*"
 		end
+	else
+		result = lastKnownPrefixes[sourcePlayer:GetId()]
 	end
+	lastKnownPrefixes[sourcePlayer:GetId()] = result
 	return result
 end
 
