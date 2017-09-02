@@ -75,7 +75,6 @@ local function showReport(transactions)
 end
 
 local function initializePlayerBank(steamId)
-	Shared.Message("playerBanks[steamId]: " .. tostring(playerBanks[steamId]))
 	if playerBanks[steamId] == nil then
 		local url = string.format("%s&i=%s", TGNS.Config.BetsEndpointBaseUrl, steamId)
 		TGNS.GetHttpAsync(url, function(betResponseJson)
