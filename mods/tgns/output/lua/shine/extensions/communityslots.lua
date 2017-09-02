@@ -484,6 +484,10 @@ function Plugin:EndGame(gamerules, winningTeam)
         TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
             PrintBumpCountsReport(c)
         end)
+        -- local bumpCounts = GetBumpCounts()
+        -- TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
+        --     PrintBumpCountsReport(c)
+        -- end)
         commandStructureLastOccupancies = {}
     end)
 end
