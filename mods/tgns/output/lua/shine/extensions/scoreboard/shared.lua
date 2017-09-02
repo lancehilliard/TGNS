@@ -30,7 +30,6 @@ Plugin.ALERT_ICON = "scoreboard_ALERT_ICON"
 Plugin.TEAM_SCORES_DATA = "scoreboard_TEAM_SCORES_DATA"
 Plugin.WYZ = "scoreboard_WYZ"
 Plugin.SQUAD_ALLOWED = "scoreboard_SQUAD_ALLOWED"
-Plugin.SQUAD_REQUESTED = "scoreboard_SQUAD_REQUESTED"
 Plugin.SQUAD_CONFIRMED = "scoreboard_SQUAD_CONFIRMED"
 Plugin.LAPS_BAD = "scoreboard_LAPS_BAD"
 Plugin.LAPS_LEG = "scoreboard_LAPS_LEG"
@@ -80,7 +79,6 @@ TGNS.RegisterNetworkMessage(Plugin.ALERT_ICON, {});
 TGNS.RegisterNetworkMessage(Plugin.TEAM_SCORES_DATA, {mn="string(30)", an="string(30)",ms="integer",as="integer"});
 TGNS.RegisterNetworkMessage(Plugin.WYZ, {});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_ALLOWED, {});
-TGNS.RegisterNetworkMessage(Plugin.SQUAD_REQUESTED, {c="integer",d="integer"});
 TGNS.RegisterNetworkMessage(Plugin.SQUAD_CONFIRMED, {c="integer",s="integer"});
 TGNS.RegisterNetworkMessage(Plugin.LAPS_BAD, {})
 TGNS.RegisterNetworkMessage(Plugin.LAPS_LEG, {})

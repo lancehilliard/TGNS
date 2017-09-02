@@ -178,6 +178,9 @@
 !mods/tgns/output/lua/shine/extensions/sprayhelper/client.lua
 !mods/tgns/output/lua/shine/extensions/sprayhelper/server.lua
 !mods/tgns/output/lua/shine/extensions/sprayhelper/shared.lua
+!mods/tgns/output/lua/shine/extensions/squadnumbers/client.lua
+!mods/tgns/output/lua/shine/extensions/squadnumbers/server.lua
+!mods/tgns/output/lua/shine/extensions/squadnumbers/shared.lua
 !mods/tgns/output/lua/shine/extensions/stagedteamjoins.lua
 !mods/tgns/output/lua/shine/extensions/statusextended.lua
 !mods/tgns/output/lua/shine/extensions/taglines.lua
