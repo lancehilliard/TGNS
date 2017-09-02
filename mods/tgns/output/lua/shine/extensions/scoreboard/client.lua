@@ -139,9 +139,6 @@ TGNS.HookNetworkMessage(Shine.Plugins.scoreboard.SCOREBOARD_DATA, function(messa
 	has.Focus[message.i] = message.u8
 	has.Vampirism[message.i] = message.u9
 
-	has.MarineResourcesPercentage = message.mrp
-	has.AlienResourcesPercentage = message.arp
-
 	streamingWebAddresses[message.i] = message.streaming
 	resourceTowersKilled[message.i] = message.rtk
 	captains.isOptedInForCaptains[message.i] = message.o
@@ -986,16 +983,26 @@ function Plugin:Initialise()
 	        currentPlayerIndex = currentPlayerIndex + 1
 		end
 
-		if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
+		-- if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
+		if ((Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber()) or Client.GetLocalClientTeamNumber() == kSpectatorIndex then
 
-		    local teamInfo = GetEntitiesForTeam("TeamInfo", teamNumber)
-		    if teamInfo and #teamInfo > 0 then
-			    local ownedResourceNodesCount = teamInfo[1]:GetNumResourceTowers()
+			local teamInfos = {}
+			teamInfos[kMarineTeamType] = GetEntitiesForTeam("TeamInfo", kMarineTeamType)
+			teamInfos[kAlienTeamType] = GetEntitiesForTeam("TeamInfo", kAlienTeamType)
+		    if teamInfos[teamNumber] and #teamInfos[teamNumber] > 0 then
+			    local ownedResourceNodesCount = teamInfos[teamNumber][1]:GetNumResourceTowers()
 			    totalResourceNodesCount = totalResourceNodesCount or Shared.GetEntitiesWithClassname("ResourcePoint"):GetSize()
 			    local percentResourceNodesOwned = math.floor(ownedResourceNodesCount / totalResourceNodesCount * 100)
-				local resourceNodesName = Client.GetLocalClientTeamNumber() == kMarineTeamType and "Extractors" or "Harvesters"
-				local resourcesPercentage = Client.GetLocalClientTeamNumber() == kMarineTeamType and has.MarineResourcesPercentage or has.AlienResourcesPercentage
-				local resourcesPercentageDisplay = (resourcesPercentage or 0) < 1 and "" or string.format("; Resources Gathered: %s%%", resourcesPercentage)
+				local resourceNodesName = teamNumber == kMarineTeamType and "Extractors" or "Harvesters"
+
+				local totalMarineResources = (teamInfos[kMarineTeamType] and #teamInfos[kMarineTeamType] > 0) and teamInfos[kMarineTeamType][1]:GetTotalTeamResources() or 0
+				local totalAlienResources = (teamInfos[kAlienTeamType] and #teamInfos[kAlienTeamType] > 0) and teamInfos[kAlienTeamType][1]:GetTotalTeamResources() or 0
+				local totalResources = (totalMarineResources > 0 and totalAlienResources > 0) and totalMarineResources + totalAlienResources or 0
+				local teamResourcePercentages = {}
+			    teamResourcePercentages[kMarineTeamType] = totalResources > 0 and math.floor(totalMarineResources / totalResources * 100) or 0
+			    teamResourcePercentages[kAlienTeamType] = totalResources > 0 and 100 - teamResourcePercentages[kMarineTeamType] or 0
+				local resourcesPercentage = teamResourcePercentages[teamNumber]
+				local resourcesPercentageDisplay = string.format("; Resources Gathered: %s%%", resourcesPercentage)
 		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
 		    	if teamInfoGUIItem then
 			    	local originalTeamInfoGuiItemText = teamInfoGUIItem:GetText()
@@ -1007,7 +1014,7 @@ function Plugin:Initialise()
 		    local teamNameGUIItemText = teamNameGUIItem:GetText()
 			local truncatedTeamNameGUIItemText = string.sub(teamNameGUIItemText, 1, string.len(teamNameGUIItemText) - 1)
 			local afkDisplay = totalAfkCount > 0 and string.format(", with %d AFK", totalAfkCount) or ""
-			local supplyDisplay = string.format("            %s/%s Supply", GetSupplyUsedByTeam(teamNumber), GetMaxSupplyForTeam(teamNumber)) or ""
+			local supplyDisplay = TGNS.IsGameplayTeamNumber(teamNumber) and string.format("            %s/%s Supply", GetSupplyUsedByTeam(teamNumber), GetMaxSupplyForTeam(teamNumber)) or ""
 		    local teamHeaderText = string.format("%s%s)%s", truncatedTeamNameGUIItemText, afkDisplay, supplyDisplay)
 		    teamNameGUIItem:SetText(teamHeaderText)
 

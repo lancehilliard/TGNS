@@ -90,21 +90,7 @@ local function SendNetworkMessage(sourcePlayer, targetPlayer)
 		local isOptedInAsCaptainsCaptain = Shine.Plugins.captains and Shine.Plugins.captains.IsOptedInAsCaptain and Shine.Plugins.captains:IsOptedInAsCaptain(sourceClient)
 		local isOptedInForCaptains = isOptedInAsCaptainsPlayer or isOptedInAsCaptainsCaptain
 
-
-	local marineTeamInfos = GetEntitiesForTeam("TeamInfo", kMarineTeamType)
-	local alienTeamInfos = GetEntitiesForTeam("TeamInfo", kAlienTeamType)
-	local marineResourcesPercentage = 0
-	local alienResourcesPercentage = 0
-	if marineTeamInfos and alienTeamInfos then
-	    local totalMarineResources = marineTeamInfos[1]:GetTotalTeamResources()
-	    local totalAlienResources = alienTeamInfos[1]:GetTotalTeamResources()
-	    local totalResources = totalMarineResources + totalAlienResources
-	    if totalResources > 0 then
-		    marineResourcesPercentage = math.floor(totalMarineResources / totalResources * 100)
-		    alienResourcesPercentage = 100 - marineResourcesPercentage
-	    end
-	end
-		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten and Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), n=(Shine.Plugins.newcomms and Shine.Plugins.newcomms.ClientIsGated and Shine.Plugins.newcomms:ClientIsGated(sourceClient)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasSilence, u4=sourcePlayerHasRegeneration, u5=sourcePlayerHasCarapace, u6=sourcePlayerHasCrush, u7=sourcePlayerHasAura, u8=sourcePlayerHasFocus, u9=sourcePlayerHasVampirism, streaming=streamingWebAddresses[sourceClient] or "", rtk=resourceTowersKilled, o=isOptedInForCaptains, mrp = marineResourcesPercentage, arp = alienResourcesPercentage})
+		TGNS.SendNetworkMessageToPlayer(targetPlayer, Shine.Plugins.scoreboard.SCOREBOARD_DATA, {i=sourcePlayer:GetClientIndex(), p=GetPlayerPrefix(sourcePlayer, targetPlayer), c=TGNS.ClientIsInGroup(sourceClient, "captains_group"),s=Shine.Plugins.speclisten and Shine.Plugins.speclisten:GetIsUsingSvi(sourceClient), b=(Shine.Plugins.betterknownas and Shine.Plugins.betterknownas:PlayerFailsBkaPrerequisite(sourcePlayer)), n=(Shine.Plugins.newcomms and Shine.Plugins.newcomms.ClientIsGated and Shine.Plugins.newcomms:ClientIsGated(sourceClient)), w=sourcePlayerHasWelder, m=sourcePlayerHasMines, cg=sourcePlayerHasClusterGrenades, gg=sourcePlayerHasGasGrenades, pg=sourcePlayerHasPulseGrenades, t=sourcePlayerTunnelDescription, u1=sourcePlayerHasCelerity, u2=sourcePlayerHasAdrenaline, u3=sourcePlayerHasSilence, u4=sourcePlayerHasRegeneration, u5=sourcePlayerHasCarapace, u6=sourcePlayerHasCrush, u7=sourcePlayerHasAura, u8=sourcePlayerHasFocus, u9=sourcePlayerHasVampirism, streaming=streamingWebAddresses[sourceClient] or "", rtk=resourceTowersKilled, o=isOptedInForCaptains})
 	end
 end
 
