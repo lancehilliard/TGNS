@@ -117,6 +117,9 @@
 !mods/tgns/output/lua/shine/extensions/fullgameplayed.lua
 !mods/tgns/output/lua/shine/extensions/gamestartevents.lua
 !mods/tgns/output/lua/shine/extensions/gamestracker.lua
+!mods/tgns/output/lua/shine/extensions/gorgetunnelhelper/client.lua
+!mods/tgns/output/lua/shine/extensions/gorgetunnelhelper/server.lua
+!mods/tgns/output/lua/shine/extensions/gorgetunnelhelper/shared.lua
 !mods/tgns/output/lua/shine/extensions/greetings.lua
 !mods/tgns/output/lua/shine/extensions/groundedrookies.lua
 !mods/tgns/output/lua/shine/extensions/help.lua

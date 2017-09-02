@@ -333,6 +333,10 @@ local function getTeamQueryTexture(teamNumber)
 	return result
 end
 
+function Plugin:GetTunnelDescriptions(clientIndex)
+	return tunnelDescriptions[clientIndex] or ""
+end
+
 function Plugin:OnResolutionChanged( OldX, OldY, NewX, NewY )
 	has.ChangedResolutionSinceAddingGameTimeFavorite = true
 end
@@ -1502,29 +1506,6 @@ function Plugin:Initialise()
 	-- TGNS.HookNetworkMessage(Plugin.FOG_NEEDS_LIFT, function(message)
 	-- 	fogIsLifted = message.b
 	-- end)
-
-	GhostModelUI_GetTunnelText = function()
-		local result = "" -- "Crouch while building to preserve the oldest entrance"
-		local player = Client.GetLocalPlayer()
-		if player and player.GetGhostModelTechId and player:GetGhostModelTechId() == kTechId.GorgeTunnel then
-			local playerTunnelDescriptions = tunnelDescriptions[Client.GetLocalClientIndex()]
-			if TGNS.HasNonEmptyValue(playerTunnelDescriptions) then
-				if TGNS.Contains(playerTunnelDescriptions, " / ") then
-					local playerTunnelDescriptionParts = TGNS.Split(" / ", playerTunnelDescriptions)
-					if #playerTunnelDescriptionParts == 2 then
-						local olderEntrance = playerTunnelDescriptionParts[1]
-						local newerEntrance = TGNS.Replace(playerTunnelDescriptionParts[2], "/ ", "")
-						result = string.format("open a tunnel to %s%s", player:GetCrouching() and olderEntrance or newerEntrance, olderEntrance == newerEntrance and "" or " (crouch to toggle)")
-					end
-				else
-					local entranceToConnectTo = playerTunnelDescriptions
-					result = string.format("open a tunnel to %s", entranceToConnectTo)
-				end
-			end
-		end
-		return result
-	end
-
 
 	return true
 end
