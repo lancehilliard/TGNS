@@ -420,6 +420,14 @@ function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
 
+    TGNS.RegisterEventHook("OnEverySecond", function()
+    	if not TGNS.IsGameInProgress() then
+    		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+    			self:AnnouncePlayerPrefix(p)
+    		end)
+    	end
+    end)
+
 	TGNS.RegisterEventHook("AFKChanged", function(client, playerIsAfk)
 		self:AnnouncePlayerPrefix(TGNS.GetPlayer(client))
 	end)
