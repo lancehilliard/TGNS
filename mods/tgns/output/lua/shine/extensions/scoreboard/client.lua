@@ -39,6 +39,7 @@ gameState.gameIsInCountdown = false
 gameState.precisionResources = {}
 gameState.nearbyAliveTeammateClientIndexes = {}
 gameState.nearbyAliveTeammateClientIndexesLastQueried = {}
+gameState.totalTeamResources = {}
 local serverSimpleName
 local squadNumbers={}
 local hudTexts = {}
@@ -146,6 +147,10 @@ end)
 
 TGNS.HookNetworkMessage(Plugin.PRECISIONRESOURCES, function(message)
 	gameState.precisionResources[message.i] = message.r
+end)
+
+TGNS.HookNetworkMessage(Plugin.TOTAL_TEAM_RESOURCES, function(message)
+	gameState.totalTeamResources[message.t] = message.r
 end)
 
 TGNS.HookNetworkMessage(Plugin.TOGGLE_CUSTOM_NUMBERS_COLUMN, function(message)
@@ -986,22 +991,23 @@ function Plugin:Initialise()
 		-- if gameState.gameIsInProgress and (Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber() then
 		if ((Client.GetLocalClientTeamNumber() == kMarineTeamType or Client.GetLocalClientTeamNumber() == kAlienTeamType) and teamNumber == Client.GetLocalClientTeamNumber()) or Client.GetLocalClientTeamNumber() == kSpectatorIndex then
 
-			local teamInfos = {}
-			teamInfos[kMarineTeamType] = GetEntitiesForTeam("TeamInfo", kMarineTeamType)
-			teamInfos[kAlienTeamType] = GetEntitiesForTeam("TeamInfo", kAlienTeamType)
-		    if teamInfos[teamNumber] and #teamInfos[teamNumber] > 0 then
-			    local ownedResourceNodesCount = teamInfos[teamNumber][1]:GetNumResourceTowers()
+			local teamInfo = GetEntitiesForTeam("TeamInfo", teamNumber)
+		    if teamInfo and #teamInfo > 0 then
+			    local ownedResourceNodesCount = teamInfo[1]:GetNumResourceTowers()
 			    totalResourceNodesCount = totalResourceNodesCount or Shared.GetEntitiesWithClassname("ResourcePoint"):GetSize()
 			    local percentResourceNodesOwned = math.floor(ownedResourceNodesCount / totalResourceNodesCount * 100)
 				local resourceNodesName = teamNumber == kMarineTeamType and "Extractors" or "Harvesters"
 
-				local totalMarineResources = (teamInfos[kMarineTeamType] and #teamInfos[kMarineTeamType] > 0) and teamInfos[kMarineTeamType][1]:GetTotalTeamResources() or 0
-				local totalAlienResources = (teamInfos[kAlienTeamType] and #teamInfos[kAlienTeamType] > 0) and teamInfos[kAlienTeamType][1]:GetTotalTeamResources() or 0
-				local totalResources = (totalMarineResources > 0 and totalAlienResources > 0) and totalMarineResources + totalAlienResources or 0
+				local totalMarineResources = gameState.totalTeamResources[kMarineTeamType] or 0
+				local totalAlienResources = gameState.totalTeamResources[kAlienTeamType] or 0
+				local totalResources = totalMarineResources + totalAlienResources
+
 				local teamResourcePercentages = {}
 			    teamResourcePercentages[kMarineTeamType] = totalResources > 0 and math.floor(totalMarineResources / totalResources * 100) or 0
 			    teamResourcePercentages[kAlienTeamType] = totalResources > 0 and 100 - teamResourcePercentages[kMarineTeamType] or 0
+
 				local resourcesPercentage = teamResourcePercentages[teamNumber]
+
 				local resourcesPercentageDisplay = string.format("; Resources Gathered: %s%%", resourcesPercentage)
 		    	local teamInfoGUIItem = updateTeam["GUIs"]["TeamInfo"]
 		    	if teamInfoGUIItem then
@@ -1014,7 +1020,7 @@ function Plugin:Initialise()
 		    local teamNameGUIItemText = teamNameGUIItem:GetText()
 			local truncatedTeamNameGUIItemText = string.sub(teamNameGUIItemText, 1, string.len(teamNameGUIItemText) - 1)
 			local afkDisplay = totalAfkCount > 0 and string.format(", with %d AFK", totalAfkCount) or ""
-			local supplyDisplay = TGNS.IsGameplayTeamNumber(teamNumber) and string.format("            %s/%s Supply", GetSupplyUsedByTeam(teamNumber), GetMaxSupplyForTeam(teamNumber)) or ""
+			local supplyDisplay = (TGNS.IsGameplayTeamNumber(teamNumber) and gameState.gameIsInProgress) and string.format("            %s/%s Supply", GetSupplyUsedByTeam(teamNumber), GetMaxSupplyForTeam(teamNumber)) or ""
 		    local teamHeaderText = string.format("%s%s)%s", truncatedTeamNameGUIItemText, afkDisplay, supplyDisplay)
 		    teamNameGUIItem:SetText(teamHeaderText)
 

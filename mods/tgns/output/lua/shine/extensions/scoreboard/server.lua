@@ -861,6 +861,14 @@ function Plugin:Initialise()
 		end
 	end)
 
+	local originalPlayingTeamAddTeamResources
+	originalPlayingTeamAddTeamResources = TGNS.ReplaceClassMethod("PlayingTeam", "AddTeamResources", function(playingTeamSelf, amount, isIncome)
+		originalPlayingTeamAddTeamResources(playingTeamSelf, amount, isIncome)
+		TGNS.DoFor(TGNS.GetPlayerList(), function(p)
+			TGNS.SendNetworkMessageToPlayer(p, self.TOTAL_TEAM_RESOURCES, {t=playingTeamSelf:GetTeamNumber(), r=playingTeamSelf:GetTotalTeamResources()})
+		end)
+	end)
+
 	return true
 end
 
