@@ -464,7 +464,7 @@ function Plugin:ClientConfirmConnect(client)
             end
         end)
     end
-    local steamId = TGNS.GetClientSteamId(client)
+    -- local steamId = TGNS.GetClientSteamId(client)
     -- if ServerIsFull(GetPlayingPlayers()) and TGNS.Has(fullSpecSteamIds, steamId) then
     --     TGNS.ScheduleAction(1, function()
     --         if Shine:IsValidClient(client) then
@@ -480,10 +480,6 @@ end)
 
 function Plugin:EndGame(gamerules, winningTeam)
     TGNS.ScheduleAction(TGNS.ENDGAME_TIME_TO_READYROOM, function()
-        local bumpCounts = GetBumpCounts()
-        TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
-            PrintBumpCountsReport(c)
-        end)
         -- local bumpCounts = GetBumpCounts()
         -- TGNS.DoFor(TGNS.GetMatchingClients(TGNS.GetPlayerList(), TGNS.IsClientAdmin), function(c)
         --     PrintBumpCountsReport(c)
@@ -576,9 +572,10 @@ end
 --TGNS.RegisterCommandHook("Console_sv_csinfo", PrintPlayerSlotsStatuses, "Print Community Slots bump counts and player statuses.", true)
 
 function Plugin:GetMaximumEffectiveSpectatorCount()
-    local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
-    local result = captainsModeIsEnabled and getCommunitySlotsCount() or getMaximumSpectatorsCount()
-    return result
+    -- local captainsModeIsEnabled = Shine.Plugins.captains and Shine.Plugins.captains:IsCaptainsModeEnabled()
+    -- local result = captainsModeIsEnabled and getCommunitySlotsCount() or getMaximumSpectatorsCount()
+    -- return result
+    return Server.GetMaxSpectators();
 end
 
 function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
@@ -629,12 +626,12 @@ function Plugin:JoinTeam(gamerules, player, newTeamNumber, force, shineForce)
             end
         end
     end
-    if not cancel and TGNS.IsPlayerReadyRoom(player) and Shine.GetGamemode() == "Infested" and ((#TGNS.GetMarineClients(playerList) + #TGNS.GetSpectatorClients(playerList)) >= Server.GetMaxPlayers() - 1) then
-        cancel = true
-        local teamName = TGNS.GetTeamName(newTeamNumber)
-        tgnsMd:ToPlayerNotifyError(player, string.format("Sorry. %s is full.", teamName))
-        tgnsMd:ToAdminConsole(string.format("%s was not allowed to join %s.", TGNS.GetPlayerName(player), teamName))
-    end
+    -- if not cancel and TGNS.IsPlayerReadyRoom(player) and Shine.GetGamemode() == "Infested" and ((#TGNS.GetMarineClients(playerList) + #TGNS.GetSpectatorClients(playerList)) >= Server.GetMaxPlayers() - 1) then
+    --     cancel = true
+    --     local teamName = TGNS.GetTeamName(newTeamNumber)
+    --     tgnsMd:ToPlayerNotifyError(player, string.format("Sorry. %s is full.", teamName))
+    --     tgnsMd:ToAdminConsole(string.format("%s was not allowed to join %s.", TGNS.GetPlayerName(player), teamName))
+    -- end
 
     if cancel then
         return false
@@ -656,32 +653,32 @@ function Plugin:PostJoinTeam(gamerules, player, oldTeamNumber, newTeamNumber, fo
     end
 end
 
-local function sweep()
-    if Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-0 then
-        TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (Shine.Plugins.sidebar and Shine.Plugins.sidebar:PlayerIsInSidebar(p)) end)), function(c)
-            if TGNS.IsGameInProgress() then
-                local lastTeamChangeTime = inReadyRoomSinceTimes[c]
-                if lastTeamChangeTime then
-                    local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
-                    if secondsRemaining > 0 then
-                        if secondsRemaining < 40 then
-                            local p = TGNS.GetPlayer(c)
-                            tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
-                            Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
-                        end
-                    else
-                        TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
-                        tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
-                    end
-                else
-                    inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
-                end
-            else
-                inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
-            end
-        end)
-    end
-end
+-- local function sweep()
+--     if Server.GetNumPlayersTotal() >= Server.GetMaxPlayers()-0 then
+--         TGNS.DoFor(TGNS.GetReadyRoomClients(TGNS.Where(TGNS.GetPlayerList(), function(p) return not (Shine.Plugins.sidebar and Shine.Plugins.sidebar:PlayerIsInSidebar(p)) end)), function(c)
+--             if TGNS.IsGameInProgress() then
+--                 local lastTeamChangeTime = inReadyRoomSinceTimes[c]
+--                 if lastTeamChangeTime then
+--                     local secondsRemaining = TGNS.RoundPositiveNumberDown(lastTeamChangeTime + 180 - TGNS.GetSecondsSinceMapLoaded())
+--                     if secondsRemaining > 0 then
+--                         if secondsRemaining < 40 then
+--                             local p = TGNS.GetPlayer(c)
+--                             tgnsMd:ToPlayerNotifyError(p, string.format("Play or Spectate within %s seconds to stay on the server.", secondsRemaining))
+--                             Shine.Plugins.scoreboard:AlertApplicationIconForPlayer(p)
+--                         end
+--                     else
+--                         TGNSClientKicker.Kick(c, "Too long spent in the Ready Room.", nil, AnnounceClientBumpToStrangers)
+--                         tgnsMd:ToAdminNotifyInfo(string.format("%s kicked for being in the Ready Room too long.", TGNS.GetClientName(c)))
+--                     end
+--                 else
+--                     inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
+--                 end
+--             else
+--                 inReadyRoomSinceTimes[c] = TGNS.GetSecondsSinceMapLoaded()
+--             end
+--         end)
+--     end
+-- end
 
 function Plugin:ClientDisconnect(client)
     UpdateReservedSlotAmount()
@@ -739,7 +736,7 @@ end
 function Plugin:Initialise()
     self.Enabled = true
     self:CreateCommands()
-    TGNS.ScheduleActionInterval(10, sweep)
+    -- TGNS.ScheduleActionInterval(10, sweep)
     TGNS.ScheduleActionInterval(10, AnnounceRemainingPublicSlots)
     -- fullSpecDataRepository = TGNSDataRepository.Create("fullspec", function(data)
     --     data.enrolled = data.enrolled or {}
