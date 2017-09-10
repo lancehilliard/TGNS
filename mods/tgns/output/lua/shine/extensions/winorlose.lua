@@ -378,7 +378,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 					else
 						if kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime + Shine.Plugins.winorlose.Config.AlertDelayInSeconds < TGNS.GetSecondsSinceMapLoaded() then
 							local secondsLeft = math.ceil((kWinOrLoseVoteArray[i].WinOrLoseRunning + kWinOrLoseVoteArray[i].VotingTimeInSeconds) - TGNS.GetSecondsSinceMapLoaded())
-							if secondsLeft <= Shine.Plugins.winorlose.Config.AlertDelayInSeconds then
+							if secondsLeft <= Shine.Plugins.winorlose.Config.AlertDelayInSeconds and totalvotes > 1 then
 								chatMessage = string.sub(string.format("%s/%s votes to concede; %s secs left. %s", totalvotes,
 								 getNumberOfRequiredVotes(playerRecords),
 								 secondsLeft, VOTE_HOWTO_TEXT), 1, kMaxChatLength)
@@ -438,8 +438,8 @@ local function OnCommandWinOrLose(client)
 								md:ToPlayerNotifyError(player, chatMessage)
 							else
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
-								-- showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT))
-								md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
+								showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s", TGNS.IsClientCommander(client) and "The Commander" or "A teammate", VOTE_HOWTO_TEXT))
+								-- md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
 							end
 							UpdateWinOrLoseVotes(teamNumber)
 						else
@@ -447,8 +447,11 @@ local function OnCommandWinOrLose(client)
 								kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
 								lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
-								-- showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("%s would like to concede. %s %s", TGNS.GetPlayerName(player), VOTE_HOWTO_TEXT, GIVE_TEXT))
-								md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
+								if TGNS.IsClientCommander(client) then
+									showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("The Commander would like to concede. %s %s", VOTE_HOWTO_TEXT, GIVE_TEXT))
+								else
+									md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
+								end
 							else
 								md:ToPlayerNotifyError(player, "You started a vote too recently. When another")
 								md:ToPlayerNotifyError(player, "teammate starts a vote, you may participate.")
