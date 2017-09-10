@@ -4,6 +4,8 @@ if Server or Client then
 	kContaminationLifeSpan = kContaminationLifeSpan * 2
 	kContaminationBileInterval = kContaminationBileInterval * 2
 	kWhipSupply = kWhipSupply * 2
+	ARC.kCombatMoveSpeed = ARC.kCombatMoveSpeed * 1.1
+	ARC.kMoveSpeed = ARC.kMoveSpeed * 1.1
 	-- kWhipCost = kWhipCost * 2
 
 	kTechData = nil
@@ -987,7 +989,7 @@ if Server or Client then
 				md:ToAllConsole("bile bomb half as often. Whip supply is doubled, as whips spread")
 				md:ToAllConsole("out and target much more reliably. Also, Oni move at 315 speeds,")
 				md:ToAllConsole("but 316 Bone Shield is unchanged. Power nodes near command chairs")
-				md:ToAllConsole("have twice the normal max armor. Balance changes consider that")
+				md:ToAllConsole("have twice the normal max armor. ARCs move 10% faster at all times.")
 				md:ToAllConsole("TGNS Marines lose most games. All is WIP. Discuss in our forums.")
 				local commandStations = GetEntitiesForTeam("CommandStation", kMarineTeamType)
 				TGNS.DoFor(commandStations, function(commandStation) upgradeCommandStationPowerPoint(commandStation) end)
