@@ -310,6 +310,10 @@ if Server or Client then
 					local playingClients = TGNS.GetPlayingClients(TGNS.GetPlayerList())
 					if #playingClients < Shine.Plugins.communityslots.Config.PublicSlots then
 						md:ToAllNotifyInfo(string.format("%s is sending players to teams. Chat 'switch' if you want the other team.", client and TGNS.GetClientName(client) or "Server"))
+						TGNS.ScheduleAction(7, function()
+							local discordMd = TGNSMessageDisplayer.Create()
+							discordMd:ToAllNotifyGreen("#tgns on TG Discord: https://discordapp.com/invite/RdhZjb (link in TGNS forums)")
+						end)
 						if forcePlayersToReadyRoom then
 							TGNS.DoFor(playingClients, function(c) TGNS.ExecuteClientCommand(c, "readyroom") end)
 						end
