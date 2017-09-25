@@ -171,10 +171,11 @@ function Plugin:Initialise()
 						if crosshairTargetForInfection then
 							local originalInfect = crosshairTargetForInfection.Infect
 							crosshairTargetForInfection.Infect = function(targetSelf)
-								local marineClient = TGNS.GetClient(marineSelf)
-								infectedCounts[marineClient] = (infectedCounts[marineClient] or 0) + 1
-								Shared.Message("infectedCounts[marineClient]: " .. tostring(infectedCounts[marineClient]))
 								originalInfect(targetSelf)
+								local marineClient = TGNS.GetClient(marineSelf)
+								if marineClient then
+									infectedCounts[marineClient] = (infectedCounts[marineClient] or 0) + 1
+								end
 							end
 						end
 						return crosshairTargetForInfection
