@@ -358,7 +358,7 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 						--	end
 						--end)
 						--chatMessage = string.sub(string.format("Concede vote expired. Abstained: %s", TGNS.Join(abstainedNames, ", ")), 1, kMaxChatLength)
-						chatMessage = "Concede vote expired"
+						chatMessage = totalvotes > 1 and "Concede vote expired" or ""
 						if (#playerRecords >= 7 and totalvotes > #playerRecords / 2) then
 							table.insert(whenBigVotesFailedWithMajorityThisGame, Shared.GetTime())
 							local teamSteamIds = TGNS.Select(TGNS.GetTeamClients(i), TGNS.GetClientSteamId)
@@ -369,7 +369,9 @@ local function UpdateWinOrLoseVotes(forceVoteStatusUpdateForTeamNumber)
 							local randomAbstainerPlayerName = TGNS.GetPlayerName(randomAbstainerPlayer)
 							chatMessage = string.format("%s with majority. %s: make sure there's a team plan!", chatMessage, randomAbstainerPlayerName)
 						else
-							chatMessage = string.format("%s.", chatMessage)
+							if TGNS.HasNonEmptyValue(chatMessage) then
+								chatMessage = string.format("%s.", chatMessage)
+							end
 						end
 						kWinOrLoseVoteArray[i].WinOrLoseVotesAlertTime = 0
 						kWinOrLoseVoteArray[i].WinOrLoseRunning = 0
@@ -447,7 +449,7 @@ local function OnCommandWinOrLose(client)
 								kWinOrLoseVoteArray[teamNumber].WinOrLoseRunning = TGNS.GetSecondsSinceMapLoaded()
 								table.insert(kWinOrLoseVoteArray[teamNumber].WinOrLoseVotes, steamId)
 								lastVoteStartTimes[client] = TGNS.GetSecondsSinceMapLoaded()
-								if TGNS.IsClientCommander(client) then
+								if TGNS.IsClientCommander(client) or Shine.Plugins.communityslots:IsClientRecentCommander(client) then
 									showVoteUpdateMessageToTeamAndSpectators(teamNumber, string.format("The Commander would like to concede. %s %s", VOTE_HOWTO_TEXT, GIVE_TEXT))
 								else
 									md:ToPlayerNotifyInfo(player, string.format("Voted! %s", GIVE_TEXT))
