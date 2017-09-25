@@ -5,6 +5,7 @@ local specpriority = {}
 local whenSpecWasLastHeard = {}
 local specmodesCache = {}
 local specmodesCacheWasPreloaded = false
+local isInfested = false
 
 local modeDescriptions = {["0"] = "Chat Advisory OFF; Voicecomm: All"
 	, ["1"] = "Chat Advisory OFF; Voicecomm: Marines only"
@@ -26,15 +27,15 @@ local function listenerSpectatorShouldHearSpeaker(listenerPlayer, speakerPlayer)
 	local speakerClient = TGNS.GetClient(speakerPlayer)
 	local specmode = specmodes[listenerClient] or 0
 	local playerCanHearAllVoices = specmode == 0
-	local playerIsOnGameplayTeamThatPlayerCanHear = (TGNS.PlayerIsOnPlayingTeam(speakerPlayer) and (specmode == 3 or specmode == TGNS.GetPlayerTeamNumber(speakerPlayer)))
+	local speakerIsOnGameplayTeamThatPlayerCanHear = (TGNS.PlayerIsOnPlayingTeam(speakerPlayer) and (specmode == 3 or specmode == TGNS.GetPlayerTeamNumber(speakerPlayer)))
 	local bothPlayersAreSpectatorsAndPlayerCanHearSpectators = TGNS.IsPlayerSpectator(listenerPlayer) and TGNS.IsPlayerSpectator(speakerPlayer) and specmode == 4
 	local playerIsCommanderThatPlayerCanHear = TGNS.IsClientCommander(speakerClient) and specmode == 5
-	local result = playerCanHearAllVoices or playerIsOnGameplayTeamThatPlayerCanHear or bothPlayersAreSpectatorsAndPlayerCanHearSpectators or playerIsCommanderThatPlayerCanHear
+	local result = playerCanHearAllVoices or speakerIsOnGameplayTeamThatPlayerCanHear or bothPlayersAreSpectatorsAndPlayerCanHearSpectators or playerIsCommanderThatPlayerCanHear
 	
 	local adjustForSpecPriority = function()
 		if result then
-			if TGNS.IsPlayerSpectator(listenerPlayer) then
-				if TGNS.IsPlayerSpectator(speakerPlayer) then
+			if TGNS.IsPlayerSpectator(listenerPlayer) or (isInfested and TGNS.PlayerIsMarine(listenerPlayer) and not TGNS.IsPlayerAlive(listenerPlayer)) then
+				if TGNS.IsPlayerSpectator(speakerPlayer) or (isInfested and TGNS.PlayerIsMarine(speakerPlayer) and not TGNS.IsPlayerAlive(speakerPlayer)) then
 					whenSpecWasLastHeard[listenerClient] = Shared.GetTime()
 				else
 					whenSpecWasLastHeard[listenerClient] = whenSpecWasLastHeard[listenerClient] or 0
@@ -165,7 +166,7 @@ function Plugin:Initialise()
     self.Enabled = true
 	originalGetCanPlayerHearPlayer = TGNS.ReplaceClassMethod("NS2Gamerules", "GetCanPlayerHearPlayer", function(self, listenerPlayer, speakerPlayer)
 		local result
-		if TGNS.IsPlayerSpectator(listenerPlayer) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.IsEitherPlayerInSidebar and Shine.Plugins.sidebar:IsEitherPlayerInSidebar(listenerPlayer, speakerPlayer)) then
+		if (TGNS.IsPlayerSpectator(listenerPlayer) or (isInfested and TGNS.PlayerIsMarine(listenerPlayer) and not TGNS.IsPlayerAlive(listenerPlayer))) and not (Shine.Plugins.sidebar and Shine.Plugins.sidebar.IsEitherPlayerInSidebar and Shine.Plugins.sidebar:IsEitherPlayerInSidebar(listenerPlayer, speakerPlayer)) then
 			result = listenerSpectatorShouldHearSpeaker(listenerPlayer, speakerPlayer)
 		else
 			result = originalGetCanPlayerHearPlayer(self, listenerPlayer, speakerPlayer)
@@ -197,6 +198,7 @@ function Plugin:Initialise()
 	end, TGNS.LOWEST_EVENT_HANDLER_PRIORITY)
 
 	TGNS.DoWithConfig(function()
+		isInfested = Shine.GetGamemode() == "Infested"
 		local url = TGNS.Config.SpecModeEndpointBaseUrl
 		TGNS.GetHttpAsync(url, function(specModeResponseJson)
 			local specModeResponse = json.decode(specModeResponseJson) or {}
