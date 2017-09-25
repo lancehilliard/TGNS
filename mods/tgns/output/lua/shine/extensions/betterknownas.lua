@@ -1,6 +1,7 @@
 local PLAYER_CHANGE_INTERVAL_THRESHOLD_IN_SECONDS = 1814400
 local PLAYER_CHANGE_INTERVAL_THRESHOLD_ADJECTIVE = "3-week"
 local PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD = 20
+local notified = {}
 
 local warned = {}
 local bkas = {}
@@ -409,8 +410,9 @@ function Plugin:CreateCommands()
 								end
 								showSummary(client)
 								TGNS.ScheduleAction(0, function()
-									if Balance.GetTotalGamesPlayed(client) == PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and newBkaName == TGNS.GetClientName(client) then
+									if Balance.GetTotalGamesPlayed(client) == PERSISTENT_PLAYER_NAME_GAMES_COUNT_THRESHOLD and newBkaName == TGNS.GetClientName(client) and not notified[client] then
 										md:ToAllNotifyInfo(string.format("%s read sh_name output carefully and set BKA successfully.", TGNS.GetClientName(client)))
+										notified[client] = true
 									end
 								end)
 							end
